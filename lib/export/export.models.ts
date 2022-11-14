@@ -1,6 +1,8 @@
 import {
     AssetContracts,
     ContentItemContracts,
+    ContentTypeContracts,
+    LanguageContracts,
     LanguageVariantContracts,
     ProjectContracts} from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
@@ -21,6 +23,8 @@ export interface IExportData {
     contentItems: ContentItemContracts.IContentItemModelContract[];
     languageVariants: LanguageVariantContracts.ILanguageVariantModelContract[];
     assets: AssetContracts.IAssetModelContract[];
+    contentTypes: ContentTypeContracts.IContentTypeContract[];
+    languages: LanguageContracts.ILanguageModelContract[];
 }
 
 export interface IExportAllResult {

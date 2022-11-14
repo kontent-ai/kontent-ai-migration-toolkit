@@ -4,7 +4,9 @@ import {
     ManagementClient,
     AssetContracts,
     LanguageContracts,
-    ProjectContracts} from '@kontent-ai/management-sdk';
+    ProjectContracts,
+    ContentTypeContracts
+} from '@kontent-ai/management-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
 
 import { IExportAllResult, IExportConfig, IExportData } from './export.models';
@@ -73,7 +75,9 @@ export class ExportService {
             languageVariants: exportItems.languageVariant
                 ? await this.exportLanguageVariantsAsync(contentItems, languages)
                 : [],
-            assets: exportItems.asset ? await this.exportAssetsAsync() : []
+            assets: exportItems.asset ? await this.exportAssetsAsync() : [],
+            contentTypes: await this.getContentTypesAsync(),
+            languages: languages
         };
 
         return {
@@ -149,6 +153,11 @@ export class ExportService {
 
     private async getLanguagesAsync(): Promise<LanguageContracts.ILanguageModelContract[]> {
         const response = await this.client.listLanguages().toAllPromise();
+        return response.data.items.map((m) => m._raw);
+    }
+
+    private async getContentTypesAsync(): Promise<ContentTypeContracts.IContentTypeContract[]> {
+        const response = await this.client.listContentTypes().toAllPromise();
         return response.data.items.map((m) => m._raw);
     }
 
