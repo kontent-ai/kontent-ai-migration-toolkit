@@ -1,24 +1,30 @@
-import { AssetContracts } from '@kontent-ai/management-sdk';
+import { AssetContracts, ContentItemContracts } from '@kontent-ai/management-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
+import { AsyncParser } from 'json2csv';
 import * as JSZip from 'jszip';
 
 import { IExportAllResult } from '../export';
 import { IBinaryFile, IImportSource } from '../import';
 import { IZipServiceConfig } from './zip.models';
 import { yellow } from 'colors';
+import { Readable } from 'stream';
 
 export class ZipService {
     private readonly delayBetweenAssetRequestsMs: number;
 
-    private readonly contentItemsName: string = 'contentItems.json';
+    private readonly contentItemsName: string = 'contentItems.csv';
     private readonly assetsName: string = 'assets.json';
     private readonly languageVariantsName: string = 'languageVariants.json';
     private readonly metadataName: string = 'metadata.json';
     private readonly filesName: string = 'files';
+    private readonly dataName: string = 'data';
 
     private readonly validationName: string = 'validation.json';
 
     private readonly httpService: HttpService = new HttpService();
+
+    private readonly csvDelimiter: string = ',';
+    private readonly csvParser: AsyncParser<any> = new AsyncParser({ delimiter: this.csvDelimiter });
 
     constructor(private config: IZipServiceConfig) {
         this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 150;
@@ -60,17 +66,26 @@ export class ZipService {
             console.log(`Parsing json`);
         }
 
-        zip.file(this.validationName, JSON.stringify(exportData.validation));
-        zip.file(this.contentItemsName, JSON.stringify(exportData.data.contentItems));
-        zip.file(this.assetsName, JSON.stringify(exportData.data.assets));
-        zip.file(this.languageVariantsName, JSON.stringify(exportData.data.languageVariants));
-        zip.file(this.metadataName, JSON.stringify(exportData.metadata));
-
+        const dataFolder = zip.folder(this.dataName);
         const assetsFolder = zip.folder(this.filesName);
 
         if (!assetsFolder) {
             throw Error(`Could not create folder '${yellow(this.filesName)}'`);
         }
+
+        if (!dataFolder) {
+            throw Error(`Could not create folder '${yellow(this.dataName)}'`);
+        }
+
+        dataFolder.file(
+            this.contentItemsName,
+            (await this.mapContentItemsToCsvAsync(exportData.data.contentItems)) ?? ''
+        );
+        dataFolder.file(this.assetsName, JSON.stringify(exportData.data.assets));
+        dataFolder.file(this.languageVariantsName, JSON.stringify(exportData.data.languageVariants));
+
+        zip.file(this.metadataName, JSON.stringify(exportData.metadata));
+        zip.file(this.validationName, JSON.stringify(exportData.validation));
 
         if (this.config.enableLog) {
             console.log(`Adding assets to zip`);
@@ -111,6 +126,20 @@ export class ZipService {
         }
 
         return content;
+    }
+
+    private async mapContentItemsToCsvAsync(
+        items: ContentItemContracts.IContentItemModelContract[]
+    ): Promise<string | undefined> {
+        const itemsAsReadableStream = new Readable();
+        itemsAsReadableStream.push(JSON.stringify(items));
+        itemsAsReadableStream.push(null);
+
+        const parsingProcessor = this.csvParser.fromInput(itemsAsReadableStream);
+
+        const result = await parsingProcessor.promise();
+
+        return result ?? undefined;
     }
 
     private sleepAsync(ms: number): Promise<any> {

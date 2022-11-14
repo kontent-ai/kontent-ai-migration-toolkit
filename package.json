@@ -47,6 +47,7 @@
   "license": "MIT",
   "dependencies": {
     "@kontent-ai/management-sdk": "3.4.0",
+    "json2csv": "5.0.7",
     "jszip": "3.10.1",
     "yargs": "17.6.2",
     "colors": "1.4.0"
@@ -54,6 +55,7 @@
   "devDependencies": {
     "tslib": "2.4.1",
     "@types/jszip": "3.4.1",
+    "@types/json2csv": "5.0.3",
     "@types/node": "18.11.9",
     "@types/yargs": "17.0.13",
     "standard-version": "9.5.0",
