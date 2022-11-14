@@ -25,7 +25,12 @@ interface IContentItemCsvModel {
     collection?: string;
 }
 
-interface ILanguageVariantCsvModel extends IContentItemCsvModel {
+interface ILanguageVariantCsvModel {
+    item: string;
+    language: string;
+    last_modified: string;
+    workflow_step: string;
+
     [elementCodename: string]: any;
 }
 
@@ -285,7 +290,10 @@ export class ZipService {
 
     private getLanguageVariantFields(contentType: ContentTypeContracts.IContentTypeContract): string[] {
         return [
-            ...this.getContentItemFields(),
+            'item',
+            'language',
+            'last_modified',
+            'workflow_step',
             ...contentType.elements
                 .map((m) => m.codename)
                 .filter((m) => {
@@ -324,7 +332,10 @@ export class ZipService {
         contentType: ContentTypeContracts.IContentTypeContract
     ): ILanguageVariantCsvModel {
         const model: ILanguageVariantCsvModel = {
-            ...this.mapContentItemToCsvModel(item)
+            item: item.id,
+            language: languageVariant.language.id ?? '',
+            last_modified: languageVariant.last_modified,
+            workflow_step: languageVariant.workflow_step.id ?? ''
         };
 
         for (const element of contentType.elements) {
