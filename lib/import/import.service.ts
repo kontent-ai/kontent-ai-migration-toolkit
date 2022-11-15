@@ -437,7 +437,7 @@ export class ImportService {
                         importId: response.data.item.id,
                         originalId: languageVariant.item.id
                     });
-                    this.processItem(`${itemCodename} (${languageCodename})`, 'languageVariant', response.data);
+                    this.processItem(`${itemCodename} (${languageCodename})`, 'contentItem', response.data);
                 })
                 .catch((error) => this.handleImportError(error));
         }

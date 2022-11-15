@@ -1,34 +1,31 @@
-import {
-    AssetContracts,
-    ContentItemContracts,
-    ContentTypeContracts,
-    LanguageContracts,
-    LanguageVariantContracts,
-    ProjectContracts} from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { IProcessedItem, IPackageMetadata, ItemType } from '../core';
+import { IProcessedItem, IPackageMetadata } from '../core';
+import { IContentItem, IContentType, ILanguage } from '@kontent-ai/delivery-sdk';
+
+export interface IExportFilter {
+    /**
+     * Array of type codenames to export. Defaults to all content types if none type is provided.
+     */
+    types?: string[];
+}
 
 export interface IExportConfig {
     projectId: string;
     apiKey: string;
     baseUrl?: string;
     onExport?: (item: IProcessedItem) => void;
-    exportFilter?: ItemType[];
-    skipValidation: boolean;
+    exportFilter?: IExportFilter;
     retryStrategy?: IRetryStrategyOptions;
 }
 
 export interface IExportData {
-    contentItems: ContentItemContracts.IContentItemModelContract[];
-    languageVariants: LanguageVariantContracts.ILanguageVariantModelContract[];
-    assets: AssetContracts.IAssetModelContract[];
-    contentTypes: ContentTypeContracts.IContentTypeContract[];
-    languages: LanguageContracts.ILanguageModelContract[];
+    contentItems: IContentItem[];
+    contentTypes: IContentType[];
+    languages: ILanguage[];
 }
 
 export interface IExportAllResult {
     metadata: IPackageMetadata;
     data: IExportData;
-    validation: ProjectContracts.IProjectReportResponseContract | string;
 }

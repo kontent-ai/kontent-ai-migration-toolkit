@@ -1,8 +1,4 @@
-import {
-    AssetContracts,
-    ContentItemContracts,
-    LanguageVariantContracts,
-    ProjectContracts} from '@kontent-ai/management-sdk';
+import { AssetContracts, ContentItemContracts, LanguageVariantContracts } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import { IProcessedItem, ItemType, IPackageMetadata } from '../core';
@@ -51,7 +47,6 @@ export interface IImportSource {
         assets: AssetContracts.IAssetModelContract[];
     };
     metadata: IPackageMetadata;
-    validation: ProjectContracts.IProjectReportResponseContract;
     binaryFiles: IBinaryFile[];
 }
 

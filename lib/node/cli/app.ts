@@ -3,14 +3,13 @@ import { readFileSync } from 'fs';
 import * as yargs from 'yargs';
 
 import { CleanService } from '../../clean';
-import { ICliFileConfig, getFilenameWithoutExtension, CliAction, ItemType } from '../../core';
+import { ICliFileConfig, CliAction } from '../../core';
 import { ExportService } from '../../export';
-import { IImportSource, ImportService } from '../../import';
+import { ImportService } from '../../import';
 import { ZipService } from '../../zip';
 import { SharedModels } from '@kontent-ai/management-sdk';
 import { FileService } from '../file/file.service';
-import { fileHelper } from '../file/file-helper';
-import { green, red, yellow } from 'colors';
+import { green, red, yellow, magenta } from 'colors';
 
 const argv = yargs(process.argv.slice(2))
     .example('kbm --action=backup --apiKey=xxx --projectId=xxx', 'Creates zip backup of Kontent.ai project')
@@ -24,8 +23,6 @@ const argv = yargs(process.argv.slice(2))
     )
     .alias('p', 'projectId')
     .describe('p', 'ProjectId')
-    .alias('sv', 'skipValidation')
-    .describe('sv', 'Skips validation endpoint during export')
     .alias('k', 'apiKey')
     .describe('k', 'Management API Key')
     .alias('a', 'action')
@@ -34,19 +31,14 @@ const argv = yargs(process.argv.slice(2))
     .describe('z', 'Name of zip used for export / restore')
     .alias('l', 'enableLog')
     .describe('l', 'Indicates if default logging is enabled (useful to indicate progress)')
-    .alias('f', 'force')
-    .describe(
-        'f',
-        'If enabled, project will we exported / restored even if there are data inconsistencies. Enabled by default.'
-    )
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
     .alias('s', 'preserveWorkflow')
     .describe('s', 'Indicates if workflow information of language variants is preserved')
-    .alias('e', 'exportFilter')
+    .alias('t', 'types')
     .describe(
-        'e',
-        'Can be used to export only selected data types. Expects CSV of types. Supported types: taxonomy, contentType, contentTypeSnippet, contentItem, languageVariant, language, assetFolder, binaryFile & workflowSteps'
+        't',
+        'Can be used to export only selected content types. Expects CSV of type codenames. If not provided, all content items of all types are exported'
     )
     .help('h')
     .alias('h', 'help').argv;
@@ -57,10 +49,13 @@ const backupAsync = async (config: ICliFileConfig) => {
         projectId: config.projectId,
         baseUrl: config.baseUrl,
         exportFilter: config.exportFilter,
-        skipValidation: config.skipValidation ?? false,
         onExport: (item) => {
             if (config.enableLog) {
-                console.log(`Exported ${yellow(item.title)} (${green(item.type)})`);
+                console.log(
+                    `Exported ${yellow(item.title)} | ${green(item.data.system.type)} | ${magenta(
+                        item.data.system.language
+                    )}`
+                );
             }
         }
     });
@@ -80,10 +75,6 @@ const backupAsync = async (config: ICliFileConfig) => {
     await fileService.writeFileAsync(config.zipFilename, zipFileData);
 
     console.log(green('Completed'));
-};
-
-const getLogFilename = (filename: string) => {
-    return `${getFilenameWithoutExtension(filename)}_log.json`;
 };
 
 const cleanAsync = async (config: ICliFileConfig) => {
@@ -137,19 +128,9 @@ const restoreAsync = async (config: ICliFileConfig) => {
 
     const data = await zipService.extractZipAsync(file);
 
-    if (canImport(data, config)) {
-        await importService.importFromSourceAsync(data);
+    await importService.importFromSourceAsync(data);
 
-        console.log(green('Completed'));
-    } else {
-        const logFilename: string = getLogFilename(config.zipFilename);
-
-        await fileHelper.createFileInCurrentFolderAsync(logFilename, JSON.stringify(data.validation));
-
-        console.log(`Project could not be imported due to data inconsistencies.`);
-        console.log(`A log file '${yellow(logFilename)}' with issues was created in current folder.`);
-        console.log(`To import data regardless of issues, set 'force' config parameter to true`);
-    }
+    console.log(green('Completed'));
 };
 
 const validateConfig = (config?: ICliFileConfig) => {
@@ -190,18 +171,6 @@ const run = async () => {
     }
 };
 
-const canImport = (importData: IImportSource, config: ICliFileConfig) => {
-    if (!importData.metadata.isInconsistentExport) {
-        return true;
-    }
-
-    if (config.force === true) {
-        return true;
-    }
-
-    return false;
-};
-
 const getConfig = async () => {
     const resolvedArgs = await argv;
     const configFilename: string = (await resolvedArgs.config) as string;
@@ -216,23 +185,15 @@ const getConfig = async () => {
     const action: CliAction | undefined = resolvedArgs.action as CliAction | undefined;
     const apiKey: string | undefined = resolvedArgs.apiKey as string | undefined;
     const enableLog: boolean | undefined = (resolvedArgs.enableLog as boolean | undefined) ?? true;
-    const force: boolean | undefined = (resolvedArgs.force as boolean | undefined) ?? true;
     const preserveWorkflow: boolean | undefined = (resolvedArgs.preserveWorkflow as boolean | undefined) ?? true;
     const skipValidation: boolean = (resolvedArgs.skipValidation as boolean | undefined) ?? false;
     const projectId: string | undefined = resolvedArgs.projectId as string | undefined;
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
     const zipFilename: string | undefined =
         (resolvedArgs.zipFilename as string | undefined) ?? getDefaultBackupFilename();
-    const exportFilter: string | undefined = resolvedArgs.exportFilter as string | undefined;
+    const types: string | undefined = resolvedArgs.exportFilter as string | undefined;
 
-    const exportFilterMapped: ItemType[] | undefined = exportFilter
-        ? exportFilter
-              .split(',')
-              .map((m) => m.trim())
-              .map((m) => {
-                  return m as ItemType;
-              })
-        : undefined;
+    const typesMapped: string[] = types ? types.split(',').map((m) => m.trim()) : [];
 
     if (!action) {
         throw Error(`No action was provided`);
@@ -252,11 +213,12 @@ const getConfig = async () => {
         action,
         apiKey,
         enableLog,
-        force,
         projectId,
         zipFilename,
         baseUrl,
-        exportFilter: exportFilterMapped,
+        exportFilter: {
+            types: typesMapped
+        },
         skipValidation
     };
 

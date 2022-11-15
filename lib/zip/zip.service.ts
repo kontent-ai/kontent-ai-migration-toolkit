@@ -1,10 +1,4 @@
-import {
-    AssetContracts,
-    ContentItemContracts,
-    ContentTypeContracts,
-    LanguageContracts,
-    LanguageVariantContracts
-} from '@kontent-ai/management-sdk';
+import { AssetContracts } from '@kontent-ai/management-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { AsyncParser } from 'json2csv';
 import * as JSZip from 'jszip';
@@ -14,13 +8,28 @@ import { IBinaryFile, IImportSource } from '../import';
 import { IZipServiceConfig } from './zip.models';
 import { yellow } from 'colors';
 import { Readable } from 'stream';
+import { Elements, ElementType, IContentItem, IContentType, ILanguage } from '@kontent-ai/delivery-sdk';
+import { getHashCode } from '../core';
+
+interface IExtractedAsset {
+    url: string;
+    extension: string;
+    hashcode: number;
+    filename: string;
+}
+
+interface IAssetCsvModel {
+    url: string;
+    extension: string;
+    hashcode: number;
+    filename: string;
+}
 
 interface IContentItemCsvModel {
     id: string;
     name: string;
     codename: String;
     type?: string;
-    external_id?: string;
     last_modified: string;
     collection?: string;
 }
@@ -29,46 +38,41 @@ interface ILanguageVariantCsvModel {
     item: string;
     language: string;
     last_modified: string;
-    workflow_step: string;
+    workflow_step?: string;
 
     [elementCodename: string]: any;
 }
 
 interface ILanguageCsvWrapper {
-    language: LanguageContracts.ILanguageModelContract;
+    language: ILanguage;
     languageFolderName: string;
     typeWrappers: ILanguageVariantsTypeCsvWrapper[];
 }
 
 interface ILanguageVariantsTypeCsvWrapper {
-    contentType: ContentTypeContracts.IContentTypeContract;
+    contentType: IContentType;
     csvFilename: string;
     csv: string;
-}
-
-interface IJoinedLanguageVariants {
-    contentItem: ContentItemContracts.IContentItemModelContract;
-    languageVariants: LanguageVariantContracts.ILanguageVariantModelContract[];
 }
 
 export class ZipService {
     private readonly delayBetweenAssetRequestsMs: number;
 
     private readonly contentItemsName: string = 'contentItems.csv';
-    private readonly assetsName: string = 'assets.json';
+    private readonly assetsName: string = 'assets.csv';
     private readonly languageVariantsName: string = 'languageVariants.json';
     private readonly metadataName: string = 'metadata.json';
-    private readonly filesName: string = 'files';
+    private readonly assetsFolderName: string = 'assets';
+    private readonly assetsBinariesFolderName: string = 'files';
     private readonly contentItemsFolderName: string = 'contentItems';
     private readonly languageVariantsFolderName: string = 'languageVariants';
 
-    private readonly validationName: string = 'validation.json';
     private readonly httpService: HttpService = new HttpService();
 
     private readonly csvDelimiter: string = ',';
 
     constructor(private config: IZipServiceConfig) {
-        this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 150;
+        this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 50;
     }
 
     public async extractZipAsync(zipFile: any): Promise<IImportSource> {
@@ -89,7 +93,6 @@ export class ZipService {
                 contentItems: await this.readAndParseJsonFile(unzippedFile, this.contentItemsName)
             },
             binaryFiles: await this.extractBinaryFilesAsync(unzippedFile, assets),
-            validation: await this.readAndParseJsonFile(unzippedFile, this.validationName),
             metadata: await this.readAndParseJsonFile(unzippedFile, this.metadataName)
         };
 
@@ -109,10 +112,10 @@ export class ZipService {
 
         const contentItemsFolder = zip.folder(this.contentItemsFolderName);
         const languageVariantsFolder = zip.folder(this.languageVariantsFolderName);
-        const assetsFolder = zip.folder(this.filesName);
+        const assetsFolder = zip.folder(this.assetsFolderName);
 
         if (!assetsFolder) {
-            throw Error(`Could not create folder '${yellow(this.filesName)}'`);
+            throw Error(`Could not create folder '${yellow(this.assetsFolderName)}'`);
         }
 
         if (!contentItemsFolder) {
@@ -123,16 +126,20 @@ export class ZipService {
             throw Error(`Could not create folder '${yellow(this.languageVariantsFolderName)}'`);
         }
 
+        const assetBinariesFolder = assetsFolder.folder(this.assetsBinariesFolderName);
+
+        if (!assetBinariesFolder) {
+            throw Error(`Could not create folder '${yellow(this.assetsBinariesFolderName)}'`);
+        }
+
         contentItemsFolder.file(
             this.contentItemsName,
             (await this.mapContentItemsToCsvAsync(exportData.data.contentItems)) ?? ''
         );
-        contentItemsFolder.file(this.assetsName, JSON.stringify(exportData.data.assets));
 
         const languageCsvWrappers = await this.mapLanguageVariantsToCsvAsync(
             exportData.data.contentTypes,
             exportData.data.contentItems,
-            exportData.data.languageVariants,
             exportData.data.languages
         );
 
@@ -149,31 +156,24 @@ export class ZipService {
         }
 
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
-        zip.file(this.validationName, JSON.stringify(exportData.validation));
 
         if (this.config.enableLog) {
             console.log(`Adding assets to zip`);
         }
 
-        for (const asset of exportData.data.assets) {
-            const assetIdShortFolderName = asset.id.substr(0, 3);
-            const assetIdShortFolder = assetsFolder.folder(assetIdShortFolderName);
+        const assets = this.extractAssets(exportData.data.contentItems, exportData.data.contentTypes);
 
-            if (!assetIdShortFolder) {
-                throw Error(`Could not create folder '${yellow(this.filesName)}'`);
-            }
+        assetsFolder.file(this.assetsName, (await this.mapAssetsToCsvAsync(assets)) ?? '');
 
-            const assetIdFolderName = asset.id;
-            const assetIdFolder = assetIdShortFolder.folder(assetIdFolderName);
-
-            if (!assetIdFolder) {
-                throw Error(`Could not create folder '${yellow(this.filesName)}'`);
-            }
-
-            const assetFilename = asset.file_name;
-            assetIdFolder.file(assetFilename, await this.getBinaryDataFromUrlAsync(asset.url, this.config.enableLog), {
-                binary: true
-            });
+        for (const asset of assets) {
+            const assetFilename = asset.filename;
+            assetBinariesFolder.file(
+                assetFilename,
+                await this.getBinaryDataFromUrlAsync(asset.url, this.config.enableLog),
+                {
+                    binary: true
+                }
+            );
 
             // create artificial delay between requests as to prevent errors on network
             await this.sleepAsync(this.delayBetweenAssetRequestsMs);
@@ -192,9 +192,86 @@ export class ZipService {
         return content;
     }
 
-    private async mapContentItemsToCsvAsync(
-        items: ContentItemContracts.IContentItemModelContract[]
-    ): Promise<string | undefined> {
+    private extractAssets(items: IContentItem[], types: IContentType[]): IExtractedAsset[] {
+        const assets: IExtractedAsset[] = [];
+
+        for (const type of types) {
+            const itemsOfType: IContentItem[] = items.filter((m) => m.system.type === type.system.codename);
+
+            for (const element of type.elements) {
+                if (!element.codename) {
+                    continue;
+                }
+                if (element.type === ElementType.Asset) {
+                    for (const item of itemsOfType) {
+                        const assetElement = item.elements[element.codename] as Elements.AssetsElement;
+
+                        if (assetElement.value.length) {
+                            assets.push(
+                                ...assetElement.value.map((m) => {
+                                    const hashcode = getHashCode(m.url);
+                                    const extension = this.getExtension(m.url) ?? '';
+                                    const asset: IExtractedAsset = {
+                                        url: m.url,
+                                        hashcode: hashcode,
+                                        filename: `${hashcode}.${extension}`,
+                                        extension: extension
+                                    };
+
+                                    return asset;
+                                })
+                            );
+                        }
+                    }
+                } else if (element.type === ElementType.RichText) {
+                    for (const item of itemsOfType) {
+                        const richTextElement = item.elements[element.codename] as Elements.RichTextElement;
+
+                        if (richTextElement.images.length) {
+                            assets.push(
+                                ...richTextElement.images.map((m) => {
+                                    const hashcode = getHashCode(m.url);
+                                    const extension = this.getExtension(m.url) ?? '';
+                                    const asset: IExtractedAsset = {
+                                        url: m.url,
+                                        hashcode: hashcode,
+                                        filename: `${hashcode}.${extension}`,
+                                        extension: extension
+                                    };
+
+                                    return asset;
+                                })
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        return [...new Map(assets.map((item) => [item['url'], item])).values()]; // filters unique values
+    }
+
+    private getExtension(url: string): string | undefined {
+        return url.split('.').pop();
+    }
+
+    private async mapAssetsToCsvAsync(assets: IExtractedAsset[]): Promise<string | undefined> {
+        const csvModels: IAssetCsvModel[] = assets;
+
+        const stream = new Readable();
+        stream.push(JSON.stringify(csvModels));
+        stream.push(null); // required to end the stream
+
+        const parsingProcessor = this.geCsvParser({
+            fields: this.getAssetFields()
+        }).fromInput(stream);
+
+        const csvResult = await parsingProcessor.promise();
+
+        return csvResult ?? undefined;
+    }
+
+    private async mapContentItemsToCsvAsync(items: IContentItem[]): Promise<string | undefined> {
         const csvModels: IContentItemCsvModel[] = items.map((m) => this.mapContentItemToCsvModel(m));
 
         const itemsStream = new Readable();
@@ -211,35 +288,20 @@ export class ZipService {
     }
 
     private async mapLanguageVariantsToCsvAsync(
-        contentTypes: ContentTypeContracts.IContentTypeContract[],
-        contentItems: ContentItemContracts.IContentItemModelContract[],
-        languageVariants: LanguageVariantContracts.ILanguageVariantModelContract[],
-        languages: LanguageContracts.ILanguageModelContract[]
+        types: IContentType[],
+        items: IContentItem[],
+        languages: ILanguage[]
     ): Promise<ILanguageCsvWrapper[]> {
         const result: ILanguageCsvWrapper[] = [];
-        const joinedLanguageVariants: IJoinedLanguageVariants[] = this.getJoinedLanguageVariants(
-            contentItems,
-            languageVariants
-        );
 
         for (const language of languages) {
             const typeWrappers: ILanguageVariantsTypeCsvWrapper[] = [];
-            for (const contentType of contentTypes) {
+            for (const contentType of types) {
                 const languageVariantFields: string[] = this.getLanguageVariantFields(contentType);
-                const contentItemWithVariants = joinedLanguageVariants.filter(
-                    (m) => m.contentItem.type.id === contentType.id
-                );
-                const csvModels: ILanguageVariantCsvModel[] = [];
-
-                for (const contentItemWithVariant of contentItemWithVariants) {
-                    csvModels.push(
-                        ...contentItemWithVariant.languageVariants
-                            .filter((m) => m.language.id === language.id)
-                            .map((m) =>
-                                this.mapLanguageVariantToCsvModel(contentItemWithVariant.contentItem, m, contentType)
-                            )
-                    );
-                }
+                const contentItemsOfType = items.filter((m) => m.system.type === contentType.system.codename);
+                const csvModels: ILanguageVariantCsvModel[] = contentItemsOfType
+                    .filter((m) => m.system.language === language.system.codename)
+                    .map((m) => this.mapLanguageVariantToCsvModel(m, contentType));
 
                 const languageVariantsStream = new Readable();
                 languageVariantsStream.push(JSON.stringify(csvModels));
@@ -254,13 +316,13 @@ export class ZipService {
                 typeWrappers.push({
                     csv: csvResult ?? '',
                     contentType: contentType,
-                    csvFilename: `${contentType.codename}.csv`
+                    csvFilename: `${contentType.system.codename}.csv`
                 });
             }
 
             result.push({
                 language: language,
-                languageFolderName: `${language.codename}`,
+                languageFolderName: `${language.system.codename}`,
                 typeWrappers: typeWrappers
             });
         }
@@ -268,27 +330,15 @@ export class ZipService {
         return result;
     }
 
-    private getJoinedLanguageVariants(
-        contentItems: ContentItemContracts.IContentItemModelContract[],
-        languageVariants: LanguageVariantContracts.ILanguageVariantModelContract[]
-    ): IJoinedLanguageVariants[] {
-        const joinedLanguageVariants: IJoinedLanguageVariants[] = [];
-
-        for (const contentItem of contentItems) {
-            joinedLanguageVariants.push({
-                contentItem: contentItem,
-                languageVariants: languageVariants.filter((m) => m.item.id === contentItem.id)
-            });
-        }
-
-        return joinedLanguageVariants;
+    private getAssetFields(): string[] {
+        return ['hashcode', 'url', 'filename', 'extension'];
     }
 
     private getContentItemFields(): string[] {
-        return ['id', 'name', 'codename', 'type', 'external_id', 'last_modified', 'collection'];
+        return ['id', 'name', 'codename', 'type', 'last_modified', 'collection'];
     }
 
-    private getLanguageVariantFields(contentType: ContentTypeContracts.IContentTypeContract): string[] {
+    private getLanguageVariantFields(contentType: IContentType): string[] {
         return [
             'item',
             'language',
@@ -314,33 +364,28 @@ export class ZipService {
         return new AsyncParser({ delimiter: this.csvDelimiter, fields: config.fields });
     }
 
-    private mapContentItemToCsvModel(item: ContentItemContracts.IContentItemModelContract): IContentItemCsvModel {
+    private mapContentItemToCsvModel(item: IContentItem): IContentItemCsvModel {
         return {
-            codename: item.codename,
-            collection: item.collection?.id,
-            external_id: item.external_id,
-            id: item.id,
-            last_modified: item.last_modified.toString(),
-            name: item.name,
-            type: item.type.id
+            codename: item.system.codename,
+            collection: item.system.collection,
+            id: item.system.id,
+            last_modified: item.system.lastModified,
+            name: item.system.name,
+            type: item.system.type
         };
     }
 
-    private mapLanguageVariantToCsvModel(
-        item: ContentItemContracts.IContentItemModelContract,
-        languageVariant: LanguageVariantContracts.ILanguageVariantModelContract,
-        contentType: ContentTypeContracts.IContentTypeContract
-    ): ILanguageVariantCsvModel {
+    private mapLanguageVariantToCsvModel(item: IContentItem, contentType: IContentType): ILanguageVariantCsvModel {
         const model: ILanguageVariantCsvModel = {
-            item: item.id,
-            language: languageVariant.language.id ?? '',
-            last_modified: languageVariant.last_modified,
-            workflow_step: languageVariant.workflow_step.id ?? ''
+            item: item.system.id,
+            language: item.system.language,
+            last_modified: item.system.lastModified,
+            workflow_step: item.system.workflowStep ?? undefined
         };
 
         for (const element of contentType.elements) {
             if (element.codename) {
-                const variantElement = languageVariant.elements.find((m) => m.element.id === element.id);
+                const variantElement = item.elements[element.codename];
 
                 if (variantElement) {
                     model[element.codename] = variantElement.value;
@@ -389,7 +434,7 @@ export class ZipService {
      * "files/3b4/3b42f36c-2e67-4605-a8d3-fee2498e5224/image.jpg"
      */
     private getFullAssetPath(assetId: string, filename: string): string {
-        return `${this.filesName}/${assetId.substr(0, 3)}/${assetId}/${filename}`;
+        return `${this.assetsFolderName}/${assetId.substr(0, 3)}/${assetId}/${filename}`;
     }
 
     private async readAndParseJsonFile(fileContents: any, filename: string): Promise<any> {

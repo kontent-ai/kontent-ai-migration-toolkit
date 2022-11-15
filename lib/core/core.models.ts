@@ -1,3 +1,4 @@
+import { IContentItem } from '@kontent-ai/delivery-sdk';
 import {
     AssetContracts,
     AssetModels,
@@ -18,6 +19,7 @@ import {
     WorkflowContracts,
     WorkflowModels
 } from '@kontent-ai/management-sdk';
+import { IExportFilter } from 'lib/export';
 
 export interface ICliFileConfig {
     projectId: string;
@@ -26,16 +28,14 @@ export interface ICliFileConfig {
     zipFilename: string;
     enableLog: boolean;
     preserveWorkflow: boolean;
-    force: boolean;
     baseUrl?: string;
-    exportFilter?: ItemType[];
+    exportFilter?: IExportFilter;
     skipValidation?: boolean;
 }
 
 export type CliAction = 'backup' | 'restore' | 'clean';
 export type ItemType =
     | 'contentItem'
-    | 'languageVariant'
     | 'asset'
     | 'binaryFile';
 
@@ -67,7 +67,7 @@ export type ValidImportContract =
 export interface IProcessedItem {
     title: string;
     type: ActionType;
-    data: any;
+    data: IContentItem;
 }
 
 export interface IImportItemResult<TRaw, TModel> {
@@ -86,12 +86,9 @@ export interface IPackageMetadata {
     version: string;
     projectId: string;
     timestamp: Date;
-    isInconsistentExport: boolean;
     dataOverview: IPackageDataOverview;
 }
 
 export interface IPackageDataOverview {
     contentItemsCount: number;
-    languageVariantsCount: number;
-    assetsCount: number;
 }

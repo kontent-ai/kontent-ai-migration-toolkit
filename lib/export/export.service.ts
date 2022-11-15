@@ -1,24 +1,18 @@
-import {
-    ContentItemContracts,
-    LanguageVariantContracts,
-    ManagementClient,
-    AssetContracts,
-    LanguageContracts,
-    ProjectContracts,
-    ContentTypeContracts
-} from '@kontent-ai/management-sdk';
+import { IManagementClient, createManagementClient } from '@kontent-ai/management-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
+import { createDeliveryClient, IContentItem, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
 
 import { IExportAllResult, IExportConfig, IExportData } from './export.models';
 import { defaultRetryStrategy, ItemType, printProjectInfoToConsoleAsync } from '../core';
 import { version } from '../../package.json';
-import { green, red, yellow } from 'colors';
+import { yellow } from 'colors';
 
 export class ExportService {
-    private readonly client: ManagementClient;
+    private readonly managementClient: IManagementClient<any>;
+    private readonly deliveryClient: IDeliveryClient;
 
     constructor(private config: IExportConfig) {
-        this.client = new ManagementClient({
+        this.managementClient = createManagementClient({
             apiKey: config.apiKey,
             projectId: config.projectId,
             baseUrl: config.baseUrl,
@@ -27,56 +21,30 @@ export class ExportService {
             }),
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
         });
+        this.deliveryClient = createDeliveryClient({
+            projectId: config.projectId,
+            retryStrategy: config.retryStrategy ?? defaultRetryStrategy,
+            httpService: new HttpService({
+                logErrorsToConsole: false
+            }),
+            proxy: {
+                baseUrl: config.baseUrl
+            }
+        });
     }
 
-    public async exportAllAsync(): Promise<IExportAllResult> {
-        const exportItems = {
-            asset: this.config.exportFilter?.includes('asset') ?? true,
-            binaryFile: this.config.exportFilter?.includes('binaryFile') ?? true,
-            contentItem: this.config.exportFilter?.includes('contentItem') ?? true,
-            languageVariant: this.config.exportFilter?.includes('languageVariant') ?? true
-        };
-
-        let projectValidation: string | ProjectContracts.IProjectReportResponseContract;
-        let isInconsistentExport: boolean = false;
-
-        await printProjectInfoToConsoleAsync(this.client);
-
-        if (!this.config.skipValidation) {
-            console.log(green('Running project validation'));
-            projectValidation = await this.exportProjectValidationAsync();
-            isInconsistentExport =
-                projectValidation.type_issues.length > 0 || projectValidation.variant_issues.length > 0;
-            console.log(
-                `Project validation results: ${
-                    projectValidation.type_issues.length
-                        ? red(projectValidation.type_issues.length.toString())
-                        : green('0')
-                } type issues, ${
-                    projectValidation.variant_issues.length
-                        ? red(projectValidation.variant_issues.length.toString())
-                        : green('0')
-                } variant issues`
-            );
-            console.log('Projects with type or variant issues might not get imported back successfully');
-        } else {
-            console.log(red('Skipping project validation'));
-            projectValidation = '{}';
-        }
+    async exportAllAsync(): Promise<IExportAllResult> {
+        await printProjectInfoToConsoleAsync(this.managementClient);
 
         console.log('');
 
+        const types = await this.getContentTypesAsync();
         const languages = await this.getLanguagesAsync();
-        const contentItems =
-            exportItems.contentItem || exportItems.languageVariant ? await this.exportContentItemsAsync() : [];
+        const contentItems = await this.exportContentItemsAsync(types, languages);
 
         const data: IExportData = {
-            contentItems: exportItems.contentItem ? await this.exportContentItemsAsync() : [],
-            languageVariants: exportItems.languageVariant
-                ? await this.exportLanguageVariantsAsync(contentItems, languages)
-                : [],
-            assets: exportItems.asset ? await this.exportAssetsAsync() : [],
-            contentTypes: await this.getContentTypesAsync(),
+            contentItems: contentItems,
+            contentTypes: types,
             languages: languages
         };
 
@@ -85,80 +53,59 @@ export class ExportService {
                 version,
                 timestamp: new Date(),
                 projectId: this.config.projectId,
-                isInconsistentExport,
                 dataOverview: {
-                    assetsCount: data.assets.length,
-                    contentItemsCount: data.contentItems.length,
-                    languageVariantsCount: data.languageVariants.length
+                    contentItemsCount: data.contentItems.length
                 }
             },
-            validation: projectValidation,
             data
         };
     }
 
-    public async exportProjectValidationAsync(): Promise<ProjectContracts.IProjectReportResponseContract> {
-        const response = await this.client.validateProjectContent().projectId(this.config.projectId).toPromise();
-        return response.rawData;
-    }
+    private async exportContentItemsAsync(types: IContentType[], languages: ILanguage[]): Promise<IContentItem[]> {
+        const contentItems: IContentItem[] = [];
 
-    public async exportAssetsAsync(): Promise<AssetContracts.IAssetModelContract[]> {
-        const response = await this.client
-            .listAssets()
-            .withListQueryConfig({
-                responseFetched: (listResponse, token) => {
-                    listResponse.data.items.forEach((m) => this.processItem(m.fileName, 'asset', m));
+        for (const type of types) {
+            if (this.config.exportFilter?.types?.length) {
+                if (
+                    this.config.exportFilter.types.find((m) => m.toLowerCase() === type.system.codename.toLowerCase())
+                ) {
+                    // content type can be exported
+                } else {
+                    // content type should not be exported
+                    continue;
                 }
-            })
-            .toAllPromise();
-        return response.data.items.map((m) => m._raw);
-    }
-
-    public async exportContentItemsAsync(): Promise<ContentItemContracts.IContentItemModelContract[]> {
-        const response = await this.client
-            .listContentItems()
-            .withListQueryConfig({
-                responseFetched: (listResponse, token) => {
-                    listResponse.data.items.forEach((m) => this.processItem(m.name, 'contentItem', m));
-                }
-            })
-            .toAllPromise();
-        return response.data.items.map((m) => m._raw);
-    }
-
-    public async exportLanguageVariantsAsync(
-        contentItems: ContentItemContracts.IContentItemModelContract[],
-        languages: LanguageContracts.ILanguageModelContract[]
-    ): Promise<LanguageVariantContracts.ILanguageVariantModelContract[]> {
-        const languageVariants: LanguageVariantContracts.ILanguageVariantModelWithComponentsContract[] = [];
-
-        for (const contentItem of contentItems) {
-            const response = await this.client.listLanguageVariantsOfItem().byItemId(contentItem.id).toPromise();
-
-            languageVariants.push(...response.data.items.map((m) => m._raw));
-
-            for (const languageVariant of response.data.items) {
-                const language = languages.find((m) => m.id === languageVariant.language.id);
-
-                this.processItem(
-                    `${contentItem.name} (${yellow(language?.name ?? '')})`,
-                    'languageVariant',
-                    languageVariant
-                );
+            }
+            for (const language of languages) {
+                await this.deliveryClient
+                    .items()
+                    .equalsFilter('system.language', language.system.codename)
+                    .depthParameter(0)
+                    .toAllPromise({
+                        responseFetched: (response) => {
+                            for (const contentItem of response.data.items) {
+                                this.processItem(
+                                    `${contentItem.system.name} (${yellow(contentItem.system.language)})`,
+                                    'contentItem',
+                                    contentItem
+                                );
+                            }
+                            contentItems.push(...response.data.items);
+                        }
+                    });
             }
         }
 
-        return languageVariants;
+        return contentItems;
     }
 
-    private async getLanguagesAsync(): Promise<LanguageContracts.ILanguageModelContract[]> {
-        const response = await this.client.listLanguages().toAllPromise();
-        return response.data.items.map((m) => m._raw);
+    private async getLanguagesAsync(): Promise<ILanguage[]> {
+        const response = await this.deliveryClient.languages().toAllPromise();
+        return response.data.items;
     }
 
-    private async getContentTypesAsync(): Promise<ContentTypeContracts.IContentTypeContract[]> {
-        const response = await this.client.listContentTypes().toAllPromise();
-        return response.data.items.map((m) => m._raw);
+    private async getContentTypesAsync(): Promise<IContentType[]> {
+        const response = await this.deliveryClient.types().toAllPromise();
+        return response.data.items;
     }
 
     private processItem(title: string, type: ItemType, data: any): void {

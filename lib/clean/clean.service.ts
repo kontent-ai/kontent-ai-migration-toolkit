@@ -90,7 +90,7 @@ export class CleanService {
                 .byLanguageId(languageId)
                 .toPromise()
                 .then((response) => {
-                    this.processItem(itemId, 'languageVariant', languageVariant);
+                    this.processItem(itemId, 'contentItem', languageVariant);
                 })
                 .catch((error) => this.handleCleanError(error));
         }
