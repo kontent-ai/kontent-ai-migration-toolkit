@@ -8,6 +8,7 @@ import { IZipServiceConfig } from './zip.models';
 import { yellow } from 'colors';
 import { Readable } from 'stream';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
+import { translationHelper } from '../core';
 
 interface ILanguageVariantCsvModel {
     codename: string;
@@ -196,7 +197,10 @@ export class ZipService {
     }
 
     private geCsvParser(config: { fields: string[] }): AsyncParser<any> {
-        return new AsyncParser({ delimiter: this.csvDelimiter, fields: config.fields });
+        return new AsyncParser({
+            delimiter: this.csvDelimiter,
+            fields: config.fields
+        });
     }
 
     private mapLanguageVariantToCsvModel(item: IContentItem, contentType: IContentType): ILanguageVariantCsvModel {
@@ -215,7 +219,7 @@ export class ZipService {
                 const variantElement = item.elements[element.codename];
 
                 if (variantElement) {
-                    model[element.codename] = variantElement.value;
+                    model[element.codename] = translationHelper.transformToExportValue(variantElement);
                 }
             }
         }

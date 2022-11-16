@@ -1,7 +1,166 @@
+import { ContentItemElementsIndexer, Elements, ElementType } from '@kontent-ai/delivery-sdk';
+import { ElementContracts } from '@kontent-ai/management-sdk';
+import { yellow } from 'colors';
 import { defaultObjectId } from './core-properties';
 import { IIdCodenameTranslationResult } from './core.models';
 
+interface IElementTransform {
+    type: ElementType;
+    toExportValue: (element: ContentItemElementsIndexer) => string | string[] | undefined;
+    toImportValue: (value: string) => ElementContracts.IContentItemElementContract;
+}
+
 export class TranslationHelper {
+    private readonly transforms: IElementTransform[] = [
+        {
+            type: ElementType.Text,
+            toExportValue: (element) => element.value,
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        },
+        {
+            type: ElementType.Number,
+            toExportValue: (element) => element.value,
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        },
+        {
+            type: ElementType.DateTime,
+            toExportValue: (element) => element.value,
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        },
+        {
+            type: ElementType.RichText,
+            toExportValue: (element) => {
+                const mappedElement = element as Elements.RichTextElement;
+                return mappedElement.value;
+            },
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        },
+        {
+            type: ElementType.Asset,
+            toExportValue: (element) => {
+                const mappedElement = element as Elements.AssetsElement;
+                return mappedElement.value.map(m => m.url);
+            },
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        },
+        {
+            type: ElementType.Taxonomy,
+            toExportValue: (element) => {
+                const mappedElement = element as Elements.TaxonomyElement;
+                return mappedElement.value.map(m => m.codename);
+            },
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        },
+        {
+            type: ElementType.ModularContent,
+            toExportValue: (element) => {
+                const mappedElement = element as Elements.LinkedItemsElement;
+                return mappedElement.value.map(m => m);
+            },
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        },
+        {
+            type: ElementType.UrlSlug,
+            toExportValue: (element) => element.value,
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        },
+        {
+            type: ElementType.Custom,
+            toExportValue: (element) => element.value,
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        },
+        {
+            type: ElementType.MultipleChoice,
+            toExportValue: (element) => {
+                const mappedElement = element as Elements.MultipleChoiceElement;
+                return mappedElement.value.map(m => m.codename);
+            },
+            toImportValue: (value) => {
+                return {
+                    element: {
+                        codename: 'xx'
+                    },
+                    value: 'yy'
+                };
+            }
+        }
+    ];
+
+    transformToExportValue(element: ContentItemElementsIndexer): string | string[] | undefined {
+        const transform = this.transforms.find((m) => m.type === element.type);
+
+        if (transform) {
+            return transform.toExportValue(element);
+        }
+
+        console.log(`Missing transform for element type '${yellow(element.type)}'`);
+
+        return '';
+    }
+
     public replaceIdReferencesWithExternalId(data: any): void {
         if (data) {
             if (Array.isArray(data)) {
