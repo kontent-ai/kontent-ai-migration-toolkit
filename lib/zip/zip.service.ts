@@ -1,21 +1,13 @@
-import { AssetContracts } from '@kontent-ai/management-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { AsyncParser } from 'json2csv';
 import * as JSZip from 'jszip';
 
-import { IExportAllResult, IExportedAsset } from '../export';
-import { IBinaryFile, IImportSource } from '../import';
+import { IExportAllResult } from '../export';
+import { IImportSource } from '../import';
 import { IZipServiceConfig } from './zip.models';
 import { yellow } from 'colors';
 import { Readable } from 'stream';
 import { IContentItem, IContentType, ILanguage } from '@kontent-ai/delivery-sdk';
-
-interface IAssetCsvModel {
-    url: string;
-    extension: string;
-    assetId: string;
-    filename: string;
-}
 
 interface IContentItemCsvModel {
     id: string;
@@ -51,7 +43,6 @@ export class ZipService {
     private readonly delayBetweenAssetRequestsMs: number;
 
     private readonly contentItemsName: string = 'contentItems.csv';
-    private readonly assetsName: string = 'assets.csv';
     private readonly languageVariantsName: string = 'languageVariants.json';
     private readonly metadataName: string = 'metadata.json';
     private readonly assetsFolderName: string = 'assets';
@@ -76,14 +67,14 @@ export class ZipService {
         if (this.config.enableLog) {
             console.log(`Parsing zip contents`);
         }
-        const assets = await this.readAndParseJsonFile(unzippedFile, this.assetsName);
         const result: IImportSource = {
             importData: {
-                assets,
+                assets: [],
                 languageVariants: await this.readAndParseJsonFile(unzippedFile, this.languageVariantsName),
                 contentItems: await this.readAndParseJsonFile(unzippedFile, this.contentItemsName)
             },
-            binaryFiles: await this.extractBinaryFilesAsync(unzippedFile, assets),
+            binaryFiles: [],
+            // binaryFiles: await this.extractBinaryFilesAsync(unzippedFile, assets),
             metadata: await this.readAndParseJsonFile(unzippedFile, this.metadataName)
         };
 
@@ -146,8 +137,6 @@ export class ZipService {
             console.log(`Adding assets to zip`);
         }
 
-        assetsFolder.file(this.assetsName, (await this.mapAssetsToCsvAsync(exportData.data.assets)) ?? '');
-
         for (const asset of exportData.data.assets) {
 
             const assetSubfolderName = asset.assetId.toString().substring(0, 3);
@@ -182,22 +171,6 @@ export class ZipService {
         }
 
         return content;
-    }
-
-    private async mapAssetsToCsvAsync(assets: IExportedAsset[]): Promise<string | undefined> {
-        const csvModels: IAssetCsvModel[] = assets;
-
-        const stream = new Readable();
-        stream.push(JSON.stringify(csvModels));
-        stream.push(null); // required to end the stream
-
-        const parsingProcessor = this.geCsvParser({
-            fields: this.getAssetFields()
-        }).fromInput(stream);
-
-        const csvResult = await parsingProcessor.promise();
-
-        return csvResult ?? undefined;
     }
 
     private async mapContentItemsToCsvAsync(items: IContentItem[]): Promise<string | undefined> {
@@ -257,10 +230,6 @@ export class ZipService {
         }
 
         return result;
-    }
-
-    private getAssetFields(): string[] {
-        return ['hashcode', 'url', 'filename', 'extension'];
     }
 
     private getContentItemFields(): string[] {
@@ -325,26 +294,26 @@ export class ZipService {
         return model;
     }
 
-    private async extractBinaryFilesAsync(
-        zip: JSZip,
-        assets: AssetContracts.IAssetModelContract[]
-    ): Promise<IBinaryFile[]> {
-        const binaryFiles: IBinaryFile[] = [];
+    // private async extractBinaryFilesAsync(
+    //     zip: JSZip,
+    //     assets: AssetContracts.IAssetModelContract[]
+    // ): Promise<IBinaryFile[]> {
+    //     const binaryFiles: IBinaryFile[] = [];
 
-        const files = zip.files;
+    //     const files = zip.files;
 
-        for (const asset of assets) {
-            const assetFile = files[this.getFullAssetPath(asset.id, asset.file_name)];
+    //     for (const asset of assets) {
+    //         const assetFile = files[this.getFullAssetPath(asset.id, asset.file_name)];
 
-            const binaryData = await assetFile.async(this.getZipOutputType());
-            binaryFiles.push({
-                asset,
-                binaryData
-            });
-        }
+    //         const binaryData = await assetFile.async(this.getZipOutputType());
+    //         binaryFiles.push({
+    //             asset,
+    //             binaryData
+    //         });
+    //     }
 
-        return binaryFiles;
-    }
+    //     return binaryFiles;
+    // }
 
     private getZipOutputType(): 'nodebuffer' | 'blob' {
         if (this.config.context === 'browser') {
@@ -362,9 +331,9 @@ export class ZipService {
      * Gets path to asset within zip folder. Uses tree format using asset ids such as:
      * "files/3b4/3b42f36c-2e67-4605-a8d3-fee2498e5224/image.jpg"
      */
-    private getFullAssetPath(assetId: string, filename: string): string {
-        return `${this.assetsFolderName}/${assetId.substring(0, 3)}/${assetId}/${filename}`;
-    }
+    // private getFullAssetPath(assetId: string, filename: string): string {
+    //     return `${this.assetsFolderName}/${assetId.substring(0, 3)}/${assetId}/${filename}`;
+    // }
 
     private async readAndParseJsonFile(fileContents: any, filename: string): Promise<any> {
         const files = fileContents.files;
