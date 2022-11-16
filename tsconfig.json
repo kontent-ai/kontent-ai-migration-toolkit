@@ -26,8 +26,7 @@
         "./node_modules/@types"
       ],
       "lib": [
-        "esnext",
-        "dom"
+        "esnext"
       ]
     },
     "include": [

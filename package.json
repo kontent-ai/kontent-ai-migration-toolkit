@@ -11,6 +11,9 @@
     "type": "git",
     "url": "https://github.com/Enngage/kontent-csv-manager"
   },
+  "engines" : { 
+    "node" : ">=16.0.0"
+  },
   "author": "Richard Sustek",
   "main": "./dist/cjs/lib/index.js",
   "module": "./dist/esm5/lib/index.js",
@@ -49,6 +52,7 @@
     "@kontent-ai/management-sdk": "3.4.0",
     "@kontent-ai/delivery-sdk": "12.4.1",
     "json2csv": "5.0.7",
+    "csv-parse": "5.3.2",
     "jszip": "3.10.1",
     "yargs": "17.6.2",
     "colors": "1.4.0"

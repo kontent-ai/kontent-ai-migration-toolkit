@@ -8,21 +8,21 @@ import {
     LanguageVariantContracts,
     LanguageVariantModels,
     ManagementClient,
-    SharedModels} from '@kontent-ai/management-sdk';
+    SharedModels
+} from '@kontent-ai/management-sdk';
 import { version, name } from '../../package.json';
 
 import {
     idTranslateHelper,
     IImportItemResult,
     ActionType,
-    translationHelper,
     ValidImportContract,
     ValidImportModel,
     handleError,
     defaultRetryStrategy,
     printProjectInfoToConsoleAsync
 } from '../core';
-import { IBinaryFile, IImportConfig, IImportSource } from './import.models';
+import { IBinaryFile, IImportConfig, IImportContentItem, IImportSource } from './import.models';
 import { HttpService } from '@kontent-ai/core-sdk';
 
 export class ImportService {
@@ -68,21 +68,13 @@ export class ImportService {
             );
         }
 
-        if (this.config.enableLog) {
-            console.log(`Translating object ids to codenames`);
-        }
-
         // this is an optional step where users can exclude certain objects from being
         // imported via import configuration.
         // this has to be done before translating ids
-        this.removeSkippedItemsFromImport(sourceData);
-
-        // translate ids to codenames for certain objects types
-        this.translateIds(sourceData);
-
         if (this.config.enableLog) {
             console.log(`Removing skipped items`);
         }
+        this.removeSkippedItemsFromImport(sourceData);
 
         if (this.config.enableLog) {
             console.log(`Importing data`);
@@ -105,6 +97,10 @@ export class ImportService {
         }
 
         // ### Content items
+        if (sourceData.importData.items.length) {
+            await this.importContentItemsAsync(sourceData.importData.items);
+        }
+
         if (sourceData.importData.contentItems.length) {
             const importedContentItems = await this.importContentItemAsync(sourceData.importData.contentItems);
             importedItems.push(...importedContentItems);
@@ -146,26 +142,6 @@ export class ImportService {
         }
 
         return importedItems;
-    }
-
-    private translateIds(source: IImportSource): void {
-        const defaultLanguageCodename = 'todo';
-
-        // in following objects replace id references with codename
-        translationHelper.replaceIdReferencesWithCodenames(
-            source.importData.assets,
-            source.importData,
-            {},
-            defaultLanguageCodename
-        );
-        translationHelper.replaceIdReferencesWithCodenames(source.importData.contentItems, source.importData, {});
-        translationHelper.replaceIdReferencesWithCodenames(
-            source.importData.languageVariants,
-            source.importData,
-            {},
-            defaultLanguageCodename
-        );
-       
     }
 
     private removeSkippedItemsFromImport(source: IImportSource): void {
@@ -263,6 +239,29 @@ export class ImportService {
         }
 
         return importedItems;
+    }
+
+    private async importContentItemsAsync(contentItems: IImportContentItem[]): Promise<[]> {
+        for (const contentItem of contentItems) {
+            const upsertedContentItem = await this.client
+                .upsertContentItem()
+                .byItemCodename(contentItem.codename)
+                .withData({
+                    name: contentItem.name,
+                    type: { codename: contentItem.type }
+                })
+                .toPromise();
+
+            await this.client
+                .upsertLanguageVariant()
+                .byItemCodename(upsertedContentItem.data.codename)
+                .byLanguageCodename(contentItem.language)
+                .withData(() => {
+                    return contentItem.elements;
+                })
+                .toPromise();
+        }
+        return [];
     }
 
     private async importContentItemAsync(

@@ -1,4 +1,4 @@
-import { AssetContracts, ContentItemContracts, LanguageVariantContracts } from '@kontent-ai/management-sdk';
+import { AssetContracts, ContentItemContracts, ElementContracts, LanguageVariantContracts } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import { IProcessedItem, ItemType, IPackageMetadata } from '../core';
@@ -42,6 +42,7 @@ export interface IBinaryFile {
 
 export interface IImportSource {
     importData: {
+        items: IImportContentItem[];
         contentItems: ContentItemContracts.IContentItemModelContract[];
         languageVariants: LanguageVariantContracts.ILanguageVariantModelContract[];
         assets: AssetContracts.IAssetModelContract[];
@@ -59,4 +60,18 @@ export interface IFlattenedFolder {
     name: string;
     externalId?: string;
     id: string;
+}
+
+export interface IImportContentItem {
+    codename: string;
+    name: string;
+    language: string;
+    type: string;
+    collection: string;
+    last_modified: string;
+    workflow_step?: string;
+
+    [elementCodename: string]: any;
+
+    elements: ElementContracts.IContentItemElementContract[];
 }

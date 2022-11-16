@@ -7,7 +7,7 @@ import { IIdCodenameTranslationResult } from './core.models';
 interface IElementTransform {
     type: ElementType;
     toExportValue: (element: ContentItemElementsIndexer) => string | string[] | undefined;
-    toImportValue: (value: string) => ElementContracts.IContentItemElementContract;
+    toImportValue: (value: string | undefined, elementCodename: string) => ElementContracts.IContentItemElementContract;
 }
 
 export class TranslationHelper {
@@ -15,36 +15,36 @@ export class TranslationHelper {
         {
             type: ElementType.Text,
             toExportValue: (element) => element.value,
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: value ?? ''
                 };
             }
         },
         {
             type: ElementType.Number,
             toExportValue: (element) => element.value,
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: value ?? ''
                 };
             }
         },
         {
             type: ElementType.DateTime,
             toExportValue: (element) => element.value,
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: value ?? ''
                 };
             }
         },
@@ -54,12 +54,12 @@ export class TranslationHelper {
                 const mappedElement = element as Elements.RichTextElement;
                 return mappedElement.value;
             },
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: value ?? ''
                 };
             }
         },
@@ -67,14 +67,18 @@ export class TranslationHelper {
             type: ElementType.Asset,
             toExportValue: (element) => {
                 const mappedElement = element as Elements.AssetsElement;
-                return mappedElement.value.map(m => m.url);
+                return mappedElement.value.map((m) => m.url);
             },
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: this.parseArrayValue(value).map((m) => {
+                        return {
+                            codename: m
+                        };
+                    })
                 };
             }
         },
@@ -82,14 +86,18 @@ export class TranslationHelper {
             type: ElementType.Taxonomy,
             toExportValue: (element) => {
                 const mappedElement = element as Elements.TaxonomyElement;
-                return mappedElement.value.map(m => m.codename);
+                return mappedElement.value.map((m) => m.codename);
             },
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: this.parseArrayValue(value).map((m) => {
+                        return {
+                            codename: m
+                        };
+                    })
                 };
             }
         },
@@ -97,38 +105,42 @@ export class TranslationHelper {
             type: ElementType.ModularContent,
             toExportValue: (element) => {
                 const mappedElement = element as Elements.LinkedItemsElement;
-                return mappedElement.value.map(m => m);
+                return mappedElement.value.map((m) => m);
             },
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: this.parseArrayValue(value).map((m) => {
+                        return {
+                            codename: m
+                        };
+                    })
                 };
             }
         },
         {
             type: ElementType.UrlSlug,
             toExportValue: (element) => element.value,
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: value ?? ''
                 };
             }
         },
         {
             type: ElementType.Custom,
             toExportValue: (element) => element.value,
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: value ?? ''
                 };
             }
         },
@@ -136,14 +148,18 @@ export class TranslationHelper {
             type: ElementType.MultipleChoice,
             toExportValue: (element) => {
                 const mappedElement = element as Elements.MultipleChoiceElement;
-                return mappedElement.value.map(m => m.codename);
+                return mappedElement.value.map((m) => m.codename);
             },
-            toImportValue: (value) => {
+            toImportValue: (value, elementCodename) => {
                 return {
                     element: {
-                        codename: 'xx'
+                        codename: elementCodename
                     },
-                    value: 'yy'
+                    value: this.parseArrayValue(value).map((m) => {
+                        return {
+                            codename: m
+                        };
+                    })
                 };
             }
         }
@@ -159,6 +175,29 @@ export class TranslationHelper {
         console.log(`Missing transform for element type '${yellow(element.type)}'`);
 
         return '';
+    }
+
+    transformToImportValue(
+        value: string,
+        elementCodename: string,
+        type: ElementType
+    ): ElementContracts.IContentItemElementContract | undefined {
+        const transform = this.transforms.find((m) => m.type === type);
+
+        if (transform) {
+            return transform.toImportValue(value, elementCodename);
+        }
+
+        console.log(`Missing transform for element type '${yellow(type)}'`);
+
+        return undefined;
+    }
+
+    private parseArrayValue(value: string | undefined): string[] {
+        if (!value) {
+            return [];
+        }
+        return JSON.parse(value);
     }
 
     public replaceIdReferencesWithExternalId(data: any): void {
