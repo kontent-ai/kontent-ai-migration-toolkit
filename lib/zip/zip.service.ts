@@ -7,30 +7,18 @@ import { IImportSource } from '../import';
 import { IZipServiceConfig } from './zip.models';
 import { yellow } from 'colors';
 import { Readable } from 'stream';
-import { IContentItem, IContentType, ILanguage } from '@kontent-ai/delivery-sdk';
-
-interface IContentItemCsvModel {
-    id: string;
-    name: string;
-    codename: String;
-    type?: string;
-    last_modified: string;
-    collection?: string;
-}
+import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 
 interface ILanguageVariantCsvModel {
-    item: string;
+    codename: string;
+    name: string;
     language: string;
+    type: string;
+    collection: string;
     last_modified: string;
     workflow_step?: string;
 
     [elementCodename: string]: any;
-}
-
-interface ILanguageCsvWrapper {
-    language: ILanguage;
-    languageFolderName: string;
-    typeWrappers: ILanguageVariantsTypeCsvWrapper[];
 }
 
 interface ILanguageVariantsTypeCsvWrapper {
@@ -42,12 +30,9 @@ interface ILanguageVariantsTypeCsvWrapper {
 export class ZipService {
     private readonly delayBetweenAssetRequestsMs: number;
 
-    private readonly contentItemsName: string = 'contentItems.csv';
-    private readonly languageVariantsName: string = 'languageVariants.json';
     private readonly metadataName: string = 'metadata.json';
     private readonly assetsFolderName: string = 'assets';
-    private readonly contentItemsFolderName: string = 'contentItems';
-    private readonly languageVariantsFolderName: string = 'languageVariants';
+    private readonly contentItemsFolderName: string = 'items';
 
     private readonly httpService: HttpService = new HttpService();
 
@@ -70,8 +55,8 @@ export class ZipService {
         const result: IImportSource = {
             importData: {
                 assets: [],
-                languageVariants: await this.readAndParseJsonFile(unzippedFile, this.languageVariantsName),
-                contentItems: await this.readAndParseJsonFile(unzippedFile, this.contentItemsName)
+                languageVariants: [],
+                contentItems: []
             },
             binaryFiles: [],
             // binaryFiles: await this.extractBinaryFilesAsync(unzippedFile, assets),
@@ -93,7 +78,6 @@ export class ZipService {
         }
 
         const contentItemsFolder = zip.folder(this.contentItemsFolderName);
-        const languageVariantsFolder = zip.folder(this.languageVariantsFolderName);
         const assetsFolder = zip.folder(this.assetsFolderName);
 
         if (!assetsFolder) {
@@ -104,31 +88,13 @@ export class ZipService {
             throw Error(`Could not create folder '${yellow(this.contentItemsFolderName)}'`);
         }
 
-        if (!languageVariantsFolder) {
-            throw Error(`Could not create folder '${yellow(this.languageVariantsFolderName)}'`);
-        }
-
-        contentItemsFolder.file(
-            this.contentItemsName,
-            (await this.mapContentItemsToCsvAsync(exportData.data.contentItems)) ?? ''
-        );
-
-        const languageCsvWrappers = await this.mapLanguageVariantsToCsvAsync(
+        const typeWrappers = await this.mapLanguageVariantsToCsvAsync(
             exportData.data.contentTypes,
-            exportData.data.contentItems,
-            exportData.data.languages
+            exportData.data.contentItems
         );
 
-        for (const languageCsvWrapper of languageCsvWrappers) {
-            const languageCsvFolder = languageVariantsFolder.folder(languageCsvWrapper.languageFolderName);
-
-            if (!languageCsvFolder) {
-                throw Error(`Could not create folder '${yellow(languageCsvWrapper.languageFolderName)}'`);
-            }
-
-            for (const typeWrapper of languageCsvWrapper.typeWrappers) {
-                languageCsvFolder.file(typeWrapper.csvFilename, typeWrapper.csv);
-            }
+        for (const typeWrapper of typeWrappers) {
+            contentItemsFolder.file(typeWrapper.csvFilename, typeWrapper.csv);
         }
 
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
@@ -138,7 +104,6 @@ export class ZipService {
         }
 
         for (const asset of exportData.data.assets) {
-
             const assetSubfolderName = asset.assetId.toString().substring(0, 3);
 
             const assetSubfolderFolder = assetsFolder.folder(assetSubfolderName);
@@ -173,73 +138,45 @@ export class ZipService {
         return content;
     }
 
-    private async mapContentItemsToCsvAsync(items: IContentItem[]): Promise<string | undefined> {
-        const csvModels: IContentItemCsvModel[] = items.map((m) => this.mapContentItemToCsvModel(m));
-
-        const itemsStream = new Readable();
-        itemsStream.push(JSON.stringify(csvModels));
-        itemsStream.push(null); // required to end the stream
-
-        const parsingProcessor = this.geCsvParser({
-            fields: this.getContentItemFields()
-        }).fromInput(itemsStream);
-
-        const csvResult = await parsingProcessor.promise();
-
-        return csvResult ?? undefined;
-    }
-
     private async mapLanguageVariantsToCsvAsync(
         types: IContentType[],
-        items: IContentItem[],
-        languages: ILanguage[]
-    ): Promise<ILanguageCsvWrapper[]> {
-        const result: ILanguageCsvWrapper[] = [];
+        items: IContentItem[]
+    ): Promise<ILanguageVariantsTypeCsvWrapper[]> {
+        const typeWrappers: ILanguageVariantsTypeCsvWrapper[] = [];
+        for (const contentType of types) {
+            const languageVariantFields: string[] = this.getLanguageVariantFields(contentType);
+            const contentItemsOfType = items.filter((m) => m.system.type === contentType.system.codename);
+            const csvModels: ILanguageVariantCsvModel[] = contentItemsOfType.map((m) =>
+                this.mapLanguageVariantToCsvModel(m, contentType)
+            );
 
-        for (const language of languages) {
-            const typeWrappers: ILanguageVariantsTypeCsvWrapper[] = [];
-            for (const contentType of types) {
-                const languageVariantFields: string[] = this.getLanguageVariantFields(contentType);
-                const contentItemsOfType = items.filter((m) => m.system.type === contentType.system.codename);
-                const csvModels: ILanguageVariantCsvModel[] = contentItemsOfType
-                    .filter((m) => m.system.language === language.system.codename)
-                    .map((m) => this.mapLanguageVariantToCsvModel(m, contentType));
+            const languageVariantsStream = new Readable();
+            languageVariantsStream.push(JSON.stringify(csvModels));
+            languageVariantsStream.push(null); // required to end the stream
 
-                const languageVariantsStream = new Readable();
-                languageVariantsStream.push(JSON.stringify(csvModels));
-                languageVariantsStream.push(null); // required to end the stream
+            const parsingProcessor = this.geCsvParser({
+                fields: languageVariantFields
+            }).fromInput(languageVariantsStream);
 
-                const parsingProcessor = this.geCsvParser({
-                    fields: languageVariantFields
-                }).fromInput(languageVariantsStream);
+            const csvResult = await parsingProcessor.promise();
 
-                const csvResult = await parsingProcessor.promise();
-
-                typeWrappers.push({
-                    csv: csvResult ?? '',
-                    contentType: contentType,
-                    csvFilename: `${contentType.system.codename}.csv`
-                });
-            }
-
-            result.push({
-                language: language,
-                languageFolderName: `${language.system.codename}`,
-                typeWrappers: typeWrappers
+            typeWrappers.push({
+                csv: csvResult ?? '',
+                contentType: contentType,
+                csvFilename: `${contentType.system.codename}.csv`
             });
         }
 
-        return result;
-    }
-
-    private getContentItemFields(): string[] {
-        return ['id', 'name', 'codename', 'type', 'last_modified', 'collection'];
+        return typeWrappers;
     }
 
     private getLanguageVariantFields(contentType: IContentType): string[] {
         return [
-            'item',
+            'codename',
+            'name',
             'language',
+            'type',
+            'collection',
             'last_modified',
             'workflow_step',
             ...contentType.elements
@@ -262,20 +199,12 @@ export class ZipService {
         return new AsyncParser({ delimiter: this.csvDelimiter, fields: config.fields });
     }
 
-    private mapContentItemToCsvModel(item: IContentItem): IContentItemCsvModel {
-        return {
-            codename: item.system.codename,
-            collection: item.system.collection,
-            id: item.system.id,
-            last_modified: item.system.lastModified,
-            name: item.system.name,
-            type: item.system.type
-        };
-    }
-
     private mapLanguageVariantToCsvModel(item: IContentItem, contentType: IContentType): ILanguageVariantCsvModel {
         const model: ILanguageVariantCsvModel = {
-            item: item.system.codename,
+            codename: item.system.codename,
+            name: item.system.name,
+            collection: item.system.collection,
+            type: item.system.type,
             language: item.system.language,
             last_modified: item.system.lastModified,
             workflow_step: item.system.workflowStep ?? undefined
