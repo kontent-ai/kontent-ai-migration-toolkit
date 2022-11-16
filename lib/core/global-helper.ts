@@ -42,6 +42,18 @@ export function handleError(error: any | SharedModels.ContentManagementBaseKonte
     throw result;
 }
 
+export function extractAssetIdFromUrl(assetUrl: string): string {
+    const url = new URL(assetUrl);
+
+    const splitPaths = url.pathname.split('/');
+
+    if (splitPaths.length < 3) {
+        throw Error(`Invalid asset url '${assetUrl}' because asset id could not be determined`);
+    }
+
+    return splitPaths[2];
+}
+
 export function getHashCode(str: string): number {
     let seed = 1;
     let h1 = 0xdeadbeef ^ seed,

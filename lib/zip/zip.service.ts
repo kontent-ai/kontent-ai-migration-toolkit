@@ -13,7 +13,7 @@ import { IContentItem, IContentType, ILanguage } from '@kontent-ai/delivery-sdk'
 interface IAssetCsvModel {
     url: string;
     extension: string;
-    hashcode: number;
+    assetId: string;
     filename: string;
 }
 
@@ -150,7 +150,7 @@ export class ZipService {
 
         for (const asset of exportData.data.assets) {
 
-            const assetSubfolderName = asset.hashcode.toString().substring(0, 3);
+            const assetSubfolderName = asset.assetId.toString().substring(0, 3);
 
             const assetSubfolderFolder = assetsFolder.folder(assetSubfolderName);
 
@@ -384,7 +384,7 @@ export class ZipService {
         url = url.replace('#', '%23');
 
         if (enableLog) {
-            console.log(`Asset download: ${yellow(url)}`);
+            console.log(`Downloading ${yellow(url)}`);
         }
 
         return (

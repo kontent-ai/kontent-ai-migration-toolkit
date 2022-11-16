@@ -34,6 +34,6 @@ export interface IExportAllResult {
 export interface IExportedAsset {
     url: string;
     extension: string;
-    hashcode: number;
+    assetId: string;
     filename: string;
 }

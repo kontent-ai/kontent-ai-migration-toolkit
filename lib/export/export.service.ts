@@ -1,32 +1,47 @@
 import { IManagementClient, createManagementClient } from '@kontent-ai/management-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
-import { createDeliveryClient, Elements, ElementType, IContentItem, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
+import {
+    createDeliveryClient,
+    Elements,
+    ElementType,
+    IContentItem,
+    IContentType,
+    IDeliveryClient,
+    ILanguage
+} from '@kontent-ai/delivery-sdk';
 
 import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models';
-import { defaultRetryStrategy, getHashCode, ItemType, printProjectInfoToConsoleAsync } from '../core';
+import {
+    defaultRetryStrategy,
+    extractAssetIdFromUrl,
+    ItemType,
+    printProjectInfoToConsoleAsync
+} from '../core';
 import { version } from '../../package.json';
 import { yellow } from 'colors';
 
 export class ExportService {
+    private readonly httpService: HttpService = new HttpService({
+        logErrorsToConsole: false
+    });
+
     private readonly managementClient: IManagementClient<any>;
     private readonly deliveryClient: IDeliveryClient;
 
     constructor(private config: IExportConfig) {
+        const retryStrategy = config.retryStrategy ?? defaultRetryStrategy;
+
         this.managementClient = createManagementClient({
             apiKey: config.apiKey,
             projectId: config.projectId,
             baseUrl: config.baseUrl,
-            httpService: new HttpService({
-                logErrorsToConsole: false
-            }),
-            retryStrategy: config.retryStrategy ?? defaultRetryStrategy
+            httpService: this.httpService,
+            retryStrategy: retryStrategy
         });
         this.deliveryClient = createDeliveryClient({
             projectId: config.projectId,
-            retryStrategy: config.retryStrategy ?? defaultRetryStrategy,
-            httpService: new HttpService({
-                logErrorsToConsole: false
-            }),
+            retryStrategy: retryStrategy,
+            httpService: this.httpService,
             proxy: {
                 baseUrl: config.baseUrl
             }
@@ -140,12 +155,12 @@ export class ExportService {
                         if (assetElement.value.length) {
                             assets.push(
                                 ...assetElement.value.map((m) => {
-                                    const hashcode = getHashCode(m.url);
+                                    const assetId = extractAssetIdFromUrl(m.url);
                                     const extension = this.getExtension(m.url) ?? '';
                                     const asset: IExportedAsset = {
                                         url: m.url,
-                                        hashcode: hashcode,
-                                        filename: `${hashcode}.${extension}`,
+                                        assetId: assetId,
+                                        filename: `${assetId}.${extension}`,
                                         extension: extension
                                     };
 
@@ -161,12 +176,12 @@ export class ExportService {
                         if (richTextElement.images.length) {
                             assets.push(
                                 ...richTextElement.images.map((m) => {
-                                    const hashcode = getHashCode(m.url);
+                                    const assetId = extractAssetIdFromUrl(m.url);
                                     const extension = this.getExtension(m.url) ?? '';
                                     const asset: IExportedAsset = {
                                         url: m.url,
-                                        hashcode: hashcode,
-                                        filename: `${hashcode}.${extension}`,
+                                        assetId: assetId,
+                                        filename: `${assetId}.${extension}`,
                                         extension: extension
                                     };
 
