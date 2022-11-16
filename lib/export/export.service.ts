@@ -1,9 +1,9 @@
 import { IManagementClient, createManagementClient } from '@kontent-ai/management-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
-import { createDeliveryClient, IContentItem, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
+import { createDeliveryClient, Elements, ElementType, IContentItem, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
 
-import { IExportAllResult, IExportConfig, IExportData } from './export.models';
-import { defaultRetryStrategy, ItemType, printProjectInfoToConsoleAsync } from '../core';
+import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models';
+import { defaultRetryStrategy, getHashCode, ItemType, printProjectInfoToConsoleAsync } from '../core';
 import { version } from '../../package.json';
 import { yellow } from 'colors';
 
@@ -34,27 +34,30 @@ export class ExportService {
     }
 
     async exportAllAsync(): Promise<IExportAllResult> {
-        await printProjectInfoToConsoleAsync(this.managementClient);
-
-        console.log('');
+        const project = await printProjectInfoToConsoleAsync(this.managementClient);
 
         const types = await this.getContentTypesAsync();
         const languages = await this.getLanguagesAsync();
         const contentItems = await this.exportContentItemsAsync(types, languages);
+        const assets = this.extractAssets(contentItems, types);
 
         const data: IExportData = {
             contentItems: contentItems,
             contentTypes: types,
-            languages: languages
+            languages: languages,
+            assets: assets
         };
 
         return {
             metadata: {
-                version,
+                csvManagerVersion: version,
                 timestamp: new Date(),
-                projectId: this.config.projectId,
+                projectId: project.id,
+                projectName: project.name,
+                environment: project.environment,
                 dataOverview: {
-                    contentItemsCount: data.contentItems.length
+                    contentItemsCount: data.contentItems.length,
+                    assetsCount: data.assets.length
                 }
             },
             data
@@ -118,5 +121,68 @@ export class ExportService {
             title,
             type
         });
+    }
+
+    private extractAssets(items: IContentItem[], types: IContentType[]): IExportedAsset[] {
+        const assets: IExportedAsset[] = [];
+
+        for (const type of types) {
+            const itemsOfType: IContentItem[] = items.filter((m) => m.system.type === type.system.codename);
+
+            for (const element of type.elements) {
+                if (!element.codename) {
+                    continue;
+                }
+                if (element.type === ElementType.Asset) {
+                    for (const item of itemsOfType) {
+                        const assetElement = item.elements[element.codename] as Elements.AssetsElement;
+
+                        if (assetElement.value.length) {
+                            assets.push(
+                                ...assetElement.value.map((m) => {
+                                    const hashcode = getHashCode(m.url);
+                                    const extension = this.getExtension(m.url) ?? '';
+                                    const asset: IExportedAsset = {
+                                        url: m.url,
+                                        hashcode: hashcode,
+                                        filename: `${hashcode}.${extension}`,
+                                        extension: extension
+                                    };
+
+                                    return asset;
+                                })
+                            );
+                        }
+                    }
+                } else if (element.type === ElementType.RichText) {
+                    for (const item of itemsOfType) {
+                        const richTextElement = item.elements[element.codename] as Elements.RichTextElement;
+
+                        if (richTextElement.images.length) {
+                            assets.push(
+                                ...richTextElement.images.map((m) => {
+                                    const hashcode = getHashCode(m.url);
+                                    const extension = this.getExtension(m.url) ?? '';
+                                    const asset: IExportedAsset = {
+                                        url: m.url,
+                                        hashcode: hashcode,
+                                        filename: `${hashcode}.${extension}`,
+                                        extension: extension
+                                    };
+
+                                    return asset;
+                                })
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        return [...new Map(assets.map((item) => [item['url'], item])).values()]; // filters unique values
+    }
+
+    private getExtension(url: string): string | undefined {
+        return url.split('.').pop();
     }
 }

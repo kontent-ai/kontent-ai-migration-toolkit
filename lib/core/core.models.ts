@@ -83,12 +83,15 @@ export interface IIdCodenameTranslationResult {
 }
 
 export interface IPackageMetadata {
-    version: string;
     projectId: string;
+    projectName: string;
+    environment: string;
     timestamp: Date;
     dataOverview: IPackageDataOverview;
+    csvManagerVersion: string;
 }
 
 export interface IPackageDataOverview {
     contentItemsCount: number;
+    assetsCount: number;
 }

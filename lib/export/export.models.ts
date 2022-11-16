@@ -23,9 +23,17 @@ export interface IExportData {
     contentItems: IContentItem[];
     contentTypes: IContentType[];
     languages: ILanguage[];
+    assets: IExportedAsset[];
 }
 
 export interface IExportAllResult {
     metadata: IPackageMetadata;
     data: IExportData;
+}
+
+export interface IExportedAsset {
+    url: string;
+    extension: string;
+    hashcode: number;
+    filename: string;
 }

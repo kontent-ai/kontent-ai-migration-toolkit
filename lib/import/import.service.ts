@@ -59,12 +59,12 @@ export class ImportService {
         await printProjectInfoToConsoleAsync(this.client);
 
         // log information regarding version mismatch
-        if (version !== sourceData.metadata.version) {
+        if (version !== sourceData.metadata.csvManagerVersion) {
             console.warn(
-                `WARNING: Version mismatch. Current version of '${name}' is '${version}', but package was created in version '${sourceData.metadata.version}'.`
+                `WARNING: Version mismatch. Current version of '${name}' is '${version}', but package was created in version '${sourceData.metadata.csvManagerVersion}'.`
             );
             console.warn(
-                `Import may still succeed, but if it doesn't, please try using '${sourceData.metadata.version}' version of this library. `
+                `Import may still succeed, but if it doesn't, please try using '${sourceData.metadata.csvManagerVersion}' version of this library. `
             );
         }
 
