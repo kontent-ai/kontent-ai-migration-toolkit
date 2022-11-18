@@ -1,6 +1,7 @@
 import {
     AssetFolderContracts,
     AssetFolderModels,
+    CollectionModels,
     ContentItemModels,
     ElementContracts,
     LanguageVariantModels,
@@ -203,6 +204,7 @@ export class ImportService {
         const upsertedLanguageVariants: LanguageVariantModels.ContentItemLanguageVariant[] = [];
 
         const workflows = await this.getWorkflowsAsync();
+        const collections = await this.getCollectionsAsync();
 
         // first process content items
         for (const importContentItem of importContentItems) {
@@ -213,13 +215,16 @@ export class ImportService {
             preparedItems.push(preparedContentItem);
 
             // check if name should be updated, no other changes are supported
-            if (this.shouldUpdateContentItem(importContentItem, preparedContentItem)) {
+            if (this.shouldUpdateContentItem(importContentItem, preparedContentItem, collections)) {
                 const upsertedContentItem = (
                     await this.client
                         .upsertContentItem()
                         .byItemCodename(importContentItem.codename)
                         .withData({
-                            name: importContentItem.name
+                            name: importContentItem.name,
+                            collection: {
+                                codename: importContentItem.collection
+                            }
                         })
                         .toPromise()
                 ).data;
@@ -593,6 +598,10 @@ export class ImportService {
         return (await this.client.listWorkflows().toPromise()).data;
     }
 
+    private async getCollectionsAsync(): Promise<CollectionModels.Collection[]> {
+        return (await this.client.listCollections().toPromise()).data.collections;
+    }
+
     private isLanguageVariantPublished(
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
         workflows: WorkflowModels.Workflow[]
@@ -722,8 +731,14 @@ export class ImportService {
 
     private shouldUpdateContentItem(
         importContentItem: IImportContentItem,
-        item: ContentItemModels.ContentItem
+        item: ContentItemModels.ContentItem,
+        collections: CollectionModels.Collection[]
     ): boolean {
-        return importContentItem.name !== item.name;
+        const collection = collections.find((m) => m.codename === importContentItem.collection);
+
+        if (!collection) {
+            throw Error(`Invalid collection '${importContentItem.collection}'`);
+        }
+        return importContentItem.name !== item.name || importContentItem.collection !== collection.codename;
     }
 }
