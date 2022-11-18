@@ -17,11 +17,12 @@ import {
     defaultRetryStrategy,
     printProjectInfoToConsoleAsync,
     translationHelper,
-    ItemType
+    ItemType,
+    defaultWorkflowCodename
 } from '../core';
 import { IImportConfig, IImportContentItem, IImportContentItemElement, IImportSource } from './import.models';
 import { HttpService } from '@kontent-ai/core-sdk';
-import { magenta } from 'colors';
+import { magenta, yellow } from 'colors';
 
 export class ImportService {
     private readonly client: ManagementClient;
@@ -272,12 +273,120 @@ export class ImportService {
                 originalId: undefined,
                 original: importContentItem
             });
+
+            // set workflow of language variant
+            if (importContentItem.workflow_step) {
+                if (this.doesWorkflowStepCodenameRepresentPublishedStep(importContentItem.workflow_step, workflows)) {
+                    await this.client
+                        .publishLanguageVariant()
+                        .byItemCodename(importContentItem.codename)
+                        .byLanguageCodename(importContentItem.language)
+                        .withoutData()
+                        .toPromise();
+
+                    this.processItem(importedItems, 'publish', 'languageVariant', {
+                        title: `${upsertedContentItem.name} (${magenta(importContentItem.language)}) ${yellow(
+                            importContentItem.workflow_step
+                        )})`,
+                        imported: upsertedLanguageVariants,
+                        importedId: upsertedContentItem.id,
+                        originalCodename: importContentItem.codename,
+                        originalId: undefined,
+                        original: importContentItem
+                    });
+                } else if (
+                    this.doesWorkflowStepCodenameRepresentArchivedStep(importContentItem.workflow_step, workflows)
+                ) {
+                    const workflow = this.getWorkflowForGivenStep(importContentItem.workflow_step, workflows);
+
+                    await this.client
+                        .changeWorkflowOfLanguageVariant()
+                        .byItemCodename(importContentItem.codename)
+                        .byLanguageCodename(importContentItem.language)
+                        .withData({
+                            step_identifier: {
+                                codename: workflow.archivedStep.codename
+                            },
+                            workflow_identifier: {
+                                codename: workflow.codename
+                            }
+                        })
+                        .toPromise();
+
+                    this.processItem(importedItems, 'archive', 'languageVariant', {
+                        title: `${upsertedContentItem.name} (${magenta(importContentItem.language)}) ${yellow(
+                            importContentItem.workflow_step
+                        )})`,
+                        imported: upsertedLanguageVariants,
+                        importedId: upsertedContentItem.id,
+                        originalCodename: importContentItem.codename,
+                        originalId: undefined,
+                        original: importContentItem
+                    });
+                } else {
+                    const workflow = this.getWorkflowForGivenStep(importContentItem.workflow_step, workflows);
+
+                    await this.client
+                        .changeWorkflowOfLanguageVariant()
+                        .byItemCodename(importContentItem.codename)
+                        .byLanguageCodename(importContentItem.language)
+                        .withData({
+                            step_identifier: {
+                                codename: importContentItem.workflow_step
+                            },
+                            workflow_identifier: {
+                                codename: workflow.codename
+                            }
+                        })
+                        .toPromise();
+
+                    this.processItem(importedItems, 'changeWorkflowStep', 'languageVariant', {
+                        title: `${upsertedContentItem.name} (${magenta(importContentItem.language)} | ${yellow(
+                            importContentItem.workflow_step
+                        )})`,
+                        imported: upsertedLanguageVariants,
+                        importedId: upsertedContentItem.id,
+                        originalCodename: importContentItem.codename,
+                        originalId: undefined,
+                        original: importContentItem
+                    });
+                }
+            }
         }
 
         return {
             importedItems: preparedItems,
             importedLanguageVariants: upsertedLanguageVariants
         };
+    }
+
+    private getWorkflowForGivenStep(
+        itemWorkflowCodename: string,
+        workflows: WorkflowModels.Workflow[]
+    ): WorkflowModels.Workflow {
+        for (const workflow of workflows) {
+            if (workflow.archivedStep.codename === itemWorkflowCodename) {
+                return workflow;
+            }
+            if (workflow.publishedStep.codename === itemWorkflowCodename) {
+                return workflow;
+            }
+            const step = workflow.steps.find((m) => m.codename === itemWorkflowCodename);
+
+            if (step) {
+                return workflow;
+            }
+        }
+
+        const defaultWorkflow = workflows.find(
+            (m) => m.codename.toLowerCase() === defaultWorkflowCodename.toLowerCase()
+        );
+
+        if (!defaultWorkflow) {
+            throw Error(`Missing default workflow`);
+        }
+
+        return defaultWorkflow;
     }
 
     private async prepareContentItemForImportAsync(
@@ -483,12 +592,39 @@ export class ImportService {
     private async getWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
         return (await this.client.listWorkflows().toPromise()).data;
     }
+
     private isLanguageVariantPublished(
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
         workflows: WorkflowModels.Workflow[]
     ): boolean {
         for (const workflow of workflows) {
             if (workflow.publishedStep.id === languageVariant.workflowStep.id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private doesWorkflowStepCodenameRepresentPublishedStep(
+        workflowStepCodename: string,
+        workflows: WorkflowModels.Workflow[]
+    ): boolean {
+        for (const workflow of workflows) {
+            if (workflow.publishedStep.codename === workflowStepCodename) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private doesWorkflowStepCodenameRepresentArchivedStep(
+        workflowStepCodename: string,
+        workflows: WorkflowModels.Workflow[]
+    ): boolean {
+        for (const workflow of workflows) {
+            if (workflow.archivedStep.codename === workflowStepCodename) {
                 return true;
             }
         }
