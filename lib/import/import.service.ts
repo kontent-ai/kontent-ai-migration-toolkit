@@ -285,7 +285,7 @@ export class ImportService {
                         .toPromise();
 
                     this.processItem(importedItems, 'publish', 'languageVariant', {
-                        title: `${upsertedContentItem.name} (${magenta(importContentItem.language)}) ${yellow(
+                        title: `${upsertedContentItem.name} (${magenta(importContentItem.language)}) (${yellow(
                             importContentItem.workflow_step
                         )})`,
                         imported: upsertedLanguageVariants,
@@ -314,7 +314,7 @@ export class ImportService {
                         .toPromise();
 
                     this.processItem(importedItems, 'archive', 'languageVariant', {
-                        title: `${upsertedContentItem.name} (${magenta(importContentItem.language)}) ${yellow(
+                        title: `${upsertedContentItem.name} (${magenta(importContentItem.language)}) (${yellow(
                             importContentItem.workflow_step
                         )})`,
                         imported: upsertedLanguageVariants,
@@ -341,7 +341,7 @@ export class ImportService {
                         .toPromise();
 
                     this.processItem(importedItems, 'changeWorkflowStep', 'languageVariant', {
-                        title: `${upsertedContentItem.name} (${magenta(importContentItem.language)} | ${yellow(
+                        title: `${upsertedContentItem.name} (${magenta(importContentItem.language)} (${yellow(
                             importContentItem.workflow_step
                         )})`,
                         imported: upsertedLanguageVariants,
