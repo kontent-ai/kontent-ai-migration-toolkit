@@ -4,7 +4,7 @@ const run = async () => {
     const cleanService = new CleanService({
         onDelete: item => {
             // called when any content is deleted
-            console.log(`Deleted: ${item.title} | ${item.type}`);
+            console.log(`Deleted: ${item.title} | ${item.actionType}`);
         },
         projectId: 'targetProjectId',
         apiKey: 'targetProjectApiKey'

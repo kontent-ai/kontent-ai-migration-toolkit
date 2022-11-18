@@ -12,18 +12,21 @@ import {
 
 import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models';
 import {
+    ActionType,
     defaultRetryStrategy,
     extractAssetIdFromUrl,
     ItemType,
     printProjectInfoToConsoleAsync
 } from '../core';
 import { version } from '../../package.json';
-import { yellow } from 'colors';
+import { magenta } from 'colors';
 
 export class ExportService {
     private readonly httpService: HttpService = new HttpService({
         logErrorsToConsole: false
     });
+
+    private readonly contentItemsLimit: number = 200;
 
     private readonly managementClient: IManagementClient<any>;
     private readonly deliveryClient: IDeliveryClient;
@@ -96,18 +99,35 @@ export class ExportService {
             for (const language of languages) {
                 await this.deliveryClient
                     .items()
+                    .type(type.system.codename)
                     .equalsFilter('system.language', language.system.codename)
                     .depthParameter(0)
+                    .limitParameter(this.contentItemsLimit)
                     .toAllPromise({
                         responseFetched: (response) => {
+                            // add items to result
                             for (const contentItem of response.data.items) {
                                 this.processItem(
-                                    `${contentItem.system.name} (${yellow(contentItem.system.language)})`,
+                                    `${contentItem.system.name} ${magenta(contentItem.system.language)}`,
                                     'contentItem',
+                                    'fetch',
                                     contentItem
                                 );
+                                contentItems.push(contentItem);
                             }
-                            contentItems.push(...response.data.items);
+
+                            // add components to result
+                            for (const [codename, contentItem] of Object.entries(response.data.linkedItems)) {
+                                if (!contentItems.find((m) => m.system.codename === codename)) {
+                                    this.processItem(
+                                        `${contentItem.system.name} ${magenta(contentItem.system.language)}`,
+                                        'component',
+                                        'fetch',
+                                        contentItem
+                                    );
+                                    contentItems.push(contentItem);
+                                }
+                            }
                         }
                     });
             }
@@ -126,7 +146,7 @@ export class ExportService {
         return response.data.items;
     }
 
-    private processItem(title: string, type: ItemType, data: any): void {
+    private processItem(title: string, itemType: ItemType, actionType: ActionType, data: any): void {
         if (!this.config.onExport) {
             return;
         }
@@ -134,7 +154,8 @@ export class ExportService {
         this.config.onExport({
             data,
             title,
-            type
+            actionType,
+            itemType
         });
     }
 

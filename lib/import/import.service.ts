@@ -1,29 +1,27 @@
 import {
-    AssetContracts,
     AssetFolderContracts,
     AssetFolderModels,
-    AssetModels,
-    ContentItemContracts,
     ContentItemModels,
-    LanguageVariantContracts,
+    ElementContracts,
     LanguageVariantModels,
     ManagementClient,
-    SharedModels
+    SharedModels,
+    WorkflowModels
 } from '@kontent-ai/management-sdk';
 import { version, name } from '../../package.json';
 
 import {
-    idTranslateHelper,
     IImportItemResult,
     ActionType,
-    ValidImportContract,
-    ValidImportModel,
     handleError,
     defaultRetryStrategy,
-    printProjectInfoToConsoleAsync
+    printProjectInfoToConsoleAsync,
+    translationHelper,
+    ItemType
 } from '../core';
-import { IBinaryFile, IImportConfig, IImportContentItem, IImportSource } from './import.models';
+import { IImportConfig, IImportContentItem, IImportContentItemElement, IImportSource } from './import.models';
 import { HttpService } from '@kontent-ai/core-sdk';
+import { magenta } from 'colors';
 
 export class ImportService {
     private readonly client: ManagementClient;
@@ -32,7 +30,7 @@ export class ImportService {
      * Maximum allowed size of asset in Bytes.
      * Currently 1e8 = 100 MB
      */
-    private readonly maxAllowedAssetSizeInBytes: number = 1e8;
+    // private readonly maxAllowedAssetSizeInBytes: number = 1e8;
 
     constructor(private config: IImportConfig) {
         this.client = new ManagementClient({
@@ -46,16 +44,12 @@ export class ImportService {
         });
     }
 
-    public async importFromSourceAsync(
-        sourceData: IImportSource
-    ): Promise<IImportItemResult<ValidImportContract, ValidImportModel>[]> {
+    public async importFromSourceAsync(sourceData: IImportSource): Promise<IImportItemResult[]> {
         return await this.importAsync(sourceData);
     }
 
-    public async importAsync(
-        sourceData: IImportSource
-    ): Promise<IImportItemResult<ValidImportContract, ValidImportModel>[]> {
-        const importedItems: IImportItemResult<ValidImportContract, ValidImportModel>[] = [];
+    public async importAsync(sourceData: IImportSource): Promise<IImportItemResult[]> {
+        const importedItems: IImportItemResult[] = [];
         await printProjectInfoToConsoleAsync(this.client);
 
         // log information regarding version mismatch
@@ -82,65 +76,32 @@ export class ImportService {
 
         // import order matters
 
-        // ### Assets
-        if (sourceData.importData.assets.length) {
-            const importedAssets = await this.importAssetsAsync(
-                sourceData.importData.assets,
-                sourceData.binaryFiles,
-                importedItems
-            );
-            importedItems.push(...importedAssets);
-        } else {
-            if (this.config.enableLog) {
-                console.log(`Skipping assets`);
+        try {
+            // ### Assets
+            if (sourceData.importData.assets.length) {
+                // const importedAssets = await this.importAssetsAsync(
+                //     sourceData.importData.assets,
+                //     sourceData.binaryFiles,
+                //     importedItems
+                // );
+                // importedItems.push(...importedAssets);
+            } else {
+                if (this.config.enableLog) {
+                    console.log(`Skipping assets`);
+                }
             }
-        }
 
-        // ### Content items
-        if (sourceData.importData.items.length) {
-            await this.importContentItemsAsync(sourceData.importData.items);
-        }
-
-        if (sourceData.importData.contentItems.length) {
-            const importedContentItems = await this.importContentItemAsync(sourceData.importData.contentItems);
-            importedItems.push(...importedContentItems);
-        } else {
-            if (this.config.enableLog) {
-                console.log(`Skipping content items`);
+            // ### Content items
+            if (sourceData.importData.items.length) {
+                await this.importContentItemsAsync(sourceData.importData.items, importedItems);
             }
-        }
 
-        // ### Language variants
-        if (sourceData.importData.languageVariants) {
-            const importedLanguageVariants = await this.importLanguageVariantsAsync(
-                sourceData.importData.languageVariants,
-                importedItems
-            );
-            importedItems.push(...importedLanguageVariants);
-
-            // if (this.config.preserveWorkflow) {
-            //     await this.setWorkflowStepsOfLanguageVariantsAsync(
-            //         sourceData.importData.languageVariants,
-            //         sourceData.importData.workflows
-            //     );
-            // }
-
-            // if (this.config.workflowIdForImportedItems) {
-            //     await this.moveLanguageVariantsToCustomWorkflowStepAsync(
-            //         this.config.workflowIdForImportedItems,
-            //         sourceData.importData.languageVariants
-            //     );
-            // }
-        } else {
             if (this.config.enableLog) {
-                console.log(`Skipping language variants`);
+                console.log(`Finished importing data`);
             }
+        } catch (error) {
+            this.handleImportError(error);
         }
-
-        if (this.config.enableLog) {
-            console.log(`Finished importing data`);
-        }
-
         return importedItems;
     }
 
@@ -149,160 +110,284 @@ export class ImportService {
             for (const item of source.importData.assets) {
                 const shouldImport = this.config.canImport.asset(item);
                 if (!shouldImport) {
-                    source.importData.assets = source.importData.assets.filter((m) => m.id !== item.id);
+                    source.importData.assets = source.importData.assets.filter((m) => m.assetId !== item.assetId);
                 }
             }
         }
 
         if (this.config.canImport && this.config.canImport.contentItem) {
-            for (const item of source.importData.contentItems) {
+            for (const item of source.importData.items) {
                 const shouldImport = this.config.canImport.contentItem(item);
                 if (!shouldImport) {
-                    source.importData.contentItems = source.importData.contentItems.filter((m) => m.id !== item.id);
-                }
-            }
-        }
-
-        if (this.config.canImport && this.config.canImport.languageVariant) {
-            for (const item of source.importData.languageVariants) {
-                const shouldImport = this.config.canImport.languageVariant(item);
-                if (!shouldImport) {
-                    source.importData.languageVariants = source.importData.languageVariants.filter(
-                        (m) => m.item.id !== item.item.id && m.language.id !== item.language.id
-                    );
+                    source.importData.items = source.importData.items.filter((m) => m.codename !== item.codename);
                 }
             }
         }
     }
 
-    private async importAssetsAsync(
-        assets: AssetContracts.IAssetModelContract[],
-        binaryFiles: IBinaryFile[],
-        currentItems: IImportItemResult<ValidImportContract, ValidImportModel>[]
-    ): Promise<IImportItemResult<AssetContracts.IAssetModelContract, AssetModels.Asset>[]> {
-        const importedItems: IImportItemResult<AssetContracts.IAssetModelContract, AssetModels.Asset>[] = [];
-        const unsupportedBinaryFiles: IBinaryFile[] = [];
+    // private async importAssetsAsync(
+    //     assets: AssetContracts.IAssetModelContract[],
+    //     binaryFiles: IBinaryFile[],
+    //     currentItems: IImportItemResult[]
+    // ): Promise<IImportItemResult[]> {
+    //     const importedItems: IImportItemResult[] = [];
+    //     const unsupportedBinaryFiles: IBinaryFile[] = [];
 
-        for (const asset of assets) {
-            const binaryFile = binaryFiles.find((m) => m.asset.id === asset.id);
+    //     for (const asset of assets) {
+    //         const binaryFile = binaryFiles.find((m) => m.asset.id === asset.id);
 
-            if (!binaryFile) {
-                throw Error(`Could not find binary file for asset with id '${asset.id}'`);
+    //         if (!binaryFile) {
+    //             throw Error(`Could not find binary file for asset with id '${asset.id}'`);
+    //         }
+
+    //         let binaryDataToUpload: any = binaryFile.binaryData;
+    //         if (binaryFile.asset.size >= this.maxAllowedAssetSizeInBytes) {
+    //             if (this.config.onUnsupportedBinaryFile) {
+    //                 this.config.onUnsupportedBinaryFile(binaryFile);
+    //             }
+    //             console.log(
+    //                 `Removing binary data from file due to size. Max. file size is '${this.maxAllowedAssetSizeInBytes}'Bytes, but file has '${asset.size}' Bytes`,
+    //                 asset.file_name
+    //             );
+    //             // remove binary data so that import proceeds & asset is created (so that it can be referenced by
+    //             // content items )
+    //             binaryDataToUpload = [];
+    //             unsupportedBinaryFiles.push(binaryFile);
+    //         }
+
+    //         const uploadedBinaryFile = await this.client
+    //             .uploadBinaryFile()
+    //             .withData({
+    //                 binaryData: binaryDataToUpload,
+    //                 contentType: asset.type,
+    //                 filename: asset.file_name
+    //             })
+    //             .toPromise()
+    //             .then((m) => m)
+    //             .catch((error) => this.handleImportError(error));
+
+    //         if (!uploadedBinaryFile) {
+    //             throw Error(`File not uploaded`);
+    //         }
+
+    //         // const assetData = this.getAddAssetModel(asset, uploadedBinaryFile.data.id, currentItems);
+
+    //         // await this.client
+    //         //     .addAsset()
+    //         //     .withData((builder) => assetData)
+    //         //     .toPromise()
+    //         //     .then((response) => {
+    //         //         importedItems.push({
+    //         //             imported: response.data,
+    //         //             csvModel: asset,
+    //         //             importId: response.data.id,
+    //         //             originalId: asset.id
+    //         //         });
+    //         //         this.processItem(response.data.fileName, 'asset', response.data);
+    //         //     })
+    //         //     .catch((error) => this.handleImportError(error));
+    //     }
+
+    //     return importedItems;
+    // }
+
+    private async importContentItemsAsync(
+        importContentItems: IImportContentItem[],
+        importedItems: IImportItemResult[]
+    ): Promise<{
+        importedItems: ContentItemModels.ContentItem[];
+        importedLanguageVariants: LanguageVariantModels.ContentItemLanguageVariant[];
+    }> {
+        const preparedItems: ContentItemModels.ContentItem[] = [];
+        const upsertedLanguageVariants: LanguageVariantModels.ContentItemLanguageVariant[] = [];
+
+        const workflows = await this.getWorkflowsAsync();
+
+        // first process content items
+        for (const importContentItem of importContentItems) {
+            const preparedContentItem: ContentItemModels.ContentItem = await this.prepareContentItemForImportAsync(
+                importContentItem,
+                importedItems
+            );
+            preparedItems.push(preparedContentItem);
+
+            // check if name should be updated, no other changes are supported
+            if (this.shouldUpdateContentItem(importContentItem, preparedContentItem)) {
+                const upsertedContentItem = (
+                    await this.client
+                        .upsertContentItem()
+                        .byItemCodename(importContentItem.codename)
+                        .withData({
+                            name: importContentItem.name
+                        })
+                        .toPromise()
+                ).data;
+
+                this.processItem(importedItems, 'upsert', 'contentItem', {
+                    title: `${importContentItem.name}`,
+                    imported: importContentItem,
+                    importedId: upsertedContentItem.id,
+                    originalCodename: importContentItem.codename,
+                    originalId: undefined,
+                    original: importContentItem
+                });
+            } else {
+                this.processItem(importedItems, 'skipUpdate', 'contentItem', {
+                    title: `${importContentItem.name}`,
+                    imported: importContentItem,
+                    importedId: preparedContentItem.id,
+                    originalCodename: importContentItem.codename,
+                    originalId: undefined,
+                    original: importContentItem
+                });
             }
-
-            let binaryDataToUpload: any = binaryFile.binaryData;
-            if (binaryFile.asset.size >= this.maxAllowedAssetSizeInBytes) {
-                if (this.config.onUnsupportedBinaryFile) {
-                    this.config.onUnsupportedBinaryFile(binaryFile);
-                }
-                console.log(
-                    `Removing binary data from file due to size. Max. file size is '${this.maxAllowedAssetSizeInBytes}'Bytes, but file has '${asset.size}' Bytes`,
-                    asset.file_name
-                );
-                // remove binary data so that import proceeds & asset is created (so that it can be referenced by
-                // content items )
-                binaryDataToUpload = [];
-                unsupportedBinaryFiles.push(binaryFile);
-            }
-
-            const uploadedBinaryFile = await this.client
-                .uploadBinaryFile()
-                .withData({
-                    binaryData: binaryDataToUpload,
-                    contentType: asset.type,
-                    filename: asset.file_name
-                })
-                .toPromise()
-                .then((m) => m)
-                .catch((error) => this.handleImportError(error));
-
-            if (!uploadedBinaryFile) {
-                throw Error(`File not uploaded`);
-            }
-
-            const assetData = this.getAddAssetModel(asset, uploadedBinaryFile.data.id, currentItems);
-
-            await this.client
-                .addAsset()
-                .withData((builder) => assetData)
-                .toPromise()
-                .then((response) => {
-                    importedItems.push({
-                        imported: response.data,
-                        original: asset,
-                        importId: response.data.id,
-                        originalId: asset.id
-                    });
-                    this.processItem(response.data.fileName, 'asset', response.data);
-                })
-                .catch((error) => this.handleImportError(error));
         }
 
-        return importedItems;
-    }
+        // then process language variants
+        for (const importContentItem of importContentItems) {
+            const upsertedContentItem = preparedItems.find((m) => m.codename === importContentItem.codename);
 
-    private async importContentItemsAsync(contentItems: IImportContentItem[]): Promise<[]> {
-        for (const contentItem of contentItems) {
-            const upsertedContentItem = await this.client
-                .upsertContentItem()
-                .byItemCodename(contentItem.codename)
-                .withData({
-                    name: contentItem.name,
-                    type: { codename: contentItem.type }
-                })
-                .toPromise();
+            if (!upsertedContentItem) {
+                throw Error(`Invalid content item for codename '${importContentItem.codename}'`);
+            }
 
-            await this.client
+            await this.prepareLanguageVariantForImportAsync(importContentItem, workflows, importedItems);
+
+            const upsertedLanguageVariant = await this.client
                 .upsertLanguageVariant()
-                .byItemCodename(upsertedContentItem.data.codename)
-                .byLanguageCodename(contentItem.language)
+                .byItemCodename(upsertedContentItem.codename)
+                .byLanguageCodename(importContentItem.language)
                 .withData(() => {
-                    return contentItem.elements;
+                    return importContentItem.elements.map((m) => this.getElementContract(m, importedItems));
                 })
                 .toPromise();
+
+            upsertedLanguageVariants.push(upsertedLanguageVariant.data);
+
+            this.processItem(importedItems, 'upsert', 'languageVariant', {
+                title: `${upsertedContentItem.name} (${magenta(importContentItem.language)})`,
+                imported: upsertedLanguageVariants,
+                importedId: upsertedContentItem.id,
+                originalCodename: importContentItem.codename,
+                originalId: undefined,
+                original: importContentItem
+            });
         }
-        return [];
+
+        return {
+            importedItems: preparedItems,
+            importedLanguageVariants: upsertedLanguageVariants
+        };
     }
 
-    private async importContentItemAsync(
-        contentItems: ContentItemContracts.IContentItemModelContract[]
-    ): Promise<IImportItemResult<ContentItemContracts.IContentItemModelContract, ContentItemModels.ContentItem>[]> {
-        const importedItems: IImportItemResult<
-            ContentItemContracts.IContentItemModelContract,
-            ContentItemModels.ContentItem
-        >[] = [];
+    private async prepareContentItemForImportAsync(
+        importContentItem: IImportContentItem,
+        importedItems: IImportItemResult[]
+    ): Promise<ContentItemModels.ContentItem> {
+        try {
+            const contentItem = (
+                await this.client.viewContentItem().byItemCodename(importContentItem.codename).toPromise()
+            ).data;
 
-        for (const contentItem of contentItems) {
-            const typeCodename = (contentItem.type as any).codename;
+            this.processItem(importedItems, 'fetch', 'contentItem', {
+                title: `${contentItem.name}`,
+                imported: contentItem,
+                importedId: contentItem.id,
+                originalCodename: contentItem.codename,
+                originalId: undefined,
+                original: contentItem
+            });
 
-            if (!typeCodename) {
-                throw Error(`Content item '${contentItem.codename}' has unset type codename`);
+            return contentItem;
+        } catch (error) {
+            if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+                if (error.originalError?.response?.status === 404) {
+                    const contentItem = (
+                        await this.client
+                            .addContentItem()
+                            .withData({
+                                name: importContentItem.name,
+                                type: {
+                                    codename: importContentItem.type
+                                },
+                                codename: importContentItem.codename,
+                                collection: {
+                                    codename: importContentItem.collection
+                                }
+                            })
+                            .toPromise()
+                    ).data;
+
+                    this.processItem(importedItems, 'create', 'contentItem', {
+                        title: `${contentItem.name}`,
+                        imported: contentItem,
+                        importedId: contentItem.id,
+                        originalCodename: contentItem.codename,
+                        originalId: undefined,
+                        original: contentItem
+                    });
+
+                    return contentItem;
+                }
             }
 
-            await this.client
-                .addContentItem()
-                .withData({
-                    name: contentItem.name,
-                    type: {
-                        codename: typeCodename
-                    },
-                    codename: contentItem.codename,
-                    external_id: contentItem.external_id
-                })
-                .toPromise()
-                .then((response) => {
-                    importedItems.push({
-                        imported: response.data,
-                        original: contentItem,
-                        importId: response.data.id,
-                        originalId: contentItem.id
-                    });
-                    this.processItem(response.data.name, 'contentItem', response.data);
-                })
-                .catch((error) => this.handleImportError(error));
+            throw error;
+        }
+    }
+
+    private async prepareLanguageVariantForImportAsync(
+        importContentItem: IImportContentItem,
+        workflows: WorkflowModels.Workflow[],
+        importItems: IImportItemResult[]
+    ): Promise<void> {
+        let languageVariantOfContentItem: undefined | LanguageVariantModels.ContentItemLanguageVariant;
+
+        try {
+            languageVariantOfContentItem = (
+                await this.client
+                    .viewLanguageVariant()
+                    .byItemCodename(importContentItem.codename)
+                    .byLanguageCodename(importContentItem.language)
+                    .toPromise()
+            ).data;
+
+            this.processItem(importItems, 'fetch', 'languageVariant', {
+                title: `${importContentItem.name} (${magenta(importContentItem.language)})`,
+                imported: languageVariantOfContentItem,
+                original: importContentItem
+            });
+        } catch (error) {
+            let throwError: boolean = true;
+
+            if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+                if (error.originalError?.response?.status === 404) {
+                    throwError = false;
+                }
+            }
+
+            if (throwError) {
+                throw error;
+            }
         }
 
-        return importedItems;
+        if (languageVariantOfContentItem) {
+            // language variant exists
+            // check if variant is published or not
+            if (this.isLanguageVariantPublished(languageVariantOfContentItem, workflows)) {
+                // create new version
+                await this.client
+                    .createNewVersionOfLanguageVariant()
+                    .byItemCodename(importContentItem.codename)
+                    .byLanguageCodename(importContentItem.language)
+                    .toPromise();
+
+                this.processItem(importItems, 'createNewVersion', 'languageVariant', {
+                    title: `${importContentItem.name} (${magenta(importContentItem.language)})`,
+                    imported: languageVariantOfContentItem,
+                    original: importContentItem
+                });
+            }
+        }
     }
 
     // private async setWorkflowStepsOfLanguageVariantsAsync(
@@ -395,53 +480,20 @@ export class ImportService {
     //     }
     // }
 
-    private async importLanguageVariantsAsync(
-        languageVariants: LanguageVariantContracts.ILanguageVariantModelContract[],
-        currentItems: IImportItemResult<ValidImportContract, ValidImportModel>[]
-    ): Promise<
-        IImportItemResult<
-            LanguageVariantContracts.ILanguageVariantModelContract,
-            LanguageVariantModels.ContentItemLanguageVariant
-        >[]
-    > {
-        const importedItems: IImportItemResult<
-            LanguageVariantContracts.ILanguageVariantModelContract,
-            LanguageVariantModels.ContentItemLanguageVariant
-        >[] = [];
-
-        for (const languageVariant of languageVariants) {
-            const itemCodename: string | undefined = languageVariant.item.codename;
-            const languageCodename: string | undefined = languageVariant.language.codename;
-
-            if (!itemCodename) {
-                throw Error(`Missing item codename for item '${languageVariant.item.id}'`);
+    private async getWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
+        return (await this.client.listWorkflows().toPromise()).data;
+    }
+    private isLanguageVariantPublished(
+        languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
+        workflows: WorkflowModels.Workflow[]
+    ): boolean {
+        for (const workflow of workflows) {
+            if (workflow.publishedStep.id === languageVariant.workflowStep.id) {
+                return true;
             }
-            if (!languageCodename) {
-                throw Error(`Missing language codename for item '${itemCodename}'`);
-            }
-
-            // replace ids in assets with new ones
-            idTranslateHelper.replaceIdReferencesWithNewId(languageVariant, currentItems);
-
-            await this.client
-                .upsertLanguageVariant()
-                .byItemCodename(itemCodename)
-                .byLanguageCodename(languageCodename)
-                .withData((builder) => languageVariant.elements)
-                .toPromise()
-                .then((response) => {
-                    importedItems.push({
-                        imported: response.data,
-                        original: languageVariant,
-                        importId: response.data.item.id,
-                        originalId: languageVariant.item.id
-                    });
-                    this.processItem(`${itemCodename} (${languageCodename})`, 'contentItem', response.data);
-                })
-                .catch((error) => this.handleImportError(error));
         }
 
-        return importedItems;
+        return false;
     }
 
     private handleImportError(error: any | SharedModels.ContentManagementBaseKontentError): void {
@@ -449,39 +501,60 @@ export class ImportService {
         handleError(error);
     }
 
-    private processItem(title: string, type: ActionType, data: any): void {
+    private processItem(
+        importedItems: IImportItemResult[],
+        actionType: ActionType,
+        itemType: ItemType,
+        data: {
+            title: string;
+            originalId?: string;
+            originalCodename?: string;
+            importedId?: string;
+            imported: any;
+            original: any;
+        }
+    ): void {
+        importedItems.push({
+            imported: data.imported,
+            original: data.original,
+            importId: data.importedId,
+            originalId: data.originalId,
+            originalCodename: data.originalCodename
+        });
+
         if (!this.config.onImport) {
             return;
         }
 
         this.config.onImport({
-            data,
-            title,
-            type
+            data: data.imported,
+            title: data.title,
+            actionType,
+            itemType
         });
     }
 
-    private getAddAssetModel(
-        assetContract: AssetContracts.IAssetModelContract,
-        binaryFileId: string,
-        currentItems: IImportItemResult<ValidImportContract, ValidImportModel>[]
-    ): AssetModels.IAddAssetRequestData {
-        const model: AssetModels.IAddAssetRequestData = {
-            descriptions: assetContract.descriptions,
-            file_reference: {
-                id: binaryFileId,
-                type: assetContract.file_reference.type
-            },
-            external_id: assetContract.external_id,
-            folder: assetContract.folder,
-            title: assetContract.title
-        };
+    // private getAddAssetModel(
+    //     assetContract: AssetContracts.IAssetModelContract,
+    //     binaryFileId: string,
+    //     currentItems: IImportItemResult[]
+    // ): AssetModels.IAddAssetRequestData {
+    //     const model: AssetModels.IAddAssetRequestData = {
+    //         descriptions: assetContract.descriptions,
+    //         file_reference: {
+    //             id: binaryFileId,
+    //             type: assetContract.file_reference.type
+    //         },
+    //         external_id: assetContract.external_id,
+    //         folder: assetContract.folder,
+    //         title: assetContract.title
+    //     };
 
-        // replace ids
-        idTranslateHelper.replaceIdReferencesWithNewId(model, currentItems);
+    //     // replace ids
+    //     idTranslateHelper.replaceIdReferencesWithNewId(model, currentItems);
 
-        return model;
-    }
+    //     return model;
+    // }
 
     private mapAssetFolder(
         folder: AssetFolderContracts.IAssetFolderContract
@@ -491,5 +564,30 @@ export class ImportService {
             external_id: folder.external_id,
             folders: folder.folders?.map((m) => this.mapAssetFolder(m)) ?? []
         };
+    }
+
+    private getElementContract(
+        element: IImportContentItemElement,
+        importItems: IImportItemResult[]
+    ): ElementContracts.IContentItemElementContract {
+        const importContract = translationHelper.transformToImportValue(
+            element.value,
+            element.codename,
+            element.type,
+            importItems
+        );
+
+        if (!importContract) {
+            throw Error(`Missing import contract for element `);
+        }
+
+        return importContract;
+    }
+
+    private shouldUpdateContentItem(
+        importContentItem: IImportContentItem,
+        item: ContentItemModels.ContentItem
+    ): boolean {
+        return importContentItem.name !== item.name;
     }
 }

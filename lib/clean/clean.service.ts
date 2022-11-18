@@ -108,7 +108,8 @@ export class CleanService {
         this.config.onDelete({
             data,
             title,
-            type
+            actionType: 'archive',
+            itemType: 'asset'
         });
     }
 }

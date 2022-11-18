@@ -15,13 +15,13 @@ const run = async () => {
     const importService = new ImportService({
         onImport: item => {
             // called when any content is imported
-            console.log(`Imported: ${item.title} | ${item.type}`);
+            console.log(`Imported: ${item.title} | ${item.actionType}`);
         },
         // be careful when filtering data to import because you might break data consistency.
         // for example, it might not be possible to import language variant without first importing content item and so on.
         canImport: {
             asset: (item) => {
-                if(item.title.startsWith('_corporate')) {
+                if(item.filename.startsWith('_corporate')) {
                     // asset will be imported only if the title starts with "_corporate"
                     return true;
                 }
@@ -30,7 +30,6 @@ const run = async () => {
             },
            
             contentItem: item => true, // all content items will be imported
-            languageVariant: item => true, // all language variants will be imported
         },
         preserveWorkflow: true, // when enabled, workflow of language variants is preserved
         projectId: 'targetProjectId',

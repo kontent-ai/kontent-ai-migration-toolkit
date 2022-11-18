@@ -18,7 +18,7 @@ const run = async () => {
         projectId: 'sourceProjectId',
         onExport: item => {
             // called when any content is exported
-            console.log(`Exported: ${item.title} | ${item.type}`);
+            console.log(`Exported: ${item.title} | ${item.actionType}`);
         }
     });
 

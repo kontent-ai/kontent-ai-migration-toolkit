@@ -1,7 +1,9 @@
-import { AssetContracts, ContentItemContracts, ElementContracts, LanguageVariantContracts } from '@kontent-ai/management-sdk';
+import { AssetContracts } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import { IProcessedItem, ItemType, IPackageMetadata } from '../core';
+import { ElementType } from '@kontent-ai/delivery-sdk';
+import { IExportedAsset } from '../export';
 
 export interface IImportConfig {
     retryStrategy?: IRetryStrategyOptions;
@@ -15,9 +17,8 @@ export interface IImportConfig {
     onImport?: (item: IProcessedItem) => void;
     fixLanguages: boolean;
     canImport?: {
-        contentItem?: (item: ContentItemContracts.IContentItemModelContract) => boolean | Promise<boolean>;
-        languageVariant?: (item: LanguageVariantContracts.ILanguageVariantModelContract) => boolean | Promise<boolean>;
-        asset?: (item: AssetContracts.IAssetModelContract) => boolean | Promise<boolean>;
+        contentItem?: (item: IImportContentItem) => boolean | Promise<boolean>;
+        asset?: (item: IExportedAsset) => boolean | Promise<boolean>;
     };
 }
 
@@ -43,9 +44,7 @@ export interface IBinaryFile {
 export interface IImportSource {
     importData: {
         items: IImportContentItem[];
-        contentItems: ContentItemContracts.IContentItemModelContract[];
-        languageVariants: LanguageVariantContracts.ILanguageVariantModelContract[];
-        assets: AssetContracts.IAssetModelContract[];
+        assets: IExportedAsset[];
     };
     metadata: IPackageMetadata;
     binaryFiles: IBinaryFile[];
@@ -62,6 +61,12 @@ export interface IFlattenedFolder {
     id: string;
 }
 
+export interface IImportContentItemElement {
+    value: string;
+    type: ElementType;
+    codename: string;
+}
+
 export interface IImportContentItem {
     codename: string;
     name: string;
@@ -71,7 +76,7 @@ export interface IImportContentItem {
     last_modified: string;
     workflow_step?: string;
 
-    [elementCodename: string]: any;
+    [prop: string]: any;
 
-    elements: ElementContracts.IContentItemElementContract[];
+    elements: IImportContentItemElement[];
 }

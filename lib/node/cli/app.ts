@@ -9,7 +9,7 @@ import { ImportService } from '../../import';
 import { ZipService } from '../../zip';
 import { SharedModels } from '@kontent-ai/management-sdk';
 import { FileService } from '../file/file.service';
-import { green, red, yellow, magenta } from 'colors';
+import { green, red, yellow } from 'colors';
 
 const argv = yargs(process.argv.slice(2))
     .example('kbm --action=backup --apiKey=xxx --projectId=xxx', 'Creates zip backup of Kontent.ai project')
@@ -51,11 +51,7 @@ const backupAsync = async (config: ICliFileConfig) => {
         exportFilter: config.exportFilter,
         onExport: (item) => {
             if (config.enableLog) {
-                console.log(
-                    `Exported ${yellow(item.title)} | ${green(item.data.system.type)} | ${magenta(
-                        item.data.system.language
-                    )}`
-                );
+                console.log(`Exported ${yellow(item.title)} | ${green(item.data.system.type)}`);
             }
         }
     });
@@ -107,7 +103,7 @@ const restoreAsync = async (config: ICliFileConfig) => {
     const importService = new ImportService({
         onImport: (item) => {
             if (config.enableLog) {
-                console.log(`Imported: ${yellow(item.title)} (${green(item.type)})`);
+                console.log(`${yellow(item.title)} | ${green(item.itemType)} | ${item.actionType}`);
             }
         },
         preserveWorkflow: config.preserveWorkflow,

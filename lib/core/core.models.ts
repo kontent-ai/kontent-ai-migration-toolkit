@@ -1,24 +1,3 @@
-import { IContentItem } from '@kontent-ai/delivery-sdk';
-import {
-    AssetContracts,
-    AssetModels,
-    ContentItemModels,
-    ContentTypeContracts,
-    ContentTypeModels,
-    ContentTypeSnippetContracts,
-    ContentTypeSnippetModels,
-    LanguageContracts,
-    LanguageModels,
-    LanguageVariantModels,
-    TaxonomyContracts,
-    TaxonomyModels,
-    LanguageVariantContracts,
-    ContentItemContracts,
-    AssetFolderModels,
-    AssetFolderContracts,
-    WorkflowContracts,
-    WorkflowModels
-} from '@kontent-ai/management-sdk';
 import { IExportFilter } from 'lib/export';
 
 export interface ICliFileConfig {
@@ -34,47 +13,33 @@ export interface ICliFileConfig {
 }
 
 export type CliAction = 'backup' | 'restore' | 'clean';
-export type ItemType =
-    | 'contentItem'
-    | 'asset'
-    | 'binaryFile';
+export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile';
 
-export type ActionType = ItemType | 'archive' | 'publish' | 'changeWorkflowStep';
-
-export type ValidImportModel =
-    | ContentTypeModels.ContentType
-    | TaxonomyModels.Taxonomy
-    | ContentTypeSnippetModels.ContentTypeSnippet
-    | LanguageVariantModels.ContentItemLanguageVariant
-    | ContentItemModels.ContentItem
-    | LanguageModels.LanguageModel
-    | AssetModels.Asset
-    | WorkflowModels.Workflow
-    | AssetFolderModels.AssetFolder;
-
-export type ValidImportContract =
-    | ContentTypeContracts.IContentTypeContract
-    | TaxonomyContracts.ITaxonomyContract
-    | ContentTypeSnippetContracts.IContentTypeSnippetContract
-    | ContentItemContracts.IContentItemModelContract
-    | TaxonomyContracts.ITaxonomyContract
-    | AssetContracts.IAssetModelContract
-    | LanguageVariantContracts.ILanguageVariantModelContract
-    | LanguageContracts.ILanguageModelContract
-    | WorkflowContracts.IWorkflowContract
-    | AssetFolderContracts.IAssetFolderContract;
+export type ActionType =
+    | 'skipUpdate'
+    | 'archive'
+    | 'upsert'
+    | 'publish'
+    | 'changeWorkflowStep'
+    | 'createNewVersion'
+    | 'fetch'
+    | 'create'
+    | 'publish'
+    | 'update';
 
 export interface IProcessedItem {
     title: string;
-    type: ActionType;
-    data: IContentItem;
+    actionType: ActionType;
+    itemType: ItemType;
+    data: any;
 }
 
-export interface IImportItemResult<TRaw, TModel> {
-    original: TRaw;
-    imported: TModel;
+export interface IImportItemResult {
+    original: any;
+    imported: any;
 
     originalId?: string;
+    originalCodename?: string;
     importId?: string;
 }
 

@@ -40,8 +40,6 @@ export class ZipService {
             importData: {
                 items: await this.parseContentItemsCsvFileAsync(unzippedFile),
                 assets: [],
-                languageVariants: [],
-                contentItems: []
             },
             binaryFiles: [],
             // binaryFiles: await this.extractBinaryFilesAsync(unzippedFile, assets),
@@ -308,15 +306,11 @@ export class ZipService {
                             // process user defined element
                             const parsedElementName = this.parseCsvElementName(elementName);
 
-                            const importValue = translationHelper.transformToImportValue(
-                                elementValue,
-                                parsedElementName.elementCodename,
-                                parsedElementName.elementType
-                            );
-
-                            if (importValue) {
-                                contentItem.elements.push(importValue);
-                            }
+                            contentItem.elements.push({
+                                type: parsedElementName.elementType,
+                                codename: parsedElementName.elementCodename,
+                                value: elementValue
+                            });
                         } else {
                             // process base element
                             contentItem[elementName] = elementValue;
