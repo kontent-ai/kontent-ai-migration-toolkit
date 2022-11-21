@@ -73,7 +73,7 @@ export class IdTranslateHelper {
                 const newId = this.tryFindNewIdForCodename(b, items);
                 if (newId) {
                     return `${replaceAttr}="${newId}"`;
-                } return`${replaceAttr}="ahoj"`;
+                }
             }
 
             return a;

@@ -208,6 +208,10 @@ export class ImportService {
 
         // first process content items
         for (const importContentItem of importContentItems) {
+            if (!importContentItem.workflow_step) {
+                continue;
+            }
+
             const preparedContentItem: ContentItemModels.ContentItem = await this.prepareContentItemForImportAsync(
                 importContentItem,
                 importedItems
@@ -251,6 +255,10 @@ export class ImportService {
 
         // then process language variants
         for (const importContentItem of importContentItems) {
+            if (!importContentItem.workflow_step) {
+                continue;
+            }
+            
             const upsertedContentItem = preparedItems.find((m) => m.codename === importContentItem.codename);
 
             if (!upsertedContentItem) {
@@ -264,7 +272,9 @@ export class ImportService {
                 .byItemCodename(upsertedContentItem.codename)
                 .byLanguageCodename(importContentItem.language)
                 .withData(() => {
-                    return importContentItem.elements.map((m) => this.getElementContract(m, importedItems));
+                    return importContentItem.elements.map((m) =>
+                        this.getElementContract(importContentItems, m, importedItems)
+                    );
                 })
                 .toPromise();
 
@@ -712,6 +722,7 @@ export class ImportService {
     }
 
     private getElementContract(
+        sourceItems: IImportContentItem[],
         element: IImportContentItemElement,
         importItems: IImportItemResult[]
     ): ElementContracts.IContentItemElementContract {
@@ -719,7 +730,8 @@ export class ImportService {
             element.value,
             element.codename,
             element.type,
-            importItems
+            importItems,
+            sourceItems
         );
 
         if (!importContract) {

@@ -1,6 +1,7 @@
 import { ContentItemElementsIndexer, Elements, ElementType } from '@kontent-ai/delivery-sdk';
-import { ElementContracts } from '@kontent-ai/management-sdk';
+import { ElementContracts, LanguageVariantElements, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
 import { yellow } from 'colors';
+import { IImportContentItem } from '../import';
 import { IImportItemResult } from './core.models';
 import { extractAssetIdFromUrl } from './global-helper';
 import { idTranslateHelper } from './id-translate-helper';
@@ -15,11 +16,14 @@ export interface IImportTransform {
     toImportValue: (data: {
         value: string | undefined;
         elementCodename: string;
-        importItems: IImportItemResult[];
+        importedItems: IImportItemResult[];
+        sourceItems: IImportContentItem[];
     }) => ElementContracts.IContentItemElementContract;
 }
 
 export class TranslationHelper {
+    private readonly elementsBuilder = new LanguageVariantElementsBuilder();
+
     private readonly exportTransforms: IExportTransform[] = [
         {
             type: ElementType.Text,
@@ -115,12 +119,49 @@ export class TranslationHelper {
         {
             type: ElementType.RichText,
             toImportValue: (data) => {
-                return {
+                const processedRte = this.processImportRichTextHtmlValue(data.value ?? '', data.importedItems);
+                const componentItems: IImportContentItem[] = [];
+
+                for (const componentCodename of processedRte.componentCodenames) {
+                    const componentItem = data.sourceItems.find((m) => m.codename === componentCodename);
+
+                    if (!componentItem) {
+                        throw Error(`Could not find component item with codename '${componentCodename}'`);
+                    }
+
+                    componentItems.push(componentItem);
+                }
+
+                return this.elementsBuilder.richTextElement({
                     element: {
                         codename: data.elementCodename
                     },
-                    value: this.processImportRichTextHtmlValue(data.value ?? '', data.importItems)
-                };
+                    components: componentItems.map((m) => {
+                        const itemElements: LanguageVariantElements.ILanguageVariantElementBase[] = m.elements
+                            .map((e) =>
+                                this.transformToImportValue(
+                                    e.value,
+                                    e.codename,
+                                    e.type,
+                                    data.importedItems,
+                                    data.sourceItems
+                                )
+                            )
+                            .filter((m) => m)
+                            .map((m) => m as LanguageVariantElements.ILanguageVariantElementBase);
+
+                        const componentContract: LanguageVariantElements.IRichTextComponent = {
+                            id: this.convertComponentCodenameToId(m.codename),
+                            type: {
+                                codename: m.type
+                            },
+                            elements: itemElements
+                        };
+
+                        return componentContract;
+                    }),
+                    value: processedRte.processedHtml
+                });
             }
         },
         {
@@ -225,15 +266,17 @@ export class TranslationHelper {
         value: string,
         elementCodename: string,
         type: ElementType,
-        importItems: IImportItemResult[]
+        importedITems: IImportItemResult[],
+        sourceItems: IImportContentItem[]
     ): ElementContracts.IContentItemElementContract | undefined {
         const transform = this.importTransforms.find((m) => m.type === type);
 
         if (transform) {
             return transform.toImportValue({
-                importItems: importItems,
+                importedItems: importedITems,
                 elementCodename: elementCodename,
-                value: value
+                value: value,
+                sourceItems: sourceItems
             });
         }
 
@@ -249,11 +292,58 @@ export class TranslationHelper {
         return JSON.parse(value);
     }
 
-    private processImportRichTextHtmlValue(richTextHtml: string | undefined, importItems: IImportItemResult[]): string {
+    private processImportRichTextHtmlValue(
+        richTextHtml: string | undefined,
+        importItems: IImportItemResult[]
+    ): {
+        processedHtml: string;
+        linkedItemCodenames: string[];
+        componentCodenames: string[];
+    } {
+        const componentCodenames: string[] = [];
+        const linkedItemCodenames: string[] = [];
+
         if (!richTextHtml) {
-            return '';
+            return {
+                linkedItemCodenames: [],
+                componentCodenames: [],
+                processedHtml: ''
+            };
         }
 
+        // extract linked items / components
+        const objectStart: string = '<object';
+        const objectEnd: string = '</object>';
+
+        const dataCodenameStart: string = 'data-codename=\\"';
+        const dataCodename: string = '\\"';
+
+        const objectRegex = new RegExp(`${objectStart}(.+?)${objectEnd}`, 'g');
+        const dataCodenameRegex = new RegExp(`${dataCodenameStart}(.+?)${dataCodename}`);
+
+        let processedRichText = richTextHtml.replaceAll(objectRegex, (objectTag) => {
+            if (objectTag.includes('type="application/kenticocloud"') && objectTag.includes('data-type="item"')) {
+                const codenameMatch = objectTag.match(dataCodenameRegex);
+                if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
+                    const codename = codenameMatch[1];
+
+                    if (objectTag.includes('data-rel="component"')) {
+                        console.log('is component');
+                        objectTag = objectTag.replace('data-rel="component"', '');
+                        objectTag = objectTag.replace('data-type="item"', 'data-type="component"');
+                        objectTag = objectTag.replace('data-codename', 'data-id');
+                        objectTag = objectTag.replace(codename, this.convertComponentCodenameToId(codename));
+                     
+                        componentCodenames.push(codename);
+                    } else {
+                        linkedItemCodenames.push(codename);
+                    }
+                }
+            }
+            return objectTag;
+        });
+
+        // remove data-image-id attribute if it's present
         const imageAttrStart: string = 'data-image-id=\\"';
         const imageAttrEnd: string = '\\"';
 
@@ -263,8 +353,7 @@ export class TranslationHelper {
         const imgAttrRegex = new RegExp(`${imageAttrStart}(.+?)${imageAttrEnd}`, 'g');
         const imgTagRegex = new RegExp(`${imgStart}(.+?)${imgEnd}`, 'g');
 
-        // remove data-image-id attribute if it's present
-        let processedRichText: string = richTextHtml.replaceAll(imgAttrRegex, (match, $1: string) => {
+        processedRichText = processedRichText.replaceAll(imgAttrRegex, (match, $1: string) => {
             return '';
         });
         processedRichText = processedRichText.replaceAll(imgTagRegex, (match, $1: string) => {
@@ -275,11 +364,19 @@ export class TranslationHelper {
         processedRichText = idTranslateHelper.replaceIdsInRichText(processedRichText, importItems);
 
         // remove unsupported attributes
-        processedRichText = processedRichText.replaceAll(`data-rel="component"`, '');
+        // processedRichText = processedRichText.replaceAll(`data-rel="component"`, '');
         processedRichText = processedRichText.replaceAll(`data-rel="link"`, '');
         processedRichText = processedRichText.replaceAll(`href=""`, '');
 
-        return processedRichText.trim();
+        return {
+            linkedItemCodenames: linkedItemCodenames,
+            componentCodenames: componentCodenames,
+            processedHtml: processedRichText.trim()
+        };
+    }
+
+    private convertComponentCodenameToId(codename: string): string {
+        return codename.replaceAll('_', '-');
     }
 }
 
