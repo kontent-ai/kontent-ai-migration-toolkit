@@ -39,7 +39,7 @@ export class ZipService {
         const result: IImportSource = {
             importData: {
                 items: await this.parseContentItemsCsvFileAsync(unzippedFile),
-                assets: [],
+                assets: []
             },
             binaryFiles: [],
             // binaryFiles: await this.extractBinaryFilesAsync(unzippedFile, assets),
@@ -130,7 +130,7 @@ export class ZipService {
             const languageVariantFields: FieldInfo<any>[] = this.getLanguageVariantFields(contentType);
             const contentItemsOfType = items.filter((m) => m.system.type === contentType.system.codename);
             const csvModels: ILanguageVariantCsvModel[] = contentItemsOfType.map((m) =>
-                this.mapLanguageVariantToCsvModel(m, contentType)
+                this.mapLanguageVariantToCsvModel(m, contentType, types, items)
             );
 
             const languageVariantsStream = new Readable();
@@ -196,7 +196,12 @@ export class ZipService {
         });
     }
 
-    private mapLanguageVariantToCsvModel(item: IContentItem, contentType: IContentType): ILanguageVariantCsvModel {
+    private mapLanguageVariantToCsvModel(
+        item: IContentItem,
+        contentType: IContentType,
+        types: IContentType[],
+        items: IContentItem[]
+    ): ILanguageVariantCsvModel {
         const model: ILanguageVariantCsvModel = {
             codename: item.system.codename,
             name: item.system.name,
@@ -212,7 +217,7 @@ export class ZipService {
                 const variantElement = item.elements[element.codename];
 
                 if (variantElement) {
-                    model[element.codename] = translationHelper.transformToExportValue(variantElement);
+                    model[element.codename] = translationHelper.transformToExportValue(variantElement, items, types);
                 }
             }
         }

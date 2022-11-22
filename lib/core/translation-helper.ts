@@ -1,4 +1,10 @@
-import { ContentItemElementsIndexer, Elements, ElementType } from '@kontent-ai/delivery-sdk';
+import {
+    ContentItemElementsIndexer,
+    Elements,
+    ElementType,
+    IContentItem,
+    IContentType
+} from '@kontent-ai/delivery-sdk';
 import { ElementContracts, LanguageVariantElements, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
 import { yellow } from 'colors';
 import { IImportContentItem } from '../import';
@@ -8,7 +14,11 @@ import { idTranslateHelper } from './id-translate-helper';
 
 export interface IExportTransform {
     type: ElementType;
-    toExportValue: (element: ContentItemElementsIndexer) => string | string[] | undefined;
+    toExportValue: (data: {
+        element: ContentItemElementsIndexer;
+        items: IContentItem[];
+        types: IContentType[];
+    }) => string | string[] | undefined;
 }
 
 export interface IImportTransform {
@@ -22,61 +32,62 @@ export interface IImportTransform {
 }
 
 export class TranslationHelper {
+    private readonly csvManagerLinkCodenameAttributeName: string = 'csvm-link-codename';
     private readonly elementsBuilder = new LanguageVariantElementsBuilder();
 
     private readonly exportTransforms: IExportTransform[] = [
         {
             type: ElementType.Text,
-            toExportValue: (element) => element.value
+            toExportValue: (data) => data.element.value
         },
         {
             type: ElementType.Number,
-            toExportValue: (element) => element.value
+            toExportValue: (data) => data.element.value
         },
         {
             type: ElementType.DateTime,
-            toExportValue: (element) => element.value
+            toExportValue: (data) => data.element.value
         },
         {
             type: ElementType.RichText,
-            toExportValue: (element) => {
-                const mappedElement = element as Elements.RichTextElement;
-                return mappedElement.value;
+            toExportValue: (data) => {
+                const mappedElement = data.element as Elements.RichTextElement;
+                return this.processExportRichTextHtmlValue(mappedElement.value, data.items, data.types).processedHtml;
             }
         },
         {
             type: ElementType.Asset,
-            toExportValue: (element) => {
-                const mappedElement = element as Elements.AssetsElement;
+            toExportValue: (data) => {
+                const mappedElement = data.element as Elements.AssetsElement;
                 return mappedElement.value.map((m) => m.url);
             }
         },
         {
             type: ElementType.Taxonomy,
-            toExportValue: (element) => {
-                const mappedElement = element as Elements.TaxonomyElement;
+            toExportValue: (data) => {
+                const mappedElement = data.element as Elements.TaxonomyElement;
                 return mappedElement.value.map((m) => m.codename);
             }
         },
         {
             type: ElementType.ModularContent,
-            toExportValue: (element) => {
-                const mappedElement = element as Elements.LinkedItemsElement;
+            toExportValue: (data) => {
+                const mappedElement = data.element as Elements.LinkedItemsElement;
                 return mappedElement.value.map((m) => m);
             }
         },
         {
             type: ElementType.UrlSlug,
-            toExportValue: (element) => element.value
+            toExportValue: (data) => data.element.value
         },
         {
             type: ElementType.Custom,
-            toExportValue: (element) => element.value
+            toExportValue: (data) => data.element.value
         },
         {
             type: ElementType.MultipleChoice,
-            toExportValue: (element) => {
-                const mappedElement = element as Elements.MultipleChoiceElement;
+            toExportValue: (data) => {
+                const mappedElement = data.element as Elements.MultipleChoiceElement;
                 return mappedElement.value.map((m) => m.codename);
             }
         }
@@ -250,11 +261,19 @@ export class TranslationHelper {
         }
     ];
 
-    transformToExportValue(element: ContentItemElementsIndexer): string | string[] | undefined {
+    transformToExportValue(
+        element: ContentItemElementsIndexer,
+        items: IContentItem[],
+        types: IContentType[]
+    ): string | string[] | undefined {
         const transform = this.exportTransforms.find((m) => m.type === element.type);
 
         if (transform) {
-            return transform.toExportValue(element);
+            return transform.toExportValue({
+                element: element,
+                items: items,
+                types: types
+            });
         }
 
         console.log(`Missing export transform for element type '${yellow(element.type)}'`);
@@ -290,6 +309,54 @@ export class TranslationHelper {
             return [];
         }
         return JSON.parse(value);
+    }
+
+    private processExportRichTextHtmlValue(
+        richTextHtml: string | undefined,
+        items: IContentItem[],
+        types: IContentType[]
+    ): {
+        processedHtml: string;
+    } {
+        if (!richTextHtml) {
+            return {
+                processedHtml: ''
+            };
+        }
+
+        // extract linked items / components
+        const linkStart: string = '<a';
+        const linkEnd: string = '</a>';
+
+        const dataItemIdStart: string = 'data-item-id=\\"';
+        const dataItemIdEnd: string = '\\"';
+
+        const linkRegex = new RegExp(`${linkStart}(.+?)${linkEnd}`, 'g');
+        const dataItemIdRegex = new RegExp(`${dataItemIdStart}(.+?)${dataItemIdEnd}`);
+
+        let processedRichText = richTextHtml.replaceAll(linkRegex, (objectTag) => {
+            const idMatch = objectTag.match(dataItemIdRegex);
+            if (idMatch && (idMatch?.length ?? 0) >= 2) {
+                const id = idMatch[1];
+
+                // find content item with given id
+                const contentItemWithGivenId: IContentItem | undefined = items.find((m) => m.system.id === id);
+
+                if (!contentItemWithGivenId) {
+                    console.log(
+                        `Could not find content item with id '${id}'. This item was referenced as a link in Rich text element.`
+                    );
+                } else {
+                    objectTag = objectTag.replace(id, contentItemWithGivenId.system.codename);
+                    objectTag = objectTag.replace('data-item-id', this.csvManagerLinkCodenameAttributeName);
+                }
+            }
+            return objectTag;
+        });
+
+        return {
+            processedHtml: processedRichText
+        };
     }
 
     private processImportRichTextHtmlValue(
@@ -328,16 +395,47 @@ export class TranslationHelper {
                     const codename = codenameMatch[1];
 
                     if (objectTag.includes('data-rel="component"')) {
-                        console.log('is component');
                         objectTag = objectTag.replace('data-rel="component"', '');
                         objectTag = objectTag.replace('data-type="item"', 'data-type="component"');
                         objectTag = objectTag.replace('data-codename', 'data-id');
                         objectTag = objectTag.replace(codename, this.convertComponentCodenameToId(codename));
-                     
+
                         componentCodenames.push(codename);
                     } else {
                         linkedItemCodenames.push(codename);
                     }
+                }
+            }
+            return objectTag;
+        });
+
+        // process links
+        const linkStart: string = '<a';
+        const linkEnd: string = '</a>';
+
+        const csvmLinkCodenameStart: string = this.csvManagerLinkCodenameAttributeName + '=\\"';
+        const csvmLinkCodenameEnd: string = '\\"';
+
+        const linkRegex = new RegExp(`${linkStart}(.+?)${linkEnd}`, 'g');
+        const csvmLinkCodenameRegex = new RegExp(`${csvmLinkCodenameStart}(.+?)${csvmLinkCodenameEnd}`);
+
+        processedRichText = processedRichText.replaceAll(linkRegex, (objectTag) => {
+            const codenameMatch = objectTag.match(csvmLinkCodenameRegex);
+            if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
+                const codename = codenameMatch[1];
+
+                // find content item with given codename and replace it with id
+                const contentItemWithGivenCodename: IImportItemResult | undefined = importItems.find(
+                    (m) => m.originalCodename === codename
+                );
+
+                if (!contentItemWithGivenCodename) {
+                    console.log(
+                        `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
+                    );
+                } else {
+                    objectTag = objectTag.replace(codename, contentItemWithGivenCodename.importId ?? '');
+                    objectTag = objectTag.replace(this.csvManagerLinkCodenameAttributeName, 'data-item-id');
                 }
             }
             return objectTag;
@@ -364,7 +462,6 @@ export class TranslationHelper {
         processedRichText = idTranslateHelper.replaceIdsInRichText(processedRichText, importItems);
 
         // remove unsupported attributes
-        // processedRichText = processedRichText.replaceAll(`data-rel="component"`, '');
         processedRichText = processedRichText.replaceAll(`data-rel="link"`, '');
         processedRichText = processedRichText.replaceAll(`href=""`, '');
 
