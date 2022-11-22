@@ -183,8 +183,17 @@ export class TranslationHelper {
                         codename: data.elementCodename
                     },
                     value: this.parseArrayValue(data.value).map((m) => {
+                        const assetId = extractAssetIdFromUrl(m);
+
+                        // find id of imported asset
+                        const importedAsset = data.importedItems.find(m => m.originalId === assetId);
+
+                        if (!importedAsset) {
+                            throw Error(`Could not find imported asset for asset with original id '${assetId}'`);
+                        }
+
                         return {
-                            id: extractAssetIdFromUrl(m)
+                            id: importedAsset.importId
                         };
                     })
                 };

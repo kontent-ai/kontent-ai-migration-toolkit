@@ -15,6 +15,7 @@ import {
     ActionType,
     defaultRetryStrategy,
     extractAssetIdFromUrl,
+    getExtension,
     ItemType,
     printProjectInfoToConsoleAsync
 } from '../core';
@@ -177,7 +178,7 @@ export class ExportService {
                             assets.push(
                                 ...assetElement.value.map((m) => {
                                     const assetId = extractAssetIdFromUrl(m.url);
-                                    const extension = this.getExtension(m.url) ?? '';
+                                    const extension = getExtension(m.url) ?? '';
                                     const asset: IExportedAsset = {
                                         url: m.url,
                                         assetId: assetId,
@@ -198,7 +199,7 @@ export class ExportService {
                             assets.push(
                                 ...richTextElement.images.map((m) => {
                                     const assetId = extractAssetIdFromUrl(m.url);
-                                    const extension = this.getExtension(m.url) ?? '';
+                                    const extension = getExtension(m.url) ?? '';
                                     const asset: IExportedAsset = {
                                         url: m.url,
                                         assetId: assetId,
@@ -216,9 +217,5 @@ export class ExportService {
         }
 
         return [...new Map(assets.map((item) => [item['url'], item])).values()]; // filters unique values
-    }
-
-    private getExtension(url: string): string | undefined {
-        return url.split('.').pop();
     }
 }

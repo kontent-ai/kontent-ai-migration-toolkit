@@ -19,6 +19,7 @@ export type ActionType =
     | 'skipUpdate'
     | 'archive'
     | 'upsert'
+    | 'upload'
     | 'publish'
     | 'changeWorkflowStep'
     | 'createNewVersion'

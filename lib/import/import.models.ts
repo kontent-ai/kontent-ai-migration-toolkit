@@ -1,4 +1,3 @@
-import { AssetContracts } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import { IProcessedItem, ItemType, IPackageMetadata } from '../core';
@@ -13,7 +12,6 @@ export interface IImportConfig {
     apiKey: string;
     enableLog: boolean;
     preserveWorkflow: boolean;
-    onUnsupportedBinaryFile?: (binaryFile: IBinaryFile) => void;
     onImport?: (item: IProcessedItem) => void;
     fixLanguages: boolean;
     canImport?: {
@@ -36,23 +34,24 @@ export interface IPreparedImportItem<TItem> {
     deps: string[];
 }
 
-export interface IBinaryFile {
+export interface IImportAsset {
     binaryData: any;
-    asset: AssetContracts.IAssetModelContract;
+    assetId: string;
+    filename: string;
+    mimeType: string | undefined;
+    extension: string | undefined;
 }
 
 export interface IImportSource {
     importData: {
         items: IImportContentItem[];
-        assets: IExportedAsset[];
+        assets: IImportAsset[];
     };
     metadata: IPackageMetadata;
-    binaryFiles: IBinaryFile[];
 }
 
 export interface IImportData {
     orderedImportItems: IPreparedImportItem<any>[];
-    binaryFiles: IBinaryFile[];
 }
 
 export interface IFlattenedFolder {

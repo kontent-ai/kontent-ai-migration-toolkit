@@ -1,6 +1,7 @@
 import {
     AssetFolderContracts,
     AssetFolderModels,
+    AssetResponses,
     CollectionModels,
     ContentItemModels,
     ElementContracts,
@@ -21,7 +22,13 @@ import {
     ItemType,
     defaultWorkflowCodename
 } from '../core';
-import { IImportConfig, IImportContentItem, IImportContentItemElement, IImportSource } from './import.models';
+import {
+    IImportAsset,
+    IImportConfig,
+    IImportContentItem,
+    IImportContentItemElement,
+    IImportSource
+} from './import.models';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { magenta, yellow } from 'colors';
 
@@ -81,12 +88,8 @@ export class ImportService {
         try {
             // ### Assets
             if (sourceData.importData.assets.length) {
-                // const importedAssets = await this.importAssetsAsync(
-                //     sourceData.importData.assets,
-                //     sourceData.binaryFiles,
-                //     importedItems
-                // );
-                // importedItems.push(...importedAssets);
+                const importedAssets = await this.importAssetsAsync(sourceData.importData.assets);
+                importedItems.push(...importedAssets);
             } else {
                 if (this.config.enableLog) {
                     console.log(`Skipping assets`);
@@ -99,7 +102,7 @@ export class ImportService {
             }
 
             if (this.config.enableLog) {
-                console.log(`Finished importing data`);
+                console.log(`Finished import`);
             }
         } catch (error) {
             this.handleImportError(error);
@@ -108,15 +111,6 @@ export class ImportService {
     }
 
     private removeSkippedItemsFromImport(source: IImportSource): void {
-        if (this.config.canImport && this.config.canImport.asset) {
-            for (const item of source.importData.assets) {
-                const shouldImport = this.config.canImport.asset(item);
-                if (!shouldImport) {
-                    source.importData.assets = source.importData.assets.filter((m) => m.assetId !== item.assetId);
-                }
-            }
-        }
-
         if (this.config.canImport && this.config.canImport.contentItem) {
             for (const item of source.importData.items) {
                 const shouldImport = this.config.canImport.contentItem(item);
@@ -127,71 +121,103 @@ export class ImportService {
         }
     }
 
-    // private async importAssetsAsync(
-    //     assets: AssetContracts.IAssetModelContract[],
-    //     binaryFiles: IBinaryFile[],
-    //     currentItems: IImportItemResult[]
-    // ): Promise<IImportItemResult[]> {
-    //     const importedItems: IImportItemResult[] = [];
-    //     const unsupportedBinaryFiles: IBinaryFile[] = [];
+    private async importAssetsAsync(assets: IImportAsset[]): Promise<IImportItemResult[]> {
+        const importedItems: IImportItemResult[] = [];
 
-    //     for (const asset of assets) {
-    //         const binaryFile = binaryFiles.find((m) => m.asset.id === asset.id);
+        for (const asset of assets) {
+            // use asset id as external id
+            const assetExternalId: string = asset.assetId;
 
-    //         if (!binaryFile) {
-    //             throw Error(`Could not find binary file for asset with id '${asset.id}'`);
-    //         }
+            // check if asset with given external id already exists
+            let existingAsset: AssetResponses.ViewAssetResponse | undefined;
 
-    //         let binaryDataToUpload: any = binaryFile.binaryData;
-    //         if (binaryFile.asset.size >= this.maxAllowedAssetSizeInBytes) {
-    //             if (this.config.onUnsupportedBinaryFile) {
-    //                 this.config.onUnsupportedBinaryFile(binaryFile);
-    //             }
-    //             console.log(
-    //                 `Removing binary data from file due to size. Max. file size is '${this.maxAllowedAssetSizeInBytes}'Bytes, but file has '${asset.size}' Bytes`,
-    //                 asset.file_name
-    //             );
-    //             // remove binary data so that import proceeds & asset is created (so that it can be referenced by
-    //             // content items )
-    //             binaryDataToUpload = [];
-    //             unsupportedBinaryFiles.push(binaryFile);
-    //         }
+            try {
+                // when target project is the same as source project, the id of asset would be the same
+                // and such asset should not be imported again
+                existingAsset = await this.client.viewAsset().byAssetExternalId(asset.assetId).toPromise();
+            } catch (error) {
+                let throwError = true;
 
-    //         const uploadedBinaryFile = await this.client
-    //             .uploadBinaryFile()
-    //             .withData({
-    //                 binaryData: binaryDataToUpload,
-    //                 contentType: asset.type,
-    //                 filename: asset.file_name
-    //             })
-    //             .toPromise()
-    //             .then((m) => m)
-    //             .catch((error) => this.handleImportError(error));
+                if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+                    if (error.originalError?.response?.status === 404) {
+                        throwError = false;
+                    }
+                }
 
-    //         if (!uploadedBinaryFile) {
-    //             throw Error(`File not uploaded`);
-    //         }
+                if (throwError) {
+                    throw error;
+                }
+            }
 
-    //         // const assetData = this.getAddAssetModel(asset, uploadedBinaryFile.data.id, currentItems);
+            try {
+                // check if asset with given external id was already created
+                existingAsset = await this.client.viewAsset().byAssetExternalId(assetExternalId).toPromise();
+            } catch (error) {
+                let throwError = true;
 
-    //         // await this.client
-    //         //     .addAsset()
-    //         //     .withData((builder) => assetData)
-    //         //     .toPromise()
-    //         //     .then((response) => {
-    //         //         importedItems.push({
-    //         //             imported: response.data,
-    //         //             csvModel: asset,
-    //         //             importId: response.data.id,
-    //         //             originalId: asset.id
-    //         //         });
-    //         //         this.processItem(response.data.fileName, 'asset', response.data);
-    //         //     })
-    //         //     .catch((error) => this.handleImportError(error));
-    //     }
+                if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+                    if (error.originalError?.response?.status === 404) {
+                        throwError = false;
+                    }
+                }
 
-    //     return importedItems;
-    // }
+                if (throwError) {
+                    throw error;
+                }
+            }
+
+            if (!existingAsset) {
+                // only import asset if it wasn't already there
+                const uploadedBinaryFile = await this.client
+                    .uploadBinaryFile()
+                    .withData({
+                        binaryData: asset.binaryData,
+                        contentType: asset.mimeType ?? '',
+                        filename: asset.filename
+                    })
+                    .toPromise();
+
+                this.processItem(importedItems, 'upload', 'binaryFile', {
+                    imported: uploadedBinaryFile,
+                    original: asset,
+                    title: asset.filename,
+                    importedId: undefined,
+                    originalId: undefined
+                });
+
+                const createdAsset = await this.client
+                    .addAsset()
+                    .withData((builder) => {
+                        return {
+                            file_reference: {
+                                id: uploadedBinaryFile.data.id,
+                                type: 'internal'
+                            },
+                            external_id: assetExternalId
+                        };
+                    })
+                    .toPromise();
+
+                this.processItem(importedItems, 'create', 'asset', {
+                    imported: createdAsset,
+                    original: asset,
+                    title: asset.filename,
+                    importedId: createdAsset.data.id,
+                    originalId: asset.assetId
+                });
+            } else {
+                this.processItem(importedItems, 'skipUpdate', 'asset', {
+                    imported: existingAsset,
+                    original: asset,
+                    title: asset.filename,
+                    importedId: existingAsset.data.id,
+                    originalId: asset.assetId
+                });
+            }
+        }
+
+        return importedItems;
+    }
 
     private async importContentItemsAsync(
         importContentItems: IImportContentItem[],
@@ -255,10 +281,12 @@ export class ImportService {
 
         // then process language variants
         for (const importContentItem of importContentItems) {
+            // if content item does not have a workflow step it means it is used as a component within Rich text element
+            // such items are procesed within element transform
             if (!importContentItem.workflow_step) {
                 continue;
             }
-            
+
             const upsertedContentItem = preparedItems.find((m) => m.codename === importContentItem.codename);
 
             if (!upsertedContentItem) {
@@ -514,96 +542,6 @@ export class ImportService {
         }
     }
 
-    // private async setWorkflowStepsOfLanguageVariantsAsync(
-    //     languageVariants: LanguageVariantContracts.ILanguageVariantModelContract[],
-    //     workflows: WorkflowContracts.IWorkflowContract[]
-    // ): Promise<void> {
-    //     if (!languageVariants.length) {
-    //         return;
-    //     }
-
-    //     for (const languageVariant of languageVariants) {
-    //         const itemCodename: string | undefined = languageVariant.item.codename;
-    //         const languageCodename: string | undefined = languageVariant.language.codename;
-    //         const workflowStepCodename: string | undefined = languageVariant.workflow_step.codename;
-
-    //         if (!itemCodename) {
-    //             throw Error(`Missing item codename for item '${languageVariant.item.id}'`);
-    //         }
-    //         if (!languageCodename) {
-    //             throw Error(`Missing language codename for item '${itemCodename}'`);
-    //         }
-
-    //         if (!workflowStepCodename) {
-    //             throw Error(`Missing workflow step codename for item '${itemCodename}'`);
-    //         }
-
-    //         const isPublished = this.isLanguageVariantPublished(languageVariant, workflows);
-    //         const isArchived = this.isLanguageVariantArchived(languageVariant, workflows);
-
-    //         if (isPublished) {
-    //             await this.client
-    //                 .publishLanguageVariant()
-    //                 .byItemCodename(itemCodename)
-    //                 .byLanguageCodename(languageCodename)
-    //                 .withoutData()
-    //                 .toPromise()
-    //                 .then((response) => {
-    //                     this.processItem(`${itemCodename} (${languageCodename})`, 'publish', response.data);
-    //                 })
-    //                 .catch((error) => this.handleImportError(error));
-    //         } else if (isArchived) {
-    //             const defaultWorkflow = this.getDefaultWorkflow(workflows);
-
-    //             await this.client
-    //                 .changeWorkflowOfLanguageVariant()
-    //                 .byItemCodename(itemCodename)
-    //                 .byLanguageCodename(languageCodename)
-    //                 .withData({
-    //                     step_identifier: {
-    //                         codename: defaultWorkflow.archived_step.codename
-    //                     },
-    //                     workflow_identifier: {
-    //                         codename: defaultWorkflow.codename
-    //                     }
-    //                 })
-    //                 .toPromise()
-    //                 .then((response) => {
-    //                     this.processItem(`${itemCodename} (${languageCodename})`, 'archive', response.data);
-    //                 })
-    //                 .catch((error) => this.handleImportError(error));
-    //         } else {
-    //             const workflowData = this.getWorkflowAndStepOfLanguageVariant(languageVariant, workflows);
-
-    //             if (!workflowData) {
-    //                 throw Error(`Invalid workflow data for language variant '${itemCodename}'`);
-    //             }
-
-    //             await this.client
-    //                 .changeWorkflowOfLanguageVariant()
-    //                 .byItemCodename(itemCodename)
-    //                 .byLanguageCodename(languageCodename)
-    //                 .withData({
-    //                     step_identifier: {
-    //                         codename: workflowData.workflowStep.codename
-    //                     },
-    //                     workflow_identifier: {
-    //                         codename: workflowData.workflow.codename
-    //                     }
-    //                 })
-    //                 .toPromise()
-    //                 .then((response) => {
-    //                     this.processItem(
-    //                         `${itemCodename} (${languageCodename}) - ${workflowData.workflow.name} -> ${workflowData.workflowStep.name}`,
-    //                         'changeWorkflowStep',
-    //                         response.data
-    //                     );
-    //                 })
-    //                 .catch((error) => this.handleImportError(error));
-    //         }
-    //     }
-    // }
-
     private async getWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
         return (await this.client.listWorkflows().toPromise()).data;
     }
@@ -688,28 +626,6 @@ export class ImportService {
             itemType
         });
     }
-
-    // private getAddAssetModel(
-    //     assetContract: AssetContracts.IAssetModelContract,
-    //     binaryFileId: string,
-    //     currentItems: IImportItemResult[]
-    // ): AssetModels.IAddAssetRequestData {
-    //     const model: AssetModels.IAddAssetRequestData = {
-    //         descriptions: assetContract.descriptions,
-    //         file_reference: {
-    //             id: binaryFileId,
-    //             type: assetContract.file_reference.type
-    //         },
-    //         external_id: assetContract.external_id,
-    //         folder: assetContract.folder,
-    //         title: assetContract.title
-    //     };
-
-    //     // replace ids
-    //     idTranslateHelper.replaceIdReferencesWithNewId(model, currentItems);
-
-    //     return model;
-    // }
 
     private mapAssetFolder(
         folder: AssetFolderContracts.IAssetFolderContract

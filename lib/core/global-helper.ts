@@ -18,6 +18,10 @@ export const defaultRetryStrategy: IRetryStrategyOptions = {
     deltaBackoffMs: 1000
 };
 
+export function getExtension(url: string): string | undefined {
+    return url.split('.').pop();
+}
+
 export async function printProjectInfoToConsoleAsync(
     client: IManagementClient<any>
 ): Promise<ProjectModels.ProjectInformationModel> {
