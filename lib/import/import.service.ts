@@ -79,15 +79,14 @@ export class ImportService {
         }
         this.removeSkippedItemsFromImport(sourceData);
 
-        if (this.config.enableLog) {
-            console.log(`Importing data`);
-        }
-
         // import order matters
 
         try {
             // ### Assets
             if (sourceData.importData.assets.length) {
+                if (this.config.enableLog) {
+                    console.log(`Importing assets`);
+                }
                 const importedAssets = await this.importAssetsAsync(sourceData.importData.assets);
                 importedItems.push(...importedAssets);
             } else {
@@ -97,7 +96,11 @@ export class ImportService {
             }
 
             // ### Content items
+
             if (sourceData.importData.items.length) {
+                if (this.config.enableLog) {
+                    console.log(`Importing content items`);
+                }
                 await this.importContentItemsAsync(sourceData.importData.items, importedItems);
             }
 
@@ -206,6 +209,13 @@ export class ImportService {
                     originalId: asset.assetId
                 });
             } else {
+                this.processItem(importedItems, 'fetch', 'asset', {
+                    imported: existingAsset,
+                    original: asset,
+                    title: asset.filename,
+                    importedId: existingAsset.data.id,
+                    originalId: asset.assetId
+                });
                 this.processItem(importedItems, 'skipUpdate', 'asset', {
                     imported: existingAsset,
                     original: asset,
