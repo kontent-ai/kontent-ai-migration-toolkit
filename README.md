@@ -3,7 +3,17 @@
 
 # Kontent.ai CSV Manager
 
-The purpose of this project is to expot & import content related data to & from [Kontent.ai](https://kontent.ai) projects. This project is built on top of Management API.
+The purpose of this project is to export & import content related data to & from [Kontent.ai](https://kontent.ai) projects. This project uses `Delivery API` for fast import and conversion to CSV and `Management API` to import data back. 
+
+When importing it is absolutely essential that both `source` and `target` project contains identical definitions of Content types, taxonomies and workflows. Any inconsistency in data definition may cause import to fail.
+
+## Limitations
+
+### Export limitations
+
+Export is made with `Delivery API` for speed and efficiency, but this brings some limitations:
+
+- Assets are exported without their original `filename`. If you import these assets back to a different project, the `Asset Id` is used as a filename. However, if you import back to the same project, the asset will not be imported if it is already there. 
 
 ## Installation
 
@@ -18,13 +28,12 @@ Install package globally:
 | Config          | Value                                                                                                               |
 |-----------------|---------------------------------------------------------------------------------------------------------------------|
 | **projectId**       | Id of Kontent.ai project **(required)**                                                                            |
-| **apiKey**           | Content management Api key **(required)**                                                                               |
+| **apiKey**           | Content management Api key **(required for import, not needed for export)**                                                                               |
 | **action**           | Action. Possible values are: `restore` & `backup` & `clean` **(required)**                                              |
 | zipFilename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup').                                            |
-| force           | If enabled, project will we exported / restored even if there are data inconsistencies. Enabled by default. |
 | baseUrl           | Custom base URL for Management API calls. |
-| preserveWorkflow           | Indicates language variant workflow information should be preserved |
-| exportFilter           | Can be used to export only selected data types. Expects CSV of types. For example `contentType,language` will cause backup manager to export only content types & language data. List of data types can be found below. |
+| exportAssets           | Indicates if assets should be exported. Supported values are `true` & `false` |
+| exportTypes           | Array of content types codenames of which content items should be exported. By default all items of all types are exported |
 
 ### Execution
 
@@ -32,7 +41,7 @@ Install package globally:
 
 To backup a project run:
 
-`csvm --action=backup --apiKey=xxx --projectId=xxx`
+`csvm --action=backup --projectId=xxx`
 
 To restore a project run:
 
@@ -53,12 +62,11 @@ Create a `json` configuration file in the folder where you are attempting to run
 ```json
 {
     "projectId": "xxx",
-    "apiKey": "xxx",
-    "zipFilename": "backup",
+    "zipFilename": "csv-backup",
     "action": "backup",
-    "force": true,
     "baseUrl": null,
-    "exportFilter": null
+    "exportTypes": null,
+    "exportAssets": null
 }
 ```
 
@@ -76,9 +84,9 @@ import { FileService } from '@kontent-ai/backup-manager/dist/cjs/lib/node';
 
 const run = async () => {
     const exportService = new ExportService({
-        apiKey: 'sourceProjectApiKey',
         projectId: 'sourceProjectId',
-        exportFilter: undefined,
+        exportTypes: ['movie'], // array of type codenames to export
+        exportAssets: true, // indicates whether asset binaries should be exported 
         onExport: item => {
             // called when any content is exported
             console.log(`Exported: ${item.title} | ${item.type}`);

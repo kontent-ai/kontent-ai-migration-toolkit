@@ -42,7 +42,16 @@ export class ExportService {
         const types = await this.getContentTypesAsync();
         const languages = await this.getLanguagesAsync();
         const contentItems = await this.exportContentItemsAsync(types, languages);
-        const assets = this.extractAssets(contentItems, types);
+
+        let assets: IExportedAsset[] = [];
+
+        console.log('');
+        if (this.config.exportAssets) {
+            console.log(`Extracting assets referenced by content items`);
+            assets = this.extractAssets(contentItems, types);
+        } else {
+            console.log(`Assets export is disabled`);
+        }
 
         const data: IExportData = {
             contentItems: contentItems,
@@ -68,13 +77,13 @@ export class ExportService {
     private getTypesToExport(types: IContentType[]): IContentType[] {
         const filteredTypes: IContentType[] = [];
 
-        if (!this.config.exportFilter?.types?.length) {
+        if (!this.config?.exportTypes?.length) {
             // export all types
             return types;
         }
 
         for (const type of types) {
-            if (this.config.exportFilter.types.find((m) => m.toLowerCase() === type.system.codename.toLowerCase())) {
+            if (this.config.exportTypes.find((m) => m.toLowerCase() === type.system.codename.toLowerCase())) {
                 // content type can be exported
                 filteredTypes.push(type);
             }
@@ -87,7 +96,9 @@ export class ExportService {
         const typesToExport: IContentType[] = this.getTypesToExport(types);
         const contentItems: IContentItem[] = [];
 
-        console.log(`Exporting content items of types: ${yellow(typesToExport.map(m => m.system.codename).join(', '))} \n`);
+        console.log(
+            `Exporting content items of types: ${yellow(typesToExport.map((m) => m.system.codename).join(', '))} \n`
+        );
 
         for (const type of typesToExport) {
             for (const language of languages) {

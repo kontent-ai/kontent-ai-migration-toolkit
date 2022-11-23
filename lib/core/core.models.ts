@@ -1,12 +1,11 @@
-import { IExportFilter } from 'lib/export';
-
 export interface ICliFileConfig {
     projectId: string;
     apiKey: string;
     action: CliAction;
     zipFilename: string;
     baseUrl?: string;
-    exportFilter?: IExportFilter;
+    exportTypes?: string[];
+    exportAssets: boolean;
 }
 
 export type CliAction = 'backup' | 'restore' | 'clean';

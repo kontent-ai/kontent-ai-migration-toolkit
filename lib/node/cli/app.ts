@@ -31,10 +31,15 @@ const argv = yargs(process.argv.slice(2))
     .describe('z', 'Name of zip used for export / restore')
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
-    .alias('t', 'types')
+    .alias('t', 'exportTypes')
     .describe(
         't',
         'Can be used to export only selected content types. Expects CSV of type codenames. If not provided, all content items of all types are exported'
+    )
+    .alias('t', 'exportAssets')
+    .describe(
+        's',
+        'Indicated if assets should be exported. Supported values are "true" | "false"'
     )
     .help('h')
     .alias('h', 'help').argv;
@@ -43,7 +48,8 @@ const backupAsync = async (config: ICliFileConfig) => {
     const exportService = new ExportService({
         projectId: config.projectId,
         baseUrl: config.baseUrl,
-        exportFilter: config.exportFilter,
+        exportTypes: config.exportTypes,
+        exportAssets: config.exportAssets,
         onExport: (item) => {
             console.log(`Exported ${yellow(item.title)} | ${green(item.data.system.type)}`);
         }
@@ -158,9 +164,11 @@ const getConfig = async () => {
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
     const zipFilename: string | undefined =
         (resolvedArgs.zipFilename as string | undefined) ?? getDefaultBackupFilename();
-    const types: string | undefined = resolvedArgs.exportFilter as string | undefined;
+    const exportTypes: string | undefined = resolvedArgs.exportTypes as string | undefined;
+    const exportAssets: boolean =
+        (resolvedArgs.exportAssets as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
 
-    const typesMapped: string[] = types ? types.split(',').map((m) => m.trim()) : [];
+    const typesMapped: string[] = exportTypes ? exportTypes.split(',').map((m) => m.trim()) : [];
 
     if (!action) {
         throw Error(`No action was provided`);
@@ -181,9 +189,8 @@ const getConfig = async () => {
         projectId,
         zipFilename,
         baseUrl,
-        exportFilter: {
-            types: typesMapped
-        },
+        exportTypes: typesMapped,
+        exportAssets: exportAssets
     };
 
     return config;

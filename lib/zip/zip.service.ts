@@ -78,19 +78,25 @@ export class ZipService {
 
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
 
-        console.log(`\nPreparing to download '${yellow(exportData.data.assets.length.toString())}' assets`);
+        console.log('');
 
-        for (const asset of exportData.data.assets) {
-            const assetFilename = asset.filename;
-            assetsFolder.file(assetFilename, await this.getBinaryDataFromUrlAsync(asset.url), {
-                binary: true
-            });
+        if (exportData.data.assets.length) {
+            console.log(`Preparing to download '${yellow(exportData.data.assets.length.toString())}' assets`);
 
-            // create artificial delay between request to prevent network errors
-            await this.sleepAsync(this.delayBetweenAssetRequestsMs);
+            for (const asset of exportData.data.assets) {
+                const assetFilename = asset.filename;
+                assetsFolder.file(assetFilename, await this.getBinaryDataFromUrlAsync(asset.url), {
+                    binary: true
+                });
+
+                // create artificial delay between request to prevent network errors
+                await this.sleepAsync(this.delayBetweenAssetRequestsMs);
+            }
+
+            console.log(`All assets added to zip \n`);
+        } else {
+            console.log(`There are no assets to download\n`);
         }
-
-        console.log(`All assets added to zip \n`);
 
         const zipOutputType = this.getZipOutputType();
         console.log(`Creating zip file using '${yellow(zipOutputType)}'`);

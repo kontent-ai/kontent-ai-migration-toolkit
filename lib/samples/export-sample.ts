@@ -16,7 +16,8 @@ const run = async () => {
         onExport: item => {
             // called when any content is exported
             console.log(`Exported: ${item.title} | ${item.actionType}`);
-        }
+        },
+        exportAssets: true
     });
 
     // data contains entire project content
