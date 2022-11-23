@@ -104,6 +104,15 @@ export class ImportService {
     }
 
     private removeSkippedItemsFromImport(source: IImportSource): void {
+        if (this.config.canImport && this.config.canImport.asset) {
+            for (const asset of source.importData.assets) {
+                const shouldImport = this.config.canImport.asset(asset);
+                if (!shouldImport) {
+                    source.importData.assets = source.importData.assets.filter((m) => m.assetId !== asset.assetId);
+                }
+            }
+        }
+
         if (this.config.canImport && this.config.canImport.contentItem) {
             for (const item of source.importData.items) {
                 const shouldImport = this.config.canImport.contentItem(item);

@@ -21,7 +21,6 @@ Install package globally:
 | **apiKey**           | Content management Api key **(required)**                                                                               |
 | **action**           | Action. Possible values are: `restore` & `backup` & `clean` **(required)**                                              |
 | zipFilename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup').                                            |
-| skipValidation       | Skips validation endpoint during project export      
 | force           | If enabled, project will we exported / restored even if there are data inconsistencies. Enabled by default. |
 | baseUrl           | Custom base URL for Management API calls. |
 | preserveWorkflow           | Indicates language variant workflow information should be preserved |

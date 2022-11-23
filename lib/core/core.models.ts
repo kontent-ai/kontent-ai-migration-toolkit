@@ -5,10 +5,8 @@ export interface ICliFileConfig {
     apiKey: string;
     action: CliAction;
     zipFilename: string;
-    preserveWorkflow: boolean;
     baseUrl?: string;
     exportFilter?: IExportFilter;
-    skipValidation?: boolean;
 }
 
 export type CliAction = 'backup' | 'restore' | 'clean';

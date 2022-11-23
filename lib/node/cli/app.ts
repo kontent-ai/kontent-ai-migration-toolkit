@@ -31,8 +31,6 @@ const argv = yargs(process.argv.slice(2))
     .describe('z', 'Name of zip used for export / restore')
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
-    .alias('s', 'preserveWorkflow')
-    .describe('s', 'Indicates if workflow information of language variants is preserved')
     .alias('t', 'types')
     .describe(
         't',
@@ -91,12 +89,9 @@ const restoreAsync = async (config: ICliFileConfig) => {
         onImport: (item) => {
             console.log(`${yellow(item.title)} | ${green(item.itemType)} | ${item.actionType}`);
         },
-        preserveWorkflow: config.preserveWorkflow,
         baseUrl: config.baseUrl,
-        fixLanguages: true,
         projectId: config.projectId,
         apiKey: config.apiKey,
-        workflowIdForImportedItems: undefined,
         canImport: {
             contentItem: (item) => {
                 return true;
@@ -159,8 +154,6 @@ const getConfig = async () => {
 
     const action: CliAction | undefined = resolvedArgs.action as CliAction | undefined;
     const apiKey: string | undefined = resolvedArgs.apiKey as string | undefined;
-    const preserveWorkflow: boolean | undefined = (resolvedArgs.preserveWorkflow as boolean | undefined) ?? true;
-    const skipValidation: boolean = (resolvedArgs.skipValidation as boolean | undefined) ?? false;
     const projectId: string | undefined = resolvedArgs.projectId as string | undefined;
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
     const zipFilename: string | undefined =
@@ -183,7 +176,6 @@ const getConfig = async () => {
 
     // get config from command line
     const config: ICliFileConfig = {
-        preserveWorkflow,
         action,
         apiKey,
         projectId,
@@ -192,7 +184,6 @@ const getConfig = async () => {
         exportFilter: {
             types: typesMapped
         },
-        skipValidation
     };
 
     return config;

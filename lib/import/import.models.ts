@@ -2,20 +2,16 @@ import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import { IProcessedItem, ItemType, IPackageMetadata } from '../core';
 import { ElementType } from '@kontent-ai/delivery-sdk';
-import { IExportedAsset } from '../export';
 
 export interface IImportConfig {
     retryStrategy?: IRetryStrategyOptions;
-    workflowIdForImportedItems?: string;
     baseUrl?: string;
     projectId: string;
     apiKey: string;
-    preserveWorkflow: boolean;
     onImport?: (item: IProcessedItem) => void;
-    fixLanguages: boolean;
     canImport?: {
         contentItem?: (item: IImportContentItem) => boolean | Promise<boolean>;
-        asset?: (item: IExportedAsset) => boolean | Promise<boolean>;
+        asset?: (item: IImportAsset) => boolean | Promise<boolean>;
     };
 }
 
