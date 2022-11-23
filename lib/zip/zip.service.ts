@@ -72,12 +72,13 @@ export class ZipService {
         );
 
         for (const typeWrapper of typeWrappers) {
+            console.log(`Adding '${yellow(typeWrapper.csvFilename)}' to zip`);
             contentItemsFolder.file(typeWrapper.csvFilename, typeWrapper.csv);
         }
 
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
 
-        console.log(`Preparing to download '${yellow(exportData.data.assets.length.toString())}' assets`);
+        console.log(`\nPreparing to download '${yellow(exportData.data.assets.length.toString())}' assets`);
 
         for (const asset of exportData.data.assets) {
             const assetFilename = asset.filename;
