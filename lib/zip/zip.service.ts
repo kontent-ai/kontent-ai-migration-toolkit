@@ -28,15 +28,11 @@ export class ZipService {
     }
 
     public async extractZipAsync(zipFile: any): Promise<IImportSource> {
-        if (this.config.enableLog) {
-            console.log(`Unzipping file`);
-        }
+        console.log(`Unzipping file`);
 
         const unzippedFile = await JSZip.loadAsync(zipFile);
 
-        if (this.config.enableLog) {
-            console.log(`Parsing zip contents`);
-        }
+        console.log(`Parsing zip contents`);
         const result: IImportSource = {
             importData: {
                 items: await this.parseContentItemsCsvFileAsync(unzippedFile),
@@ -45,9 +41,7 @@ export class ZipService {
             metadata: await this.readAndParseJsonFileAsync(unzippedFile, this.metadataName)
         };
 
-        if (this.config.enableLog) {
-            console.log(`Pasing zip completed`);
-        }
+        console.log(`Pasing zip completed`);
 
         return result;
     }
@@ -55,9 +49,7 @@ export class ZipService {
     public async createZipAsync(exportData: IExportAllResult): Promise<any> {
         const zip = new JSZip();
 
-        if (this.config.enableLog) {
-            console.log(`Parsing json`);
-        }
+        console.log(`Parsing json`);
 
         const contentItemsFolder = zip.folder(this.contentItemsFolderName);
         const assetsFolder = zip.folder(this.assetsFolderName);
@@ -81,13 +73,11 @@ export class ZipService {
 
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
 
-        if (this.config.enableLog) {
-            console.log(`Adding assets to zip`);
-        }
+        console.log(`Adding assets to zip`);
 
         for (const asset of exportData.data.assets) {
             const assetFilename = asset.filename;
-            assetsFolder.file(assetFilename, await this.getBinaryDataFromUrlAsync(asset.url, this.config.enableLog), {
+            assetsFolder.file(assetFilename, await this.getBinaryDataFromUrlAsync(asset.url), {
                 binary: true
             });
 
@@ -95,15 +85,11 @@ export class ZipService {
             await this.sleepAsync(this.delayBetweenAssetRequestsMs);
         }
 
-        if (this.config.enableLog) {
-            console.log(`Creating zip file`);
-        }
+        console.log(`Creating zip file`);
 
         const content = await zip.generateAsync({ type: this.getZipOutputType() });
 
-        if (this.config.enableLog) {
-            console.log(`Zip file prepared`);
-        }
+        console.log(`Zip file prepared`);
 
         return content;
     }
@@ -226,7 +212,6 @@ export class ZipService {
             if (file?.name?.endsWith('/')) {
                 continue;
             }
-
 
             const binaryData = await file.async(this.getZipOutputType());
 
@@ -360,13 +345,11 @@ export class ZipService {
         return JSON.parse(text);
     }
 
-    private async getBinaryDataFromUrlAsync(url: string, enableLog: boolean): Promise<any> {
+    private async getBinaryDataFromUrlAsync(url: string): Promise<any> {
         // temp fix for Kontent.ai Repository not validating url
         url = url.replace('#', '%23');
 
-        if (enableLog) {
-            console.log(`Downloading ${yellow(url)}`);
-        }
+        console.log(`Downloading ${yellow(url)}`);
 
         return (
             await this.httpService.getAsync(

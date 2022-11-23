@@ -3,7 +3,6 @@
     "apiKey": "y",
     "zipFilename": "backup",
     "action": "backup",
-    "enableLog": true,
     "force": false,
     "baseUrl": null,
     "exportFilter": null

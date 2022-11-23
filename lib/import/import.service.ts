@@ -74,9 +74,7 @@ export class ImportService {
         // this is an optional step where users can exclude certain objects from being
         // imported via import configuration.
         // this has to be done before translating ids
-        if (this.config.enableLog) {
-            console.log(`Removing skipped items`);
-        }
+        console.log(`Removing skipped items`);
         this.removeSkippedItemsFromImport(sourceData);
 
         // import order matters
@@ -84,29 +82,21 @@ export class ImportService {
         try {
             // ### Assets
             if (sourceData.importData.assets.length) {
-                if (this.config.enableLog) {
-                    console.log(`Importing assets`);
-                }
+                console.log(`Importing assets`);
                 const importedAssets = await this.importAssetsAsync(sourceData.importData.assets);
                 importedItems.push(...importedAssets);
             } else {
-                if (this.config.enableLog) {
-                    console.log(`Skipping assets`);
-                }
+                console.log(`Skipping assets`);
             }
 
             // ### Content items
 
             if (sourceData.importData.items.length) {
-                if (this.config.enableLog) {
-                    console.log(`Importing content items`);
-                }
+                console.log(`Importing content items`);
                 await this.importContentItemsAsync(sourceData.importData.items, importedItems);
             }
 
-            if (this.config.enableLog) {
-                console.log(`Finished import`);
-            }
+            console.log(`Finished import`);
         } catch (error) {
             this.handleImportError(error);
         }

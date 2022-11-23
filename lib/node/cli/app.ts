@@ -29,8 +29,6 @@ const argv = yargs(process.argv.slice(2))
     .describe('a', 'Action to perform. One of: backup, restore & clean')
     .alias('z', 'zipFilename')
     .describe('z', 'Name of zip used for export / restore')
-    .alias('l', 'enableLog')
-    .describe('l', 'Indicates if default logging is enabled (useful to indicate progress)')
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
     .alias('s', 'preserveWorkflow')
@@ -50,18 +48,13 @@ const backupAsync = async (config: ICliFileConfig) => {
         baseUrl: config.baseUrl,
         exportFilter: config.exportFilter,
         onExport: (item) => {
-            if (config.enableLog) {
-                console.log(`Exported ${yellow(item.title)} | ${green(item.data.system.type)}`);
-            }
+            console.log(`Exported ${yellow(item.title)} | ${green(item.data.system.type)}`);
         }
     });
 
-    const fileService = new FileService({
-        enableLog: config.enableLog
-    });
+    const fileService = new FileService({});
 
     const zipService = new ZipService({
-        enableLog: config.enableLog,
         context: 'node.js'
     });
 
@@ -76,9 +69,7 @@ const backupAsync = async (config: ICliFileConfig) => {
 const cleanAsync = async (config: ICliFileConfig) => {
     const cleanService = new CleanService({
         onDelete: (item) => {
-            if (config.enableLog) {
-                console.log(`Deleted: ${yellow(item.title)}`);
-            }
+            console.log(`Deleted: ${yellow(item.title)}`);
         },
         baseUrl: config.baseUrl,
         projectId: config.projectId,
@@ -92,26 +83,20 @@ const cleanAsync = async (config: ICliFileConfig) => {
 
 const restoreAsync = async (config: ICliFileConfig) => {
     const zipService = new ZipService({
-        enableLog: config.enableLog,
         context: 'node.js'
     });
 
-    const fileService = new FileService({
-        enableLog: config.enableLog
-    });
+    const fileService = new FileService({});
 
     const importService = new ImportService({
         onImport: (item) => {
-            if (config.enableLog) {
-                console.log(`${yellow(item.title)} | ${green(item.itemType)} | ${item.actionType}`);
-            }
+            console.log(`${yellow(item.title)} | ${green(item.itemType)} | ${item.actionType}`);
         },
         preserveWorkflow: config.preserveWorkflow,
         baseUrl: config.baseUrl,
         fixLanguages: true,
         projectId: config.projectId,
         apiKey: config.apiKey,
-        enableLog: config.enableLog,
         workflowIdForImportedItems: undefined,
         canImport: {
             contentItem: (item) => {
@@ -180,7 +165,6 @@ const getConfig = async () => {
 
     const action: CliAction | undefined = resolvedArgs.action as CliAction | undefined;
     const apiKey: string | undefined = resolvedArgs.apiKey as string | undefined;
-    const enableLog: boolean | undefined = (resolvedArgs.enableLog as boolean | undefined) ?? true;
     const preserveWorkflow: boolean | undefined = (resolvedArgs.preserveWorkflow as boolean | undefined) ?? true;
     const skipValidation: boolean = (resolvedArgs.skipValidation as boolean | undefined) ?? false;
     const projectId: string | undefined = resolvedArgs.projectId as string | undefined;
@@ -208,7 +192,6 @@ const getConfig = async () => {
         preserveWorkflow,
         action,
         apiKey,
-        enableLog,
         projectId,
         zipFilename,
         baseUrl,

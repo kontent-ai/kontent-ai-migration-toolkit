@@ -21,7 +21,6 @@ Install package globally:
 | **apiKey**           | Content management Api key **(required)**                                                                               |
 | **action**           | Action. Possible values are: `restore` & `backup` & `clean` **(required)**                                              |
 | zipFilename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup').                                            |
-| enableLog       | Indicates if default logging is enabled (useful to indicate progress)       
 | skipValidation       | Skips validation endpoint during project export      
 | force           | If enabled, project will we exported / restored even if there are data inconsistencies. Enabled by default. |
 | baseUrl           | Custom base URL for Management API calls. |
@@ -58,7 +57,6 @@ Create a `json` configuration file in the folder where you are attempting to run
     "apiKey": "xxx",
     "zipFilename": "backup",
     "action": "backup",
-    "enableLog": true,
     "force": true,
     "baseUrl": null,
     "exportFilter": null
@@ -94,14 +92,12 @@ const run = async () => {
     // you can also save backup in file with ZipService
     const zipService = new ZipService({
         context: 'node.js',
-        enableLog: true
     });
 
     // prepare zip data
     const zipData = await zipService.createZipAsync(data);
 
     const fileService = new FileService({
-        enableLog: true,
     });
 
     // create file on FS
@@ -119,7 +115,6 @@ import { FileService } from '@kontent-ai/backup-manager/dist/cjs/lib/node';
 
 const run = async () => {
     const fileService = new FileService({
-        enableLog: true,
     });
 
     // load file
@@ -127,7 +122,6 @@ const run = async () => {
 
     const zipService = new ZipService({
         context: 'node.js',
-        enableLog: true
     });
 
     const importService = new ImportService({
@@ -155,7 +149,6 @@ const run = async () => {
         preserveWorkflow: true, // when enabled, language variants will preserve their workflow information
         projectId: 'targetProjectId',
         apiKey: 'targetProjectId',
-        enableLog: true, // shows progress of immport in console
         fixLanguages: true, // backup manager will attempt to create missing languages & map existing languages
         workflowIdForImportedItems: '00000000-0000-0000-0000-000000000000' // id that items are assigned
     });
@@ -176,7 +169,6 @@ run();
 const run = async () => {
     const zipService = new ZipService({
         filename: 'xxx',
-        enableLog: true,
         context: 'node.js' // 'node.js' or 'browser'
     });
 
@@ -188,7 +180,6 @@ const run = async () => {
         fixLanguages: true,
         projectId: 'targetProjectId',
         apiKey: 'targetProjectId',
-        enableLog: true
     });
 
     // read export data from zip

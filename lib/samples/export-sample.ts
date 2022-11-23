@@ -5,11 +5,9 @@ import { FileService } from '../node';
 
 const run = async () => {
     const fileService = new FileService({
-        enableLog: true
     });
 
     const zipService = new ZipService({
-        enableLog: true,
         context: 'node.js'
     });
 

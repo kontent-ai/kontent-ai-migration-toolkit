@@ -5,7 +5,6 @@ export interface ICliFileConfig {
     apiKey: string;
     action: CliAction;
     zipFilename: string;
-    enableLog: boolean;
     preserveWorkflow: boolean;
     baseUrl?: string;
     exportFilter?: IExportFilter;

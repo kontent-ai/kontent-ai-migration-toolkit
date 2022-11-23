@@ -4,12 +4,10 @@ import { FileService } from '../node';
 
 const run = async () => {
     const zipService = new ZipService({
-        enableLog: true,
         context: 'node.js'
     });
 
     const fileService = new FileService({
-        enableLog: true
     });
 
     const importService = new ImportService({
@@ -34,7 +32,6 @@ const run = async () => {
         preserveWorkflow: true, // when enabled, workflow of language variants is preserved
         projectId: 'targetProjectId',
         apiKey: 'targetProjectId',
-        enableLog: true, // shows progress of immport in console
         fixLanguages: true, // backup manager will attempt to create missing languages & map existing languages
         workflowIdForImportedItems: '00000000-0000-0000-0000-000000000000' // id that items are assigned
     });

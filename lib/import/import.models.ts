@@ -10,7 +10,6 @@ export interface IImportConfig {
     baseUrl?: string;
     projectId: string;
     apiKey: string;
-    enableLog: boolean;
     preserveWorkflow: boolean;
     onImport?: (item: IProcessedItem) => void;
     fixLanguages: boolean;
