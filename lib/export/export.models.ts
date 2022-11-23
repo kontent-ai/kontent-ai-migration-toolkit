@@ -5,7 +5,7 @@ import { IContentItem, IContentType, ILanguage } from '@kontent-ai/delivery-sdk'
 
 export interface IExportFilter {
     /**
-     * Array of type codenames to export. Defaults to all content types if none type is provided.
+     * Array of content type codenames to export. Defaults to all content types if none type is provided.
      */
     types?: string[];
 }

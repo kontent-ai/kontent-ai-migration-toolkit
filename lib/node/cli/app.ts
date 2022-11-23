@@ -12,13 +12,13 @@ import { FileService } from '../file/file.service';
 import { green, red, yellow } from 'colors';
 
 const argv = yargs(process.argv.slice(2))
-    .example('kbm --action=backup --apiKey=xxx --projectId=xxx', 'Creates zip backup of Kontent.ai project')
+    .example('csvm --action=backup --apiKey=xxx --projectId=xxx', 'Creates zip backup of Kontent.ai project')
     .example(
-        'kbm --action=restore --apiKey=xxx --projectId=xxx --zipFilename=backupFile',
+        'csvm --action=restore --apiKey=xxx --projectId=xxx --zipFilename=backupFile',
         'Read given zip file and recreates data in Kontent.ai project'
     )
     .example(
-        'kbm --action=clean --apiKey=xxx --projectId=xxx',
+        'csvm --action=clean --apiKey=xxx --projectId=xxx',
         'Deletes data from given Kontent.ai project. Use with care, this action is not reversible.'
     )
     .alias('p', 'projectId')
@@ -191,7 +191,7 @@ const getConfig = async () => {
 
 const getDefaultBackupFilename = () => {
     const date = new Date();
-    return `kontent-backup-${date.getDate()}-${
+    return `csvm-backup-${date.getDate()}-${
         date.getMonth() + 1
     }-${date.getFullYear()}-${date.getHours()}-${date.getMinutes()}`;
 };

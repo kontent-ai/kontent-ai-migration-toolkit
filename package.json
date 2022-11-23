@@ -5,7 +5,7 @@
   "preferGlobal": true,
   "private": true,
   "bin": {
-    "kbm": "./dist/cjs/lib/node/cli/app.js"
+    "csvm": "./dist/cjs/lib/node/cli/app.js"
   },
   "repository": {
     "type": "git",

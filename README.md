@@ -32,19 +32,19 @@ Install package globally:
 
 To backup a project run:
 
-`kbm --action=backup --apiKey=xxx --projectId=xxx`
+`csvm --action=backup --apiKey=xxx --projectId=xxx`
 
 To restore a project run:
 
-`kbm --action=restore --apiKey=xxx --projectId=xxx --zipFilename=backupFile`
+`csvm --action=restore --apiKey=xxx --projectId=xxx --zipFilename=backupFile`
 
 To clean (delete) everything inside a project run:
 
-`kbm --action=clean --apiKey=xxx --projectId=xxx`
+`csvm --action=clean --apiKey=xxx --projectId=xxx`
 
 To get some help you can use:
 
-`kbm --help`
+`csvm --help`
 
 ### Use with config file
 
@@ -64,7 +64,7 @@ Create a `json` configuration file in the folder where you are attempting to run
 
 To execute your action run: 
 
-`kbm --config=backup-config.json`
+`csvm --config=backup-config.json`
 
 ## Use via code
 

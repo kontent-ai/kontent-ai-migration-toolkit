@@ -64,36 +64,33 @@ export class ImportService {
         // log information regarding version mismatch
         if (version !== sourceData.metadata.csvManagerVersion) {
             console.warn(
-                `WARNING: Version mismatch. Current version of '${name}' is '${version}', but package was created in version '${sourceData.metadata.csvManagerVersion}'.`
+                `WARNING: Version mismatch. Current version of '${name}' is '${version}', but export was created using version '${sourceData.metadata.csvManagerVersion}'.`
             );
             console.warn(
-                `Import may still succeed, but if it doesn't, please try using '${sourceData.metadata.csvManagerVersion}' version of this library. `
+                `Import may still succeed, but if it doesn't, please try using '${sourceData.metadata.csvManagerVersion}' version of this library.`
             );
         }
 
-        // this is an optional step where users can exclude certain objects from being
-        // imported via import configuration.
-        // this has to be done before translating ids
-        console.log(`Removing skipped items`);
+        // this is an optional step where users can exclude certain objects from being imported
         this.removeSkippedItemsFromImport(sourceData);
 
         // import order matters
-
         try {
-            // ### Assets
+            //  Assets
             if (sourceData.importData.assets.length) {
                 console.log(`Importing assets`);
                 const importedAssets = await this.importAssetsAsync(sourceData.importData.assets);
                 importedItems.push(...importedAssets);
             } else {
-                console.log(`Skipping assets`);
+                console.log(`There are no assets to import`);
             }
 
-            // ### Content items
-
+            // Content items
             if (sourceData.importData.items.length) {
                 console.log(`Importing content items`);
                 await this.importContentItemsAsync(sourceData.importData.items, importedItems);
+            } else {
+                console.log(`There are no content items to import`);
             }
 
             console.log(`Finished import`);
@@ -104,11 +101,15 @@ export class ImportService {
     }
 
     private removeSkippedItemsFromImport(source: IImportSource): void {
+        let removedAssets: number = 0;
+        let removedContentItems: number = 0;
+
         if (this.config.canImport && this.config.canImport.asset) {
             for (const asset of source.importData.assets) {
                 const shouldImport = this.config.canImport.asset(asset);
                 if (!shouldImport) {
                     source.importData.assets = source.importData.assets.filter((m) => m.assetId !== asset.assetId);
+                    removedAssets++;
                 }
             }
         }
@@ -118,9 +119,13 @@ export class ImportService {
                 const shouldImport = this.config.canImport.contentItem(item);
                 if (!shouldImport) {
                     source.importData.items = source.importData.items.filter((m) => m.codename !== item.codename);
+                    removedContentItems++;
                 }
             }
         }
+
+        console.log(`Removed '${yellow(removedAssets.toString())}' assets from import`);
+        console.log(`Removed '${yellow(removedContentItems.toString())}' content items from import`);
     }
 
     private async importAssetsAsync(assets: IImportAsset[]): Promise<IImportItemResult[]> {

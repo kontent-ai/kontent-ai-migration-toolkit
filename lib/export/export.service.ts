@@ -65,20 +65,31 @@ export class ExportService {
         };
     }
 
-    private async exportContentItemsAsync(types: IContentType[], languages: ILanguage[]): Promise<IContentItem[]> {
-        const contentItems: IContentItem[] = [];
+    private getTypesToExport(types: IContentType[]): IContentType[] {
+        const filteredTypes: IContentType[] = [];
+
+        if (!this.config.exportFilter?.types?.length) {
+            // export all types
+            return types;
+        }
 
         for (const type of types) {
-            if (this.config.exportFilter?.types?.length) {
-                if (
-                    this.config.exportFilter.types.find((m) => m.toLowerCase() === type.system.codename.toLowerCase())
-                ) {
-                    // content type can be exported
-                } else {
-                    // content type should not be exported
-                    continue;
-                }
+            if (this.config.exportFilter.types.find((m) => m.toLowerCase() === type.system.codename.toLowerCase())) {
+                // content type can be exported
+                filteredTypes.push(type);
             }
+        }
+
+        return filteredTypes;
+    }
+
+    private async exportContentItemsAsync(types: IContentType[], languages: ILanguage[]): Promise<IContentItem[]> {
+        const typesToExport: IContentType[] = this.getTypesToExport(types);
+        const contentItems: IContentItem[] = [];
+
+        console.log(`Exporting content items of types: ${yellow(typesToExport.map(m => m.system.codename).join(', '))} \n`);
+
+        for (const type of typesToExport) {
             for (const language of languages) {
                 await this.deliveryClient
                     .items()
