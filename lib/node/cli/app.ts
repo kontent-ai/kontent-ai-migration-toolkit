@@ -43,7 +43,6 @@ const argv = yargs(process.argv.slice(2))
 
 const backupAsync = async (config: ICliFileConfig) => {
     const exportService = new ExportService({
-        apiKey: config.apiKey,
         projectId: config.projectId,
         baseUrl: config.baseUrl,
         exportFilter: config.exportFilter,
@@ -120,15 +119,10 @@ const validateConfig = (config?: ICliFileConfig) => {
     }
 
     const projectId = config.projectId;
-    const apiKey = config.apiKey;
     const action = config.action;
 
     if (!projectId) {
         throw Error('Invalid project id');
-    }
-
-    if (!apiKey) {
-        throw Error('Invalid api key');
     }
 
     if (!action) {

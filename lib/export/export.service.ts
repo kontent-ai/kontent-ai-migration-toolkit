@@ -1,4 +1,3 @@
-import { IManagementClient, createManagementClient } from '@kontent-ai/management-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
 import {
     createDeliveryClient,
@@ -11,16 +10,9 @@ import {
 } from '@kontent-ai/delivery-sdk';
 
 import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models';
-import {
-    ActionType,
-    defaultRetryStrategy,
-    extractAssetIdFromUrl,
-    getExtension,
-    ItemType,
-    printProjectInfoToConsoleAsync
-} from '../core';
+import { ActionType, defaultRetryStrategy, extractAssetIdFromUrl, getExtension, ItemType } from '../core';
 import { version } from '../../package.json';
-import { magenta } from 'colors';
+import { magenta, yellow } from 'colors';
 
 export class ExportService {
     private readonly httpService: HttpService = new HttpService({
@@ -29,19 +21,11 @@ export class ExportService {
 
     private readonly contentItemsLimit: number = 200;
 
-    private readonly managementClient: IManagementClient<any>;
     private readonly deliveryClient: IDeliveryClient;
 
     constructor(private config: IExportConfig) {
         const retryStrategy = config.retryStrategy ?? defaultRetryStrategy;
 
-        this.managementClient = createManagementClient({
-            apiKey: config.apiKey,
-            projectId: config.projectId,
-            baseUrl: config.baseUrl,
-            httpService: this.httpService,
-            retryStrategy: retryStrategy
-        });
         this.deliveryClient = createDeliveryClient({
             projectId: config.projectId,
             retryStrategy: retryStrategy,
@@ -53,7 +37,7 @@ export class ExportService {
     }
 
     async exportAllAsync(): Promise<IExportAllResult> {
-        const project = await printProjectInfoToConsoleAsync(this.managementClient);
+        console.log(`Project: '${yellow(this.config.projectId)}'\n`);
 
         const types = await this.getContentTypesAsync();
         const languages = await this.getLanguagesAsync();
@@ -71,9 +55,7 @@ export class ExportService {
             metadata: {
                 csvManagerVersion: version,
                 timestamp: new Date(),
-                projectId: project.id,
-                projectName: project.name,
-                environment: project.environment,
+                projectId: this.config.projectId,
                 dataOverview: {
                     contentItemsCount: data.contentItems.length,
                     assetsCount: data.assets.length

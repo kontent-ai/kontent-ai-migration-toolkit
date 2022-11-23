@@ -49,8 +49,6 @@ export interface IIdCodenameTranslationResult {
 
 export interface IPackageMetadata {
     projectId: string;
-    projectName: string;
-    environment: string;
     timestamp: Date;
     dataOverview: IPackageDataOverview;
     csvManagerVersion: string;

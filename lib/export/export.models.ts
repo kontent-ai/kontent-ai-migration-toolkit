@@ -12,7 +12,6 @@ export interface IExportFilter {
 
 export interface IExportConfig {
     projectId: string;
-    apiKey: string;
     baseUrl?: string;
     onExport?: (item: IProcessedItem) => void;
     exportFilter?: IExportFilter;

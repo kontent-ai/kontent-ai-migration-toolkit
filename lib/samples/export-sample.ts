@@ -12,7 +12,6 @@ const run = async () => {
     });
 
     const exportService = new ExportService({
-        apiKey: 'sourceProjectApiKey',
         projectId: 'sourceProjectId',
         onExport: item => {
             // called when any content is exported

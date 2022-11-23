@@ -49,7 +49,7 @@ export class ZipService {
     public async createZipAsync(exportData: IExportAllResult): Promise<any> {
         const zip = new JSZip();
 
-        console.log(`Parsing json`);
+        console.log('');
 
         const contentItemsFolder = zip.folder(this.contentItemsFolderName);
         const assetsFolder = zip.folder(this.assetsFolderName);
@@ -62,6 +62,10 @@ export class ZipService {
             throw Error(`Could not create folder '${yellow(this.contentItemsFolderName)}'`);
         }
 
+        console.log(
+            `Mapping '${yellow(exportData.data.contentItems.length.toString())}' content items to '${yellow('csv')}'`
+        );
+
         const typeWrappers = await this.mapLanguageVariantsToCsvAsync(
             exportData.data.contentTypes,
             exportData.data.contentItems
@@ -73,7 +77,7 @@ export class ZipService {
 
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
 
-        console.log(`Adding assets to zip`);
+        console.log(`Preparing to download '${yellow(exportData.data.assets.length.toString())}' assets`);
 
         for (const asset of exportData.data.assets) {
             const assetFilename = asset.filename;
@@ -85,11 +89,14 @@ export class ZipService {
             await this.sleepAsync(this.delayBetweenAssetRequestsMs);
         }
 
-        console.log(`Creating zip file`);
+        console.log(`All assets added to zip \n`);
 
-        const content = await zip.generateAsync({ type: this.getZipOutputType() });
+        const zipOutputType = this.getZipOutputType();
+        console.log(`Creating zip file using '${yellow(zipOutputType)}'`);
 
-        console.log(`Zip file prepared`);
+        const content = await zip.generateAsync({ type: zipOutputType });
+
+        console.log(`Zip file generated`);
 
         return content;
     }

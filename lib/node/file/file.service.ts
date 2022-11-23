@@ -21,7 +21,7 @@ export class FileService {
         const filePath = this.getFilePath(fileNameWithoutExtension);
 
         await promises.writeFile(filePath, content);
-        console.log(`File saved`);
+        console.log(`File '${yellow(filePath)}' saved`);
     }
 
     private getFilePath(fileNameWithoutExtension: string) {
