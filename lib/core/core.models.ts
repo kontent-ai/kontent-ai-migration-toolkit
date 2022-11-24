@@ -1,6 +1,7 @@
 export interface ICliFileConfig {
     projectId: string;
     apiKey: string;
+    skipFailedItems: boolean;
     action: CliAction;
     filename: string;
     baseUrl?: string;

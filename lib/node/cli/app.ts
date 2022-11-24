@@ -26,13 +26,15 @@ const argv = yargs(process.argv.slice(2))
     .describe('f', 'Name of file to export / restore')
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
-    .alias('t', 'exportTypes')
+    .alias('sfi', 'skipFailedItems')
+    .describe('sfi', 'Indicates whether import should skip items that fail to import and cotinue with next item')
+    .alias('et', 'exportTypes')
     .describe(
-        't',
+        'et',
         'Can be used to export only selected content types. Expects CSV of type codenames. If not provided, all content items of all types are exported'
     )
-    .alias('t', 'exportAssets')
-    .describe('s', 'Indicated if assets should be exported. Supported values are "true" | "false"')
+    .alias('ea', 'exportAssets')
+    .describe('at', 'Indicated if assets should be exported. Supported values are "true" | "false"')
     .help('h')
     .alias('h', 'help').argv;
 
@@ -72,6 +74,7 @@ const restoreAsync = async (config: ICliFileConfig) => {
         onImport: (item) => {
             console.log(`${yellow(item.title)} | ${green(item.itemType)} | ${item.actionType}`);
         },
+        skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
         projectId: config.projectId,
         apiKey: config.apiKey,
@@ -148,6 +151,8 @@ const getConfig = async () => {
     const exportTypes: string | undefined = resolvedArgs.exportTypes as string | undefined;
     const exportAssets: boolean =
         (resolvedArgs.exportAssets as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
+    const skipFailedItems: boolean =
+        (resolvedArgs.skipFailedItems as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
 
     const typesMapped: string[] = exportTypes ? exportTypes.split(',').map((m) => m.trim()) : [];
 
@@ -171,7 +176,8 @@ const getConfig = async () => {
         filename: filename,
         baseUrl,
         exportTypes: typesMapped,
-        exportAssets: exportAssets
+        exportAssets: exportAssets,
+        skipFailedItems: skipFailedItems
     };
 
     return config;

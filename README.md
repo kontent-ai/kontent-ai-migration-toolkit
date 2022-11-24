@@ -32,8 +32,9 @@ Install package globally:
 | **action**           | Action. Possible values are: `restore` & `backup` **(required)**                                              |
 | zipFilename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup').                                            |
 | baseUrl           | Custom base URL for Management API calls. |
-| exportAssets           | Indicates if assets should be exported. Supported values are `true` & `false` |
+| exportAssets           | Indicates if assets should be exported. Supported are `true` & `false` |
 | exportTypes           | Array of content types codenames of which content items should be exported. By default all items of all types are exported |
+| skipFailedItems           | Indicates if failed content items & language variants should be skipped if their import fails. Supported are `true` & `false` |
 
 ### Execution
 

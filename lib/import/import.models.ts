@@ -4,10 +4,12 @@ import { IProcessedItem, ItemType, IPackageMetadata } from '../core';
 import { ElementType } from '@kontent-ai/delivery-sdk';
 
 export interface IImportConfig {
+    apiKey: string;
+    skipFailedItems: boolean;
+
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;
     projectId: string;
-    apiKey: string;
     onImport?: (item: IProcessedItem) => void;
     canImport?: {
         contentItem?: (item: IImportContentItem) => boolean | Promise<boolean>;

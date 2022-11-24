@@ -29,7 +29,8 @@ const run = async () => {
             contentItem: (item) => true // all content items will be imported
         },
         projectId: 'targetProjectId',
-        apiKey: 'targetProjectId'
+        apiKey: 'targetProjectId',
+        skipFailedItems: false,
     });
 
     // read file
