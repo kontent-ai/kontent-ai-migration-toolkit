@@ -190,7 +190,7 @@ const getDefaultBackupFilename = () => {
     const date = new Date();
     return `csvm-backup-${date.getDate()}-${
         date.getMonth() + 1
-    }-${date.getFullYear()}-${date.getHours()}-${date.getMinutes()}`;
+    }-${date.getFullYear()}-${date.getHours()}-${date.getMinutes()}.zip`;
 };
 
 run()
