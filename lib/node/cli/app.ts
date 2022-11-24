@@ -2,7 +2,6 @@
 import { readFileSync } from 'fs';
 import * as yargs from 'yargs';
 
-import { CleanService } from '../../clean';
 import { ICliFileConfig, CliAction } from '../../core';
 import { ExportService } from '../../export';
 import { ImportService } from '../../import';
@@ -17,16 +16,12 @@ const argv = yargs(process.argv.slice(2))
         'csvm --action=restore --apiKey=xxx --projectId=xxx --zipFilename=backupFile',
         'Read given zip file and recreates data in Kontent.ai project'
     )
-    .example(
-        'csvm --action=clean --apiKey=xxx --projectId=xxx',
-        'Deletes data from given Kontent.ai project. Use with care, this action is not reversible.'
-    )
     .alias('p', 'projectId')
     .describe('p', 'ProjectId')
     .alias('k', 'apiKey')
     .describe('k', 'Management API Key')
     .alias('a', 'action')
-    .describe('a', 'Action to perform. One of: backup, restore & clean')
+    .describe('a', 'Action to perform. One of: "backup" | "restore"')
     .alias('z', 'zipFilename')
     .describe('z', 'Name of zip used for export / restore')
     .alias('b', 'baseUrl')
@@ -37,10 +32,7 @@ const argv = yargs(process.argv.slice(2))
         'Can be used to export only selected content types. Expects CSV of type codenames. If not provided, all content items of all types are exported'
     )
     .alias('t', 'exportAssets')
-    .describe(
-        's',
-        'Indicated if assets should be exported. Supported values are "true" | "false"'
-    )
+    .describe('s', 'Indicated if assets should be exported. Supported values are "true" | "false"')
     .help('h')
     .alias('h', 'help').argv;
 
@@ -65,21 +57,6 @@ const backupAsync = async (config: ICliFileConfig) => {
     const zipFileData = await zipService.createZipAsync(response);
 
     await fileService.writeFileAsync(config.zipFilename, zipFileData);
-
-    console.log(green('Completed'));
-};
-
-const cleanAsync = async (config: ICliFileConfig) => {
-    const cleanService = new CleanService({
-        onDelete: (item) => {
-            console.log(`Deleted: ${yellow(item.title)}`);
-        },
-        baseUrl: config.baseUrl,
-        projectId: config.projectId,
-        apiKey: config.apiKey
-    });
-
-    await cleanService.cleanAllAsync();
 
     console.log(green('Completed'));
 };
@@ -138,8 +115,6 @@ const run = async () => {
 
     if (config.action === 'backup') {
         await backupAsync(config);
-    } else if (config.action === 'clean') {
-        await cleanAsync(config);
     } else if (config.action === 'restore') {
         await restoreAsync(config);
     } else {

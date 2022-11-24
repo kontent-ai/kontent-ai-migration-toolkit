@@ -23,22 +23,6 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Test clean",
-            "program": "${workspaceFolder}\\lib\\node\\cli\\app.ts",
-            "preLaunchTask": "npm: build:cjs",
-            "sourceMaps": true,
-            "smartStep": true,
-            "args": [
-                "--config", "./output/clean-config.json",
-            ],
-            "internalConsoleOptions": "openOnSessionStart",
-            "outFiles": [
-                "${workspaceFolder}/dist/cjs/lib/**/*.js"
-            ]
-        },
-        {
-            "type": "node",
-            "request": "launch",
             "name": "Test restore",
             "program": "${workspaceFolder}\\lib\\node\\cli\\app.ts",
             "preLaunchTask": "npm: build:cjs",

@@ -1,19 +1,19 @@
-[![npm version](https://badge.fury.io/js/%40kontent-ai%2Fbackup-manager.svg)](https://badge.fury.io/js/%40kontent-ai%2Fbackup-manager)
-[![Build & Test](https://github.com/kontent-ai/backup-manager-js/actions/workflows/integrate.yml/badge.svg)](https://github.com/kontent-ai/backup-manager-js/actions/workflows/integrate.yml)
-
 # Kontent.ai CSV Manager
 
-The purpose of this project is to export & import content related data to & from [Kontent.ai](https://kontent.ai) projects. This project uses `Delivery API` for fast import and conversion to CSV and `Management API` to import data back. 
+The purpose of this project is to export & import content data to & from [Kontent.ai](https://kontent.ai) projects. This project uses `Delivery API` for fast import and conversion to CSV and `Management API` to import data back. 
 
-When importing it is absolutely essential that both `source` and `target` project contains identical definitions of Content types, taxonomies and workflows. Any inconsistency in data definition may cause import to fail.
+## How it works
 
-## Limitations
+> When importing it is absolutely essential that both `source` and `target` project have identical definitions of Content types, taxonomies and workflows. Any inconsistency in data definition may cause import to fail.
 
-### Export limitations
+**How are content items imported?**
+The CSV manager creates content items that are not present in target project. If the content item is already present in the project (based on item's `codename`) the item will get updated or skipped. 
 
-Export is made with `Delivery API` for speed and efficiency, but this brings some limitations:
+**How are langauge variants imported?**
+Same as with content items, CSV manager either creates or updates language variants based on their codename & codename of the language.
 
-- Assets are exported without their original `filename`. If you import these assets back to a different project, the `Asset Id` is used as a filename. However, if you import back to the same project, the asset will not be imported if it is already there. 
+**How are langauge variants imported?**
+If asset with it's id or external_id exists in target project, the asset upload will be skipped and not uploaded at all. If it doesn't exist, the asset from the zip folder will be uploaded and it's id will be used as a filename. The CSV Manager will also set `external_id` of newly uploaded assets to equal their original id.
 
 ## Installation
 
@@ -29,7 +29,7 @@ Install package globally:
 |-----------------|---------------------------------------------------------------------------------------------------------------------|
 | **projectId**       | Id of Kontent.ai project **(required)**                                                                            |
 | **apiKey**           | Content management Api key **(required for import, not needed for export)**                                                                               |
-| **action**           | Action. Possible values are: `restore` & `backup` & `clean` **(required)**                                              |
+| **action**           | Action. Possible values are: `restore` & `backup` **(required)**                                              |
 | zipFilename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup').                                            |
 | baseUrl           | Custom base URL for Management API calls. |
 | exportAssets           | Indicates if assets should be exported. Supported values are `true` & `false` |
@@ -37,7 +37,7 @@ Install package globally:
 
 ### Execution
 
-> We recommend restoring backups to clean (empty) projects. Restoration process may make changes to target project such as changing language codenames to match source project.
+> We do not recommend importing data back to your production environment directly. Instead, we recommend that you create a new environment based on your production one and test the import there first. If the import completes successfully, you may swap environments or run it again on the production since you have previously tested it on practically identical environment.
 
 To backup a project run:
 
@@ -46,10 +46,6 @@ To backup a project run:
 To restore a project run:
 
 `csvm --action=restore --apiKey=xxx --projectId=xxx --zipFilename=backupFile`
-
-To clean (delete) everything inside a project run:
-
-`csvm --action=clean --apiKey=xxx --projectId=xxx`
 
 To get some help you can use:
 
@@ -169,35 +165,13 @@ const run = async () => {
 
 run();
 ```
+## Limitations
 
-### Clean in code
+### Export limitations
 
-```typescript
-const run = async () => {
-    const zipService = new ZipService({
-        filename: 'xxx',
-        context: 'node.js' // 'node.js' or 'browser'
-    });
+Export is made with `Delivery API` for speed and efficiency, but this brings some limitations:
 
-    const cleanService = new CleanService({
-        onDelete: item => {
-            // called when any content is deleted
-            console.log(`Deleted: ${item.title} | ${item.type}`);
-        },
-        fixLanguages: true,
-        projectId: 'targetProjectId',
-        apiKey: 'targetProjectId',
-    });
-
-    // read export data from zip
-    const data = await zipService.extractZipAsync();
-
-    // restore into target project
-    await cleanService.importFromSourceAsync(data);
-};
-
-run();
-```
+- Assets are exported without their original `filename`. If you import these assets back to a different project, the `Asset Id` is used as a filename. However, if you import back to the same project, the asset will not be imported if it is already there. 
 
 ### FAQ
 

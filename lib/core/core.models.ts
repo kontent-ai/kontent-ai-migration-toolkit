@@ -8,7 +8,7 @@ export interface ICliFileConfig {
     exportAssets: boolean;
 }
 
-export type CliAction = 'backup' | 'restore' | 'clean';
+export type CliAction = 'backup' | 'restore';
 export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile';
 
 export type ActionType =
