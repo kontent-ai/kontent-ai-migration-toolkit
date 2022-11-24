@@ -2,10 +2,10 @@
 import { readFileSync } from 'fs';
 import * as yargs from 'yargs';
 
-import { ICliFileConfig, CliAction } from '../../core';
+import { ICliFileConfig, CliAction, getExtension } from '../../core';
 import { ExportService } from '../../export';
 import { ImportService } from '../../import';
-import { ZipService } from '../../zip';
+import { FileProcessorService } from '../../file-processor';
 import { SharedModels } from '@kontent-ai/management-sdk';
 import { FileService } from '../file/file.service';
 import { green, red, yellow } from 'colors';
@@ -13,7 +13,7 @@ import { green, red, yellow } from 'colors';
 const argv = yargs(process.argv.slice(2))
     .example('csvm --action=backup --apiKey=xxx --projectId=xxx', 'Creates zip backup of Kontent.ai project')
     .example(
-        'csvm --action=restore --apiKey=xxx --projectId=xxx --zipFilename=backupFile',
+        'csvm --action=restore --apiKey=xxx --projectId=xxx --filename=backupFile',
         'Read given zip file and recreates data in Kontent.ai project'
     )
     .alias('p', 'projectId')
@@ -22,8 +22,8 @@ const argv = yargs(process.argv.slice(2))
     .describe('k', 'Management API Key')
     .alias('a', 'action')
     .describe('a', 'Action to perform. One of: "backup" | "restore"')
-    .alias('z', 'zipFilename')
-    .describe('z', 'Name of zip used for export / restore')
+    .alias('f', 'filename')
+    .describe('f', 'Name of file to export / restore')
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
     .alias('t', 'exportTypes')
@@ -49,20 +49,20 @@ const backupAsync = async (config: ICliFileConfig) => {
 
     const fileService = new FileService({});
 
-    const zipService = new ZipService({
+    const fileProcessorService = new FileProcessorService({
         context: 'node.js'
     });
 
     const response = await exportService.exportAllAsync();
-    const zipFileData = await zipService.createZipAsync(response);
+    const zipFileData = await fileProcessorService.createZipAsync(response);
 
-    await fileService.writeFileAsync(config.zipFilename, zipFileData);
+    await fileService.writeFileAsync(config.filename, zipFileData);
 
     console.log(green('Completed'));
 };
 
 const restoreAsync = async (config: ICliFileConfig) => {
-    const zipService = new ZipService({
+    const fileProcessorService = new FileProcessorService({
         context: 'node.js'
     });
 
@@ -82,11 +82,18 @@ const restoreAsync = async (config: ICliFileConfig) => {
         }
     });
 
-    const file = await fileService.loadFileAsync(config.zipFilename);
+    const file = await fileService.loadFileAsync(config.filename);
+    const fileExtension = getExtension(config.filename);
 
-    const data = await zipService.extractZipAsync(file);
-
-    await importService.importFromSourceAsync(data);
+    if (fileExtension?.endsWith('zip')) {
+        const data = await fileProcessorService.extractZipAsync(file);
+        await importService.importFromSourceAsync(data);
+    } else if (fileExtension?.endsWith('csv')) {
+        const data = await fileProcessorService.extractCsvFileAsync(file);
+        await importService.importFromSourceAsync(data);
+    } else {
+        throw Error(`Unsupported file type '${fileExtension}'`);
+    }
 
     console.log(green('Completed'));
 };
@@ -137,8 +144,7 @@ const getConfig = async () => {
     const apiKey: string | undefined = resolvedArgs.apiKey as string | undefined;
     const projectId: string | undefined = resolvedArgs.projectId as string | undefined;
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
-    const zipFilename: string | undefined =
-        (resolvedArgs.zipFilename as string | undefined) ?? getDefaultBackupFilename();
+    const filename: string | undefined = (resolvedArgs.filename as string | undefined) ?? getDefaultBackupFilename();
     const exportTypes: string | undefined = resolvedArgs.exportTypes as string | undefined;
     const exportAssets: boolean =
         (resolvedArgs.exportAssets as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
@@ -162,7 +168,7 @@ const getConfig = async () => {
         action,
         apiKey,
         projectId,
-        zipFilename,
+        filename: filename,
         baseUrl,
         exportTypes: typesMapped,
         exportAssets: exportAssets

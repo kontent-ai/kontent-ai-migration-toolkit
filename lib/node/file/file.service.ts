@@ -5,10 +5,8 @@ import { IFileServiceConfig } from './file.models';
 export class FileService {
     constructor(public config: IFileServiceConfig) {}
 
-    private readonly zipExtension: string = '.zip';
-
-    async loadFileAsync(fileNameWithoutExtension: string): Promise<Buffer> {
-        const filePath = this.getFilePath(fileNameWithoutExtension);
+    async loadFileAsync(filename: string): Promise<Buffer> {
+        const filePath = this.getFilePath(filename);
 
         console.log(`Reading file '${yellow(filePath)}'`);
         const file = await promises.readFile(filePath);
@@ -24,8 +22,7 @@ export class FileService {
         console.log(`File '${yellow(filePath)}' saved`);
     }
 
-    private getFilePath(fileNameWithoutExtension: string) {
-        const filenameWithExtension = fileNameWithoutExtension + this.zipExtension;
-        return `./${filenameWithExtension}`;
+    private getFilePath(filename: string) {
+        return `./${filename}`;
     }
 }

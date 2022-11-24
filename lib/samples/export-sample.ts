@@ -1,4 +1,4 @@
-import { ZipService } from 'lib/zip';
+import { FileProcessorService } from 'lib/file-processor';
 
 import { ExportService } from '../export';
 import { FileService } from '../node';
@@ -7,7 +7,7 @@ const run = async () => {
     const fileService = new FileService({
     });
 
-    const zipService = new ZipService({
+    const zipService = new FileProcessorService({
         context: 'node.js'
     });
 

@@ -2,7 +2,7 @@ export interface ICliFileConfig {
     projectId: string;
     apiKey: string;
     action: CliAction;
-    zipFilename: string;
+    filename: string;
     baseUrl?: string;
     exportTypes?: string[];
     exportAssets: boolean;

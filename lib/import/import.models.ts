@@ -42,7 +42,7 @@ export interface IImportSource {
         items: IImportContentItem[];
         assets: IImportAsset[];
     };
-    metadata: IPackageMetadata;
+    metadata?: IPackageMetadata;
 }
 
 export interface IImportData {

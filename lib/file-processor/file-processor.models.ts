@@ -2,7 +2,7 @@ import { IContentType } from '@kontent-ai/delivery-sdk';
 
 export type ZipContext = 'node.js' | 'browser';
 
-export interface IZipServiceConfig {
+export interface IFileProcessorConfig {
     context: ZipContext;
     delayBetweenAssetDownloadRequestsMs?: number;
 }

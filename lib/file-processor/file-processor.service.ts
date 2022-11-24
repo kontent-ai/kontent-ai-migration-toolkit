@@ -4,7 +4,11 @@ import * as JSZip from 'jszip';
 
 import { IExportAllResult } from '../export';
 import { IImportAsset, IImportContentItem, IImportSource } from '../import';
-import { ILanguageVariantCsvModel, ILanguageVariantsTypeCsvWrapper, IZipServiceConfig } from './zip.models';
+import {
+    ILanguageVariantCsvModel,
+    ILanguageVariantsTypeCsvWrapper,
+    IFileProcessorConfig
+} from './file-processor.models';
 import { yellow } from 'colors';
 import { Readable } from 'stream';
 import { ElementType, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
@@ -12,7 +16,7 @@ import { getExtension, translationHelper } from '../core';
 import { parse } from 'csv-parse';
 import { getType } from 'mime';
 
-export class ZipService {
+export class FileProcessorService {
     private readonly delayBetweenAssetRequestsMs: number;
 
     private readonly metadataName: string = 'metadata.json';
@@ -20,25 +24,24 @@ export class ZipService {
     private readonly contentItemsFolderName: string = 'items';
 
     private readonly httpService: HttpService = new HttpService();
-
     private readonly csvDelimiter: string = ',';
 
-    constructor(private config: IZipServiceConfig) {
+    constructor(private config: IFileProcessorConfig) {
         this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 50;
     }
 
-    public async extractZipAsync(zipFile: any): Promise<IImportSource> {
+    async extractZipAsync(file: any): Promise<IImportSource> {
         console.log(`Unzipping file`);
 
-        const unzippedFile = await JSZip.loadAsync(zipFile);
+        const zipFile = await JSZip.loadAsync(file);
 
         console.log(`Parsing zip contents`);
         const result: IImportSource = {
             importData: {
-                items: await this.parseContentItemsCsvFileAsync(unzippedFile),
-                assets: await this.extractAssetsAsync(unzippedFile)
+                items: await this.parseContentItemsCsvFileAsync(zipFile),
+                assets: await this.extractAssetsAsync(zipFile)
             },
-            metadata: await this.readAndParseJsonFileAsync(unzippedFile, this.metadataName)
+            metadata: await this.readAndParseJsonFileAsync(zipFile, this.metadataName)
         };
 
         console.log(`Pasing zip completed`);
@@ -46,7 +49,25 @@ export class ZipService {
         return result;
     }
 
-    public async createZipAsync(exportData: IExportAllResult): Promise<any> {
+    async extractCsvFileAsync(file: any): Promise<IImportSource> {
+        console.log(`Reading CSV file`);
+
+        const text: string = file;
+
+        const result: IImportSource = {
+            importData: {
+                items: await this.parseCsvTextToImportItemsAsync(text),
+                assets: []
+            },
+            metadata: undefined
+        };
+
+        console.log(`Reading CSV file completed`);
+
+        return result;
+    }
+
+    async createZipAsync(exportData: IExportAllResult): Promise<any> {
         const zip = new JSZip();
 
         console.log('');
@@ -262,7 +283,7 @@ export class ZipService {
         throw Error(`Unsupported context '${this.config.context}'`);
     }
 
-    private async parseContentItemsCsvFileAsync(fileContents: any): Promise<IImportContentItem[]> {
+    private async parseContentItemsCsvFileAsync(fileContents: JSZip): Promise<IImportContentItem[]> {
         const files = fileContents.files;
         const parsedItems: IImportContentItem[] = [];
 
@@ -271,59 +292,66 @@ export class ZipService {
                 // iterate through content item files only
                 continue;
             }
-            let index = 0;
 
             const text = await (file as any).async('text');
 
-            const parser = parse(text, {
-                cast: true,
-                delimiter: this.csvDelimiter
-            });
+            parsedItems.push(...(await this.parseContentItemsCsvFileAsync(text)));
+        }
 
-            let parsedElements: string[] = [];
+        return parsedItems;
+    }
 
-            for await (const record of parser) {
-                if (index === 0) {
-                    // process header row
-                    parsedElements = record;
-                } else {
-                    // process data row
-                    const contentItem: IImportContentItem = {
-                        codename: '',
-                        collection: '',
-                        elements: [],
-                        language: '',
-                        last_modified: '',
-                        name: '',
-                        type: '',
-                        workflow_step: ''
-                    };
+    private async parseCsvTextToImportItemsAsync(text: string): Promise<IImportContentItem[]> {
+        const parsedItems: IImportContentItem[] = [];
+        let index = 0;
+        const parser = parse(text, {
+            cast: true,
+            delimiter: this.csvDelimiter
+        });
 
-                    let fieldIndex: number = 0;
-                    for (const elementName of parsedElements) {
-                        const elementValue = record[fieldIndex];
+        let parsedElements: string[] = [];
 
-                        if (elementName.includes(')') && elementName.includes(')')) {
-                            // process user defined element
-                            const parsedElementName = this.parseCsvElementName(elementName);
+        for await (const record of parser) {
+            if (index === 0) {
+                // process header row
+                parsedElements = record;
+            } else {
+                // process data row
+                const contentItem: IImportContentItem = {
+                    codename: '',
+                    collection: '',
+                    elements: [],
+                    language: '',
+                    last_modified: '',
+                    name: '',
+                    type: '',
+                    workflow_step: ''
+                };
 
-                            contentItem.elements.push({
-                                type: parsedElementName.elementType,
-                                codename: parsedElementName.elementCodename,
-                                value: elementValue
-                            });
-                        } else {
-                            // process base element
-                            contentItem[elementName] = elementValue;
-                        }
+                let fieldIndex: number = 0;
+                for (const elementName of parsedElements) {
+                    const elementValue = record[fieldIndex];
 
-                        fieldIndex++;
+                    if (elementName.includes(')') && elementName.includes(')')) {
+                        // process user defined element
+                        const parsedElementName = this.parseCsvElementName(elementName);
+
+                        contentItem.elements.push({
+                            type: parsedElementName.elementType,
+                            codename: parsedElementName.elementCodename,
+                            value: elementValue
+                        });
+                    } else {
+                        // process base element
+                        contentItem[elementName] = elementValue;
                     }
 
-                    parsedItems.push(contentItem);
+                    fieldIndex++;
                 }
-                index++;
+
+                parsedItems.push(contentItem);
             }
+            index++;
         }
 
         return parsedItems;
@@ -346,7 +374,7 @@ export class ZipService {
         throw Error(`Could not parse CSV element name '${elementName}' to determine element type & codename`);
     }
 
-    private async readAndParseJsonFileAsync(fileContents: any, filename: string): Promise<any> {
+    private async readAndParseJsonFileAsync(fileContents: JSZip, filename: string): Promise<any> {
         const files = fileContents.files;
         const file = files[filename];
 

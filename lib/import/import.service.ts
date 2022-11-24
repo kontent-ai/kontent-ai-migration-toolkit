@@ -62,13 +62,15 @@ export class ImportService {
         await printProjectInfoToConsoleAsync(this.client);
 
         // log information regarding version mismatch
-        if (version !== sourceData.metadata.csvManagerVersion) {
-            console.warn(
-                `WARNING: Version mismatch. Current version of '${name}' is '${version}', but export was created using version '${sourceData.metadata.csvManagerVersion}'.`
-            );
-            console.warn(
-                `Import may still succeed, but if it doesn't, please try using '${sourceData.metadata.csvManagerVersion}' version of this library.`
-            );
+        if (sourceData.metadata) {
+            if (version !== sourceData.metadata.csvManagerVersion) {
+                console.warn(
+                    `WARNING: Version mismatch. Current version of '${name}' is '${version}', but export was created using version '${sourceData.metadata.csvManagerVersion}'.`
+                );
+                console.warn(
+                    `Import may still succeed, but if it doesn't, please try using '${sourceData.metadata.csvManagerVersion}' version of this library.`
+                );
+            }
         }
 
         // this is an optional step where users can exclude certain objects from being imported
