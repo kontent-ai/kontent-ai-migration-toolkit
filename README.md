@@ -36,7 +36,7 @@ Install package globally:
 | **projectId**   | Id of Kontent.ai project **(required)**                                                                                       |
 | **apiKey**      | Content management Api key **(required for import, not needed for export)**                                                   |
 | **action**      | Action. Possible values are: `restore` & `backup` **(required)**                                                              |
-| zipFilename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup').                                                        |
+| filename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup.zip'). When restoring data you may also use individual `*.csv` file.                          |
 | baseUrl         | Custom base URL for Management API calls.                                                                                     |
 | exportAssets    | Indicates if assets should be exported. Supported are `true` & `false`                                                        |
 | exportTypes     | Array of content types codenames of which content items should be exported. By default all items of all types are exported    |
@@ -49,13 +49,14 @@ Install package globally:
 > you may swap environments or run it again on the production since you have previously tested it on practically
 > identical environment.
 
-To backup a project run:
+
+To backup data use:
 
 `csvm --action=backup --projectId=xxx`
 
-To restore a project run:
+To restore data use:
 
-`csvm --action=restore --apiKey=xxx --projectId=xxx --zipFilename=backupFile`
+`csvm --action=restore --apiKey=xxx --projectId=xxx --filename=backup.zip|data.csv`
 
 To get some help you can use:
 
@@ -68,7 +69,7 @@ Create a `json` configuration file in the folder where you are attempting to run
 ```json
 {
     "projectId": "xxx",
-    "zipFilename": "csv-backup",
+    "filename": "csv-backup",
     "action": "backup",
     "baseUrl": null,
     "exportTypes": null,
@@ -130,7 +131,7 @@ const run = async () => {
     const fileService = new FileService({});
 
     // load file
-    const zipFile = await fileService.loadFileAsync('backup');
+    const zipFile = await fileService.loadFileAsync('backup.zip');
 
     const fileProcessorService = new FileProcessorService({
         context: 'node.js' // or 'browser'
