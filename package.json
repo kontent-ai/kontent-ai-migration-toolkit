@@ -1,6 +1,6 @@
 {
   "name": "xeno-test",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "This utility enables users to export & import content data from / to Kontent.ai projects",
   "preferGlobal": true,
   "private": false,
