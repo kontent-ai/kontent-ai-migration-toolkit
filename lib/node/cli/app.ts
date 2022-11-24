@@ -68,6 +68,10 @@ const restoreAsync = async (config: ICliFileConfig) => {
         context: 'node.js'
     });
 
+    if (!config.apiKey) {
+        throw Error(`Missing 'apiKey' configuration option`);
+    }
+
     const fileService = new FileService({});
 
     const importService = new ImportService({
@@ -161,10 +165,6 @@ const getConfig = async () => {
 
     if (!action) {
         throw Error(`No action was provided`);
-    }
-
-    if (!apiKey) {
-        throw Error(`Api key was not provided`);
     }
 
     if (!projectId) {
