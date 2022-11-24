@@ -13,7 +13,7 @@ export interface IExportFilter {
 export interface IExportConfig {
     projectId: string;
     baseUrl?: string;
-    onExport?: (item: IProcessedItem) => void;
+    onProcess?: (item: IProcessedItem) => void;
     exportTypes?: string[];
     exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;

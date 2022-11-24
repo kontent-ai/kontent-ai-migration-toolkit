@@ -10,7 +10,7 @@ const run = async () => {
     const fileService = new FileService({});
 
     const importService = new ImportService({
-        onImport: (item) => {
+        onProcess: (item) => {
             // called when any content is imported
             console.log(`Imported: ${item.title} | ${item.actionType}`);
         },

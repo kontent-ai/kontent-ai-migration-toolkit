@@ -44,7 +44,7 @@ const backupAsync = async (config: ICliFileConfig) => {
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
         exportAssets: config.exportAssets,
-        onExport: (item) => {
+        onProcess: (item) => {
             console.log(`Exported ${yellow(item.title)} | ${green(item.data.system.type)}`);
         }
     });
@@ -71,7 +71,7 @@ const restoreAsync = async (config: ICliFileConfig) => {
     const fileService = new FileService({});
 
     const importService = new ImportService({
-        onImport: (item) => {
+        onProcess: (item) => {
             console.log(`${yellow(item.title)} | ${green(item.itemType)} | ${item.actionType}`);
         },
         skipFailedItems: config.skipFailedItems,
@@ -80,6 +80,9 @@ const restoreAsync = async (config: ICliFileConfig) => {
         apiKey: config.apiKey,
         canImport: {
             contentItem: (item) => {
+                return true;
+            },
+            asset: (asset) => {
                 return true;
             }
         }

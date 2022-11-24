@@ -10,7 +10,7 @@ export interface IImportConfig {
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;
     projectId: string;
-    onImport?: (item: IProcessedItem) => void;
+    onProcess?: (item: IProcessedItem) => void;
     canImport?: {
         contentItem?: (item: IImportContentItem) => boolean | Promise<boolean>;
         asset?: (item: IImportAsset) => boolean | Promise<boolean>;

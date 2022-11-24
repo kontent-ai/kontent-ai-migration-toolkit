@@ -677,11 +677,11 @@ export class ImportService {
             originalCodename: data.originalCodename
         });
 
-        if (!this.config.onImport) {
+        if (!this.config.onProcess) {
             return;
         }
 
-        this.config.onImport({
+        this.config.onProcess({
             data: data.imported,
             title: data.title,
             actionType,

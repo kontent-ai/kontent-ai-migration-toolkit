@@ -152,11 +152,11 @@ export class ExportService {
     }
 
     private processItem(title: string, itemType: ItemType, actionType: ActionType, data: any): void {
-        if (!this.config.onExport) {
+        if (!this.config.onProcess) {
             return;
         }
 
-        this.config.onExport({
+        this.config.onProcess({
             data,
             title,
             actionType,

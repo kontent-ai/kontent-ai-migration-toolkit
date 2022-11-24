@@ -13,7 +13,7 @@ const run = async () => {
 
     const exportService = new ExportService({
         projectId: 'sourceProjectId',
-        onExport: item => {
+        onProcess: item => {
             // called when any content is exported
             console.log(`Exported: ${item.title} | ${item.actionType}`);
         },
