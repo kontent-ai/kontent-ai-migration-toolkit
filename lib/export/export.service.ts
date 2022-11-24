@@ -220,6 +220,6 @@ export class ExportService {
             }
         }
 
-        return [...new Map(assets.map((item) => [item['url'], item])).values()]; // filters unique values
+        return [...new Map(assets.map((item) => [item.url, item])).values()]; // filters unique values
     }
 }

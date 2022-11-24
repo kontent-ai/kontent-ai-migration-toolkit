@@ -158,8 +158,8 @@ export class TranslationHelper {
                                     data.sourceItems
                                 )
                             )
-                            .filter((m) => m)
-                            .map((m) => m as LanguageVariantElements.ILanguageVariantElementBase);
+                            .filter((s) => s)
+                            .map((s) => s as LanguageVariantElements.ILanguageVariantElementBase);
 
                         const componentContract: LanguageVariantElements.IRichTextComponent = {
                             id: this.convertComponentCodenameToId(m.codename),
@@ -186,7 +186,7 @@ export class TranslationHelper {
                         const assetId = extractAssetIdFromUrl(m);
 
                         // find id of imported asset
-                        const importedAsset = data.importedItems.find(m => m.originalId === assetId);
+                        const importedAsset = data.importedItems.find(s => s.originalId === assetId);
 
                         if (!importedAsset) {
                             throw Error(`Could not find imported asset for asset with original id '${assetId}'`);
@@ -343,7 +343,7 @@ export class TranslationHelper {
         const linkRegex = new RegExp(`${linkStart}(.+?)${linkEnd}`, 'g');
         const dataItemIdRegex = new RegExp(`${dataItemIdStart}(.+?)${dataItemIdEnd}`);
 
-        let processedRichText = richTextHtml.replaceAll(linkRegex, (objectTag) => {
+        const processedRichText = richTextHtml.replaceAll(linkRegex, (objectTag) => {
             const idMatch = objectTag.match(dataItemIdRegex);
             if (idMatch && (idMatch?.length ?? 0) >= 2) {
                 const id = idMatch[1];

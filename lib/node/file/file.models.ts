@@ -1,2 +1,1 @@
-export interface IFileServiceConfig {
-}
+export interface IFileServiceConfig {}
