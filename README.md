@@ -3,6 +3,8 @@
 The purpose of this project is to export & import content data to & from [Kontent.ai](https://kontent.ai) projects. This
 project uses `Delivery API` for fast import and conversion to CSV and `Management API` to import data back.
 
+This library can be used in `node.js` only - the API cannot be used in directly in browsers.
+
 ## How it works
 
 > When importing it is absolutely essential that both `source` and `target` project have identical definitions of
