@@ -288,14 +288,18 @@ export class FileProcessorService {
         const parsedItems: IImportContentItem[] = [];
 
         for (const [, file] of Object.entries(files)) {
-            if (!(file as any)?.name?.startsWith(`${this.contentItemsFolderName}/`)) {
+            if (!file?.name?.startsWith(`${this.contentItemsFolderName}/`)) {
                 // iterate through content item files only
                 continue;
             }
 
-            const text = await (file as any).async('text');
+            if (file?.name?.endsWith('/')) {
+                continue;
+            }
 
-            parsedItems.push(...(await this.parseContentItemsCsvFileAsync(text)));
+            const text = await file.async('text');
+
+            parsedItems.push(...(await this.parseCsvTextToImportItemsAsync(text)));
         }
 
         return parsedItems;
@@ -391,7 +395,7 @@ export class FileProcessorService {
         // temp fix for Kontent.ai Repository not validating url
         url = url.replace('#', '%23');
 
-        console.log(`Downloading ${yellow(url)}`);
+        console.log(`Downloading '${yellow(url)}'`);
 
         return (
             await this.httpService.getAsync(
