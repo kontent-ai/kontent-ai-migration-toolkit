@@ -11,12 +11,12 @@ This library can be used in `node.js` only - the API cannot be used in directly 
 > Content types, taxonomies and workflows. Any inconsistency in data definition may cause import to fail.
 
 **How are content items imported?** The CSV manager creates content items that are not present in target project. If the
-content item is already present in the project (based on item's `codename`) the item will get updated or skipped.
+content item is already present in the project (based on item's `codename`) the item will be updated if necessary or skipped.
 
 **How are langauge variants imported?** Same as with content items, CSV manager either creates or updates language
 variants based on their codename & codename of the language.
 
-**How are langauge variants imported?** If asset with it's id or external_id exists in target project, the asset upload
+**How are assets?** If asset with it's id or external_id exists in target project, the asset upload
 will be skipped and not uploaded at all. If it doesn't exist, the asset from the zip folder will be uploaded and it's id
 will be used as a filename. The CSV Manager will also set `external_id` of newly uploaded assets to equal their original
 id. If you enable `fetchAssetDetails` option the original filename of the asset will be preserved.
