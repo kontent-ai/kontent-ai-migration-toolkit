@@ -13,12 +13,14 @@ export interface IExportFilter {
 export interface IExportConfig {
     projectId: string;
     secureApiKey?: string;
+    apiKey?: string;
     previewApiKey?: string;
     baseUrl?: string;
     onProcess?: (item: IProcessedItem) => void;
     exportTypes?: string[];
     exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;
+    fetchAssetDetails?: boolean;
 }
 
 export interface IExportData {

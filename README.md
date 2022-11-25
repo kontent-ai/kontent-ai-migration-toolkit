@@ -19,7 +19,7 @@ variants based on their codename & codename of the language.
 **How are langauge variants imported?** If asset with it's id or external_id exists in target project, the asset upload
 will be skipped and not uploaded at all. If it doesn't exist, the asset from the zip folder will be uploaded and it's id
 will be used as a filename. The CSV Manager will also set `external_id` of newly uploaded assets to equal their original
-id.
+id. If you enable `fetchAssetDetails` option the original filename of the asset will be preserved.
 
 ## Installation
 
@@ -43,6 +43,7 @@ Install package globally:
 | exportAssets    | Indicates if assets should be exported. Supported are `true` & `false`                                                        |
 | exportTypes     | Array of content types codenames of which content items should be exported. By default all items of all types are exported    |
 | skipFailedItems | Indicates if failed content items & language variants should be skipped if their import fails. Supported are `true` & `false` |
+| fetchAssetDetails | Indicates if asset details should be fetched when making data export. If you enable this option, you also must use provide `apiKey` because fetching asset data relies on Management API. Supported are `true` & `false` |
 
 ### Execution
 
@@ -175,7 +176,8 @@ Export is made with `Delivery API` for speed and efficiency, but this brings som
 
 -   Assets are exported without their original `filename`. If you import these assets back to a different project, the
     `Asset Id` is used as a filename. However, if you import back to the same project, the asset will not be imported if
-    it is already there.
+    it is already there. You may enable `fetchAssetDetails` option to fetch asset details including filenames using the Magement API. If you enable this option you also need
+    to provide `apiKey`
 
 ### FAQ
 

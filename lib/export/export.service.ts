@@ -12,7 +12,8 @@ import {
 import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models';
 import { ActionType, defaultRetryStrategy, extractAssetIdFromUrl, getExtension, ItemType } from '../core';
 import { version } from '../../package.json';
-import { magenta, yellow } from 'colors';
+import { green, magenta, yellow } from 'colors';
+import { createManagementClient } from '@kontent-ai/management-sdk';
 
 export class ExportService {
     private readonly httpService: HttpService = new HttpService({
@@ -54,7 +55,7 @@ export class ExportService {
         console.log('');
         if (this.config.exportAssets) {
             console.log(`Extracting assets referenced by content items`);
-            assets = this.extractAssets(contentItems, types);
+            assets = await this.extractAssetsAsync(contentItems, types);
         } else {
             console.log(`Assets export is disabled`);
         }
@@ -119,7 +120,7 @@ export class ExportService {
                             // add items to result
                             for (const contentItem of response.data.items) {
                                 this.processItem(
-                                    `${contentItem.system.name} ${magenta(contentItem.system.language)}`,
+                                    `'${yellow(contentItem.system.name)}' | ${magenta(contentItem.system.language)}`,
                                     'contentItem',
                                     'fetch',
                                     contentItem
@@ -131,7 +132,7 @@ export class ExportService {
                             for (const [codename, contentItem] of Object.entries(response.data.linkedItems)) {
                                 if (!contentItems.find((m) => m.system.codename === codename)) {
                                     this.processItem(
-                                        `${contentItem.system.name} ${magenta(contentItem.system.language)}`,
+                                        `'${yellow(contentItem.system.name)}' | ${magenta(contentItem.system.language)}`,
                                         'component',
                                         'fetch',
                                         contentItem
@@ -170,7 +171,7 @@ export class ExportService {
         });
     }
 
-    private extractAssets(items: IContentItem[], types: IContentType[]): IExportedAsset[] {
+    private async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IExportedAsset[]> {
         const assets: IExportedAsset[] = [];
 
         for (const type of types) {
@@ -226,6 +227,26 @@ export class ExportService {
             }
         }
 
-        return [...new Map(assets.map((item) => [item.url, item])).values()]; // filters unique values
+        const uniqueAssets = [...new Map(assets.map((item) => [item.url, item])).values()]; // filters unique values
+
+        if (this.config.fetchAssetDetails === true) {
+            if (!this.config.apiKey) {
+                throw Error(`Management API key is required to fetch asset details`);
+            }
+
+            const managementClient = createManagementClient({
+                apiKey: this.config.apiKey,
+                projectId: this.config.projectId,
+                retryStrategy: this.config.retryStrategy ?? defaultRetryStrategy
+            });
+
+            for (const asset of uniqueAssets) {
+                const assetResponse = await managementClient.viewAsset().byAssetId(asset.assetId).toPromise();
+                console.log(`Fetched asset details '${yellow(asset.assetId)}' -> '${green(assetResponse.data.fileName)}'`);
+                asset.filename = assetResponse.data.fileName;
+            }
+        }
+
+        return uniqueAssets;
     }
 }

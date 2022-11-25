@@ -24,3 +24,8 @@ export interface ILanguageVariantsTypeCsvWrapper {
     csvFilename: string;
     csv: string;
 }
+
+export interface IAssetDetailModel {
+    assetId: string;
+    filename: string;
+}

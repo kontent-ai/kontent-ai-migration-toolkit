@@ -45,13 +45,15 @@ const argv = yargs(process.argv.slice(2))
 const backupAsync = async (config: ICliFileConfig) => {
     const exportService = new ExportService({
         projectId: config.projectId,
+        apiKey: config.apiKey,
         previewApiKey: config.previewApiKey,
         secureApiKey: config.secureApiKey,
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
         exportAssets: config.exportAssets,
+        fetchAssetDetails: config.fetchAssetDetails,
         onProcess: (item) => {
-            console.log(`Exported ${yellow(item.title)} | ${green(item.data.system.type)}`);
+            console.log(`Exported ${(item.title)} | ${green(item.data.system.type)}`);
         }
     });
 
@@ -168,6 +170,8 @@ const getConfig = async () => {
         (resolvedArgs.exportAssets as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
     const skipFailedItems: boolean =
         (resolvedArgs.skipFailedItems as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
+    const fetchAssetDetails: boolean =
+        (resolvedArgs.fetchAssetDetails as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? false;
 
     const typesMapped: string[] = exportTypes ? exportTypes.split(',').map((m) => m.trim()) : [];
 
@@ -190,7 +194,8 @@ const getConfig = async () => {
         exportAssets: exportAssets,
         skipFailedItems: skipFailedItems,
         previewApiKey: previewApiKey,
-        secureApiKey: secureApiKey
+        secureApiKey: secureApiKey,
+        fetchAssetDetails: fetchAssetDetails
     };
 
     return config;
@@ -198,7 +203,7 @@ const getConfig = async () => {
 
 const getDefaultBackupFilename = () => {
     const date = new Date();
-    return `csvm-backup-${date.getDate()}-${
+    return `csv-backup-${date.getDate()}-${
         date.getMonth() + 1
     }-${date.getFullYear()}-${date.getHours()}-${date.getMinutes()}.zip`;
 };

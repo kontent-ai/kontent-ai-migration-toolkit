@@ -2,12 +2,13 @@ import { HttpService } from '@kontent-ai/core-sdk';
 import { AsyncParser, FieldInfo } from 'json2csv';
 import * as JSZip from 'jszip';
 
-import { IExportAllResult } from '../export';
+import { IExportAllResult, IExportedAsset } from '../export';
 import { IImportAsset, IImportContentItem, IImportSource } from '../import';
 import {
     ILanguageVariantCsvModel,
     ILanguageVariantsTypeCsvWrapper,
-    IFileProcessorConfig
+    IFileProcessorConfig,
+    IAssetDetailModel
 } from './file-processor.models';
 import { yellow } from 'colors';
 import { Readable } from 'stream';
@@ -20,6 +21,7 @@ export class FileProcessorService {
     private readonly delayBetweenAssetRequestsMs: number;
 
     private readonly metadataName: string = 'metadata.json';
+    private readonly assetDetailsName: string = '_details.json';
     private readonly assetsFolderName: string = 'assets';
     private readonly contentItemsFolderName: string = 'items';
 
@@ -102,10 +104,12 @@ export class FileProcessorService {
         console.log('');
 
         if (exportData.data.assets.length) {
+            assetsFolder.file(this.assetDetailsName, JSON.stringify(this.getAssetDetailModels(exportData.data.assets)));
+
             console.log(`Preparing to download '${yellow(exportData.data.assets.length.toString())}' assets`);
 
             for (const asset of exportData.data.assets) {
-                const assetFilename = asset.filename;
+                const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent name conflicts
                 assetsFolder.file(assetFilename, await this.getBinaryDataFromUrlAsync(asset.url), {
                     binary: true
                 });
@@ -159,6 +163,17 @@ export class FileProcessorService {
         }
 
         return typeWrappers;
+    }
+
+    private getAssetDetailModels(extractedAssets: IExportedAsset[]): IAssetDetailModel[] {
+        return extractedAssets.map((m) => {
+            const item: IAssetDetailModel = {
+                assetId: m.assetId,
+                filename: m.filename
+            };
+
+            return item;
+        });
     }
 
     private getBaseContentItemFields(): string[] {
@@ -238,6 +253,15 @@ export class FileProcessorService {
 
         const files = zip.files;
 
+        const assetDetailsFilePath = `${this.assetsFolderName}/${this.assetDetailsName}`;
+        const assetDetailsFile = files[assetDetailsFilePath];
+
+        if (!assetDetailsFile) {
+            throw Error(`Invalid file path '${assetDetailsFilePath}'`);
+        }
+
+        const assetDetailModels = JSON.parse(await assetDetailsFile.async('string')) as IAssetDetailModel[];
+
         for (const [, file] of Object.entries(files)) {
             if (!file?.name?.startsWith(`${this.assetsFolderName}/`)) {
                 // iterate through assets only
@@ -248,15 +272,23 @@ export class FileProcessorService {
                 continue;
             }
 
+            if (file?.name === this.assetDetailsName) {
+                continue;
+            }
+
             const binaryData = await file.async(this.getZipOutputType());
 
-            const filename = file.name;
-            const extension = getExtension(filename);
+            const assetId = this.getAssetIdFromFilename(file.name);
+            const assetDetailModel = assetDetailModels.find((m) => m.assetId === assetId);
+            const extension = getExtension(file.name);
+            const filename = assetDetailModel?.filename ?? `${assetId}.${extension}`;
+            const mimeType = getType(file.name) ?? undefined;
+
             assets.push({
-                assetId: this.getAssetIdFromFilename(filename),
+                assetId: assetId,
                 binaryData: binaryData,
-                filename: filename.split('/')[1],
-                mimeType: getType(filename) ?? undefined,
+                filename: filename,
+                mimeType: mimeType,
                 extension: extension
             });
         }

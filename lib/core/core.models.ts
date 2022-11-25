@@ -9,6 +9,7 @@ export interface ICliFileConfig {
     baseUrl?: string;
     exportTypes?: string[];
     exportAssets: boolean;
+    fetchAssetDetails?: boolean;
 }
 
 export type CliAction = 'backup' | 'restore';
