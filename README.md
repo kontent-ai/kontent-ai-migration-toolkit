@@ -25,7 +25,7 @@ id.
 
 Install package globally:
 
-`npm i todo -g`
+`npm i xeno-test -g`
 
 ## Use via CLI
 
@@ -54,15 +54,15 @@ Install package globally:
 
 To backup data use:
 
-`csvm --action=backup --projectId=xxx`
+`kcsvm --action=backup --projectId=xxx`
 
 To restore data use:
 
-`csvm --action=restore --apiKey=xxx --projectId=xxx --filename=backup.zip|data.csv`
+`kcsvm --action=restore --apiKey=xxx --projectId=xxx --filename=backup.zip|data.csv`
 
 To get some help you can use:
 
-`csvm --help`
+`kcsvm --help`
 
 ### Use with config file
 
@@ -81,7 +81,7 @@ Create a `json` configuration file in the folder where you are attempting to run
 
 To execute your action run:
 
-`csvm --config=backup-config.json`
+`kcsvm --config=backup-config.json`
 
 ## Use via code
 
