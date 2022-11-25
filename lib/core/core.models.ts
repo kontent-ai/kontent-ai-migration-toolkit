@@ -26,6 +26,7 @@ export type ActionType =
     | 'fetch'
     | 'create'
     | 'publish'
+    | 'unArchive'
     | 'update';
 
 export interface IProcessedItem {

@@ -380,7 +380,10 @@ export class ImportService {
                     } else if (
                         this.doesWorkflowStepCodenameRepresentArchivedStep(importContentItem.workflow_step, workflows)
                     ) {
-                        const workflow = this.getWorkflowForGivenStep(importContentItem.workflow_step, workflows);
+                        const workflow = this.getWorkflowForGivenStepByCodename(
+                            importContentItem.workflow_step,
+                            workflows
+                        );
 
                         await this.client
                             .changeWorkflowOfLanguageVariant()
@@ -407,7 +410,10 @@ export class ImportService {
                             original: importContentItem
                         });
                     } else {
-                        const workflow = this.getWorkflowForGivenStep(importContentItem.workflow_step, workflows);
+                        const workflow = this.getWorkflowForGivenStepByCodename(
+                            importContentItem.workflow_step,
+                            workflows
+                        );
 
                         await this.client
                             .changeWorkflowOfLanguageVariant()
@@ -465,7 +471,7 @@ export class ImportService {
         };
     }
 
-    private getWorkflowForGivenStep(
+    private getWorkflowForGivenStepByCodename(
         itemWorkflowCodename: string,
         workflows: WorkflowModels.Workflow[]
     ): WorkflowModels.Workflow {
@@ -477,6 +483,35 @@ export class ImportService {
                 return workflow;
             }
             const step = workflow.steps.find((m) => m.codename === itemWorkflowCodename);
+
+            if (step) {
+                return workflow;
+            }
+        }
+
+        const defaultWorkflow = workflows.find(
+            (m) => m.codename.toLowerCase() === defaultWorkflowCodename.toLowerCase()
+        );
+
+        if (!defaultWorkflow) {
+            throw Error(`Missing default workflow`);
+        }
+
+        return defaultWorkflow;
+    }
+
+    private getWorkflowForGivenStepById(
+        workflowId: string,
+        workflows: WorkflowModels.Workflow[]
+    ): WorkflowModels.Workflow {
+        for (const workflow of workflows) {
+            if (workflow.archivedStep.id === workflowId) {
+                return workflow;
+            }
+            if (workflow.publishedStep.id === workflowId) {
+                return workflow;
+            }
+            const step = workflow.steps.find((m) => m.id === workflowId);
 
             if (step) {
                 return workflow;
@@ -586,7 +621,7 @@ export class ImportService {
 
         if (languageVariantOfContentItem) {
             // language variant exists
-            // check if variant is published or not
+            // check if variant is published or archived
             if (this.isLanguageVariantPublished(languageVariantOfContentItem, workflows)) {
                 // create new version
                 await this.client
@@ -596,10 +631,34 @@ export class ImportService {
                     .toPromise();
 
                 this.processItem(importItems, 'createNewVersion', 'languageVariant', {
-                    title: `${importContentItem.name} (${magenta(importContentItem.language)})`,
+                    title: `${yellow(importContentItem.name)} (${magenta(importContentItem.language)})`,
                     imported: languageVariantOfContentItem,
                     original: importContentItem
                 });
+            } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, workflows)) {
+                // change workflow step to draft
+                if (languageVariantOfContentItem.workflowStep.id) {
+                    const workflow = this.getWorkflowForGivenStepById(
+                        languageVariantOfContentItem.workflowStep.id,
+                        workflows
+                    );
+                    const newWorkflowStep = workflow.steps[0];
+
+                    await this.client
+                        .changeWorkflowStepOfLanguageVariant()
+                        .byItemCodename(importContentItem.codename)
+                        .byLanguageCodename(importContentItem.language)
+                        .byWorkflowStepCodename(newWorkflowStep.codename)
+                        .toPromise();
+
+                    this.processItem(importItems, 'unArchive', 'languageVariant', {
+                        title: `${yellow(importContentItem.name)} | (${newWorkflowStep.codename}) (${magenta(
+                            importContentItem.language
+                        )})`,
+                        imported: languageVariantOfContentItem,
+                        original: importContentItem
+                    });
+                }
             }
         }
     }
@@ -618,6 +677,19 @@ export class ImportService {
     ): boolean {
         for (const workflow of workflows) {
             if (workflow.publishedStep.id === languageVariant.workflowStep.id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private isLanguageVariantArchived(
+        languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
+        workflows: WorkflowModels.Workflow[]
+    ): boolean {
+        for (const workflow of workflows) {
+            if (workflow.archivedStep.id === languageVariant.workflowStep.id) {
                 return true;
             }
         }
