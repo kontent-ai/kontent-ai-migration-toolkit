@@ -30,6 +30,12 @@ export class ExportService {
             projectId: config.projectId,
             retryStrategy: retryStrategy,
             httpService: this.httpService,
+            previewApiKey: config.previewApiKey,
+            secureApiKey: config.secureApiKey,
+            defaultQueryConfig: {
+                usePreviewMode: config.previewApiKey ? true : false,
+                useSecuredMode: config.secureApiKey ? true : false
+            },
             proxy: {
                 baseUrl: config.baseUrl
             }

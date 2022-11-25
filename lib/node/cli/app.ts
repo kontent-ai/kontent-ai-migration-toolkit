@@ -18,8 +18,12 @@ const argv = yargs(process.argv.slice(2))
     )
     .alias('p', 'projectId')
     .describe('p', 'ProjectId')
-    .alias('k', 'apiKey')
-    .describe('k', 'Management API Key')
+    .alias('ak', 'apiKey')
+    .describe('ak', 'Management API Key')
+    .alias('sk', 'secureApiKey')
+    .describe('sk', 'API Key required when Delivery API has secure access enabled')
+    .alias('pk', 'previewApiKey')
+    .describe('pk', 'Use if you want to export data using Preview API')
     .alias('a', 'action')
     .describe('a', 'Action to perform. One of: "backup" | "restore"')
     .alias('f', 'filename')
@@ -41,6 +45,8 @@ const argv = yargs(process.argv.slice(2))
 const backupAsync = async (config: ICliFileConfig) => {
     const exportService = new ExportService({
         projectId: config.projectId,
+        previewApiKey: config.previewApiKey,
+        secureApiKey: config.secureApiKey,
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
         exportAssets: config.exportAssets,
@@ -152,6 +158,8 @@ const getConfig = async () => {
 
     const action: CliAction | undefined = resolvedArgs.action as CliAction | undefined;
     const apiKey: string | undefined = resolvedArgs.apiKey as string | undefined;
+    const secureApiKey: string | undefined = resolvedArgs.secureApiKey as string | undefined;
+    const previewApiKey: string | undefined = resolvedArgs.previewApiKey as string | undefined;
     const projectId: string | undefined = resolvedArgs.projectId as string | undefined;
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
     const filename: string | undefined = (resolvedArgs.filename as string | undefined) ?? getDefaultBackupFilename();
@@ -180,7 +188,9 @@ const getConfig = async () => {
         baseUrl,
         exportTypes: typesMapped,
         exportAssets: exportAssets,
-        skipFailedItems: skipFailedItems
+        skipFailedItems: skipFailedItems,
+        previewApiKey: previewApiKey,
+        secureApiKey: secureApiKey
     };
 
     return config;

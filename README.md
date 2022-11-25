@@ -36,6 +36,8 @@ Install package globally:
 | **projectId**   | Id of Kontent.ai project **(required)**                                                                                       |
 | **apiKey**      | Content management Api key **(required for import, not needed for export)**                                                   |
 | **action**      | Action. Possible values are: `restore` & `backup` **(required)**                                                              |
+| previewApiKey     | When set, Preview API will be used to make data export                                                              |
+| secureApiKey      | When set, Secure API will be used to make data export                                                        |
 | filename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup.zip'). When restoring data you may also use individual `*.csv` file.                          |
 | baseUrl         | Custom base URL for Management API calls.                                                                                     |
 | exportAssets    | Indicates if assets should be exported. Supported are `true` & `false`                                                        |
