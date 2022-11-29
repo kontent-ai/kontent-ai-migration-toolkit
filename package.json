@@ -5,7 +5,7 @@
   "preferGlobal": true,
   "private": false,
   "bin": {
-    "kcsvm": "./dist/cjs/lib/node/cli/app.js"
+    "kdm": "./dist/cjs/lib/node/cli/app.js"
   },
   "repository": {
     "type": "git",

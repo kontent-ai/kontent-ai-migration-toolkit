@@ -57,15 +57,15 @@ Install package globally:
 
 To backup data use:
 
-`kcsvm --action=backup --projectId=xxx`
+`kdm --action=backup --projectId=xxx`
 
 To restore data use:
 
-`kcsvm --action=restore --apiKey=xxx --projectId=xxx --filename=backup.zip|data.csv|data.json`
+`kdm --action=restore --apiKey=xxx --projectId=xxx --filename=backup.zip|data.csv|data.json`
 
 To get some help you can use:
 
-`kcsvm --help`
+`kdm --help`
 
 ### Use with config file
 
@@ -85,7 +85,7 @@ Create a `json` configuration file in the folder where you are attempting to run
 
 To execute your action run:
 
-`kcsvm --config=backup-config.json`
+`kdm --config=backup-config.json`
 
 ## Use via code
 
