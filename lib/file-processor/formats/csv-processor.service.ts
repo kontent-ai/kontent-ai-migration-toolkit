@@ -17,11 +17,9 @@ export class CsvProcessorService extends BaseProcessorService {
         for (const contentType of types) {
             const contentItemsOfType = items.filter((m) => m.type === contentType.system.codename);
 
-            let filename: string;
-            let data: string = '';
+            const filename: string = `${contentType.system.codename}.csv`;
 
             const languageVariantFields: FieldInfo<any>[] = this.getLanguageVariantFields(contentType);
-            filename = `${contentType.system.codename}.csv`;
             const languageVariantsStream = new Readable();
             languageVariantsStream.push(JSON.stringify(contentItemsOfType));
             languageVariantsStream.push(null); // required to end the stream
@@ -30,7 +28,7 @@ export class CsvProcessorService extends BaseProcessorService {
                 fields: languageVariantFields
             }).fromInput(languageVariantsStream);
 
-            data = (await parsingProcessor.promise()) ?? '';
+            const data = (await parsingProcessor.promise()) ?? '';
 
             typeWrappers.push({
                 data: data,

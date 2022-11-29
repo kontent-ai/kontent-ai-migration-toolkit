@@ -125,7 +125,7 @@ export class FileProcessorService {
             console.log(`Preparing to download '${yellow(exportData.data.assets.length.toString())}' assets`);
 
             for (const asset of exportData.data.assets) {
-                const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent name conflicts
+                const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
                 assetsFolder.file(assetFilename, await this.getBinaryDataFromUrlAsync(asset.url), {
                     binary: true
                 });
