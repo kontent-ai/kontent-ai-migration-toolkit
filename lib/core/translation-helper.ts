@@ -313,9 +313,12 @@ export class TranslationHelper {
         return undefined;
     }
 
-    private parseArrayValue(value: string | undefined): string[] {
+    private parseArrayValue(value: string | Array<string> | undefined): string[] {
         if (!value) {
             return [];
+        }
+        if (Array.isArray(value)) {
+            return value;
         }
         return JSON.parse(value);
     }

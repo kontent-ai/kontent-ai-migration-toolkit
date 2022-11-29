@@ -24,7 +24,7 @@ export class JsonProcessorService extends BaseProcessorService {
             }
 
             typeWrappers.push({
-                data: JSON.stringify(contentItemsOfType),
+                data: contentItemsOfType.length ? JSON.stringify(contentItemsOfType) : '[]',
                 contentType: contentType,
                 filename: filename
             });
@@ -33,11 +33,60 @@ export class JsonProcessorService extends BaseProcessorService {
         return typeWrappers;
     }
 
-    parseImportItemsAsync(text: string): Promise<IImportContentItem[]> {
-        throw Error('Not implemented');
+    async parseImportItemsAsync(text: string): Promise<IImportContentItem[]> {
+        const parsedItems: IImportContentItem[] = [];
+        const rawItems: any[] = JSON.parse(text) as any[];
+        const baseFields: string[] = this.getBaseContentItemFields();
+
+        for (const rawItem of rawItems) {
+            const contentItem: IImportContentItem = {
+                codename: '',
+                collection: '',
+                elements: [],
+                language: '',
+                last_modified: '',
+                name: '',
+                type: '',
+                workflow_step: ''
+            };
+
+            for (const propertyName of Object.keys(rawItem)) {
+                if (baseFields.includes(propertyName)) {
+                    // process base field
+                    contentItem[propertyName] = rawItem[propertyName];
+                    continue;
+                }
+
+                // parse element name to find type & codename
+                const parsedJsonNameData = this.parseJsonElementName(propertyName);
+
+                contentItem.elements.push({
+                    codename: parsedJsonNameData.elementCodename,
+                    type: parsedJsonNameData.elementType,
+                    value: rawItem[propertyName]
+                });
+            }
+
+            parsedItems.push(contentItem);
+        }
+
+        return parsedItems;
     }
 
     private getJsonElementName(elementCodename: string, elementType: ElementType): string {
         return `${elementCodename} (${elementType})`;
+    }
+
+    private parseJsonElementName(elementName: string): { elementCodename: string; elementType: ElementType } {
+        const matchedResult = elementName.match(/\(([^)]+)\)/);
+
+        if (matchedResult && matchedResult.length > 1) {
+            return {
+                elementType: matchedResult[1].trim() as ElementType,
+                elementCodename: elementName.replace(/ *\([^)]*\) */g, '').trim()
+            };
+        }
+
+        throw Error(`Could not parse Json element name '${elementName}' to determine element type & codename`);
     }
 }
