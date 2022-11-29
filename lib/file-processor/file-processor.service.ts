@@ -1,21 +1,21 @@
 import { HttpService } from '@kontent-ai/core-sdk';
-import { AsyncParser, FieldInfo } from 'json2csv';
 import * as JSZip from 'jszip';
 
 import { IExportAllResult, IExportedAsset } from '../export';
 import { IImportAsset, IImportContentItem, IImportSource } from '../import';
 import {
-    ILanguageVariantCsvModel,
-    ILanguageVariantsTypeCsvWrapper,
+    ILanguageVariantDataModel,
+    ILanguageVariantsTypeDataWrapper,
     IFileProcessorConfig,
-    IAssetDetailModel
+    IAssetDetailModel,
+    ExportFormat
 } from './file-processor.models';
 import { yellow } from 'colors';
-import { Readable } from 'stream';
-import { ElementType, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
+import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { getExtension, translationHelper } from '../core';
-import { parse } from 'csv-parse';
 import { getType } from 'mime';
+import { CsvProcessorService } from './formats/csv-processor.service';
+import { JsonProcessorService } from './formats/json-processor.service';
 
 export class FileProcessorService {
     private readonly delayBetweenAssetRequestsMs: number;
@@ -26,13 +26,14 @@ export class FileProcessorService {
     private readonly contentItemsFolderName: string = 'items';
 
     private readonly httpService: HttpService = new HttpService();
-    private readonly csvDelimiter: string = ',';
+    private readonly csvProcessorService: CsvProcessorService = new CsvProcessorService();
+    private readonly jsonProcessorService: JsonProcessorService = new JsonProcessorService();
 
     constructor(private config: IFileProcessorConfig) {
         this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 50;
     }
 
-    async extractZipAsync(file: any): Promise<IImportSource> {
+    async extractZipAsync(file: Buffer): Promise<IImportSource> {
         console.log(`Unzipping file`);
 
         const zipFile = await JSZip.loadAsync(file);
@@ -40,10 +41,10 @@ export class FileProcessorService {
         console.log(`Parsing zip contents`);
         const result: IImportSource = {
             importData: {
-                items: await this.parseContentItemsCsvFileAsync(zipFile),
-                assets: await this.extractAssetsAsync(zipFile)
+                items: await this.parseContentItemsFromFileAsync(zipFile),
+                assets: await this.parseAssetsFromFileAsync(zipFile)
             },
-            metadata: await this.readAndParseJsonFileAsync(zipFile, this.metadataName)
+            metadata: await this.parseMetadataFromFileAsync(zipFile, this.metadataName)
         };
 
         console.log(`Pasing zip completed`);
@@ -51,14 +52,12 @@ export class FileProcessorService {
         return result;
     }
 
-    async extractCsvFileAsync(file: any): Promise<IImportSource> {
+    async extractCsvFileAsync(file: Buffer): Promise<IImportSource> {
         console.log(`Reading CSV file`);
-
-        const text: string = file;
 
         const result: IImportSource = {
             importData: {
-                items: await this.parseCsvTextToImportItemsAsync(text),
+                items: await this.csvProcessorService.parseImportItemsAsync(file.toString()),
                 assets: []
             },
             metadata: undefined
@@ -69,7 +68,23 @@ export class FileProcessorService {
         return result;
     }
 
-    async createZipAsync(exportData: IExportAllResult): Promise<any> {
+    async extractJsonFileAsync(file: Buffer): Promise<IImportSource> {
+        console.log(`Reading JSON file`);
+
+        const result: IImportSource = {
+            importData: {
+                items: await this.jsonProcessorService.parseImportItemsAsync(file.toString()),
+                assets: []
+            },
+            metadata: undefined
+        };
+
+        console.log(`Reading JSON file completed`);
+
+        return result;
+    }
+
+    async createZipAsync(exportData: IExportAllResult, exportFormat: ExportFormat): Promise<any> {
         const zip = new JSZip();
 
         console.log('');
@@ -86,17 +101,18 @@ export class FileProcessorService {
         }
 
         console.log(
-            `Mapping '${yellow(exportData.data.contentItems.length.toString())}' content items to '${yellow('csv')}'`
+            `Mapping '${yellow(exportData.data.contentItems.length.toString())}' content items to '${yellow(exportFormat)}'`
         );
 
-        const typeWrappers = await this.mapLanguageVariantsToCsvAsync(
+        const typeWrappers = await this.getTypeWrappersAsync(
             exportData.data.contentTypes,
-            exportData.data.contentItems
+            this.mapLanguageVariantsToDataModels(exportData.data.contentItems, exportData.data.contentTypes),
+            exportFormat
         );
 
         for (const typeWrapper of typeWrappers) {
-            console.log(`Adding '${yellow(typeWrapper.csvFilename)}' to zip`);
-            contentItemsFolder.file(typeWrapper.csvFilename, typeWrapper.csv);
+            console.log(`Adding '${yellow(typeWrapper.filename)}' to zip`);
+            contentItemsFolder.file(typeWrapper.filename, typeWrapper.data);
         }
 
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
@@ -133,36 +149,18 @@ export class FileProcessorService {
         return content;
     }
 
-    private async mapLanguageVariantsToCsvAsync(
+    private async getTypeWrappersAsync(
         types: IContentType[],
-        items: IContentItem[]
-    ): Promise<ILanguageVariantsTypeCsvWrapper[]> {
-        const typeWrappers: ILanguageVariantsTypeCsvWrapper[] = [];
-        for (const contentType of types) {
-            const languageVariantFields: FieldInfo<any>[] = this.getLanguageVariantFields(contentType);
-            const contentItemsOfType = items.filter((m) => m.system.type === contentType.system.codename);
-            const csvModels: ILanguageVariantCsvModel[] = contentItemsOfType.map((m) =>
-                this.mapLanguageVariantToCsvModel(m, contentType, types, items)
-            );
-
-            const languageVariantsStream = new Readable();
-            languageVariantsStream.push(JSON.stringify(csvModels));
-            languageVariantsStream.push(null); // required to end the stream
-
-            const parsingProcessor = this.geCsvParser({
-                fields: languageVariantFields
-            }).fromInput(languageVariantsStream);
-
-            const csvResult = await parsingProcessor.promise();
-
-            typeWrappers.push({
-                csv: csvResult ?? '',
-                contentType: contentType,
-                csvFilename: `${contentType.system.codename}.csv`
-            });
+        items: ILanguageVariantDataModel[],
+        exportFormat: ExportFormat
+    ): Promise<ILanguageVariantsTypeDataWrapper[]> {
+        if (exportFormat === 'csv') {
+            return await this.csvProcessorService.mapLanguageVariantsAsync(types, items);
+        } else if (exportFormat === 'json') {
+            return await this.jsonProcessorService.mapLanguageVariantsAsync(types, items);
+        } else {
+            throw Error(`Unsupported export format '${exportFormat}'`);
         }
-
-        return typeWrappers;
     }
 
     private getAssetDetailModels(extractedAssets: IExportedAsset[]): IAssetDetailModel[] {
@@ -176,79 +174,50 @@ export class FileProcessorService {
         });
     }
 
-    private getBaseContentItemFields(): string[] {
-        return ['codename', 'name', 'language', 'type', 'collection', 'last_modified', 'workflow_step'];
-    }
-
-    private getLanguageVariantFields(contentType: IContentType): FieldInfo<any>[] {
-        return [
-            ...this.getBaseContentItemFields().map((m) => {
-                const field: FieldInfo<any> = {
-                    label: m,
-                    value: m
-                };
-
-                return field;
-            }),
-            ...contentType.elements
-                .filter((m) => {
-                    if (m.codename?.length) {
-                        return true;
-                    }
-                    return false;
-                })
-                .map((m) => {
-                    const field: FieldInfo<any> = {
-                        label: this.getCsvElementName(m.codename ?? '', m.type as ElementType),
-                        value: m.codename ?? ''
-                    };
-
-                    return field;
-                })
-        ];
-    }
-
     private sleepAsync(ms: number): Promise<any> {
         return new Promise((resolve: any) => setTimeout(resolve, ms));
     }
 
-    private geCsvParser(config: { fields: string[] | FieldInfo<any>[] }): AsyncParser<any> {
-        return new AsyncParser({
-            delimiter: this.csvDelimiter,
-            fields: config.fields
-        });
-    }
+    private mapLanguageVariantsToDataModels(items: IContentItem[], types: IContentType[]): ILanguageVariantDataModel[] {
+        const mappedItems: ILanguageVariantDataModel[] = [];
 
-    private mapLanguageVariantToCsvModel(
-        item: IContentItem,
-        contentType: IContentType,
-        types: IContentType[],
-        items: IContentItem[]
-    ): ILanguageVariantCsvModel {
-        const model: ILanguageVariantCsvModel = {
-            codename: item.system.codename,
-            name: item.system.name,
-            collection: item.system.collection,
-            type: item.system.type,
-            language: item.system.language,
-            last_modified: item.system.lastModified,
-            workflow_step: item.system.workflowStep ?? undefined
-        };
+        for (const item of items) {
+            const type = types.find((m) => m.system.codename.toLowerCase() === item.system.type.toLowerCase());
 
-        for (const element of contentType.elements) {
-            if (element.codename) {
-                const variantElement = item.elements[element.codename];
+            if (!type) {
+                throw Error(`Could not find type '${item.system.type}'`);
+            }
+            const model: ILanguageVariantDataModel = {
+                codename: item.system.codename,
+                name: item.system.name,
+                collection: item.system.collection,
+                type: item.system.type,
+                language: item.system.language,
+                last_modified: item.system.lastModified,
+                workflow_step: item.system.workflowStep ?? undefined
+            };
 
-                if (variantElement) {
-                    model[element.codename] = translationHelper.transformToExportValue(variantElement, items, types);
+            for (const element of type.elements) {
+                if (element.codename) {
+                    const variantElement = item.elements[element.codename];
+
+                    if (variantElement) {
+                        model[element.codename] = translationHelper.transformToExportValue(
+                            variantElement,
+                            items,
+                            types
+                        );
+                    }
                 }
             }
+
+            mappedItems.push(model);
         }
 
-        return model;
+        return mappedItems;
     }
 
-    private async extractAssetsAsync(zip: JSZip): Promise<IImportAsset[]> {
+    private async parseAssetsFromFileAsync(zip: JSZip): Promise<IImportAsset[]> {
         const assets: IImportAsset[] = [];
 
         const files = zip.files;
@@ -315,7 +284,7 @@ export class FileProcessorService {
         throw Error(`Unsupported context '${this.config.context}'`);
     }
 
-    private async parseContentItemsCsvFileAsync(fileContents: JSZip): Promise<IImportContentItem[]> {
+    private async parseContentItemsFromFileAsync(fileContents: JSZip): Promise<IImportContentItem[]> {
         const files = fileContents.files;
         const parsedItems: IImportContentItem[] = [];
 
@@ -331,86 +300,19 @@ export class FileProcessorService {
 
             const text = await file.async('text');
 
-            parsedItems.push(...(await this.parseCsvTextToImportItemsAsync(text)));
-        }
-
-        return parsedItems;
-    }
-
-    private async parseCsvTextToImportItemsAsync(text: string): Promise<IImportContentItem[]> {
-        const parsedItems: IImportContentItem[] = [];
-        let index = 0;
-        const parser = parse(text, {
-            cast: true,
-            delimiter: this.csvDelimiter
-        });
-
-        let parsedElements: string[] = [];
-
-        for await (const record of parser) {
-            if (index === 0) {
-                // process header row
-                parsedElements = record;
+            if (file.name?.toLowerCase()?.endsWith('.csv')) {
+                parsedItems.push(...(await this.csvProcessorService.parseImportItemsAsync(text)));
+            } else if (file.name?.toLowerCase()?.endsWith('.json')) {
+                parsedItems.push(...(await this.jsonProcessorService.parseImportItemsAsync(text)));
             } else {
-                // process data row
-                const contentItem: IImportContentItem = {
-                    codename: '',
-                    collection: '',
-                    elements: [],
-                    language: '',
-                    last_modified: '',
-                    name: '',
-                    type: '',
-                    workflow_step: ''
-                };
-
-                let fieldIndex: number = 0;
-                for (const elementName of parsedElements) {
-                    const elementValue = record[fieldIndex];
-
-                    if (elementName.includes(')') && elementName.includes(')')) {
-                        // process user defined element
-                        const parsedElementName = this.parseCsvElementName(elementName);
-
-                        contentItem.elements.push({
-                            type: parsedElementName.elementType,
-                            codename: parsedElementName.elementCodename,
-                            value: elementValue
-                        });
-                    } else {
-                        // process base element
-                        contentItem[elementName] = elementValue;
-                    }
-
-                    fieldIndex++;
-                }
-
-                parsedItems.push(contentItem);
+                throw Error(`Could not extract file '${file.name}'`);
             }
-            index++;
         }
 
         return parsedItems;
     }
 
-    private getCsvElementName(elementCodename: string, elementType: ElementType): string {
-        return `${elementCodename} (${elementType})`;
-    }
-
-    private parseCsvElementName(elementName: string): { elementCodename: string; elementType: ElementType } {
-        const matchedResult = elementName.match(/\(([^)]+)\)/);
-
-        if (matchedResult && matchedResult.length > 1) {
-            return {
-                elementType: matchedResult[1].trim() as ElementType,
-                elementCodename: elementName.replace(/ *\([^)]*\) */g, '').trim()
-            };
-        }
-
-        throw Error(`Could not parse CSV element name '${elementName}' to determine element type & codename`);
-    }
-
-    private async readAndParseJsonFileAsync(fileContents: JSZip, filename: string): Promise<any> {
+    private async parseMetadataFromFileAsync(fileContents: JSZip, filename: string): Promise<any> {
         const files = fileContents.files;
         const file = files[filename];
 

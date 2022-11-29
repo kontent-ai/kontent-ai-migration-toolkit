@@ -24,12 +24,10 @@ const run = async () => {
     const data = await exportService.exportAllAsync();
 
     // prepare zip file
-    const zipFile = await zipService.createZipAsync(data);
+    const zipFile = await zipService.createZipAsync(data, 'csv');
 
     // save zip to file system (node.js only)
     await fileService.writeFileAsync('filename', zipFile);
-
-    await zipService.createZipAsync(data);
 };
 
 run();

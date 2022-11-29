@@ -34,7 +34,7 @@ const run = async () => {
     });
 
     // read file
-    const file = fileService.loadFileAsync('fileName');
+    const file = await fileService.loadFileAsync('fileName');
 
     // extract file
     const data = await zipService.extractZipAsync(file);

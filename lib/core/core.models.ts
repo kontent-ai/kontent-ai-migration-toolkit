@@ -1,6 +1,9 @@
+import { ExportFormat } from '../file-processor';
+
 export interface ICliFileConfig {
     projectId: string;
     apiKey?: string;
+    format?: ExportFormat;
     secureApiKey?: string;
     previewApiKey?: string;
     skipFailedItems: boolean;

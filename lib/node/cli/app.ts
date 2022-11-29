@@ -5,13 +5,16 @@ import * as yargs from 'yargs';
 import { ICliFileConfig, CliAction, getExtension } from '../../core';
 import { ExportService } from '../../export';
 import { ImportService } from '../../import';
-import { FileProcessorService } from '../../file-processor';
+import { ExportFormat, FileProcessorService } from '../../file-processor';
 import { SharedModels } from '@kontent-ai/management-sdk';
 import { FileService } from '../file/file.service';
 import { green, red, yellow } from 'colors';
 
 const argv = yargs(process.argv.slice(2))
-    .example('csvm --action=backup --apiKey=xxx --projectId=xxx', 'Creates zip backup of Kontent.ai project')
+    .example(
+        'csvm --action=backup --format=csv|json --apiKey=xxx --projectId=xxx',
+        'Creates zip backup of Kontent.ai project'
+    )
     .example(
         'csvm --action=restore --apiKey=xxx --projectId=xxx --filename=backupFile',
         'Read given zip file and recreates data in Kontent.ai project'
@@ -28,6 +31,8 @@ const argv = yargs(process.argv.slice(2))
     .describe('a', 'Action to perform. One of: "backup" | "restore"')
     .alias('f', 'filename')
     .describe('f', 'Name of file to export / restore')
+    .alias('of', 'format')
+    .describe('of', 'Format of the export. One of: "csv" | "json"')
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
     .alias('sfi', 'skipFailedItems')
@@ -53,7 +58,7 @@ const backupAsync = async (config: ICliFileConfig) => {
         exportAssets: config.exportAssets,
         fetchAssetDetails: config.fetchAssetDetails,
         onProcess: (item) => {
-            console.log(`Exported ${(item.title)} | ${green(item.data.system.type)}`);
+            console.log(`Exported ${item.title} | ${green(item.data.system.type)}`);
         }
     });
 
@@ -64,7 +69,7 @@ const backupAsync = async (config: ICliFileConfig) => {
     });
 
     const response = await exportService.exportAllAsync();
-    const zipFileData = await fileProcessorService.createZipAsync(response);
+    const zipFileData = await fileProcessorService.createZipAsync(response, config.format ?? 'json');
 
     await fileService.writeFileAsync(config.filename, zipFileData);
 
@@ -108,6 +113,9 @@ const restoreAsync = async (config: ICliFileConfig) => {
         await importService.importFromSourceAsync(data);
     } else if (fileExtension?.endsWith('csv')) {
         const data = await fileProcessorService.extractCsvFileAsync(file);
+        await importService.importFromSourceAsync(data);
+    } else if (fileExtension?.endsWith('json')) {
+        const data = await fileProcessorService.extractJsonFileAsync(file);
         await importService.importFromSourceAsync(data);
     } else {
         throw Error(`Unsupported file type '${fileExtension}'`);
@@ -163,6 +171,7 @@ const getConfig = async () => {
     const secureApiKey: string | undefined = resolvedArgs.secureApiKey as string | undefined;
     const previewApiKey: string | undefined = resolvedArgs.previewApiKey as string | undefined;
     const projectId: string | undefined = resolvedArgs.projectId as string | undefined;
+    const format: string | undefined = resolvedArgs.format as string | undefined;
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
     const filename: string | undefined = (resolvedArgs.filename as string | undefined) ?? getDefaultBackupFilename();
     const exportTypes: string | undefined = resolvedArgs.exportTypes as string | undefined;
@@ -174,6 +183,18 @@ const getConfig = async () => {
         (resolvedArgs.fetchAssetDetails as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? false;
 
     const typesMapped: string[] = exportTypes ? exportTypes.split(',').map((m) => m.trim()) : [];
+
+    let mappedFormat: ExportFormat = 'csv';
+
+    if (format?.toLowerCase() === 'csv') {
+        mappedFormat = 'csv';
+    } else if (format?.toLowerCase() === 'json') {
+        mappedFormat = 'json';
+    } else {
+        if (action === 'backup') {
+            throw Error(`Unsupported export format '${format}'`);
+        }
+    }
 
     if (!action) {
         throw Error(`No action was provided`);
@@ -195,7 +216,8 @@ const getConfig = async () => {
         skipFailedItems: skipFailedItems,
         previewApiKey: previewApiKey,
         secureApiKey: secureApiKey,
-        fetchAssetDetails: fetchAssetDetails
+        fetchAssetDetails: fetchAssetDetails,
+        format: mappedFormat
     };
 
     return config;
