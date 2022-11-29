@@ -1,36 +1,6 @@
 import { IImportItemResult } from './core.models';
 
 export class IdTranslateHelper {
-    replaceIdReferencesWithNewId(data: any, items: IImportItemResult[]): void {
-        if (data) {
-            if (Array.isArray(data)) {
-                for (const arrayItem of data) {
-                    this.replaceIdReferencesWithNewId(arrayItem, items);
-                }
-            } else {
-                for (const key of Object.keys(data)) {
-                    const val = (data as any)[key];
-                    if (typeof val === 'string' && val.startsWith('<') && val.endsWith('>')) {
-                        // replace string with updated one
-                        const newData = this.replaceIdsInRichText(val, items);
-                        data[key] = newData;
-                    }
-                    if (key.toLowerCase() === 'id') {
-                        const id = (data as any).id;
-                        const newId = this.tryFindNewId(id, items);
-
-                        if (newId) {
-                            data.id = newId;
-                        }
-                    }
-
-                    if (typeof val === 'object' && val !== null) {
-                        this.replaceIdReferencesWithNewId(val, items);
-                    }
-                }
-            }
-        }
-    }
 
     replaceIdsInRichText(text: string, items: IImportItemResult[]): string {
         const codename = { regex: /data-codename=\"(.*?)\"/g, attr: 'data-id' };
