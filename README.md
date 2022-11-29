@@ -1,7 +1,7 @@
-# Kontent.ai CSV Manager
+# Kontent.ai Data Manager
 
 The purpose of this project is to export & import content data to & from [Kontent.ai](https://kontent.ai) projects. This
-project uses `Delivery API` for fast import and conversion to CSV and `Management API` to import data back.
+project uses `Delivery API` for fast import and conversion to various formats (`json` | `csv`) and `Management API` to import data back.
 
 This library can be used in `node.js` only - the API cannot be used in directly in browsers.
 
@@ -10,15 +10,16 @@ This library can be used in `node.js` only - the API cannot be used in directly 
 > When importing it is absolutely essential that both `source` and `target` project have identical definitions of
 > Content types, taxonomies and workflows. Any inconsistency in data definition may cause import to fail.
 
-**How are content items imported?** The CSV manager creates content items that are not present in target project. If the
-content item is already present in the project (based on item's `codename`) the item will be updated if necessary or skipped.
+**How are content items imported?** The Data manager creates content items that are not present in target project. If the
+content item is already present in the project (based on item's `codename`) the item will be updated if necessary or skipped. Content item
+is only updated if the `name` of the item changes.
 
-**How are langauge variants imported?** Same as with content items, CSV manager either creates or updates language
-variants based on their codename & codename of the language.
+**How are langauge variants imported?** Same as with content items, Data manager either creates or updates language
+variants based on their codename & codename of the language. Workflow of the language variant is set based on the `workflow` field in the source data.
 
-**How are assets?** If asset with it's id or external_id exists in target project, the asset upload
+**How are assets imported?** If asset with it's id or external_id exists in target project, the asset upload
 will be skipped and not uploaded at all. If it doesn't exist, the asset from the zip folder will be uploaded and it's id
-will be used as a filename. The CSV Manager will also set `external_id` of newly uploaded assets to equal their original
+will be used as a filename. The Data Manager will also set `external_id` of newly uploaded assets to equal their original
 id. If you enable `fetchAssetDetails` option the original filename of the asset will be preserved.
 
 ## Installation
@@ -35,15 +36,16 @@ Install package globally:
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **projectId**   | Id of Kontent.ai project **(required)**                                                                                       |
 | **apiKey**      | Content management Api key **(required for import, not needed for export)**                                                   |
-| **action**      | Action. Possible values are: `restore` & `backup` **(required)**                                                              |
+| **action**      | Action. Available options: `restore` & `backup` **(required)**                                                              |
+| format     | Format used to export data. Available options: `csv` & `json`                                                             |
 | previewApiKey     | When set, Preview API will be used to make data export                                                              |
 | secureApiKey      | When set, Secure API will be used to make data export                                                        |
 | filename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup.zip'). When restoring data you may also use individual `*.csv` file.                          |
 | baseUrl         | Custom base URL for Management API calls.                                                                                     |
-| exportAssets    | Indicates if assets should be exported. Supported are `true` & `false`                                                        |
+| exportAssets    | Indicates if assets should be exported. Available options: `true` & `false`                                                        |
 | exportTypes     | Array of content types codenames of which content items should be exported. By default all items of all types are exported    |
-| skipFailedItems | Indicates if failed content items & language variants should be skipped if their import fails. Supported are `true` & `false` |
-| fetchAssetDetails | Indicates if asset details should be fetched when making data export. If you enable this option, you also must use provide `apiKey` because fetching asset data relies on Management API. Supported are `true` & `false` |
+| skipFailedItems | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false` |
+| fetchAssetDetails | Indicates if asset details should be fetched when making data export. If you enable this option, you also must use provide `apiKey` because fetching asset data relies on Management API. Available options: `true` & `false` |
 
 ### Execution
 
@@ -59,7 +61,7 @@ To backup data use:
 
 To restore data use:
 
-`kcsvm --action=restore --apiKey=xxx --projectId=xxx --filename=backup.zip|data.csv`
+`kcsvm --action=restore --apiKey=xxx --projectId=xxx --filename=backup.zip|data.csv|data.json`
 
 To get some help you can use:
 
@@ -73,6 +75,7 @@ Create a `json` configuration file in the folder where you are attempting to run
 {
     "projectId": "xxx",
     "filename": "csv-backup",
+    "format": "csv",
     "action": "backup",
     "baseUrl": null,
     "exportTypes": null,
@@ -95,6 +98,7 @@ import { FileService } from '@kontent-ai/backup-manager/dist/cjs/lib/node';
 const run = async () => {
     const exportService = new ExportService({
         projectId: 'sourceProjectId',
+        format: 'csv', // or json
         filename: 'mybackup.zip', // name of the zip
         exportTypes: [], // array of type codenames to export. If not provided, all items of all types are exported
         exportAssets: true, // indicates whether asset binaries should be exported
