@@ -8,7 +8,7 @@ import {
     ILanguageVariantsTypeDataWrapper,
     IFileProcessorConfig,
     IAssetDetailModel,
-    ExportFormat
+    IFormatService
 } from './file-processor.models';
 import { yellow } from 'colors';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
@@ -84,7 +84,7 @@ export class FileProcessorService {
         return result;
     }
 
-    async createZipAsync(exportData: IExportAllResult, exportFormat: ExportFormat): Promise<any> {
+    async createZipAsync(exportData: IExportAllResult, formatService: IFormatService): Promise<any> {
         const zip = new JSZip();
 
         console.log('');
@@ -100,14 +100,12 @@ export class FileProcessorService {
             throw Error(`Could not create folder '${yellow(this.contentItemsFolderName)}'`);
         }
 
-        console.log(
-            `Mapping '${yellow(exportData.data.contentItems.length.toString())}' content items to '${yellow(exportFormat)}'`
-        );
+        console.log(`Transforming '${yellow(exportData.data.contentItems.length.toString())}' content items`);
 
         const typeWrappers = await this.getTypeWrappersAsync(
             exportData.data.contentTypes,
             this.mapLanguageVariantsToDataModels(exportData.data.contentItems, exportData.data.contentTypes),
-            exportFormat
+            formatService
         );
 
         for (const typeWrapper of typeWrappers) {
@@ -152,15 +150,9 @@ export class FileProcessorService {
     private async getTypeWrappersAsync(
         types: IContentType[],
         items: ILanguageVariantDataModel[],
-        exportFormat: ExportFormat
+        formatService: IFormatService
     ): Promise<ILanguageVariantsTypeDataWrapper[]> {
-        if (exportFormat === 'csv') {
-            return await this.csvProcessorService.mapLanguageVariantsAsync(types, items);
-        } else if (exportFormat === 'json') {
-            return await this.jsonProcessorService.mapLanguageVariantsAsync(types, items);
-        } else {
-            throw Error(`Unsupported export format '${exportFormat}'`);
-        }
+        return await formatService.mapLanguageVariantsAsync(types, items);
     }
 
     private getAssetDetailModels(extractedAssets: IExportedAsset[]): IAssetDetailModel[] {

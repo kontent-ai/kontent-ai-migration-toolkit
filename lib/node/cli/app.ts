@@ -5,7 +5,13 @@ import * as yargs from 'yargs';
 import { ICliFileConfig, CliAction, getExtension } from '../../core';
 import { ExportService } from '../../export';
 import { ImportService } from '../../import';
-import { ExportFormat, FileProcessorService } from '../../file-processor';
+import {
+    CsvProcessorService,
+    ExportFormat,
+    FileProcessorService,
+    IFormatService,
+    JsonProcessorService
+} from '../../file-processor';
 import { SharedModels } from '@kontent-ai/management-sdk';
 import { FileService } from '../file/file.service';
 import { green, red, yellow } from 'colors';
@@ -47,6 +53,9 @@ const argv = yargs(process.argv.slice(2))
     .help('h')
     .alias('h', 'help').argv;
 
+const jsonFormatService = new JsonProcessorService();
+const csvFormatService = new CsvProcessorService();
+
 const backupAsync = async (config: ICliFileConfig) => {
     const exportService = new ExportService({
         projectId: config.projectId,
@@ -69,7 +78,17 @@ const backupAsync = async (config: ICliFileConfig) => {
     });
 
     const response = await exportService.exportAllAsync();
-    const zipFileData = await fileProcessorService.createZipAsync(response, config.format ?? 'json');
+
+    let formatService: IFormatService;
+    if (config.format === 'csv') {
+        formatService = csvFormatService;
+    } else if (config.format === 'json') {
+        formatService = jsonFormatService;
+    } else {
+        throw Error(`Unsupported export format '${config.format}'`);
+    }
+
+    const zipFileData = await fileProcessorService.createZipAsync(response, formatService);
 
     await fileService.writeFileAsync(config.filename, zipFileData);
 

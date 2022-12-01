@@ -117,7 +117,7 @@ const run = async () => {
     });
 
     // prepare zip data
-    const zipData = await fileProcessorService.createZipAsync(data);
+    const zipData = await fileProcessorService.createZipAsync(new CsvProcessorService()); // or 'JsonProcessorService' or custom service to format exporting data
 
     const fileService = new FileService({});
 

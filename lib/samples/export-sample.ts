@@ -1,11 +1,10 @@
-import { FileProcessorService } from 'lib/file-processor';
+import { FileProcessorService, JsonProcessorService } from '../file-processor';
 
 import { ExportService } from '../export';
 import { FileService } from '../node';
 
 const run = async () => {
-    const fileService = new FileService({
-    });
+    const fileService = new FileService({});
 
     const zipService = new FileProcessorService({
         context: 'node.js'
@@ -13,7 +12,7 @@ const run = async () => {
 
     const exportService = new ExportService({
         projectId: 'sourceProjectId',
-        onProcess: item => {
+        onProcess: (item) => {
             // called when any content is exported
             console.log(`Exported: ${item.title} | ${item.actionType}`);
         },
@@ -24,7 +23,7 @@ const run = async () => {
     const data = await exportService.exportAllAsync();
 
     // prepare zip file
-    const zipFile = await zipService.createZipAsync(data, 'csv');
+    const zipFile = await zipService.createZipAsync(data, new JsonProcessorService());
 
     // save zip to file system (node.js only)
     await fileService.writeFileAsync('filename', zipFile);
