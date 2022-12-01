@@ -25,7 +25,6 @@ export class JsonProcessorService extends BaseProcessorService {
 
             typeWrappers.push({
                 data: contentItemsOfType.length ? JSON.stringify(contentItemsOfType) : '[]',
-                contentType: contentType,
                 filename: filename
             });
         }

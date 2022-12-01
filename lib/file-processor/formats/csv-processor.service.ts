@@ -32,7 +32,6 @@ export class CsvProcessorService extends BaseProcessorService {
 
             typeWrappers.push({
                 data: data,
-                contentType: contentType,
                 filename: filename
             });
         }

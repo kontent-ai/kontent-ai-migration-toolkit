@@ -126,8 +126,13 @@ export class ImportService {
             }
         }
 
-        console.log(`Removed '${yellow(removedAssets.toString())}' assets from import`);
-        console.log(`Removed '${yellow(removedContentItems.toString())}' content items from import`);
+        if (removedAssets > 0) {
+            console.log(`Removed '${yellow(removedAssets.toString())}' assets from import`);
+        }
+
+        if (removedContentItems) {
+            console.log(`Removed '${yellow(removedContentItems.toString())}' content items from import`);
+        }
     }
 
     private async importAssetsAsync(assets: IImportAsset[]): Promise<IImportItemResult[]> {

@@ -32,7 +32,6 @@ export interface ILanguageVariantDataModel {
 }
 
 export interface ILanguageVariantsTypeDataWrapper {
-    contentType: IContentType;
     filename: string;
     data: string;
 }
