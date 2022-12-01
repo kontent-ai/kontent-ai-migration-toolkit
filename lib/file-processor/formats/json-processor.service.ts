@@ -1,16 +1,17 @@
-import { ElementType, IContentType } from '@kontent-ai/delivery-sdk';
+import { ElementType, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IImportContentItem } from '../../import';
 import { ILanguageVariantDataModel, ILanguageVariantsDataWrapper } from '../file-processor.models';
 import { BaseProcessorService } from './base-processor.service';
 
 export class JsonProcessorService extends BaseProcessorService {
-    async mapLanguageVariantsAsync(
+    async transformLanguageVariantsAsync(
         types: IContentType[],
-        items: ILanguageVariantDataModel[]
+        items: IContentItem[]
     ): Promise<ILanguageVariantsDataWrapper[]> {
         const typeWrappers: ILanguageVariantsDataWrapper[] = [];
+        const flattenedContentItems: ILanguageVariantDataModel[] = super.flattenLanguageVariants(items, types);
         for (const contentType of types) {
-            const contentItemsOfType = items.filter((m) => m.type === contentType.system.codename);
+            const contentItemsOfType = flattenedContentItems.filter((m) => m.type === contentType.system.codename);
 
             const filename: string = `${contentType.system.codename}.json`;
 
@@ -32,7 +33,7 @@ export class JsonProcessorService extends BaseProcessorService {
         return typeWrappers;
     }
 
-    async parseImportItemsAsync(text: string): Promise<IImportContentItem[]> {
+    async parseContentItemsAsync(text: string): Promise<IImportContentItem[]> {
         const parsedItems: IImportContentItem[] = [];
         const rawItems: any[] = JSON.parse(text) as any[];
         const baseFields: string[] = this.getBaseContentItemFields();

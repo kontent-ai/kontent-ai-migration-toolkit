@@ -1,4 +1,4 @@
-import { ElementType, IContentType } from '@kontent-ai/delivery-sdk';
+import { ElementType, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
 import { IImportContentItem } from '../../import';
@@ -9,13 +9,14 @@ import { BaseProcessorService } from './base-processor.service';
 export class CsvProcessorService extends BaseProcessorService {
     private readonly csvDelimiter: string = ',';
 
-    async mapLanguageVariantsAsync(
+    async transformLanguageVariantsAsync(
         types: IContentType[],
-        items: ILanguageVariantDataModel[]
+        items: IContentItem[]
     ): Promise<ILanguageVariantsDataWrapper[]> {
         const typeWrappers: ILanguageVariantsDataWrapper[] = [];
+        const flattenedContentItems: ILanguageVariantDataModel[] = super.flattenLanguageVariants(items, types);
         for (const contentType of types) {
-            const contentItemsOfType = items.filter((m) => m.type === contentType.system.codename);
+            const contentItemsOfType = flattenedContentItems.filter((m) => m.type === contentType.system.codename);
 
             const filename: string = `${contentType.system.codename}.csv`;
 
@@ -39,7 +40,7 @@ export class CsvProcessorService extends BaseProcessorService {
         return typeWrappers;
     }
 
-    async parseImportItemsAsync(text: string): Promise<IImportContentItem[]> {
+    async parseContentItemsAsync(text: string): Promise<IImportContentItem[]> {
         const parsedItems: IImportContentItem[] = [];
         let index = 0;
         const parser = parse(text, {

@@ -1,4 +1,4 @@
-import { IContentType } from '@kontent-ai/delivery-sdk';
+import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IImportContentItem as IParsedContentItem } from '../import';
 
 export type ZipContext = 'node.js' | 'browser';
@@ -6,12 +6,12 @@ export type ZipContext = 'node.js' | 'browser';
 export type ExportFormat = 'csv' | 'json';
 
 export interface IFormatService {
-    mapLanguageVariantsAsync(
+    transformLanguageVariantsAsync(
         types: IContentType[],
-        items: ILanguageVariantDataModel[]
+        items: IContentItem[]
     ): Promise<ILanguageVariantsDataWrapper[]>;
 
-    parseImportItemsAsync(text: string): Promise<IParsedContentItem[]>;
+    parseContentItemsAsync(text: string): Promise<IParsedContentItem[]>;
 }
 
 export interface IFileProcessorConfig {

@@ -4,7 +4,6 @@ import * as JSZip from 'jszip';
 import { IExportAllResult, IExportedAsset } from '../export';
 import { IImportAsset, IImportContentItem, IImportSource } from '../import';
 import {
-    ILanguageVariantDataModel,
     ILanguageVariantsDataWrapper,
     IFileProcessorConfig,
     IAssetDetailModel,
@@ -12,7 +11,7 @@ import {
 } from './file-processor.models';
 import { yellow } from 'colors';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { getExtension, translationHelper } from '../core';
+import { getExtension } from '../core';
 import { getType } from 'mime';
 import { CsvProcessorService } from './formats/csv-processor.service';
 import { JsonProcessorService } from './formats/json-processor.service';
@@ -57,7 +56,7 @@ export class FileProcessorService {
 
         const result: IImportSource = {
             importData: {
-                items: await this.csvProcessorService.parseImportItemsAsync(file.toString()),
+                items: await this.csvProcessorService.parseContentItemsAsync(file.toString()),
                 assets: []
             },
             metadata: undefined
@@ -73,7 +72,7 @@ export class FileProcessorService {
 
         const result: IImportSource = {
             importData: {
-                items: await this.jsonProcessorService.parseImportItemsAsync(file.toString()),
+                items: await this.jsonProcessorService.parseContentItemsAsync(file.toString()),
                 assets: []
             },
             metadata: undefined
@@ -104,7 +103,7 @@ export class FileProcessorService {
 
         const typeWrappers = await this.getTypeWrappersAsync(
             exportData.data.contentTypes,
-            this.mapLanguageVariantsToDataModels(exportData.data.contentItems, exportData.data.contentTypes),
+            exportData.data.contentItems,
             config.formatService
         );
 
@@ -149,10 +148,10 @@ export class FileProcessorService {
 
     private async getTypeWrappersAsync(
         types: IContentType[],
-        items: ILanguageVariantDataModel[],
+        items: IContentItem[],
         formatService: IFormatService
     ): Promise<ILanguageVariantsDataWrapper[]> {
-        return await formatService.mapLanguageVariantsAsync(types, items);
+        return await formatService.transformLanguageVariantsAsync(types, items);
     }
 
     private getAssetDetailModels(extractedAssets: IExportedAsset[]): IAssetDetailModel[] {
@@ -168,45 +167,6 @@ export class FileProcessorService {
 
     private sleepAsync(ms: number): Promise<any> {
         return new Promise((resolve: any) => setTimeout(resolve, ms));
-    }
-
-    private mapLanguageVariantsToDataModels(items: IContentItem[], types: IContentType[]): ILanguageVariantDataModel[] {
-        const mappedItems: ILanguageVariantDataModel[] = [];
-
-        for (const item of items) {
-            const type = types.find((m) => m.system.codename.toLowerCase() === item.system.type.toLowerCase());
-
-            if (!type) {
-                throw Error(`Could not find type '${item.system.type}'`);
-            }
-            const model: ILanguageVariantDataModel = {
-                codename: item.system.codename,
-                name: item.system.name,
-                collection: item.system.collection,
-                type: item.system.type,
-                language: item.system.language,
-                last_modified: item.system.lastModified,
-                workflow_step: item.system.workflowStep ?? undefined
-            };
-
-            for (const element of type.elements) {
-                if (element.codename) {
-                    const variantElement = item.elements[element.codename];
-
-                    if (variantElement) {
-                        model[element.codename] = translationHelper.transformToExportValue(
-                            variantElement,
-                            items,
-                            types
-                        );
-                    }
-                }
-            }
-
-            mappedItems.push(model);
-        }
-
-        return mappedItems;
     }
 
     private async parseAssetsFromFileAsync(zip: JSZip): Promise<IImportAsset[]> {
@@ -297,11 +257,11 @@ export class FileProcessorService {
 
             if (customFormatService) {
                 // use custom format service
-                parsedItems.push(...(await customFormatService.parseImportItemsAsync(text)));
+                parsedItems.push(...(await customFormatService.parseContentItemsAsync(text)));
             } else if (file.name?.toLowerCase()?.endsWith('.csv')) {
-                parsedItems.push(...(await this.csvProcessorService.parseImportItemsAsync(text)));
+                parsedItems.push(...(await this.csvProcessorService.parseContentItemsAsync(text)));
             } else if (file.name?.toLowerCase()?.endsWith('.json')) {
-                parsedItems.push(...(await this.jsonProcessorService.parseImportItemsAsync(text)));
+                parsedItems.push(...(await this.jsonProcessorService.parseContentItemsAsync(text)));
             } else {
                 throw Error(`Could not extract file '${file.name}'`);
             }
