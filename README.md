@@ -175,7 +175,7 @@ const run = async () => {
 run();
 ```
 
-## Customizing what gets exported
+## Customizing exported items
 
 You may customize what items get exported by using the `customItemsExport` option when exporting in code. This option
 allows you to export exactly the items you need, however be aware that the exported items may reference other items that
@@ -202,10 +202,12 @@ const exportService = new ExportService({
 });
 ```
 
-## Customizing export format with IFormatService
+## Using custom formats
 
 This library provides `csv` and `json` export / import formats out of the box. However, you might want to use different format or otherwise change how items are processed. For example, you can use this to export into your own `xliff` format, `xlxs`, some custom `txt` format and so on. By implementing `IFormatService` you can do just that. You may inspire from these services:
 
+| Service  | Link |
+| ------------- | ------------- |
 | CSV `IFormatService`  | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/formats/csv-processor.service.ts  |
 | JSON `IFormatService`   | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/formats/json-processor.service.ts  |
 | Simplified demo `IFormatService`  | https://github.com/Enngage/kontent-data-manager/blob/main/lib/samples/sample-custom-processor.service.ts  |
