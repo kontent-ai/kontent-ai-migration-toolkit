@@ -33,7 +33,7 @@ export class FileProcessorService {
         this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 50;
     }
 
-    async extractZipAsync(file: Buffer): Promise<IImportSource> {
+    async extractZipAsync(file: Buffer, config?: { customFormatService?: IFormatService }): Promise<IImportSource> {
         console.log(`Unzipping file`);
 
         const zipFile = await JSZip.loadAsync(file);
@@ -41,7 +41,7 @@ export class FileProcessorService {
         console.log(`Parsing zip contents`);
         const result: IImportSource = {
             importData: {
-                items: await this.parseContentItemsFromFileAsync(zipFile),
+                items: await this.parseContentItemsFromFileAsync(zipFile, config?.customFormatService),
                 assets: await this.parseAssetsFromFileAsync(zipFile)
             },
             metadata: await this.parseMetadataFromFileAsync(zipFile, this.metadataName)
@@ -84,7 +84,7 @@ export class FileProcessorService {
         return result;
     }
 
-    async createZipAsync(exportData: IExportAllResult, formatService: IFormatService): Promise<any> {
+    async createZipAsync(exportData: IExportAllResult, config: { formatService: IFormatService }): Promise<any> {
         const zip = new JSZip();
 
         console.log('');
@@ -105,7 +105,7 @@ export class FileProcessorService {
         const typeWrappers = await this.getTypeWrappersAsync(
             exportData.data.contentTypes,
             this.mapLanguageVariantsToDataModels(exportData.data.contentItems, exportData.data.contentTypes),
-            formatService
+            config.formatService
         );
 
         for (const typeWrapper of typeWrappers) {
@@ -276,7 +276,10 @@ export class FileProcessorService {
         throw Error(`Unsupported context '${this.config.context}'`);
     }
 
-    private async parseContentItemsFromFileAsync(fileContents: JSZip): Promise<IImportContentItem[]> {
+    private async parseContentItemsFromFileAsync(
+        fileContents: JSZip,
+        customFormatService?: IFormatService
+    ): Promise<IImportContentItem[]> {
         const files = fileContents.files;
         const parsedItems: IImportContentItem[] = [];
 
@@ -292,7 +295,10 @@ export class FileProcessorService {
 
             const text = await file.async('text');
 
-            if (file.name?.toLowerCase()?.endsWith('.csv')) {
+            if (customFormatService) {
+                // use custom format service
+                parsedItems.push(...(await customFormatService.parseImportItemsAsync(text)));
+            } else if (file.name?.toLowerCase()?.endsWith('.csv')) {
                 parsedItems.push(...(await this.csvProcessorService.parseImportItemsAsync(text)));
             } else if (file.name?.toLowerCase()?.endsWith('.json')) {
                 parsedItems.push(...(await this.jsonProcessorService.parseImportItemsAsync(text)));

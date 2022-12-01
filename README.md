@@ -1,7 +1,8 @@
 # Kontent.ai Data Manager
 
 The purpose of this project is to export & import content data to & from [Kontent.ai](https://kontent.ai) projects. This
-project uses `Delivery API` for fast import and conversion to various formats (`json` | `csv`) and `Management API` to import data back.
+project uses `Delivery API` for fast import and conversion to various formats (`json` | `csv`) and `Management API` to
+import data back.
 
 This library can be used in `node.js` only - the API cannot be used in directly in browsers.
 
@@ -10,17 +11,18 @@ This library can be used in `node.js` only - the API cannot be used in directly 
 > When importing it is absolutely essential that both `source` and `target` project have identical definitions of
 > Content types, taxonomies and workflows. Any inconsistency in data definition may cause import to fail.
 
-**How are content items imported?** The Data manager creates content items that are not present in target project. If the
-content item is already present in the project (based on item's `codename`) the item will be updated if necessary or skipped. Content item
-is only updated if the `name` of the item changes.
+**How are content items imported?** The Data manager creates content items that are not present in target project. If
+the content item is already present in the project (based on item's `codename`) the item will be updated if necessary or
+skipped. Content item is only updated if the `name` of the item changes.
 
 **How are langauge variants imported?** Same as with content items, Data manager either creates or updates language
-variants based on their codename & codename of the language. Workflow of the language variant is set based on the `workflow` field in the source data.
+variants based on their codename & codename of the language. Workflow of the language variant is set based on the
+`workflow` field in the source data.
 
-**How are assets imported?** If asset with it's id or external_id exists in target project, the asset upload
-will be skipped and not uploaded at all. If it doesn't exist, the asset from the zip folder will be uploaded and it's id
-will be used as a filename. The Data Manager will also set `external_id` of newly uploaded assets to equal their original
-id. If you enable `fetchAssetDetails` option the original filename of the asset will be preserved.
+**How are assets imported?** If asset with it's id or external_id exists in target project, the asset upload will be
+skipped and not uploaded at all. If it doesn't exist, the asset from the zip folder will be uploaded and it's id will be
+used as a filename. The Data Manager will also set `external_id` of newly uploaded assets to equal their original id. If
+you enable `fetchAssetDetails` option the original filename of the asset will be preserved.
 
 ## Installation
 
@@ -32,19 +34,19 @@ Install package globally:
 
 ### Configuration
 
-| Config          | Value                                                                                                                         |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **projectId**   | Id of Kontent.ai project **(required)**                                                                                       |
-| **apiKey**      | Content management Api key **(required for import, not needed for export)**                                                   |
-| **action**      | Action. Available options: `restore` & `backup` **(required)**                                                              |
-| format     | Format used to export data. Available options: `csv` & `json`                                                             |
-| previewApiKey     | When set, Preview API will be used to make data export                                                              |
-| secureApiKey      | When set, Secure API will be used to make data export                                                        |
-| filename     | Name of zip used for export / restoring data. (e.g. 'kontent-backup.zip'). When restoring data you may also use individual `*.csv` file.                          |
-| baseUrl         | Custom base URL for Management API calls.                                                                                     |
-| exportAssets    | Indicates if assets should be exported. Available options: `true` & `false`                                                        |
-| exportTypes     | Array of content types codenames of which content items should be exported. By default all items of all types are exported    |
-| skipFailedItems | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false` |
+| Config            | Value                                                                                                                                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **projectId**     | Id of Kontent.ai project **(required)**                                                                                                                                                                                       |
+| **apiKey**        | Content management Api key **(required for import, not needed for export)**                                                                                                                                                   |
+| **action**        | Action. Available options: `restore` & `backup` **(required)**                                                                                                                                                                |
+| format            | Format used to export data. Available options: `csv` & `json`                                                                                                                                                                 |
+| previewApiKey     | When set, Preview API will be used to make data export                                                                                                                                                                        |
+| secureApiKey      | When set, Secure API will be used to make data export                                                                                                                                                                         |
+| filename          | Name of zip used for export / restoring data. (e.g. 'kontent-backup.zip'). When restoring data you may also use individual `*.csv` file.                                                                                      |
+| baseUrl           | Custom base URL for Management API calls.                                                                                                                                                                                     |
+| exportAssets      | Indicates if assets should be exported. Available options: `true` & `false`                                                                                                                                                   |
+| exportTypes       | Array of content types codenames of which content items should be exported. By default all items of all types are exported                                                                                                    |
+| skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`                                                                                            |
 | fetchAssetDetails | Indicates if asset details should be fetched when making data export. If you enable this option, you also must use provide `apiKey` because fetching asset data relies on Management API. Available options: `true` & `false` |
 
 ### Execution
@@ -53,7 +55,6 @@ Install package globally:
 > a new environment based on your production one and test the import there first. If the import completes successfully,
 > you may swap environments or run it again on the production since you have previously tested it on practically
 > identical environment.
-
 
 To backup data use:
 
@@ -98,7 +99,7 @@ import { FileService } from '@kontent-ai/backup-manager/dist/cjs/lib/node';
 const run = async () => {
     const exportService = new ExportService({
         projectId: 'sourceProjectId',
-        format: 'csv', // or json
+        format: 'json', // or csv
         filename: 'mybackup.zip', // name of the zip
         exportTypes: [], // array of type codenames to export. If not provided, all items of all types are exported
         exportAssets: true, // indicates whether asset binaries should be exported
@@ -117,7 +118,7 @@ const run = async () => {
     });
 
     // prepare zip data
-    const zipData = await fileProcessorService.createZipAsync(new CsvProcessorService()); // or 'JsonProcessorService' or custom service to format exporting data
+    const zipData = await fileProcessorService.createZipAsync(data, { formatService: new JsonProcessorService() }); // or 'CsvProcessorService' or custom service
 
     const fileService = new FileService({});
 
@@ -159,11 +160,13 @@ const run = async () => {
             asset: (asset) => {
                 return true; // true if asset should be imported, false otherwise
             }
-        },
+        }
     });
 
     // read export data from zip
-    const importData = await zipService.extractZipAsync(zipFile);
+    const importData = await zipService.extractZipAsync(file, {
+        customFormatService: new JsonProcessorService(), // or 'CsvProcessorService' or custom service
+    })
 
     // restore into target project
     await importService.importFromSourceAsync(importData);
@@ -174,7 +177,9 @@ run();
 
 ## Customizing exported items
 
-You may customize what items get exported by using the `customItemsExport` option when exporting in code. This option allows you to export exactly the items you need, however be aware that the exported items may reference other items that you might not export and subsequent re-import may fail because of the fact that there are missing items. 
+You may customize what items get exported by using the `customItemsExport` option when exporting in code. This option
+allows you to export exactly the items you need, however be aware that the exported items may reference other items that
+you might not export and subsequent re-import may fail because of the fact that there are missing items.
 
 Example:
 
@@ -190,12 +195,11 @@ const exportService = new ExportService({
         // return only the items you want to export by applying filters, parameters etc..
         const response = await client.items().equalsFilter('elements.title', 'Warrior').toAllPromise();
         return response.data.items;
-
     },
     onProcess: (item) => {
         console.log(`Exported ${item.title} | ${green(item.data.system.type)}`);
     }
-    });
+});
 ```
 
 ## Limitations
@@ -206,8 +210,8 @@ Export is made with `Delivery API` for speed and efficiency, but this brings som
 
 -   Assets are exported without their original `filename`. If you import these assets back to a different project, the
     `Asset Id` is used as a filename. However, if you import back to the same project, the asset will not be imported if
-    it is already there. You may enable `fetchAssetDetails` option to fetch asset details including filenames using the Magement API. If you enable this option you also need
-    to provide `apiKey`
+    it is already there. You may enable `fetchAssetDetails` option to fetch asset details including filenames using the
+    Magement API. If you enable this option you also need to provide `apiKey`
 
 ### FAQ
 

@@ -88,7 +88,7 @@ const backupAsync = async (config: ICliFileConfig) => {
         throw Error(`Unsupported export format '${config.format}'`);
     }
 
-    const zipFileData = await fileProcessorService.createZipAsync(response, formatService);
+    const zipFileData = await fileProcessorService.createZipAsync(response, { formatService: formatService });
 
     await fileService.writeFileAsync(config.filename, zipFileData);
 

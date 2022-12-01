@@ -1,5 +1,5 @@
 import { ImportService } from 'lib';
-import { FileProcessorService } from '../file-processor';
+import { FileProcessorService, JsonProcessorService } from '../file-processor';
 import { FileService } from '../node';
 
 const run = async () => {
@@ -37,7 +37,9 @@ const run = async () => {
     const file = await fileService.loadFileAsync('fileName');
 
     // extract file
-    const data = await zipService.extractZipAsync(file);
+    const data = await zipService.extractZipAsync(file, {
+        customFormatService: new JsonProcessorService(), // or 'CsvProcessorService' or custom service
+    });
 
     // restore into target project
     await importService.importFromSourceAsync(data);

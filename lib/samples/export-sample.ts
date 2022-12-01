@@ -23,7 +23,7 @@ const run = async () => {
     const data = await exportService.exportAllAsync();
 
     // prepare zip file
-    const zipFile = await zipService.createZipAsync(data, new JsonProcessorService());
+    const zipFile = await zipService.createZipAsync(data, { formatService: new JsonProcessorService() });
 
     // save zip to file system (node.js only)
     await fileService.writeFileAsync('filename', zipFile);
