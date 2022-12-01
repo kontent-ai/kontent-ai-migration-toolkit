@@ -3,7 +3,7 @@ import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
 import { IImportContentItem } from '../../import';
 import { Readable } from 'stream';
-import { ILanguageVariantDataModel, ILanguageVariantsTypeDataWrapper } from '../file-processor.models';
+import { ILanguageVariantDataModel, ILanguageVariantsDataWrapper } from '../file-processor.models';
 import { BaseProcessorService } from './base-processor.service';
 
 export class CsvProcessorService extends BaseProcessorService {
@@ -12,8 +12,8 @@ export class CsvProcessorService extends BaseProcessorService {
     async mapLanguageVariantsAsync(
         types: IContentType[],
         items: ILanguageVariantDataModel[]
-    ): Promise<ILanguageVariantsTypeDataWrapper[]> {
-        const typeWrappers: ILanguageVariantsTypeDataWrapper[] = [];
+    ): Promise<ILanguageVariantsDataWrapper[]> {
+        const typeWrappers: ILanguageVariantsDataWrapper[] = [];
         for (const contentType of types) {
             const contentItemsOfType = items.filter((m) => m.type === contentType.system.codename);
 

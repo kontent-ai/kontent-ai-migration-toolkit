@@ -1,14 +1,14 @@
 import { ElementType, IContentType } from '@kontent-ai/delivery-sdk';
 import { IImportContentItem } from '../../import';
-import { ILanguageVariantDataModel, ILanguageVariantsTypeDataWrapper } from '../file-processor.models';
+import { ILanguageVariantDataModel, ILanguageVariantsDataWrapper } from '../file-processor.models';
 import { BaseProcessorService } from './base-processor.service';
 
 export class JsonProcessorService extends BaseProcessorService {
     async mapLanguageVariantsAsync(
         types: IContentType[],
         items: ILanguageVariantDataModel[]
-    ): Promise<ILanguageVariantsTypeDataWrapper[]> {
-        const typeWrappers: ILanguageVariantsTypeDataWrapper[] = [];
+    ): Promise<ILanguageVariantsDataWrapper[]> {
+        const typeWrappers: ILanguageVariantsDataWrapper[] = [];
         for (const contentType of types) {
             const contentItemsOfType = items.filter((m) => m.type === contentType.system.codename);
 

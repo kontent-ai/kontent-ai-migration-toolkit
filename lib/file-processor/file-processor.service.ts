@@ -5,7 +5,7 @@ import { IExportAllResult, IExportedAsset } from '../export';
 import { IImportAsset, IImportContentItem, IImportSource } from '../import';
 import {
     ILanguageVariantDataModel,
-    ILanguageVariantsTypeDataWrapper,
+    ILanguageVariantsDataWrapper,
     IFileProcessorConfig,
     IAssetDetailModel,
     IFormatService
@@ -151,7 +151,7 @@ export class FileProcessorService {
         types: IContentType[],
         items: ILanguageVariantDataModel[],
         formatService: IFormatService
-    ): Promise<ILanguageVariantsTypeDataWrapper[]> {
+    ): Promise<ILanguageVariantsDataWrapper[]> {
         return await formatService.mapLanguageVariantsAsync(types, items);
     }
 

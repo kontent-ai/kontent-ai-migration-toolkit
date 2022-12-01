@@ -1,5 +1,5 @@
 import { IContentType } from '@kontent-ai/delivery-sdk';
-import { IImportContentItem } from '../import';
+import { IImportContentItem as IParsedContentItem } from '../import';
 
 export type ZipContext = 'node.js' | 'browser';
 
@@ -9,9 +9,9 @@ export interface IFormatService {
     mapLanguageVariantsAsync(
         types: IContentType[],
         items: ILanguageVariantDataModel[]
-    ): Promise<ILanguageVariantsTypeDataWrapper[]>;
+    ): Promise<ILanguageVariantsDataWrapper[]>;
 
-    parseImportItemsAsync(text: string): Promise<IImportContentItem[]>;
+    parseImportItemsAsync(text: string): Promise<IParsedContentItem[]>;
 }
 
 export interface IFileProcessorConfig {
@@ -31,7 +31,7 @@ export interface ILanguageVariantDataModel {
     [elementCodename: string]: any;
 }
 
-export interface ILanguageVariantsTypeDataWrapper {
+export interface ILanguageVariantsDataWrapper {
     filename: string;
     data: string;
 }

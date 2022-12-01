@@ -1,12 +1,12 @@
 import { IContentType } from '@kontent-ai/delivery-sdk';
 import { IImportContentItem } from '../../import';
-import { IFormatService, ILanguageVariantDataModel, ILanguageVariantsTypeDataWrapper } from '../file-processor.models';
+import { IFormatService, ILanguageVariantDataModel, ILanguageVariantsDataWrapper } from '../file-processor.models';
 
 export abstract class BaseProcessorService implements IFormatService {
     abstract mapLanguageVariantsAsync(
         types: IContentType[],
         items: ILanguageVariantDataModel[]
-    ): Promise<ILanguageVariantsTypeDataWrapper[]>;
+    ): Promise<ILanguageVariantsDataWrapper[]>;
 
     abstract parseImportItemsAsync(text: string): Promise<IImportContentItem[]>;
 
