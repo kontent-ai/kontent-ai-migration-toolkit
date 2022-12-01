@@ -45,7 +45,7 @@ export class CustomProcessorService extends BaseProcessorService {
 
             if (workflowStep) {
                 // skip processing of items with null workflow step (e.g. components within RTE)
-                continue; 
+                continue;
             }
 
             const contentItem: IImportContentItem = {
