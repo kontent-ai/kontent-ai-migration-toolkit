@@ -103,45 +103,65 @@ export class ExportService {
         const typesToExport: IContentType[] = this.getTypesToExport(types);
         const contentItems: IContentItem[] = [];
 
-        console.log(
-            `Exporting content items of types: ${yellow(typesToExport.map((m) => m.system.codename).join(', '))} \n`
-        );
+        if (this.config.customItemsExport) {
+            console.log(`Using custom items export`);
 
-        for (const type of typesToExport) {
-            for (const language of languages) {
-                await this.deliveryClient
-                    .items()
-                    .type(type.system.codename)
-                    .equalsFilter('system.language', language.system.codename)
-                    .depthParameter(0)
-                    .limitParameter(this.contentItemsLimit)
-                    .toAllPromise({
-                        responseFetched: (response) => {
-                            // add items to result
-                            for (const contentItem of response.data.items) {
-                                this.processItem(
-                                    `'${yellow(contentItem.system.name)}' | ${magenta(contentItem.system.language)}`,
-                                    'contentItem',
-                                    'fetch',
-                                    contentItem
-                                );
-                                contentItems.push(contentItem);
-                            }
+            const customItems = await this.config.customItemsExport(this.deliveryClient);
 
-                            // add components to result
-                            for (const [codename, contentItem] of Object.entries(response.data.linkedItems)) {
-                                if (!contentItems.find((m) => m.system.codename === codename)) {
+            for (const contentItem of customItems) {
+                this.processItem(
+                    `'${yellow(contentItem.system.name)}' | ${magenta(contentItem.system.language)}`,
+                    'contentItem',
+                    'fetch',
+                    contentItem
+                );
+                contentItems.push(contentItem);
+            }
+        } else {
+            console.log(
+                `Exporting content items of types: ${yellow(typesToExport.map((m) => m.system.codename).join(', '))} \n`
+            );
+
+            for (const type of typesToExport) {
+                for (const language of languages) {
+                    await this.deliveryClient
+                        .items()
+                        .type(type.system.codename)
+                        .equalsFilter('system.language', language.system.codename)
+                        .depthParameter(0)
+                        .limitParameter(this.contentItemsLimit)
+                        .toAllPromise({
+                            responseFetched: (response) => {
+                                // add items to result
+                                for (const contentItem of response.data.items) {
                                     this.processItem(
-                                        `'${yellow(contentItem.system.name)}' | ${magenta(contentItem.system.language)}`,
-                                        'component',
+                                        `'${yellow(contentItem.system.name)}' | ${magenta(
+                                            contentItem.system.language
+                                        )}`,
+                                        'contentItem',
                                         'fetch',
                                         contentItem
                                     );
                                     contentItems.push(contentItem);
                                 }
+
+                                // add components to result
+                                for (const [codename, contentItem] of Object.entries(response.data.linkedItems)) {
+                                    if (!contentItems.find((m) => m.system.codename === codename)) {
+                                        this.processItem(
+                                            `'${yellow(contentItem.system.name)}' | ${magenta(
+                                                contentItem.system.language
+                                            )}`,
+                                            'component',
+                                            'fetch',
+                                            contentItem
+                                        );
+                                        contentItems.push(contentItem);
+                                    }
+                                }
                             }
-                        }
-                    });
+                        });
+                }
             }
         }
 
@@ -242,7 +262,9 @@ export class ExportService {
 
             for (const asset of uniqueAssets) {
                 const assetResponse = await managementClient.viewAsset().byAssetId(asset.assetId).toPromise();
-                console.log(`Fetched asset details '${yellow(asset.assetId)}' -> '${green(assetResponse.data.fileName)}'`);
+                console.log(
+                    `Fetched asset details '${yellow(asset.assetId)}' -> '${green(assetResponse.data.fileName)}'`
+                );
                 asset.filename = assetResponse.data.fileName;
             }
         }

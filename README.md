@@ -172,6 +172,32 @@ const run = async () => {
 run();
 ```
 
+## Customizing exported items
+
+You may customize what items get exported by using the `customItemsExport` option when exporting in code. This option allows you to export exactly the items you need, however be aware that the exported items may reference other items that you might not export and subsequent re-import may fail because of the fact that there are missing items. 
+
+Example:
+
+```typescript
+const exportService = new ExportService({
+    projectId: 'p',
+    apiKey: 'z',
+    previewApiKey: 'x',
+    secureApiKey: 'y',
+    exportAssets: true,
+    fetchAssetDetails: false,
+    customItemsExport: async (client) => {
+        // return only the items you want to export by applying filters, parameters etc..
+        const response = await client.items().equalsFilter('elements.title', 'Warrior').toAllPromise();
+        return response.data.items;
+
+    },
+    onProcess: (item) => {
+        console.log(`Exported ${item.title} | ${green(item.data.system.type)}`);
+    }
+    });
+```
+
 ## Limitations
 
 ### Export limitations

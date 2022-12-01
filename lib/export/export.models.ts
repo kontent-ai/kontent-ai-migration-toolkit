@@ -1,7 +1,7 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import { IProcessedItem, IPackageMetadata } from '../core';
-import { IContentItem, IContentType, ILanguage } from '@kontent-ai/delivery-sdk';
+import { IContentItem, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
 
 export interface IExportFilter {
     /**
@@ -21,6 +21,7 @@ export interface IExportConfig {
     exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;
     fetchAssetDetails?: boolean;
+    customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>
 }
 
 export interface IExportData {
