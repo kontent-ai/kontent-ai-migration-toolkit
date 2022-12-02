@@ -93,8 +93,8 @@ To execute your action run:
 ### Backup in code
 
 ```typescript
-import { ExportService, ImportService, FileProcessorService } from '@kontent-ai/xeno-test';
-import { FileService } from '@kontent-ai/xeno-test/dist/cjs/lib/node';
+import { ExportService, ImportService, FileProcessorService } from 'xeno-test';
+import { FileService } from 'xeno-test/dist/cjs/lib/node';
 
 const run = async () => {
     const exportService = new ExportService({
@@ -126,8 +126,8 @@ run();
 ### Restore in code
 
 ```typescript
-import { ExportService, ImportService, FileProcessorService } from '@kontent-ai/xeno-test';
-import { FileService } from '@kontent-ai/xeno-test/dist/cjs/lib/node';
+import { ExportService, ImportService, FileProcessorService } from 'xeno-test';
+import { FileService } from 'xeno-test/dist/cjs/lib/node';
 
 const run = async () => {
     const fileService = new FileService({});
@@ -226,5 +226,5 @@ option (https://nodejs.org/api/cli.html#--max-http-header-sizesize)
 Example script call:
 
 ```
-node --max-http-header-size 150000 %USERPROFILE%\AppData\Roaming\npm\node_modules\@kontent-ai\xeno-test\dist\cjs\lib\node\cli\app --action=backup --apiKey=<key> --projectId=<projectId>
+node --max-http-header-size 150000 %USERPROFILE%\AppData\Roaming\npm\node_modules\xeno-test\dist\cjs\lib\node\cli\app --action=backup --apiKey=<key> --projectId=<projectId>
 ```
