@@ -14,7 +14,7 @@ import {
 } from '../../file-processor';
 import { SharedModels } from '@kontent-ai/management-sdk';
 import { FileService } from '../file/file.service';
-import { green, red, yellow } from 'colors';
+import { green, red } from 'colors';
 
 const argv = yargs(process.argv.slice(2))
     .example(
@@ -66,9 +66,6 @@ const backupAsync = async (config: ICliFileConfig) => {
         exportTypes: config.exportTypes,
         exportAssets: config.exportAssets,
         fetchAssetDetails: config.fetchAssetDetails,
-        onProcess: (item) => {
-            console.log(`Exported ${item.title} | ${green(item.data.system.type)}`);
-        }
     });
 
     const fileService = new FileService({});
@@ -107,9 +104,6 @@ const restoreAsync = async (config: ICliFileConfig) => {
     const fileService = new FileService({});
 
     const importService = new ImportService({
-        onProcess: (item) => {
-            console.log(`${yellow(item.title)} | ${green(item.itemType)} | ${item.actionType}`);
-        },
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
         projectId: config.projectId,

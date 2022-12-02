@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { IProcessedItem, IPackageMetadata } from '../core';
+import { IPackageMetadata } from '../core';
 import { IContentItem, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
 
 export interface IExportFilter {
@@ -16,7 +16,6 @@ export interface IExportConfig {
     apiKey?: string;
     previewApiKey?: string;
     baseUrl?: string;
-    onProcess?: (item: IProcessedItem) => void;
     exportTypes?: string[];
     exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;

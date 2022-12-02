@@ -10,10 +10,6 @@ const run = async () => {
     const fileService = new FileService({});
 
     const importService = new ImportService({
-        onProcess: (item) => {
-            // called when any content is imported
-            console.log(`Imported: ${item.title} | ${item.actionType}`);
-        },
         // be careful when filtering data to import because you might break data consistency.
         // for example, it might not be possible to import language variant without first importing content item and so on.
         canImport: {

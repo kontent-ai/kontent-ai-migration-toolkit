@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { IProcessedItem, ItemType, IPackageMetadata } from '../core';
+import { ItemType, IPackageMetadata } from '../core';
 import { ElementType } from '@kontent-ai/delivery-sdk';
 
 export interface IImportConfig {
@@ -10,7 +10,6 @@ export interface IImportConfig {
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;
     projectId: string;
-    onProcess?: (item: IProcessedItem) => void;
     canImport?: {
         contentItem?: (item: IImportContentItem) => boolean | Promise<boolean>;
         asset?: (item: IImportAsset) => boolean | Promise<boolean>;

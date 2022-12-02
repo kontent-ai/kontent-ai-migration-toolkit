@@ -103,10 +103,6 @@ const run = async () => {
         filename: 'mybackup.zip', // name of the zip
         exportTypes: [], // array of type codenames to export. If not provided, all items of all types are exported
         exportAssets: true, // indicates whether asset binaries should be exported
-        onProcess: (item) => {
-            // called when any content is exported
-            console.log(`Exported: ${item.title} | ${item.type}`);
-        }
     });
 
     // data contains entire project content
@@ -149,10 +145,6 @@ const run = async () => {
         projectId: 'targetProjectId',
         apiKey: 'targetProjectId',
         skipFailedItems: true, // indicates if failed items should be skipped or if program should stop
-        onProcess: (item) => {
-            // called when any content is processed
-            console.log(`Imported: ${item.title} | ${item.type}`);
-        },
         canImport: {
             contentItem: (item) => {
                 return true; // true if item should be imported, false otherwise
@@ -196,9 +188,6 @@ const exportService = new ExportService({
         const response = await client.items().equalsFilter('elements.title', 'Warrior').toAllPromise();
         return response.data.items;
     },
-    onProcess: (item) => {
-        console.log(`Exported ${item.title} | ${green(item.data.system.type)}`);
-    }
 });
 ```
 

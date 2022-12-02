@@ -30,7 +30,7 @@ import {
     IImportSource
 } from './import.models';
 import { HttpService } from '@kontent-ai/core-sdk';
-import { magenta, red, yellow } from 'colors';
+import { green, magenta, red, yellow, cyan } from 'colors';
 
 export class ImportService {
     private readonly client: ManagementClient;
@@ -194,7 +194,7 @@ export class ImportService {
                 this.processItem(importedItems, 'upload', 'binaryFile', {
                     imported: uploadedBinaryFile,
                     original: asset,
-                    title: asset.filename,
+                    title: yellow(asset.filename),
                     importedId: undefined,
                     originalId: undefined
                 });
@@ -215,7 +215,7 @@ export class ImportService {
                 this.processItem(importedItems, 'create', 'asset', {
                     imported: createdAsset,
                     original: asset,
-                    title: asset.filename,
+                    title: yellow(asset.filename),
                     importedId: createdAsset.data.id,
                     originalId: asset.assetId
                 });
@@ -223,14 +223,14 @@ export class ImportService {
                 this.processItem(importedItems, 'fetch', 'asset', {
                     imported: existingAsset,
                     original: asset,
-                    title: asset.filename,
+                    title: yellow(asset.filename),
                     importedId: existingAsset.data.id,
                     originalId: asset.assetId
                 });
                 this.processItem(importedItems, 'skipUpdate', 'asset', {
                     imported: existingAsset,
                     original: asset,
-                    title: asset.filename,
+                    title: yellow(asset.filename),
                     importedId: existingAsset.data.id,
                     originalId: asset.assetId
                 });
@@ -282,7 +282,7 @@ export class ImportService {
                     ).data;
 
                     this.processItem(importedItems, 'upsert', 'contentItem', {
-                        title: `${importContentItem.name}`,
+                        title: `${yellow(importContentItem.name)}`,
                         imported: importContentItem,
                         importedId: upsertedContentItem.id,
                         originalCodename: importContentItem.codename,
@@ -291,7 +291,7 @@ export class ImportService {
                     });
                 } else {
                     this.processItem(importedItems, 'skipUpdate', 'contentItem', {
-                        title: `${importContentItem.name}`,
+                        title: `${yellow(importContentItem.name)}`,
                         imported: importContentItem,
                         importedId: preparedContentItem.id,
                         originalCodename: importContentItem.codename,
@@ -352,7 +352,7 @@ export class ImportService {
                 upsertedLanguageVariants.push(upsertedLanguageVariant.data);
 
                 this.processItem(importedItems, 'upsert', 'languageVariant', {
-                    title: `${upsertedContentItem.name} (${magenta(importContentItem.language)})`,
+                    title: `${yellow(upsertedContentItem.name)} | ${magenta(importContentItem.language)}`,
                     imported: upsertedLanguageVariants,
                     importedId: upsertedContentItem.id,
                     originalCodename: importContentItem.codename,
@@ -373,9 +373,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'publish', 'languageVariant', {
-                            title: `${upsertedContentItem.name} (${magenta(importContentItem.language)}) (${yellow(
+                            title: `${yellow(upsertedContentItem.name)} | ${magenta(importContentItem.language)} | ${cyan(
                                 importContentItem.workflow_step
-                            )})`,
+                            )}`,
                             imported: upsertedLanguageVariants,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
@@ -405,9 +405,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'archive', 'languageVariant', {
-                            title: `${upsertedContentItem.name} (${magenta(importContentItem.language)}) (${yellow(
+                            title: `${yellow(upsertedContentItem.name)} ${magenta(importContentItem.language)} | ${cyan(
                                 importContentItem.workflow_step
-                            )})`,
+                            )}`,
                             imported: upsertedLanguageVariants,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
@@ -435,9 +435,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'changeWorkflowStep', 'languageVariant', {
-                            title: `${upsertedContentItem.name} (${magenta(importContentItem.language)} (${yellow(
+                            title: `${yellow(upsertedContentItem.name)} | ${magenta(importContentItem.language)} | ${cyan(
                                 importContentItem.workflow_step
-                            )})`,
+                            )}`,
                             imported: upsertedLanguageVariants,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
@@ -544,7 +544,7 @@ export class ImportService {
             ).data;
 
             this.processItem(importedItems, 'fetch', 'contentItem', {
-                title: `${contentItem.name}`,
+                title: `${yellow(contentItem.name)}`,
                 imported: contentItem,
                 importedId: contentItem.id,
                 originalCodename: contentItem.codename,
@@ -573,7 +573,7 @@ export class ImportService {
                     ).data;
 
                     this.processItem(importedItems, 'create', 'contentItem', {
-                        title: `${contentItem.name}`,
+                        title: `${yellow(contentItem.name)}`,
                         imported: contentItem,
                         importedId: contentItem.id,
                         originalCodename: contentItem.codename,
@@ -606,7 +606,7 @@ export class ImportService {
             ).data;
 
             this.processItem(importItems, 'fetch', 'languageVariant', {
-                title: `${importContentItem.name} (${magenta(importContentItem.language)})`,
+                title: `${yellow(importContentItem.name)} | ${magenta(importContentItem.language)}`,
                 imported: languageVariantOfContentItem,
                 original: importContentItem
             });
@@ -636,7 +636,7 @@ export class ImportService {
                     .toPromise();
 
                 this.processItem(importItems, 'createNewVersion', 'languageVariant', {
-                    title: `${yellow(importContentItem.name)} (${magenta(importContentItem.language)})`,
+                    title: `${yellow(importContentItem.name)} | ${magenta(importContentItem.language)}`,
                     imported: languageVariantOfContentItem,
                     original: importContentItem
                 });
@@ -657,9 +657,9 @@ export class ImportService {
                         .toPromise();
 
                     this.processItem(importItems, 'unArchive', 'languageVariant', {
-                        title: `${yellow(importContentItem.name)} | (${newWorkflowStep.codename}) (${magenta(
+                        title: `${yellow(importContentItem.name)} | ${cyan(newWorkflowStep.codename)} | ${magenta(
                             importContentItem.language
-                        )})`,
+                        )}`,
                         imported: languageVariantOfContentItem,
                         original: importContentItem
                     });
@@ -754,16 +754,11 @@ export class ImportService {
             originalCodename: data.originalCodename
         });
 
-        if (!this.config.onProcess) {
+        if (actionType === 'fetch') {
             return;
         }
 
-        this.config.onProcess({
-            data: data.imported,
-            title: data.title,
-            actionType,
-            itemType
-        });
+        console.log(`${(data.title)} | ${green(itemType)} | ${actionType}`);
     }
 
     private mapAssetFolder(

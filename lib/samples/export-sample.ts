@@ -12,10 +12,6 @@ const run = async () => {
 
     const exportService = new ExportService({
         projectId: 'sourceProjectId',
-        onProcess: (item) => {
-            // called when any content is exported
-            console.log(`Exported: ${item.title} | ${item.actionType}`);
-        },
         exportAssets: true
     });
 

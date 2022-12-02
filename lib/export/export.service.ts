@@ -12,7 +12,7 @@ import {
 import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models';
 import { ActionType, defaultRetryStrategy, extractAssetIdFromUrl, getExtension, ItemType } from '../core';
 import { version } from '../../package.json';
-import { green, magenta, yellow } from 'colors';
+import { blue, green, magenta, yellow } from 'colors';
 import { createManagementClient } from '@kontent-ai/management-sdk';
 
 export class ExportService {
@@ -110,7 +110,9 @@ export class ExportService {
 
             for (const contentItem of customItems) {
                 this.processItem(
-                    `'${yellow(contentItem.system.name)}' | ${magenta(contentItem.system.language)}`,
+                    `${yellow(contentItem.system.name)} | ${magenta(contentItem.system.type)} | ${blue(
+                        contentItem.system.language
+                    )}`,
                     'contentItem',
                     'fetch',
                     contentItem
@@ -135,7 +137,7 @@ export class ExportService {
                                 // add items to result
                                 for (const contentItem of response.data.items) {
                                     this.processItem(
-                                        `'${yellow(contentItem.system.name)}' | ${magenta(
+                                        `${yellow(contentItem.system.name)} | ${magenta(
                                             contentItem.system.language
                                         )}`,
                                         'contentItem',
@@ -149,7 +151,7 @@ export class ExportService {
                                 for (const [codename, contentItem] of Object.entries(response.data.linkedItems)) {
                                     if (!contentItems.find((m) => m.system.codename === codename)) {
                                         this.processItem(
-                                            `'${yellow(contentItem.system.name)}' | ${magenta(
+                                            `${yellow(contentItem.system.name)} | ${magenta(
                                                 contentItem.system.language
                                             )}`,
                                             'component',
@@ -179,16 +181,7 @@ export class ExportService {
     }
 
     private processItem(title: string, itemType: ItemType, actionType: ActionType, data: any): void {
-        if (!this.config.onProcess) {
-            return;
-        }
-
-        this.config.onProcess({
-            data,
-            title,
-            actionType,
-            itemType
-        });
+        console.log(`${title} | ${green(itemType)} | ${actionType}`);
     }
 
     private async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IExportedAsset[]> {
