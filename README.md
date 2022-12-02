@@ -1,7 +1,7 @@
 # Kontent.ai Data Manager
 
 The purpose of this project is to export & import content data to & from [Kontent.ai](https://kontent.ai) projects. This
-project uses `Delivery API` for fast import and conversion to various formats (`json` | `csv`) and `Management API` to
+project uses `Delivery API` for fast import and conversion to various formats (`json` | `csv` or custom one) and `Management API` to
 import data back.
 
 This library can be used in `node.js` only. Use in Browsers is not supported.
