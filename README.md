@@ -16,7 +16,7 @@ The Data manager creates content items that are not present in target project. I
 the content item is already present in the project (based on item's `codename`) the item will be updated if necessary or
 skipped. Content item is only updated if the `name` of the item changes.
 
-### How are langauge variants imported?
+### How are language variants imported?
 Same as with content items, Data manager either creates or updates language
 variants based on their codename & codename of the language. Workflow of the language variant is set based on the
 `workflow` field in the source data.
