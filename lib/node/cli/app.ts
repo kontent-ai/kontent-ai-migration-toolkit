@@ -68,7 +68,7 @@ const backupAsync = async (config: ICliFileConfig) => {
         fetchAssetDetails: config.fetchAssetDetails,
     });
 
-    const fileService = new FileService({});
+    const fileService = new FileService();
 
     const fileProcessorService = new FileProcessorService();
 
@@ -97,7 +97,7 @@ const restoreAsync = async (config: ICliFileConfig) => {
         throw Error(`Missing 'apiKey' configuration option`);
     }
 
-    const fileService = new FileService({});
+    const fileService = new FileService();
 
     const importService = new ImportService({
         skipFailedItems: config.skipFailedItems,

@@ -3,7 +3,7 @@ import { promises } from 'fs';
 import { IFileServiceConfig } from './file.models';
 
 export class FileService {
-    constructor(public config: IFileServiceConfig) {}
+    constructor(public config?: IFileServiceConfig) {}
 
     async loadFileAsync(filename: string): Promise<Buffer> {
         const filePath = this.getFilePath(filename);

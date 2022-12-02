@@ -31,7 +31,7 @@
     },
     "include": [
       "lib/**/*",
-      "test/**/*",
+      "test/**/*", "samples",
     ],
     "exclude": [
       "node_modules"

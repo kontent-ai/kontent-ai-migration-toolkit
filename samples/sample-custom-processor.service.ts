@@ -1,7 +1,7 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IParsedAsset, IParsedContentItem } from '../import';
-import { IFormatService, IFileData } from '../file-processor';
-import { IExportedAsset } from '../export';
+import { IExportedAsset } from '../lib/export';
+import { IFormatService, IFileData } from '../lib/file-processor';
+import { IParsedContentItem, IParsedAsset } from '../lib/import';
 
 export class CustomProcessorService implements IFormatService {
     public readonly name: string = 'sample';

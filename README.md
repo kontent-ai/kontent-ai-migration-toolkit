@@ -97,24 +97,23 @@ import { ExportService, ImportService, FileProcessorService } from 'xeno-test';
 import { FileService } from 'xeno-test/dist/cjs/lib/node';
 
 const run = async () => {
+    // prepare services
+    const fileProcessorService = new FileProcessorService();
+    const fileService = new FileService();
+
     const exportService = new ExportService({
         projectId: 'sourceProjectId',
         format: 'json', // or csv
         filename: 'mybackup.zip', // name of the zip
         exportTypes: [], // array of type codenames to export. If not provided, all items of all types are exported
-        exportAssets: true, // indicates whether asset binaries should be exported
+        exportAssets: true // indicates whether asset binaries should be exported
     });
 
-    // data contains entire project content
+    // export data
     const data = await exportService.exportAllAsync();
 
-    // you can also save backup in file with FileProcessorService
-    const fileProcessorService = new FileProcessorService();
-
-    // prepare zip data
+    // prepare zip
     const zipData = await fileProcessorService.createZipAsync(data, { formatService: new JsonProcessorService() }); // or 'CsvProcessorService' or custom service
-
-    const fileService = new FileService({});
 
     // create file on FS
     await fileService.writeFileAsync('backup', zipData);
@@ -130,11 +129,8 @@ import { ExportService, ImportService, FileProcessorService } from 'xeno-test';
 import { FileService } from 'xeno-test/dist/cjs/lib/node';
 
 const run = async () => {
-    const fileService = new FileService({});
-
-    // load file
-    const zipFile = await fileService.loadFileAsync('backup.zip');
-
+    // prepare services
+    const fileService = new FileService();
     const fileProcessorService = new FileProcessorService();
 
     const importService = new ImportService({
@@ -151,10 +147,13 @@ const run = async () => {
         }
     });
 
+    // load file
+    const zipFile = await fileService.loadFileAsync('backup.zip');
+
     // read export data from zip
     const importData = await zipService.extractZipAsync(file, {
-        formatService: new JsonProcessorService(), // or 'CsvProcessorService' or custom service
-    })
+        formatService: new JsonProcessorService() // or 'CsvProcessorService' or custom service
+    });
 
     // restore into target project
     await importService.importFromSourceAsync(importData);
@@ -183,25 +182,28 @@ const exportService = new ExportService({
         // return only the items you want to export by applying filters, parameters etc..
         const response = await client.items().equalsFilter('elements.title', 'Warrior').toAllPromise();
         return response.data.items;
-    },
+    }
 });
 ```
 
 ## Using custom formats
 
-This library provides `csv` and `json` export / import formats out of the box. However, you might want to use different format or otherwise change how items are processed. For example, you can use this to export into your own `xliff` format, `xlxs`, some custom `txt` format and so on. By implementing `IFormatService` you can do just that. You may inspire from these services:
+This library provides `csv` and `json` export / import formats out of the box. However, you might want to use different
+format or otherwise change how items are processed. For example, you can use this to export into your own `xliff`
+format, `xlxs`, some custom `txt` format and so on. By implementing `IFormatService` you can do just that. You may
+inspire from these services:
 
-| Service  | Link |
-| ------------- | ------------- |
-| CSV `IFormatService`  | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/formats/csv-processor.service.ts  |
-| JSON `IFormatService`   | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/formats/json-processor.service.ts  |
-| Simplified demo `IFormatService`  | https://github.com/Enngage/kontent-data-manager/blob/main/lib/samples/sample-custom-processor.service.ts  |
+| Service                          | Link                                                                                                           |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| CSV `IFormatService`             | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/formats/csv-processor.service.ts  |
+| JSON `IFormatService`            | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/formats/json-processor.service.ts |
+| Simplified demo `IFormatService` | https://github.com/Enngage/kontent-data-manager/blob/main/lib/samples/sample-custom-processor.service.ts       |
 
 To use your custom formatting service simply pass it to `createZipAsync` or `extractZipAsync`
 
 ```typescript
 await fileProcessorService.createZipAsync(response, { formatService: YourService });
-await fileProcessorService.extractZipAsync(file, { formatService: YourService});
+await fileProcessorService.extractZipAsync(file, { formatService: YourService });
 ```
 
 ## Limitations

@@ -1,11 +1,10 @@
-import { ImportService } from 'lib';
-import { FileProcessorService, JsonProcessorService } from '../file-processor';
-import { FileService } from '../node';
+import { FileProcessorService, JsonProcessorService } from '../lib/file-processor';
+import { ImportService } from '../lib/import';
+import { FileService } from '../lib/node';
 
 const run = async () => {
     const zipService = new FileProcessorService();
-
-    const fileService = new FileService({});
+    const fileService = new FileService();
 
     const importService = new ImportService({
         // be careful when filtering data to import because you might break data consistency.

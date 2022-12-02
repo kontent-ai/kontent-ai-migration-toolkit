@@ -1,11 +1,10 @@
-import { FileProcessorService, JsonProcessorService } from '../file-processor';
+import { FileProcessorService, JsonProcessorService } from '../lib/file-processor';
 
-import { ExportService } from '../export';
-import { FileService } from '../node';
+import { ExportService } from '../lib/export';
+import { FileService } from '../lib/node';
 
 const run = async () => {
-    const fileService = new FileService({});
-
+    const fileService = new FileService();
     const zipService = new FileProcessorService();
 
     const exportService = new ExportService({
