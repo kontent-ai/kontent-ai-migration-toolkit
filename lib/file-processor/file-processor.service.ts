@@ -4,9 +4,9 @@ import * as JSZip from 'jszip';
 import { IExportAllResult, IExportedAsset } from '../export';
 import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset } from '../import';
 import { IFileData, IFileProcessorConfig, IFormatService, IExtractedBinaryFileData } from './file-processor.models';
-import { yellow } from 'colors';
+import { magenta, yellow } from 'colors';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { getExtension } from '../core';
+import { formatBytes, getExtension } from '../core';
 import { getType } from 'mime';
 import { CsvProcessorService } from './formats/csv-processor.service';
 import { JsonProcessorService } from './formats/json-processor.service';
@@ -331,17 +331,19 @@ export class FileProcessorService {
         // temp fix for Kontent.ai Repository not validating url
         url = url.replace('#', '%23');
 
-        console.log(`Downloading '${yellow(url)}'`);
+        const response = await this.httpService.getAsync(
+            {
+                url
+            },
+            {
+                responseType: 'arraybuffer'
+            }
+        );
 
-        return (
-            await this.httpService.getAsync(
-                {
-                    url
-                },
-                {
-                    responseType: 'arraybuffer'
-                }
-            )
-        ).data;
+        const contentLengthHeader = response.headers.find((m) => m.header.toLowerCase() === 'content-length');
+        const contentLength = contentLengthHeader ? +contentLengthHeader.value : 0;
+        console.log(`Downloaded | ${magenta(formatBytes(contentLength))} | ${yellow(url)}`);
+
+        return response.data;
     }
 }

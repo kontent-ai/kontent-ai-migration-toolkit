@@ -1,8 +1,13 @@
 import { IManagementClient, ProjectModels, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { yellow } from 'colors';
+import { format } from 'bytes';
 
 const rateExceededErrorCode: number = 10000;
+
+export function formatBytes(bytes: number): string {
+    return format(bytes);
+}
 
 export const defaultRetryStrategy: IRetryStrategyOptions = {
     addJitter: true,
