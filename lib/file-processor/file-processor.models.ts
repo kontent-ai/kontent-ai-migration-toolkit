@@ -1,5 +1,6 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IImportContentItem as IParsedContentItem } from '../import';
+import { IExportedAsset } from '../export';
+import { IParsedAsset, IParsedContentItem as IParsedContentItem } from '../import';
 
 export type ZipContext = 'node.js' | 'browser';
 
@@ -8,12 +9,18 @@ export type ExportFormat = 'csv' | 'json';
 export interface IFormatService {
     name: string;
 
-    transformLanguageVariantsAsync(
-        types: IContentType[],
-        items: IContentItem[]
-    ): Promise<ILanguageVariantsDataWrapper[]>;
-
+    transformLanguageVariantsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]>;
     parseContentItemsAsync(text: string): Promise<IParsedContentItem[]>;
+    transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]>;
+    parseAssetsAsync(text: string): Promise<IParsedAsset[]>;
+}
+
+export interface IExtractedBinaryFileData {
+    filename: string;
+    assetId: string;
+    extension: string;
+    mimeType: string;
+    binaryData: Buffer | Blob;
 }
 
 export interface IFileProcessorConfig {
@@ -33,12 +40,7 @@ export interface ILanguageVariantDataModel {
     [elementCodename: string]: any;
 }
 
-export interface ILanguageVariantsDataWrapper {
+export interface IFileData {
     filename: string;
     data: string;
-}
-
-export interface IAssetDetailModel {
-    assetId: string;
-    filename: string;
 }

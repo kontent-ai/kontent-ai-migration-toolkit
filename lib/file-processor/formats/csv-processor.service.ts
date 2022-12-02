@@ -1,20 +1,18 @@
 import { ElementType, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
-import { IImportContentItem } from '../../import';
+import { IParsedAsset, IParsedContentItem } from '../../import';
 import { Readable } from 'stream';
-import { ILanguageVariantDataModel, ILanguageVariantsDataWrapper } from '../file-processor.models';
+import { ILanguageVariantDataModel, IFileData } from '../file-processor.models';
 import { BaseProcessorService } from './base-processor.service';
+import { IExportedAsset } from '../../export';
 
 export class CsvProcessorService extends BaseProcessorService {
     private readonly csvDelimiter: string = ',';
     public readonly name: string = 'csv';
 
-    async transformLanguageVariantsAsync(
-        types: IContentType[],
-        items: IContentItem[]
-    ): Promise<ILanguageVariantsDataWrapper[]> {
-        const typeWrappers: ILanguageVariantsDataWrapper[] = [];
+    async transformLanguageVariantsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
+        const typeWrappers: IFileData[] = [];
         const flattenedContentItems: ILanguageVariantDataModel[] = super.flattenLanguageVariants(items, types);
         for (const contentType of types) {
             const contentItemsOfType = flattenedContentItems.filter((m) => m.type === contentType.system.codename);
@@ -41,23 +39,23 @@ export class CsvProcessorService extends BaseProcessorService {
         return typeWrappers;
     }
 
-    async parseContentItemsAsync(text: string): Promise<IImportContentItem[]> {
-        const parsedItems: IImportContentItem[] = [];
+    async parseContentItemsAsync(text: string): Promise<IParsedContentItem[]> {
+        const parsedItems: IParsedContentItem[] = [];
         let index = 0;
         const parser = parse(text, {
             cast: true,
             delimiter: this.csvDelimiter
         });
 
-        let parsedElements: string[] = [];
+        let parsedColumns: string[] = [];
 
         for await (const record of parser) {
             if (index === 0) {
                 // process header row
-                parsedElements = record;
+                parsedColumns = record;
             } else {
                 // process data row
-                const contentItem: IImportContentItem = {
+                const contentItem: IParsedContentItem = {
                     codename: '',
                     collection: '',
                     elements: [],
@@ -69,21 +67,21 @@ export class CsvProcessorService extends BaseProcessorService {
                 };
 
                 let fieldIndex: number = 0;
-                for (const elementName of parsedElements) {
-                    const elementValue = record[fieldIndex];
+                for (const columnName of parsedColumns) {
+                    const columnValue = record[fieldIndex];
 
-                    if (elementName.includes(')') && elementName.includes(')')) {
+                    if (columnName.includes(')') && columnName.includes(')')) {
                         // process user defined element
-                        const parsedElementName = this.parseCsvElementName(elementName);
+                        const parsedElementName = this.parseCsvElementName(columnName);
 
                         contentItem.elements.push({
                             type: parsedElementName.elementType,
                             codename: parsedElementName.elementCodename,
-                            value: elementValue
+                            value: columnValue
                         });
                     } else {
                         // process base element
-                        contentItem[elementName] = elementValue;
+                        contentItem[columnName] = columnValue;
                     }
 
                     fieldIndex++;
@@ -95,6 +93,64 @@ export class CsvProcessorService extends BaseProcessorService {
         }
 
         return parsedItems;
+    }
+
+    async transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]> {
+        const asssetFiels: FieldInfo<any>[] = this.getAssetFields();
+        const stream = new Readable();
+        stream.push(JSON.stringify(assets));
+        stream.push(null); // required to end the stream
+
+        const parsingProcessor = this.geCsvParser({
+            fields: asssetFiels
+        }).fromInput(stream);
+
+        const data = (await parsingProcessor.promise()) ?? '';
+
+        return [
+            {
+                filename: 'assets.csv',
+                data: data
+            }
+        ];
+    }
+
+    async parseAssetsAsync(text: string): Promise<IParsedAsset[]> {
+        const parsedAssets: IParsedAsset[] = [];
+        let index = 0;
+        const parser = parse(text, {
+            cast: true,
+            delimiter: this.csvDelimiter
+        });
+
+        let parsedColumns: string[] = [];
+
+        for await (const record of parser) {
+            if (index === 0) {
+                // process header row
+                parsedColumns = record;
+            } else {
+                // process data row
+                const parsedAsset: IParsedAsset = {
+                    assetId: '',
+                    extension: '',
+                    filename: '',
+                    url: ''
+                };
+
+                let fieldIndex: number = 0;
+                for (const columnName of parsedColumns) {
+                    const columnValue = record[fieldIndex];
+                    (parsedAsset as any)[columnName] = columnValue;
+                    fieldIndex++;
+                }
+
+                parsedAssets.push(parsedAsset);
+            }
+            index++;
+        }
+
+        return parsedAssets;
     }
 
     private parseCsvElementName(elementName: string): { elementCodename: string; elementType: ElementType } {
@@ -146,6 +202,19 @@ export class CsvProcessorService extends BaseProcessorService {
 
                     return field;
                 })
+        ];
+    }
+
+    private getAssetFields(): FieldInfo<any>[] {
+        return [
+            ...this.getBaseAssetFields().map((m) => {
+                const field: FieldInfo<any> = {
+                    label: m,
+                    value: m
+                };
+
+                return field;
+            })
         ];
     }
 }

@@ -7,7 +7,7 @@ import {
 } from '@kontent-ai/delivery-sdk';
 import { ElementContracts, LanguageVariantElements, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
 import { yellow } from 'colors';
-import { IImportContentItem } from '../import';
+import { IParsedContentItem } from '../import';
 import { IImportItemResult } from './core.models';
 import { extractAssetIdFromUrl } from './global-helper';
 import { idTranslateHelper } from './id-translate-helper';
@@ -27,7 +27,7 @@ export interface IImportTransform {
         value: string | undefined;
         elementCodename: string;
         importedItems: IImportItemResult[];
-        sourceItems: IImportContentItem[];
+        sourceItems: IParsedContentItem[];
     }) => ElementContracts.IContentItemElementContract;
 }
 
@@ -131,7 +131,7 @@ export class TranslationHelper {
             type: ElementType.RichText,
             toImportValue: (data) => {
                 const processedRte = this.processImportRichTextHtmlValue(data.value ?? '', data.importedItems);
-                const componentItems: IImportContentItem[] = [];
+                const componentItems: IParsedContentItem[] = [];
 
                 for (const componentCodename of processedRte.componentCodenames) {
                     const componentItem = data.sourceItems.find((m) => m.codename === componentCodename);
@@ -295,7 +295,7 @@ export class TranslationHelper {
         elementCodename: string,
         type: ElementType,
         importedITems: IImportItemResult[],
-        sourceItems: IImportContentItem[]
+        sourceItems: IParsedContentItem[]
     ): ElementContracts.IContentItemElementContract | undefined {
         const transform = this.importTransforms.find((m) => m.type === type);
 

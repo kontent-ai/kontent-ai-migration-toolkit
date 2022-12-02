@@ -2,13 +2,8 @@ import { HttpService } from '@kontent-ai/core-sdk';
 import * as JSZip from 'jszip';
 
 import { IExportAllResult, IExportedAsset } from '../export';
-import { IImportAsset, IImportContentItem, IImportSource } from '../import';
-import {
-    ILanguageVariantsDataWrapper,
-    IFileProcessorConfig,
-    IAssetDetailModel,
-    IFormatService
-} from './file-processor.models';
+import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset } from '../import';
+import { IFileData, IFileProcessorConfig, IFormatService, IExtractedBinaryFileData } from './file-processor.models';
 import { yellow } from 'colors';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { getExtension } from '../core';
@@ -20,8 +15,8 @@ export class FileProcessorService {
     private readonly delayBetweenAssetRequestsMs: number;
 
     private readonly metadataName: string = 'metadata.json';
-    private readonly assetDetailsName: string = '_details.json';
     private readonly assetsFolderName: string = 'assets';
+    private readonly binaryFilesFolderName: string = 'files';
     private readonly contentItemsFolderName: string = 'items';
 
     private readonly httpService: HttpService = new HttpService();
@@ -41,7 +36,7 @@ export class FileProcessorService {
         const result: IImportSource = {
             importData: {
                 items: await this.parseContentItemsFromFileAsync(zipFile, config?.customFormatService),
-                assets: await this.parseAssetsFromFileAsync(zipFile)
+                assets: await this.parseAssetsFromFileAsync(zipFile, config?.customFormatService)
             },
             metadata: await this.parseMetadataFromFileAsync(zipFile, this.metadataName)
         };
@@ -90,6 +85,11 @@ export class FileProcessorService {
 
         const contentItemsFolder = zip.folder(this.contentItemsFolderName);
         const assetsFolder = zip.folder(this.assetsFolderName);
+        const filesFolder = zip.folder(this.binaryFilesFolderName);
+
+        if (!filesFolder) {
+            throw Error(`Could not create folder '${yellow(this.binaryFilesFolderName)}'`);
+        }
 
         if (!assetsFolder) {
             throw Error(`Could not create folder '${yellow(this.assetsFolderName)}'`);
@@ -99,17 +99,21 @@ export class FileProcessorService {
             throw Error(`Could not create folder '${yellow(this.contentItemsFolderName)}'`);
         }
 
-        console.log(`Transforming '${yellow(exportData.data.contentItems.length.toString())}' content items using '${yellow(config.formatService.name)}' format service\n`);
+        console.log(
+            `Transforming '${yellow(exportData.data.contentItems.length.toString())}' content items using '${yellow(
+                config.formatService.name
+            )}' format service\n`
+        );
 
-        const typeWrappers = await this.getTypeWrappersAsync(
+        const transformedLanguageVariantsFileData = await this.transformLanguageVariantsAsync(
             exportData.data.contentTypes,
             exportData.data.contentItems,
             config.formatService
         );
 
-        for (const typeWrapper of typeWrappers) {
-            console.log(`Adding '${yellow(typeWrapper.filename)}' to zip`);
-            contentItemsFolder.file(typeWrapper.filename, typeWrapper.data);
+        for (const fileInfo of transformedLanguageVariantsFileData) {
+            console.log(`Adding '${yellow(fileInfo.filename)}' to zip`);
+            contentItemsFolder.file(fileInfo.filename, fileInfo.data);
         }
 
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
@@ -117,13 +121,22 @@ export class FileProcessorService {
         console.log('');
 
         if (exportData.data.assets.length) {
-            assetsFolder.file(this.assetDetailsName, JSON.stringify(this.getAssetDetailModels(exportData.data.assets)));
+            const transformedAssetsFileData = await this.transformAssetsAsync(
+                exportData.data.assets,
+                config.formatService
+            );
+
+            for (const fileInfo of transformedAssetsFileData) {
+                console.log(`Adding '${yellow(fileInfo.filename)}' to zip`);
+                assetsFolder.file(fileInfo.filename, fileInfo.data);
+            }
 
             console.log(`Preparing to download '${yellow(exportData.data.assets.length.toString())}' assets\n`);
 
             for (const asset of exportData.data.assets) {
                 const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
-                assetsFolder.file(assetFilename, await this.getBinaryDataFromUrlAsync(asset.url), {
+                const binaryData = await this.getBinaryDataFromUrlAsync(asset.url);
+                filesFolder.file(assetFilename, binaryData, {
                     binary: true
                 });
 
@@ -146,45 +159,79 @@ export class FileProcessorService {
         return content;
     }
 
-    private async getTypeWrappersAsync(
+    private async transformLanguageVariantsAsync(
         types: IContentType[],
         items: IContentItem[],
         formatService: IFormatService
-    ): Promise<ILanguageVariantsDataWrapper[]> {
+    ): Promise<IFileData[]> {
         return await formatService.transformLanguageVariantsAsync(types, items);
     }
 
-    private getAssetDetailModels(extractedAssets: IExportedAsset[]): IAssetDetailModel[] {
-        return extractedAssets.map((m) => {
-            const item: IAssetDetailModel = {
-                assetId: m.assetId,
-                filename: m.filename
-            };
-
-            return item;
-        });
+    private async transformAssetsAsync(assets: IExportedAsset[], formatService: IFormatService): Promise<IFileData[]> {
+        return await formatService.transformAssetsAsync(assets);
     }
 
     private sleepAsync(ms: number): Promise<any> {
         return new Promise((resolve: any) => setTimeout(resolve, ms));
     }
 
-    private async parseAssetsFromFileAsync(zip: JSZip): Promise<IImportAsset[]> {
-        const assets: IImportAsset[] = [];
+    private async parseAssetsFromFileAsync(zip: JSZip, customFormatService?: IFormatService): Promise<IImportAsset[]> {
+        const importAssets: IImportAsset[] = [];
+        const parsedAssets: IParsedAsset[] = [];
 
         const files = zip.files;
 
-        const assetDetailsFilePath = `${this.assetsFolderName}/${this.assetDetailsName}`;
-        const assetDetailsFile = files[assetDetailsFilePath];
-
-        if (!assetDetailsFile) {
-            throw Error(`Invalid file path '${assetDetailsFilePath}'`);
-        }
-
-        const assetDetailModels = JSON.parse(await assetDetailsFile.async('string')) as IAssetDetailModel[];
+        const binaryFiles: IExtractedBinaryFileData[] = await this.extractBinaryFilesAsync(zip);
 
         for (const [, file] of Object.entries(files)) {
             if (!file?.name?.startsWith(`${this.assetsFolderName}/`)) {
+                // iterate through assets files
+                continue;
+            }
+
+            if (file?.name?.endsWith('/')) {
+                continue;
+            }
+
+            const text = await file.async('string');
+
+            if (customFormatService) {
+                // use custom format service
+                parsedAssets.push(...(await customFormatService.parseAssetsAsync(text)));
+            } else if (file.name?.toLowerCase()?.endsWith('.csv')) {
+                parsedAssets.push(...(await this.csvProcessorService.parseAssetsAsync(text)));
+            } else if (file.name?.toLowerCase()?.endsWith('.json')) {
+                parsedAssets.push(...(await this.jsonProcessorService.parseAssetsAsync(text)));
+            } else {
+                throw Error(`Could not extract file '${file.name}'`);
+            }
+        }
+
+        for (const parsedAsset of parsedAssets) {
+            const binaryFile = binaryFiles.find((m) => m.assetId === parsedAsset.assetId);
+
+            if (!binaryFile) {
+                throw Error(`Could not find binary data for asset with id '${parsedAsset.assetId}'`);
+            }
+
+            importAssets.push({
+                assetId: parsedAsset.assetId,
+                extension: binaryFile.extension,
+                filename: parsedAsset.filename,
+                mimeType: binaryFile.mimeType,
+                binaryData: binaryFile.binaryData
+            });
+        }
+
+        return importAssets;
+    }
+
+    private async extractBinaryFilesAsync(zip: JSZip): Promise<IExtractedBinaryFileData[]> {
+        const extractedFiles: IExtractedBinaryFileData[] = [];
+
+        const files = zip.files;
+        for (const [, file] of Object.entries(files)) {
+            if (!file?.name?.startsWith(`${this.binaryFilesFolderName}/`)) {
                 // iterate through assets only
                 continue;
             }
@@ -193,19 +240,16 @@ export class FileProcessorService {
                 continue;
             }
 
-            if (file?.name === this.assetDetailsName) {
-                continue;
-            }
+            console.log(`Extracting binary data of '${yellow(zip.name)}'`);
 
             const binaryData = await file.async(this.getZipOutputType());
 
             const assetId = this.getAssetIdFromFilename(file.name);
-            const assetDetailModel = assetDetailModels.find((m) => m.assetId === assetId);
-            const extension = getExtension(file.name);
-            const filename = assetDetailModel?.filename ?? `${assetId}.${extension}`;
-            const mimeType = getType(file.name) ?? undefined;
+            const extension = getExtension(file.name) ?? '';
+            const filename = file.name;
+            const mimeType = getType(file.name) ?? '';
 
-            assets.push({
+            extractedFiles.push({
                 assetId: assetId,
                 binaryData: binaryData,
                 filename: filename,
@@ -214,7 +258,7 @@ export class FileProcessorService {
             });
         }
 
-        return assets;
+        return extractedFiles;
     }
 
     private getAssetIdFromFilename(filename: string): string {
@@ -239,9 +283,9 @@ export class FileProcessorService {
     private async parseContentItemsFromFileAsync(
         fileContents: JSZip,
         customFormatService?: IFormatService
-    ): Promise<IImportContentItem[]> {
+    ): Promise<IParsedContentItem[]> {
         const files = fileContents.files;
-        const parsedItems: IImportContentItem[] = [];
+        const parsedItems: IParsedContentItem[] = [];
 
         for (const [, file] of Object.entries(files)) {
             if (!file?.name?.startsWith(`${this.contentItemsFolderName}/`)) {

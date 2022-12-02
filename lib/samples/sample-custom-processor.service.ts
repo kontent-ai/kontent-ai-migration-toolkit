@@ -1,14 +1,12 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IImportContentItem } from '../import';
-import { IFormatService, ILanguageVariantsDataWrapper } from '../file-processor';
+import { IParsedAsset, IParsedContentItem } from '../import';
+import { IFormatService, IFileData } from '../file-processor';
+import { IExportedAsset } from '../export';
 
 export class CustomProcessorService implements IFormatService {
     public readonly name: string = 'sample';
-    async transformLanguageVariantsAsync(
-        types: IContentType[],
-        items: IContentItem[]
-    ): Promise<ILanguageVariantsDataWrapper[]> {
-        const typeWrappers: ILanguageVariantsDataWrapper[] = [];
+    async transformLanguageVariantsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
+        const typeWrappers: IFileData[] = [];
 
         for (const contentType of types) {
             const contentItemsOfType = items.filter((m) => m.system.type === contentType.system.codename);
@@ -30,8 +28,8 @@ export class CustomProcessorService implements IFormatService {
         return typeWrappers;
     }
 
-    async parseContentItemsAsync(text: string): Promise<IImportContentItem[]> {
-        const parsedItems: IImportContentItem[] = [];
+    async parseContentItemsAsync(text: string): Promise<IParsedContentItem[]> {
+        const parsedItems: IParsedContentItem[] = [];
         const rawItems: any[] = text.split('\n') as string[];
 
         for (const rawItem of rawItems) {
@@ -48,7 +46,7 @@ export class CustomProcessorService implements IFormatService {
                 continue;
             }
 
-            const contentItem: IImportContentItem = {
+            const contentItem: IParsedContentItem = {
                 codename: codename,
                 collection: collection,
                 elements: [],
@@ -58,10 +56,33 @@ export class CustomProcessorService implements IFormatService {
                 type: type,
                 workflow_step: workflowStep
             };
-            
+
             parsedItems.push(contentItem);
         }
 
         return parsedItems;
+    }
+
+    async transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]> {
+        return [
+            {
+                filename: 'assets.json',
+                data: JSON.stringify(
+                    assets.map((m) => {
+                        const parsedAsset: IParsedAsset = {
+                            assetId: m.assetId,
+                            extension: m.extension,
+                            filename: m.filename,
+                            url: m.url
+                        };
+
+                        return parsedAsset;
+                    })
+                )
+            }
+        ];
+    }
+    async parseAssetsAsync(text: string): Promise<IParsedAsset[]> {
+        return JSON.parse(text) as IParsedAsset[];
     }
 }

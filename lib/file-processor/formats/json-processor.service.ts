@@ -1,15 +1,13 @@
 import { ElementType, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IImportContentItem } from '../../import';
-import { ILanguageVariantDataModel, ILanguageVariantsDataWrapper } from '../file-processor.models';
+import { IExportedAsset } from '../../export';
+import { IParsedAsset, IParsedContentItem } from '../../import';
+import { ILanguageVariantDataModel, IFileData } from '../file-processor.models';
 import { BaseProcessorService } from './base-processor.service';
 
 export class JsonProcessorService extends BaseProcessorService {
     public readonly name: string = 'json';
-    async transformLanguageVariantsAsync(
-        types: IContentType[],
-        items: IContentItem[]
-    ): Promise<ILanguageVariantsDataWrapper[]> {
-        const typeWrappers: ILanguageVariantsDataWrapper[] = [];
+    async transformLanguageVariantsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
+        const typeWrappers: IFileData[] = [];
         const flattenedContentItems: ILanguageVariantDataModel[] = super.flattenLanguageVariants(items, types);
         for (const contentType of types) {
             const contentItemsOfType = flattenedContentItems.filter((m) => m.type === contentType.system.codename);
@@ -34,13 +32,13 @@ export class JsonProcessorService extends BaseProcessorService {
         return typeWrappers;
     }
 
-    async parseContentItemsAsync(text: string): Promise<IImportContentItem[]> {
-        const parsedItems: IImportContentItem[] = [];
+    async parseContentItemsAsync(text: string): Promise<IParsedContentItem[]> {
+        const parsedItems: IParsedContentItem[] = [];
         const rawItems: any[] = JSON.parse(text) as any[];
         const baseFields: string[] = this.getBaseContentItemFields();
 
         for (const rawItem of rawItems) {
-            const contentItem: IImportContentItem = {
+            const contentItem: IParsedContentItem = {
                 codename: '',
                 collection: '',
                 elements: [],
@@ -72,6 +70,29 @@ export class JsonProcessorService extends BaseProcessorService {
         }
 
         return parsedItems;
+    }
+
+    async transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]> {
+        return [
+            {
+                filename: 'assets.json',
+                data: JSON.stringify(
+                    assets.map((m) => {
+                        const parsedAsset: IParsedAsset = {
+                            assetId: m.assetId,
+                            extension: m.extension,
+                            filename: m.filename,
+                            url: m.url
+                        };
+
+                        return parsedAsset;
+                    })
+                )
+            }
+        ];
+    }
+    async parseAssetsAsync(text: string): Promise<IParsedAsset[]> {
+        return JSON.parse(text) as IParsedAsset[];
     }
 
     private getJsonElementName(elementCodename: string, elementType: ElementType): string {

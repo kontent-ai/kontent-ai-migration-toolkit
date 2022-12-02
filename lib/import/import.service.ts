@@ -25,8 +25,8 @@ import {
 import {
     IImportAsset,
     IImportConfig,
-    IImportContentItem,
-    IImportContentItemElement,
+    IParsedContentItem,
+    IParsedElement,
     IImportSource
 } from './import.models';
 import { HttpService } from '@kontent-ai/core-sdk';
@@ -241,7 +241,7 @@ export class ImportService {
     }
 
     private async importContentItemsAsync(
-        importContentItems: IImportContentItem[],
+        importContentItems: IParsedContentItem[],
         importedItems: IImportItemResult[]
     ): Promise<{
         importedItems: ContentItemModels.ContentItem[];
@@ -535,7 +535,7 @@ export class ImportService {
     }
 
     private async prepareContentItemForImportAsync(
-        importContentItem: IImportContentItem,
+        importContentItem: IParsedContentItem,
         importedItems: IImportItemResult[]
     ): Promise<ContentItemModels.ContentItem> {
         try {
@@ -590,7 +590,7 @@ export class ImportService {
     }
 
     private async prepareLanguageVariantForImportAsync(
-        importContentItem: IImportContentItem,
+        importContentItem: IParsedContentItem,
         workflows: WorkflowModels.Workflow[],
         importItems: IImportItemResult[]
     ): Promise<void> {
@@ -772,8 +772,8 @@ export class ImportService {
     }
 
     private getElementContract(
-        sourceItems: IImportContentItem[],
-        element: IImportContentItemElement,
+        sourceItems: IParsedContentItem[],
+        element: IParsedElement,
         importItems: IImportItemResult[]
     ): ElementContracts.IContentItemElementContract {
         const importContract = translationHelper.transformToImportValue(
@@ -792,7 +792,7 @@ export class ImportService {
     }
 
     private shouldUpdateContentItem(
-        importContentItem: IImportContentItem,
+        importContentItem: IParsedContentItem,
         item: ContentItemModels.ContentItem,
         collections: CollectionModels.Collection[]
     ): boolean {

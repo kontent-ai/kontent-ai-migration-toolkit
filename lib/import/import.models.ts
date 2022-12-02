@@ -11,7 +11,7 @@ export interface IImportConfig {
     baseUrl?: string;
     projectId: string;
     canImport?: {
-        contentItem?: (item: IImportContentItem) => boolean | Promise<boolean>;
+        contentItem?: (item: IParsedContentItem) => boolean | Promise<boolean>;
         asset?: (item: IImportAsset) => boolean | Promise<boolean>;
     };
 }
@@ -31,16 +31,23 @@ export interface IPreparedImportItem<TItem> {
 }
 
 export interface IImportAsset {
-    binaryData: any;
+    binaryData: Buffer | Blob;
     assetId: string;
     filename: string;
     mimeType: string | undefined;
     extension: string | undefined;
 }
 
+export interface IParsedAsset {
+    assetId: string;
+    filename: string;
+    extension: string;
+    url: string;
+}
+
 export interface IImportSource {
     importData: {
-        items: IImportContentItem[];
+        items: IParsedContentItem[];
         assets: IImportAsset[];
     };
     metadata?: IPackageMetadata;
@@ -56,13 +63,13 @@ export interface IFlattenedFolder {
     id: string;
 }
 
-export interface IImportContentItemElement {
+export interface IParsedElement {
     value: string;
     type: ElementType;
     codename: string;
 }
 
-export interface IImportContentItem {
+export interface IParsedContentItem {
     codename: string;
     name: string;
     language: string;
@@ -73,5 +80,5 @@ export interface IImportContentItem {
 
     [prop: string]: any;
 
-    elements: IImportContentItemElement[];
+    elements: IParsedElement[];
 }

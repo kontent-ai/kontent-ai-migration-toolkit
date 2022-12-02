@@ -1,25 +1,29 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
+import { IExportedAsset } from '../../export';
 import { translationHelper } from '../../core';
-import { IImportContentItem } from '../../import';
-import { IFormatService, ILanguageVariantDataModel as IFlattenedLanguageVariant, ILanguageVariantsDataWrapper } from '../file-processor.models';
+import { IParsedAsset, IParsedContentItem } from '../../import';
+import {
+    IFormatService,
+    ILanguageVariantDataModel as IFlattenedLanguageVariant,
+    IFileData
+} from '../file-processor.models';
 
 export abstract class BaseProcessorService implements IFormatService {
     abstract name: string;
-    abstract transformLanguageVariantsAsync(
-        types: IContentType[],
-        items: IContentItem[]
-    ): Promise<ILanguageVariantsDataWrapper[]>;
-
-    abstract parseContentItemsAsync(text: string): Promise<IImportContentItem[]>;
+    abstract transformLanguageVariantsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]>;
+    abstract parseContentItemsAsync(text: string): Promise<IParsedContentItem[]>;
+    abstract transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]>;
+    abstract parseAssetsAsync(text: string): Promise<IParsedAsset[]>;
 
     protected getBaseContentItemFields(): string[] {
         return ['codename', 'name', 'language', 'type', 'collection', 'last_modified', 'workflow_step'];
     }
 
-    protected flattenLanguageVariants(
-        items: IContentItem[],
-        types: IContentType[]
-    ): IFlattenedLanguageVariant[] {
+    protected getBaseAssetFields(): string[] {
+        return ['assetId', 'filename', 'extension', 'url'];
+    }
+
+    protected flattenLanguageVariants(items: IContentItem[], types: IContentType[]): IFlattenedLanguageVariant[] {
         const mappedItems: IFlattenedLanguageVariant[] = [];
 
         for (const item of items) {
