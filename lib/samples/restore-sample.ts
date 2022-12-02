@@ -3,9 +3,7 @@ import { FileProcessorService, JsonProcessorService } from '../file-processor';
 import { FileService } from '../node';
 
 const run = async () => {
-    const zipService = new FileProcessorService({
-        context: 'node.js'
-    });
+    const zipService = new FileProcessorService();
 
     const fileService = new FileService({});
 

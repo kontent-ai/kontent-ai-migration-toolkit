@@ -6,9 +6,7 @@ import { FileService } from '../node';
 const run = async () => {
     const fileService = new FileService({});
 
-    const zipService = new FileProcessorService({
-        context: 'node.js'
-    });
+    const zipService = new FileProcessorService();
 
     const exportService = new ExportService({
         projectId: 'sourceProjectId',

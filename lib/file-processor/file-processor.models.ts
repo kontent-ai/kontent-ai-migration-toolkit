@@ -2,9 +2,14 @@ import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IExportedAsset } from '../export';
 import { IParsedAsset, IParsedContentItem as IParsedContentItem } from '../import';
 
+/**
+ * Browser is currently not generally upported as we depend on few node.js specific APIs
+ */
 export type ZipContext = 'node.js' | 'browser';
 
 export type ExportFormat = 'csv' | 'json';
+
+export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export interface IFormatService {
     name: string;
@@ -24,7 +29,6 @@ export interface IExtractedBinaryFileData {
 }
 
 export interface IFileProcessorConfig {
-    context: ZipContext;
     delayBetweenAssetDownloadRequestsMs?: number;
 }
 

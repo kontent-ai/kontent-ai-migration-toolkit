@@ -4,7 +4,7 @@ The purpose of this project is to export & import content data to & from [Konten
 project uses `Delivery API` for fast import and conversion to various formats (`json` | `csv`) and `Management API` to
 import data back.
 
-This library can be used in `node.js` only - the API cannot be used in directly in browsers.
+This library can be used in `node.js` only. Use in Browsers is not supported.
 
 ## How it works
 
@@ -109,9 +109,7 @@ const run = async () => {
     const data = await exportService.exportAllAsync();
 
     // you can also save backup in file with FileProcessorService
-    const fileProcessorService = new FileProcessorService({
-        context: 'node.js' // or 'browser' depending on where your code is executed
-    });
+    const fileProcessorService = new FileProcessorService();
 
     // prepare zip data
     const zipData = await fileProcessorService.createZipAsync(data, { formatService: new JsonProcessorService() }); // or 'CsvProcessorService' or custom service
@@ -137,9 +135,7 @@ const run = async () => {
     // load file
     const zipFile = await fileService.loadFileAsync('backup.zip');
 
-    const fileProcessorService = new FileProcessorService({
-        context: 'node.js' // or 'browser'
-    });
+    const fileProcessorService = new FileProcessorService();
 
     const importService = new ImportService({
         projectId: 'targetProjectId',

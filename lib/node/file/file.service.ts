@@ -8,9 +8,8 @@ export class FileService {
     async loadFileAsync(filename: string): Promise<Buffer> {
         const filePath = this.getFilePath(filename);
 
-        console.log(`Reading file '${yellow(filePath)}'`);
+        console.log(`Reading '${yellow(filePath)}'`);
         const file = await promises.readFile(filePath);
-        console.log(`Reading file completed`);
 
         return file;
     }

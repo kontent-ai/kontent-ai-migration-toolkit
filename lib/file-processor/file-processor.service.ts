@@ -1,9 +1,17 @@
 import { HttpService } from '@kontent-ai/core-sdk';
 import * as JSZip from 'jszip';
+import { Blob } from 'buffer';
 
 import { IExportAllResult, IExportedAsset } from '../export';
 import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset } from '../import';
-import { IFileData, IFileProcessorConfig, IFormatService, IExtractedBinaryFileData } from './file-processor.models';
+import {
+    IFileData,
+    IFileProcessorConfig,
+    IFormatService,
+    IExtractedBinaryFileData,
+    ZipCompressionLevel,
+    ZipContext
+} from './file-processor.models';
 import { magenta, yellow } from 'colors';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { formatBytes, getExtension } from '../core';
@@ -13,6 +21,7 @@ import { JsonProcessorService } from './formats/json-processor.service';
 
 export class FileProcessorService {
     private readonly delayBetweenAssetRequestsMs: number;
+    private readonly zipContext: ZipContext = 'node.js';
 
     private readonly metadataName: string = 'metadata.json';
     private readonly assetsFolderName: string = 'assets';
@@ -23,16 +32,16 @@ export class FileProcessorService {
     private readonly csvProcessorService: CsvProcessorService = new CsvProcessorService();
     private readonly jsonProcessorService: JsonProcessorService = new JsonProcessorService();
 
-    constructor(private config: IFileProcessorConfig) {
+    constructor(config?: IFileProcessorConfig) {
         this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 50;
     }
 
     async extractZipAsync(file: Buffer, config?: { customFormatService?: IFormatService }): Promise<IImportSource> {
-        console.log(`Unzipping file`);
+        console.log(`Loading zip file`);
 
-        const zipFile = await JSZip.loadAsync(file);
+        const zipFile = await JSZip.loadAsync(file, {});
 
-        console.log(`Parsing zip contents`);
+        console.log(`Parsing zip data`);
         const result: IImportSource = {
             importData: {
                 items: await this.parseContentItemsFromFileAsync(zipFile, config?.customFormatService),
@@ -41,7 +50,7 @@ export class FileProcessorService {
             metadata: await this.parseMetadataFromFileAsync(zipFile, this.metadataName)
         };
 
-        console.log(`Pasing zip completed`);
+        console.log(`Parsing completed`);
 
         return result;
     }
@@ -78,7 +87,10 @@ export class FileProcessorService {
         return result;
     }
 
-    async createZipAsync(exportData: IExportAllResult, config: { formatService: IFormatService }): Promise<any> {
+    async createZipAsync(
+        exportData: IExportAllResult,
+        config: { formatService: IFormatService; compressionLevel?: ZipCompressionLevel }
+    ): Promise<any> {
         const zip = new JSZip();
 
         console.log('');
@@ -118,8 +130,6 @@ export class FileProcessorService {
 
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
 
-        console.log('');
-
         if (exportData.data.assets.length) {
             const transformedAssetsFileData = await this.transformAssetsAsync(
                 exportData.data.assets,
@@ -131,7 +141,7 @@ export class FileProcessorService {
                 assetsFolder.file(fileInfo.filename, fileInfo.data);
             }
 
-            console.log(`Preparing to download '${yellow(exportData.data.assets.length.toString())}' assets\n`);
+            console.log(`\nPreparing to download '${yellow(exportData.data.assets.length.toString())}' assets\n`);
 
             for (const asset of exportData.data.assets) {
                 const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
@@ -149,14 +159,34 @@ export class FileProcessorService {
             console.log(`There are no assets to download\n`);
         }
 
-        const zipOutputType = this.getZipOutputType();
-        console.log(`Creating zip file using '${yellow(zipOutputType)}'`);
+        const zipOutputType = this.getZipOutputType(this.zipContext);
+        const compressionLevel: number = config.compressionLevel ?? 9;
+        console.log(
+            `Creating zip file using '${yellow(zipOutputType)}' with compression level '${yellow(
+                compressionLevel.toString()
+            )}'`
+        );
 
-        const content = await zip.generateAsync({ type: zipOutputType });
+        const zipData = await zip.generateAsync({
+            type: zipOutputType,
+            compression: 'DEFLATE',
+            compressionOptions: {
+                level: compressionLevel
+            },
+            streamFiles: true
+        });
 
-        console.log(`Zip file generated`);
+        let zipSizeInBytes: number = 0;
 
-        return content;
+        if (zipData instanceof Blob) {
+            zipSizeInBytes = zipData.size;
+        } else if (zipData instanceof Buffer) {
+            zipSizeInBytes = zipData.byteLength;
+        }
+
+        console.log(`Zip successfully generated with size '${yellow(formatBytes(zipSizeInBytes))}'`);
+
+        return zipData;
     }
 
     private async transformLanguageVariantsAsync(
@@ -240,9 +270,16 @@ export class FileProcessorService {
                 continue;
             }
 
-            console.log(`Extracting binary data of '${yellow(zip.name)}'`);
+            const binaryData = await file.async(this.getZipOutputType(this.zipContext));
+            let sizeInBytes: number = 0;
 
-            const binaryData = await file.async(this.getZipOutputType());
+            if (binaryData instanceof Blob) {
+                sizeInBytes = binaryData.size;
+            } else if (binaryData instanceof Buffer) {
+                sizeInBytes = binaryData.byteLength;
+            }
+
+            console.log(`Extracted binary data | ${magenta(formatBytes(sizeInBytes))} | ${yellow(file.name)}`);
 
             const assetId = this.getAssetIdFromFilename(file.name);
             const extension = getExtension(file.name) ?? '';
@@ -268,16 +305,16 @@ export class FileProcessorService {
         return filenameWithExtension.split('.')[0];
     }
 
-    private getZipOutputType(): 'nodebuffer' | 'blob' {
-        if (this.config.context === 'browser') {
+    private getZipOutputType(context: ZipContext): 'nodebuffer' | 'blob' {
+        if (context === 'browser') {
             return 'blob';
         }
 
-        if (this.config.context === 'node.js') {
+        if (context === 'node.js') {
             return 'nodebuffer';
         }
 
-        throw Error(`Unsupported context '${this.config.context}'`);
+        throw Error(`Unsupported context '${context}'`);
     }
 
     private async parseContentItemsFromFileAsync(

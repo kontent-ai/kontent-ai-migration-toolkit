@@ -70,9 +70,7 @@ const backupAsync = async (config: ICliFileConfig) => {
 
     const fileService = new FileService({});
 
-    const fileProcessorService = new FileProcessorService({
-        context: 'node.js'
-    });
+    const fileProcessorService = new FileProcessorService();
 
     const response = await exportService.exportAllAsync();
 
@@ -93,9 +91,7 @@ const backupAsync = async (config: ICliFileConfig) => {
 };
 
 const restoreAsync = async (config: ICliFileConfig) => {
-    const fileProcessorService = new FileProcessorService({
-        context: 'node.js'
-    });
+    const fileProcessorService = new FileProcessorService();
 
     if (!config.apiKey) {
         throw Error(`Missing 'apiKey' configuration option`);
