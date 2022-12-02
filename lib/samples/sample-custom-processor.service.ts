@@ -3,6 +3,7 @@ import { IImportContentItem } from '../import';
 import { IFormatService, ILanguageVariantsDataWrapper } from '../file-processor';
 
 export class CustomProcessorService implements IFormatService {
+    public readonly name: string = 'sample';
     async transformLanguageVariantsAsync(
         types: IContentType[],
         items: IContentItem[]
@@ -57,9 +58,7 @@ export class CustomProcessorService implements IFormatService {
                 type: type,
                 workflow_step: workflowStep
             };
-
-            console.log(contentItem);
-
+            
             parsedItems.push(contentItem);
         }
 

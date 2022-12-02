@@ -99,7 +99,7 @@ export class FileProcessorService {
             throw Error(`Could not create folder '${yellow(this.contentItemsFolderName)}'`);
         }
 
-        console.log(`Transforming '${yellow(exportData.data.contentItems.length.toString())}' content items`);
+        console.log(`Transforming '${yellow(exportData.data.contentItems.length.toString())}' content items using '${yellow(config.formatService.name)}' format service\n`);
 
         const typeWrappers = await this.getTypeWrappersAsync(
             exportData.data.contentTypes,
@@ -119,7 +119,7 @@ export class FileProcessorService {
         if (exportData.data.assets.length) {
             assetsFolder.file(this.assetDetailsName, JSON.stringify(this.getAssetDetailModels(exportData.data.assets)));
 
-            console.log(`Preparing to download '${yellow(exportData.data.assets.length.toString())}' assets`);
+            console.log(`Preparing to download '${yellow(exportData.data.assets.length.toString())}' assets\n`);
 
             for (const asset of exportData.data.assets) {
                 const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts

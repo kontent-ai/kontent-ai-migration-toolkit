@@ -8,6 +8,7 @@ import { BaseProcessorService } from './base-processor.service';
 
 export class CsvProcessorService extends BaseProcessorService {
     private readonly csvDelimiter: string = ',';
+    public readonly name: string = 'csv';
 
     async transformLanguageVariantsAsync(
         types: IContentType[],

@@ -6,6 +6,8 @@ export type ZipContext = 'node.js' | 'browser';
 export type ExportFormat = 'csv' | 'json';
 
 export interface IFormatService {
+    name: string;
+
     transformLanguageVariantsAsync(
         types: IContentType[],
         items: IContentItem[]

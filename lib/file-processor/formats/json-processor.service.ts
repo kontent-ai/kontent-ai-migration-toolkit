@@ -4,6 +4,7 @@ import { ILanguageVariantDataModel, ILanguageVariantsDataWrapper } from '../file
 import { BaseProcessorService } from './base-processor.service';
 
 export class JsonProcessorService extends BaseProcessorService {
+    public readonly name: string = 'json';
     async transformLanguageVariantsAsync(
         types: IContentType[],
         items: IContentItem[]

@@ -4,6 +4,7 @@ import { IImportContentItem } from '../../import';
 import { IFormatService, ILanguageVariantDataModel as IFlattenedLanguageVariant, ILanguageVariantsDataWrapper } from '../file-processor.models';
 
 export abstract class BaseProcessorService implements IFormatService {
+    abstract name: string;
     abstract transformLanguageVariantsAsync(
         types: IContentType[],
         items: IContentItem[]
