@@ -153,7 +153,7 @@ const run = async () => {
 
     // read export data from zip
     const importData = await zipService.extractZipAsync(file, {
-        customFormatService: new JsonProcessorService(), // or 'CsvProcessorService' or custom service
+        formatService: new JsonProcessorService(), // or 'CsvProcessorService' or custom service
     })
 
     // restore into target project
@@ -201,7 +201,7 @@ To use your custom formatting service simply pass it to `createZipAsync` or `ext
 
 ```typescript
 await fileProcessorService.createZipAsync(response, { formatService: YourService });
-await fileProcessorService.extractZipAsync(file, { customFormatService: YourService});
+await fileProcessorService.extractZipAsync(file, { formatService: YourService});
 ```
 
 ## Limitations

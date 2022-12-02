@@ -36,7 +36,7 @@ export class FileProcessorService {
         this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 50;
     }
 
-    async extractZipAsync(file: Buffer, config?: { customFormatService?: IFormatService }): Promise<IImportSource> {
+    async extractZipAsync(file: Buffer, config?: { formatService?: IFormatService }): Promise<IImportSource> {
         console.log(`Loading zip file`);
 
         const zipFile = await JSZip.loadAsync(file, {});
@@ -44,8 +44,8 @@ export class FileProcessorService {
         console.log(`Parsing zip data`);
         const result: IImportSource = {
             importData: {
-                items: await this.parseContentItemsFromFileAsync(zipFile, config?.customFormatService),
-                assets: await this.parseAssetsFromFileAsync(zipFile, config?.customFormatService)
+                items: await this.parseContentItemsFromFileAsync(zipFile, config?.formatService),
+                assets: await this.parseAssetsFromFileAsync(zipFile, config?.formatService)
             },
             metadata: await this.parseMetadataFromFileAsync(zipFile, this.metadataName)
         };
@@ -205,7 +205,7 @@ export class FileProcessorService {
         return new Promise((resolve: any) => setTimeout(resolve, ms));
     }
 
-    private async parseAssetsFromFileAsync(zip: JSZip, customFormatService?: IFormatService): Promise<IImportAsset[]> {
+    private async parseAssetsFromFileAsync(zip: JSZip, formatService?: IFormatService): Promise<IImportAsset[]> {
         const importAssets: IImportAsset[] = [];
         const parsedAssets: IParsedAsset[] = [];
 
@@ -225,9 +225,9 @@ export class FileProcessorService {
 
             const text = await file.async('string');
 
-            if (customFormatService) {
+            if (formatService) {
                 // use custom format service
-                parsedAssets.push(...(await customFormatService.parseAssetsAsync(text)));
+                parsedAssets.push(...(await formatService.parseAssetsAsync(text)));
             } else if (file.name?.toLowerCase()?.endsWith('.csv')) {
                 parsedAssets.push(...(await this.csvProcessorService.parseAssetsAsync(text)));
             } else if (file.name?.toLowerCase()?.endsWith('.json')) {
@@ -319,7 +319,7 @@ export class FileProcessorService {
 
     private async parseContentItemsFromFileAsync(
         fileContents: JSZip,
-        customFormatService?: IFormatService
+        formatService?: IFormatService
     ): Promise<IParsedContentItem[]> {
         const files = fileContents.files;
         const parsedItems: IParsedContentItem[] = [];
@@ -336,9 +336,9 @@ export class FileProcessorService {
 
             const text = await file.async('text');
 
-            if (customFormatService) {
+            if (formatService) {
                 // use custom format service
-                parsedItems.push(...(await customFormatService.parseContentItemsAsync(text)));
+                parsedItems.push(...(await formatService.parseContentItemsAsync(text)));
             } else if (file.name?.toLowerCase()?.endsWith('.csv')) {
                 parsedItems.push(...(await this.csvProcessorService.parseContentItemsAsync(text)));
             } else if (file.name?.toLowerCase()?.endsWith('.json')) {

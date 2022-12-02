@@ -32,7 +32,7 @@ const run = async () => {
 
     // extract file
     const data = await zipService.extractZipAsync(file, {
-        customFormatService: new JsonProcessorService(), // or 'CsvProcessorService' or custom service
+        formatService: new JsonProcessorService(), // or 'CsvProcessorService' or custom service
     });
 
     // restore into target project
