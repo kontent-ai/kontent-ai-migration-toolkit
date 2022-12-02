@@ -11,15 +11,18 @@ This library can be used in `node.js` only. Use in Browsers is not supported.
 > When importing it is absolutely essential that both `source` and `target` project have identical definitions of
 > Content types, taxonomies and workflows. Any inconsistency in data definition may cause import to fail.
 
-**How are content items imported?** The Data manager creates content items that are not present in target project. If
+### How are content items imported?
+The Data manager creates content items that are not present in target project. If
 the content item is already present in the project (based on item's `codename`) the item will be updated if necessary or
 skipped. Content item is only updated if the `name` of the item changes.
 
-**How are langauge variants imported?** Same as with content items, Data manager either creates or updates language
+### How are langauge variants imported?
+Same as with content items, Data manager either creates or updates language
 variants based on their codename & codename of the language. Workflow of the language variant is set based on the
 `workflow` field in the source data.
 
-**How are assets imported?** If asset with it's id or external_id exists in target project, the asset upload will be
+### How are assets imported? 
+If asset with it's id or external_id exists in target project, the asset upload will be
 skipped and not uploaded at all. If it doesn't exist, the asset from the zip folder will be uploaded and it's id will be
 used as a filename. The Data Manager will also set `external_id` of newly uploaded assets to equal their original id. If
 you enable `fetchAssetDetails` option the original filename of the asset will be preserved.
