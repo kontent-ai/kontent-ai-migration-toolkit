@@ -32,8 +32,8 @@ import {
     IImportContentTypeElement
 } from './import.models';
 import { HttpService } from '@kontent-ai/core-sdk';
-import { green, magenta, red, yellow, cyan } from 'colors';
 import { DeliveryClient, ElementType } from '@kontent-ai/delivery-sdk';
+import { logDebug } from '../core/log-helper';
 
 export class ImportService {
     private readonly managementClient: ManagementClient;
@@ -118,22 +118,22 @@ export class ImportService {
         try {
             //  Assets
             if (sourceData.importData.assets.length) {
-                console.log(`Importing assets`);
+                logDebug('info', `Importing assets`);
                 const importedAssets = await this.importAssetsAsync(sourceData.importData.assets);
                 importedItems.push(...importedAssets);
             } else {
-                console.log(`There are no assets to import`);
+                logDebug('info', `There are no assets to import`);
             }
 
             // Content items
             if (sourceData.importData.items.length) {
-                console.log(`Importing content items`);
+                logDebug('info', `Importing content items`);
                 await this.importContentItemsAsync(sourceData.importData.items, importedItems);
             } else {
-                console.log(`There are no content items to import`);
+                logDebug('info', `There are no content items to import`);
             }
 
-            console.log(`Finished import`);
+            logDebug('info', `Finished import`);
         } catch (error) {
             this.handleImportError(error);
         }
@@ -165,11 +165,11 @@ export class ImportService {
         }
 
         if (removedAssets > 0) {
-            console.log(`Removed '${yellow(removedAssets.toString())}' assets from import`);
+            logDebug('info', `Removed '${removedAssets.toString()}' assets from import`);
         }
 
         if (removedContentItems) {
-            console.log(`Removed '${yellow(removedContentItems.toString())}' content items from import`);
+            logDebug('info', `Removed '${removedContentItems.toString()}' content items from import`);
         }
     }
 
@@ -232,7 +232,7 @@ export class ImportService {
                 this.processItem(importedItems, 'upload', 'binaryFile', {
                     imported: uploadedBinaryFile,
                     original: asset,
-                    title: yellow(asset.filename),
+                    title: asset.filename,
                     importedId: undefined,
                     originalId: undefined
                 });
@@ -253,7 +253,7 @@ export class ImportService {
                 this.processItem(importedItems, 'create', 'asset', {
                     imported: createdAsset,
                     original: asset,
-                    title: yellow(asset.filename),
+                    title: asset.filename,
                     importedId: createdAsset.data.id,
                     originalId: asset.assetId
                 });
@@ -261,14 +261,14 @@ export class ImportService {
                 this.processItem(importedItems, 'fetch', 'asset', {
                     imported: existingAsset,
                     original: asset,
-                    title: yellow(asset.filename),
+                    title: asset.filename,
                     importedId: existingAsset.data.id,
                     originalId: asset.assetId
                 });
                 this.processItem(importedItems, 'skipUpdate', 'asset', {
                     imported: existingAsset,
                     original: asset,
-                    title: yellow(asset.filename),
+                    title: asset.filename,
                     importedId: existingAsset.data.id,
                     originalId: asset.assetId
                 });
@@ -320,7 +320,7 @@ export class ImportService {
                     ).data;
 
                     this.processItem(importedItems, 'upsert', 'contentItem', {
-                        title: `${yellow(importContentItem.name)}`,
+                        title: `${importContentItem.name}`,
                         imported: importContentItem,
                         importedId: upsertedContentItem.id,
                         originalCodename: importContentItem.codename,
@@ -329,7 +329,7 @@ export class ImportService {
                     });
                 } else {
                     this.processItem(importedItems, 'skipUpdate', 'contentItem', {
-                        title: `${yellow(importContentItem.name)}`,
+                        title: `${importContentItem.name}`,
                         imported: importContentItem,
                         importedId: preparedContentItem.id,
                         originalCodename: importContentItem.codename,
@@ -349,10 +349,7 @@ export class ImportService {
                         errorMessage = error;
                     }
 
-                    console.log(
-                        `${red('ERROR')}: Failed to import content item '${yellow(importContentItem.codename)}' | `,
-                        errorMessage
-                    );
+                    logDebug('error', `Failed to import content item`, importContentItem.codename, errorMessage);
                 } else {
                     throw error;
                 }
@@ -392,7 +389,8 @@ export class ImportService {
                 upsertedLanguageVariants.push(upsertedLanguageVariant.data);
 
                 this.processItem(importedItems, 'upsert', 'languageVariant', {
-                    title: `${yellow(upsertedContentItem.name)} | ${magenta(importContentItem.language)}`,
+                    title: `${upsertedContentItem.name}`,
+                    language: importContentItem.language,
                     imported: upsertedLanguageVariants,
                     importedId: upsertedContentItem.id,
                     originalCodename: importContentItem.codename,
@@ -413,10 +411,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'publish', 'languageVariant', {
-                            title: `${yellow(upsertedContentItem.name)} | ${magenta(
-                                importContentItem.language
-                            )} | ${cyan(importContentItem.workflow_step)}`,
+                            title: `${upsertedContentItem.name} | ${importContentItem.workflow_step}`,
                             imported: upsertedLanguageVariants,
+                            language: importContentItem.language,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
                             originalId: undefined,
@@ -445,10 +442,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'archive', 'languageVariant', {
-                            title: `${yellow(upsertedContentItem.name)} ${magenta(importContentItem.language)} | ${cyan(
-                                importContentItem.workflow_step
-                            )}`,
+                            title: `${upsertedContentItem.name} | ${importContentItem.workflow_step}`,
                             imported: upsertedLanguageVariants,
+                            language: importContentItem.language,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
                             originalId: undefined,
@@ -475,10 +471,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'changeWorkflowStep', 'languageVariant', {
-                            title: `${yellow(upsertedContentItem.name)} | ${magenta(
-                                importContentItem.language
-                            )} | ${cyan(importContentItem.workflow_step)}`,
+                            title: `${upsertedContentItem.name} | ${importContentItem.workflow_step}`,
                             imported: upsertedLanguageVariants,
+                            language: importContentItem.language,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
                             originalId: undefined,
@@ -498,10 +493,10 @@ export class ImportService {
                         errorMessage = error;
                     }
 
-                    console.log(
-                        `${red('ERROR')}: Failed to import language variant '${yellow(
-                            importContentItem.codename
-                        )}' in language '${magenta(importContentItem.language)}' | `,
+                    logDebug(
+                        'error',
+                        ` Failed to import language variant '${importContentItem.language}'`,
+                        importContentItem.codename,
                         errorMessage
                     );
                 } else {
@@ -584,7 +579,7 @@ export class ImportService {
             ).data;
 
             this.processItem(importedItems, 'fetch', 'contentItem', {
-                title: `${yellow(contentItem.name)}`,
+                title: `${contentItem.name}`,
                 imported: contentItem,
                 importedId: contentItem.id,
                 originalCodename: contentItem.codename,
@@ -613,7 +608,7 @@ export class ImportService {
                     ).data;
 
                     this.processItem(importedItems, 'create', 'contentItem', {
-                        title: `${yellow(contentItem.name)}`,
+                        title: `${contentItem.name}`,
                         imported: contentItem,
                         importedId: contentItem.id,
                         originalCodename: contentItem.codename,
@@ -646,7 +641,7 @@ export class ImportService {
             ).data;
 
             this.processItem(importItems, 'fetch', 'languageVariant', {
-                title: `${yellow(importContentItem.name)} | ${magenta(importContentItem.language)}`,
+                title: `${importContentItem.name} | ${importContentItem.language}`,
                 imported: languageVariantOfContentItem,
                 original: importContentItem
             });
@@ -676,7 +671,7 @@ export class ImportService {
                     .toPromise();
 
                 this.processItem(importItems, 'createNewVersion', 'languageVariant', {
-                    title: `${yellow(importContentItem.name)} | ${magenta(importContentItem.language)}`,
+                    title: `${importContentItem.name} | ${importContentItem.language}`,
                     imported: languageVariantOfContentItem,
                     original: importContentItem
                 });
@@ -697,9 +692,7 @@ export class ImportService {
                         .toPromise();
 
                     this.processItem(importItems, 'unArchive', 'languageVariant', {
-                        title: `${yellow(importContentItem.name)} | ${cyan(newWorkflowStep.codename)} | ${magenta(
-                            importContentItem.language
-                        )}`,
+                        title: `${importContentItem.name} | ${newWorkflowStep.codename} | ${importContentItem.language}`,
                         imported: languageVariantOfContentItem,
                         original: importContentItem
                     });
@@ -769,7 +762,6 @@ export class ImportService {
     }
 
     private handleImportError(error: any | SharedModels.ContentManagementBaseKontentError): void {
-        console.log(error);
         handleError(error);
     }
 
@@ -778,6 +770,7 @@ export class ImportService {
         actionType: ActionType,
         itemType: ItemType,
         data: {
+            language?: string;
             title: string;
             originalId?: string;
             originalCodename?: string;
@@ -798,7 +791,7 @@ export class ImportService {
             return;
         }
 
-        console.log(`${data.title} | ${green(itemType)} | ${actionType}`);
+        logDebug(actionType, data.title, itemType, data.language);
     }
 
     private mapAssetFolder(

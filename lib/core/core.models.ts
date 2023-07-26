@@ -20,6 +20,9 @@ export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset'
 
 export type ActionType =
     | 'skipUpdate'
+    | 'save'
+    | 'download'
+    | 'read'
     | 'archive'
     | 'upsert'
     | 'upload'
@@ -30,6 +33,7 @@ export type ActionType =
     | 'create'
     | 'publish'
     | 'unArchive'
+    | 'extractedBinaryData'
     | 'update';
 
 export interface IProcessedItem {

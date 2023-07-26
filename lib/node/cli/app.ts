@@ -14,7 +14,7 @@ import {
 } from '../../file-processor';
 import { SharedModels } from '@kontent-ai/management-sdk';
 import { FileService } from '../file/file.service';
-import { green, red } from 'colors';
+import { logDebug } from '../../core/log-helper';
 
 const argv = yargs(process.argv.slice(2))
     .example(
@@ -87,7 +87,7 @@ const backupAsync = async (config: ICliFileConfig) => {
 
     await fileService.writeFileAsync(config.filename, zipFileData);
 
-    console.log(green('Completed'));
+    logDebug('info', `Completed`);
 };
 
 const restoreAsync = async (config: ICliFileConfig) => {
@@ -133,7 +133,7 @@ const restoreAsync = async (config: ICliFileConfig) => {
         throw Error(`Unsupported file type '${fileExtension}'`);
     }
 
-    console.log(green('Completed'));
+    logDebug('info', `Completed`);
 };
 
 const validateConfig = (config?: ICliFileConfig) => {
@@ -246,11 +246,12 @@ run()
     .then((m) => {})
     .catch((err) => {
         if (err instanceof SharedModels.ContentManagementBaseKontentError) {
-            console.log(`Management API error occured:`, red(err.message));
+            logDebug('error', err.message);
+
             for (const validationError of err.validationErrors) {
-                console.log(validationError.message);
+                logDebug('error', validationError.message);
             }
         } else {
-            console.log(`There was an error processing your request: `, red(err));
+            logDebug('error', err?.message ?? 'There was an error processing your request');
         }
     });

@@ -6,11 +6,11 @@ import {
     IContentType
 } from '@kontent-ai/delivery-sdk';
 import { ElementContracts, LanguageVariantElements, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
-import { yellow } from 'colors';
 import { IParsedContentItem } from '../import';
 import { IImportItemResult } from './core.models';
 import { extractAssetIdFromUrl } from './global-helper';
 import { idTranslateHelper } from './id-translate-helper';
+import { logDebug } from './log-helper';
 
 export interface IExportTransform {
     type: ElementType;
@@ -186,7 +186,7 @@ export class TranslationHelper {
                         const assetId = extractAssetIdFromUrl(m);
 
                         // find id of imported asset
-                        const importedAsset = data.importedItems.find(s => s.originalId === assetId);
+                        const importedAsset = data.importedItems.find((s) => s.originalId === assetId);
 
                         if (!importedAsset) {
                             throw Error(`Could not find imported asset for asset with original id '${assetId}'`);
@@ -285,7 +285,7 @@ export class TranslationHelper {
             });
         }
 
-        console.log(`Missing export transform for element type '${yellow(element.type)}'`);
+        logDebug('warning', 'Missing export transform for element type', element.type);
 
         return '';
     }
@@ -308,7 +308,7 @@ export class TranslationHelper {
             });
         }
 
-        console.log(`Missing import transform for element type '${yellow(type)}'`);
+        logDebug('warning', 'Missing import transform for element type', type);
 
         return undefined;
     }
@@ -355,7 +355,8 @@ export class TranslationHelper {
                 const contentItemWithGivenId: IContentItem | undefined = items.find((m) => m.system.id === id);
 
                 if (!contentItemWithGivenId) {
-                    console.log(
+                    logDebug(
+                        'warning',
                         `Could not find content item with id '${id}'. This item was referenced as a link in Rich text element.`
                     );
                 } else {
@@ -442,9 +443,11 @@ export class TranslationHelper {
                 );
 
                 if (!contentItemWithGivenCodename) {
-                    console.log(
-                        `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
-                    );
+                     logDebug(
+                         'warning',
+                         `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
+                     );
+                    
                 } else {
                     objectTag = objectTag.replace(codename, contentItemWithGivenCodename.importId ?? '');
                     objectTag = objectTag.replace(this.csvManagerLinkCodenameAttributeName, 'data-item-id');

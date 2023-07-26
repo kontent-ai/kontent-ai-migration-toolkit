@@ -1,7 +1,7 @@
 import { IManagementClient, EnvironmentModels, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
-import { yellow } from 'colors';
 import { format } from 'bytes';
+import { logDebug } from './log-helper';
 
 const rateExceededErrorCode: number = 10000;
 
@@ -31,8 +31,8 @@ export async function printProjectAndEnvironmentInfoToConsoleAsync(
     client: IManagementClient<any>
 ): Promise<EnvironmentModels.EnvironmentInformationModel> {
     const environmentInformation = (await client.environmentInformation().toPromise()).data;
-    console.log(`Project '${yellow(environmentInformation.project.name)}'`);
-    console.log(`Environment '${yellow(environmentInformation.project.environment)}'\n`);
+    logDebug('info', 'Project', environmentInformation.project.name);
+    logDebug('info', 'Environment', environmentInformation.project.environment);
 
     return environmentInformation.project;
 }

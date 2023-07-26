@@ -1,6 +1,6 @@
-import { yellow } from 'colors';
 import { promises } from 'fs';
 import { IFileServiceConfig } from './file.models';
+import { logDebug } from '../../core/log-helper';
 
 export class FileService {
     constructor(public config?: IFileServiceConfig) {}
@@ -8,7 +8,7 @@ export class FileService {
     async loadFileAsync(filename: string): Promise<Buffer> {
         const filePath = this.getFilePath(filename);
 
-        console.log(`Reading '${yellow(filePath)}'`);
+        logDebug('read', filePath);
         const file = await promises.readFile(filePath);
 
         return file;
@@ -18,7 +18,7 @@ export class FileService {
         const filePath = this.getFilePath(fileNameWithoutExtension);
 
         await promises.writeFile(filePath, content);
-        console.log(`File '${yellow(filePath)}' saved`);
+        logDebug('save', filePath);
     }
 
     private getFilePath(filename: string) {

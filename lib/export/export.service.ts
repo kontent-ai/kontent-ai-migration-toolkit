@@ -12,8 +12,8 @@ import {
 import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models';
 import { ActionType, defaultRetryStrategy, extractAssetIdFromUrl, getExtension, ItemType } from '../core';
 import { version } from '../../package.json';
-import { blue, green, magenta, yellow } from 'colors';
 import { createManagementClient } from '@kontent-ai/management-sdk';
+import { logDebug } from '../core/log-helper';
 
 export class ExportService {
     private readonly httpService: HttpService = new HttpService({
@@ -42,7 +42,7 @@ export class ExportService {
     }
 
     async exportAllAsync(): Promise<IExportAllResult> {
-        console.log(`Environment id: '${yellow(this.config.environmentId)}'\n`);
+        logDebug('info', `Environment id`, this.config.environmentId);
 
         const types = await this.getContentTypesAsync();
         const languages = await this.getLanguagesAsync();
@@ -50,12 +50,12 @@ export class ExportService {
 
         let assets: IExportedAsset[] = [];
 
-        console.log('');
         if (this.config.exportAssets) {
-            console.log(`Extracting assets referenced by content items`);
+            logDebug('info', `Extracting assets referenced by content items`);
+
             assets = await this.extractAssetsAsync(contentItems, types);
         } else {
-            console.log(`Assets export is disabled`);
+            logDebug('info', `Assets export is disabled`);
         }
 
         const data: IExportData = {
@@ -102,24 +102,21 @@ export class ExportService {
         const contentItems: IContentItem[] = [];
 
         if (this.config.customItemsExport) {
-            console.log(`Using custom items export`);
+            logDebug('info', `Using custom items export`);
 
             const customItems = await this.config.customItemsExport(this.deliveryClient);
 
             for (const contentItem of customItems) {
-                this.processItem(
-                    `${yellow(contentItem.system.name)} | ${magenta(contentItem.system.type)} | ${blue(
-                        contentItem.system.language
-                    )}`,
-                    'contentItem',
-                    'fetch',
-                    contentItem
-                );
+                this.processItem(`${contentItem.system.name} | ${contentItem.system.type}`, 'contentItem', 'fetch', {
+                    language: contentItem.system.language
+                });
                 contentItems.push(contentItem);
             }
         } else {
-            console.log(
-                `Exporting content items of types: ${yellow(typesToExport.map((m) => m.system.codename).join(', '))} \n`
+            logDebug(
+                'info',
+                `Exporting content items of types`,
+                typesToExport.map((m) => m.system.codename).join(', ')
             );
 
             for (const type of typesToExport) {
@@ -133,26 +130,18 @@ export class ExportService {
                             responseFetched: (response) => {
                                 // add items to result
                                 for (const contentItem of response.data.items) {
-                                    this.processItem(
-                                        `${yellow(contentItem.system.name)} | ${magenta(contentItem.system.language)}`,
-                                        'contentItem',
-                                        'fetch',
-                                        contentItem
-                                    );
+                                    this.processItem(`${contentItem.system.name}`, 'contentItem', 'fetch', {
+                                        language: contentItem.system.language
+                                    });
                                     contentItems.push(contentItem);
                                 }
 
                                 // add components to result
                                 for (const [codename, contentItem] of Object.entries(response.data.linkedItems)) {
                                     if (!contentItems.find((m) => m.system.codename === codename)) {
-                                        this.processItem(
-                                            `${yellow(contentItem.system.name)} | ${magenta(
-                                                contentItem.system.language
-                                            )}`,
-                                            'component',
-                                            'fetch',
-                                            contentItem
-                                        );
+                                        this.processItem(`${contentItem.system.name}`, 'component', 'fetch', {
+                                            language: contentItem.system.language
+                                        });
                                         contentItems.push(contentItem);
                                     }
                                 }
@@ -175,8 +164,15 @@ export class ExportService {
         return response.data.items;
     }
 
-    private processItem(title: string, itemType: ItemType, actionType: ActionType, data: any): void {
-        console.log(`${title} | ${green(itemType)} | ${actionType}`);
+    private processItem(
+        title: string,
+        itemType: ItemType,
+        actionType: ActionType,
+        data: {
+            language?: string;
+        }
+    ): void {
+        logDebug(actionType, title, itemType, data.language);
     }
 
     private async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IExportedAsset[]> {
@@ -250,9 +246,9 @@ export class ExportService {
 
             for (const asset of uniqueAssets) {
                 const assetResponse = await managementClient.viewAsset().byAssetId(asset.assetId).toPromise();
-                console.log(
-                    `Fetched asset details '${yellow(asset.assetId)}' -> '${green(assetResponse.data.fileName)}'`
-                );
+
+                logDebug('info', 'Fetched asset details', asset.assetId, assetResponse.data.fileName);
+
                 asset.filename = assetResponse.data.fileName;
             }
         }
