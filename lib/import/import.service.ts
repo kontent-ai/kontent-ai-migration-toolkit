@@ -411,8 +411,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'publish', 'languageVariant', {
-                            title: `${upsertedContentItem.name} | ${importContentItem.workflow_step}`,
+                            title: `${upsertedContentItem.name}`,
                             imported: upsertedLanguageVariants,
+                            workflowStep: importContentItem.workflow_step,
                             language: importContentItem.language,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
@@ -442,8 +443,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'archive', 'languageVariant', {
-                            title: `${upsertedContentItem.name} | ${importContentItem.workflow_step}`,
+                            title: `${upsertedContentItem.name}`,
                             imported: upsertedLanguageVariants,
+                            workflowStep: importContentItem.workflow_step,
                             language: importContentItem.language,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
@@ -471,8 +473,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'changeWorkflowStep', 'languageVariant', {
-                            title: `${upsertedContentItem.name} | ${importContentItem.workflow_step}`,
+                            title: `${upsertedContentItem.name}`,
                             imported: upsertedLanguageVariants,
+                            workflowStep: importContentItem.workflow_step,
                             language: importContentItem.language,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
@@ -641,9 +644,10 @@ export class ImportService {
             ).data;
 
             this.processItem(importItems, 'fetch', 'languageVariant', {
-                title: `${importContentItem.name} | ${importContentItem.language}`,
+                title: `${importContentItem.name}`,
                 imported: languageVariantOfContentItem,
-                original: importContentItem
+                original: importContentItem,
+                language: importContentItem.language
             });
         } catch (error) {
             let throwError: boolean = true;
@@ -671,9 +675,10 @@ export class ImportService {
                     .toPromise();
 
                 this.processItem(importItems, 'createNewVersion', 'languageVariant', {
-                    title: `${importContentItem.name} | ${importContentItem.language}`,
+                    title: `${importContentItem.name}`,
                     imported: languageVariantOfContentItem,
-                    original: importContentItem
+                    original: importContentItem,
+                    language: importContentItem.language
                 });
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, workflows)) {
                 // change workflow step to draft
@@ -692,9 +697,11 @@ export class ImportService {
                         .toPromise();
 
                     this.processItem(importItems, 'unArchive', 'languageVariant', {
-                        title: `${importContentItem.name} | ${newWorkflowStep.codename} | ${importContentItem.language}`,
+                        title: `${importContentItem.name}`,
                         imported: languageVariantOfContentItem,
-                        original: importContentItem
+                        original: importContentItem,
+                        language: importContentItem.language,
+                        workflowStep: newWorkflowStep.codename
                     });
                 }
             }
@@ -771,6 +778,7 @@ export class ImportService {
         itemType: ItemType,
         data: {
             language?: string;
+            workflowStep?: string;
             title: string;
             originalId?: string;
             originalCodename?: string;
@@ -791,7 +799,7 @@ export class ImportService {
             return;
         }
 
-        logDebug(actionType, data.title, itemType, data.language);
+        logDebug(actionType, data.title, itemType, data.language, data.workflowStep);
     }
 
     private mapAssetFolder(
