@@ -72,7 +72,9 @@ export class ImportService {
     }
 
     async getImportContentTypesAsync(): Promise<IImportContentType[]> {
+        logDebug('info', `Fetching content types from environment`);
         const contentTypes = (await this.deliveryClient.types().toAllPromise()).data.items;
+        logDebug('info', `Fetched '${contentTypes.length}' content types`);
 
         return contentTypes.map((contentType) => {
             const importType: IImportContentType = {
