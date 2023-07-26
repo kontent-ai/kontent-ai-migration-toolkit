@@ -70,13 +70,15 @@ export abstract class BaseProcessorService implements IFormatService {
         const type = types.find((m) => m.contentTypeCodename.toLowerCase() === contentItemType.toLowerCase());
 
         if (!type) {
-            throw Error(`Could not find content type '${type}'`);
+            throw Error(`Could not find content type '${contentItemType}'`);
         }
 
         const element = type.elements.find((m) => m.codename.toLowerCase() === elementCodename.toLowerCase());
 
         if (!element) {
-            throw Error(`Could not find element with codename '${elementCodename}' for type '${type}'`);
+            throw Error(
+                `Could not find element with codename '${elementCodename}' for type '${type.contentTypeCodename}'`
+            );
         }
 
         return element;
