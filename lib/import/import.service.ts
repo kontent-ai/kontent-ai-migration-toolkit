@@ -245,7 +245,7 @@ export class ImportService {
                     })
                     .toPromise();
 
-                this.processItem(importedItems, 'upload', 'binaryFile', {
+                this.logItem(importedItems, 'upload', 'binaryFile', {
                     imported: uploadedBinaryFile,
                     original: asset,
                     title: asset.filename,
@@ -266,7 +266,7 @@ export class ImportService {
                     })
                     .toPromise();
 
-                this.processItem(importedItems, 'create', 'asset', {
+                this.logItem(importedItems, 'create', 'asset', {
                     imported: createdAsset,
                     original: asset,
                     title: asset.filename,
@@ -274,14 +274,14 @@ export class ImportService {
                     originalId: asset.assetId
                 });
             } else {
-                this.processItem(importedItems, 'fetch', 'asset', {
+                this.logItem(importedItems, 'fetch', 'asset', {
                     imported: existingAsset,
                     original: asset,
                     title: asset.filename,
                     importedId: existingAsset.data.id,
                     originalId: asset.assetId
                 });
-                this.processItem(importedItems, 'skipUpdate', 'asset', {
+                this.logItem(importedItems, 'skipUpdate', 'asset', {
                     imported: existingAsset,
                     original: asset,
                     title: asset.filename,
@@ -335,7 +335,7 @@ export class ImportService {
                             .toPromise()
                     ).data;
 
-                    this.processItem(importedItems, 'upsert', 'contentItem', {
+                    this.logItem(importedItems, 'upsert', 'contentItem', {
                         title: `${importContentItem.name}`,
                         imported: importContentItem,
                         importedId: upsertedContentItem.id,
@@ -344,7 +344,7 @@ export class ImportService {
                         original: importContentItem
                     });
                 } else {
-                    this.processItem(importedItems, 'skipUpdate', 'contentItem', {
+                    this.logItem(importedItems, 'skipUpdate', 'contentItem', {
                         title: `${importContentItem.name}`,
                         imported: importContentItem,
                         importedId: preparedContentItem.id,
@@ -404,7 +404,7 @@ export class ImportService {
 
                 upsertedLanguageVariants.push(upsertedLanguageVariant.data);
 
-                this.processItem(importedItems, 'upsert', 'languageVariant', {
+                this.logItem(importedItems, 'upsert', 'languageVariant', {
                     title: `${upsertedContentItem.name}`,
                     language: importContentItem.language,
                     imported: upsertedLanguageVariants,
@@ -426,7 +426,7 @@ export class ImportService {
                             .withoutData()
                             .toPromise();
 
-                        this.processItem(importedItems, 'publish', 'languageVariant', {
+                        this.logItem(importedItems, 'publish', 'languageVariant', {
                             title: `${upsertedContentItem.name}`,
                             imported: upsertedLanguageVariants,
                             workflowStep: importContentItem.workflow_step,
@@ -458,7 +458,7 @@ export class ImportService {
                             })
                             .toPromise();
 
-                        this.processItem(importedItems, 'archive', 'languageVariant', {
+                        this.logItem(importedItems, 'archive', 'languageVariant', {
                             title: `${upsertedContentItem.name}`,
                             imported: upsertedLanguageVariants,
                             workflowStep: importContentItem.workflow_step,
@@ -488,7 +488,7 @@ export class ImportService {
                             })
                             .toPromise();
 
-                        this.processItem(importedItems, 'changeWorkflowStep', 'languageVariant', {
+                        this.logItem(importedItems, 'changeWorkflowStep', 'languageVariant', {
                             title: `${upsertedContentItem.name}`,
                             imported: upsertedLanguageVariants,
                             workflowStep: importContentItem.workflow_step,
@@ -597,7 +597,7 @@ export class ImportService {
                 await this.managementClient.viewContentItem().byItemCodename(importContentItem.codename).toPromise()
             ).data;
 
-            this.processItem(importedItems, 'fetch', 'contentItem', {
+            this.logItem(importedItems, 'fetch', 'contentItem', {
                 title: `${contentItem.name}`,
                 imported: contentItem,
                 importedId: contentItem.id,
@@ -626,7 +626,7 @@ export class ImportService {
                             .toPromise()
                     ).data;
 
-                    this.processItem(importedItems, 'create', 'contentItem', {
+                    this.logItem(importedItems, 'create', 'contentItem', {
                         title: `${contentItem.name}`,
                         imported: contentItem,
                         importedId: contentItem.id,
@@ -659,7 +659,7 @@ export class ImportService {
                     .toPromise()
             ).data;
 
-            this.processItem(importItems, 'fetch', 'languageVariant', {
+            this.logItem(importItems, 'fetch', 'languageVariant', {
                 title: `${importContentItem.name}`,
                 imported: languageVariantOfContentItem,
                 original: importContentItem,
@@ -690,7 +690,7 @@ export class ImportService {
                     .byLanguageCodename(importContentItem.language)
                     .toPromise();
 
-                this.processItem(importItems, 'createNewVersion', 'languageVariant', {
+                this.logItem(importItems, 'createNewVersion', 'languageVariant', {
                     title: `${importContentItem.name}`,
                     imported: languageVariantOfContentItem,
                     original: importContentItem,
@@ -712,7 +712,7 @@ export class ImportService {
                         .byWorkflowStepCodename(newWorkflowStep.codename)
                         .toPromise();
 
-                    this.processItem(importItems, 'unArchive', 'languageVariant', {
+                    this.logItem(importItems, 'unArchive', 'languageVariant', {
                         title: `${importContentItem.name}`,
                         imported: languageVariantOfContentItem,
                         original: importContentItem,
@@ -788,7 +788,7 @@ export class ImportService {
         handleError(error);
     }
 
-    private processItem(
+    private logItem(
         importedItems: IImportItemResult[],
         actionType: ActionType,
         itemType: ItemType,

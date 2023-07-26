@@ -107,7 +107,7 @@ export class ExportService {
             const customItems = await this.config.customItemsExport(this.deliveryClient);
 
             for (const contentItem of customItems) {
-                this.processItem(`${contentItem.system.name} | ${contentItem.system.type}`, 'contentItem', 'fetch', {
+                this.logItem(`${contentItem.system.name} | ${contentItem.system.type}`, 'contentItem', 'fetch', {
                     language: contentItem.system.language
                 });
                 contentItems.push(contentItem);
@@ -130,7 +130,7 @@ export class ExportService {
                             responseFetched: (response) => {
                                 // add items to result
                                 for (const contentItem of response.data.items) {
-                                    this.processItem(`${contentItem.system.name}`, 'contentItem', 'fetch', {
+                                    this.logItem(`${contentItem.system.name}`, 'contentItem', 'fetch', {
                                         language: contentItem.system.language
                                     });
                                     contentItems.push(contentItem);
@@ -139,7 +139,7 @@ export class ExportService {
                                 // add components to result
                                 for (const [codename, contentItem] of Object.entries(response.data.linkedItems)) {
                                     if (!contentItems.find((m) => m.system.codename === codename)) {
-                                        this.processItem(`${contentItem.system.name}`, 'component', 'fetch', {
+                                        this.logItem(`${contentItem.system.name}`, 'component', 'fetch', {
                                             language: contentItem.system.language
                                         });
                                         contentItems.push(contentItem);
@@ -164,7 +164,7 @@ export class ExportService {
         return response.data.items;
     }
 
-    private processItem(
+    private logItem(
         title: string,
         itemType: ItemType,
         actionType: ActionType,
