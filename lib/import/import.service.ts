@@ -17,18 +17,12 @@ import {
     ActionType,
     handleError,
     defaultRetryStrategy,
-    printProjectInfoToConsoleAsync,
+    printProjectAndEnvironmentInfoToConsoleAsync,
     translationHelper,
     ItemType,
     defaultWorkflowCodename
 } from '../core';
-import {
-    IImportAsset,
-    IImportConfig,
-    IParsedContentItem,
-    IParsedElement,
-    IImportSource
-} from './import.models';
+import { IImportAsset, IImportConfig, IParsedContentItem, IParsedElement, IImportSource } from './import.models';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { green, magenta, red, yellow, cyan } from 'colors';
 
@@ -45,7 +39,7 @@ export class ImportService {
         this.client = new ManagementClient({
             apiKey: config.apiKey,
             baseUrl: config.baseUrl,
-            projectId: config.projectId,
+            environmentId: config.environmentId,
             httpService: new HttpService({
                 logErrorsToConsole: false
             }),
@@ -59,7 +53,7 @@ export class ImportService {
 
     public async importAsync(sourceData: IImportSource): Promise<IImportItemResult[]> {
         const importedItems: IImportItemResult[] = [];
-        await printProjectInfoToConsoleAsync(this.client);
+        await printProjectAndEnvironmentInfoToConsoleAsync(this.client);
 
         // log information regarding version mismatch
         if (sourceData.metadata) {
@@ -342,10 +336,12 @@ export class ImportService {
                     .upsertLanguageVariant()
                     .byItemCodename(upsertedContentItem.codename)
                     .byLanguageCodename(importContentItem.language)
-                    .withData(() => {
-                        return importContentItem.elements.map((m) =>
-                            this.getElementContract(importContentItems, m, importedItems)
-                        );
+                    .withData((builder) => {
+                        return {
+                            elements: importContentItem.elements.map((m) =>
+                                this.getElementContract(importContentItems, m, importedItems)
+                            )
+                        };
                     })
                     .toPromise();
 
@@ -373,9 +369,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'publish', 'languageVariant', {
-                            title: `${yellow(upsertedContentItem.name)} | ${magenta(importContentItem.language)} | ${cyan(
-                                importContentItem.workflow_step
-                            )}`,
+                            title: `${yellow(upsertedContentItem.name)} | ${magenta(
+                                importContentItem.language
+                            )} | ${cyan(importContentItem.workflow_step)}`,
                             imported: upsertedLanguageVariants,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
@@ -435,9 +431,9 @@ export class ImportService {
                             .toPromise();
 
                         this.processItem(importedItems, 'changeWorkflowStep', 'languageVariant', {
-                            title: `${yellow(upsertedContentItem.name)} | ${magenta(importContentItem.language)} | ${cyan(
-                                importContentItem.workflow_step
-                            )}`,
+                            title: `${yellow(upsertedContentItem.name)} | ${magenta(
+                                importContentItem.language
+                            )} | ${cyan(importContentItem.workflow_step)}`,
                             imported: upsertedLanguageVariants,
                             importedId: upsertedContentItem.id,
                             originalCodename: importContentItem.codename,
@@ -642,9 +638,9 @@ export class ImportService {
                 });
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, workflows)) {
                 // change workflow step to draft
-                if (languageVariantOfContentItem.workflowStep.id) {
+                if (languageVariantOfContentItem.workflow.stepIdentifier.id) {
                     const workflow = this.getWorkflowForGivenStepById(
-                        languageVariantOfContentItem.workflowStep.id,
+                        languageVariantOfContentItem.workflow.stepIdentifier.id,
                         workflows
                     );
                     const newWorkflowStep = workflow.steps[0];
@@ -681,7 +677,7 @@ export class ImportService {
         workflows: WorkflowModels.Workflow[]
     ): boolean {
         for (const workflow of workflows) {
-            if (workflow.publishedStep.id === languageVariant.workflowStep.id) {
+            if (workflow.publishedStep.id === languageVariant.workflow.stepIdentifier.id) {
                 return true;
             }
         }
@@ -694,7 +690,7 @@ export class ImportService {
         workflows: WorkflowModels.Workflow[]
     ): boolean {
         for (const workflow of workflows) {
-            if (workflow.archivedStep.id === languageVariant.workflowStep.id) {
+            if (workflow.archivedStep.id === languageVariant.workflow.stepIdentifier.id) {
                 return true;
             }
         }
@@ -758,7 +754,7 @@ export class ImportService {
             return;
         }
 
-        console.log(`${(data.title)} | ${green(itemType)} | ${actionType}`);
+        console.log(`${data.title} | ${green(itemType)} | ${actionType}`);
     }
 
     private mapAssetFolder(

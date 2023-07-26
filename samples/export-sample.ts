@@ -8,7 +8,7 @@ const run = async () => {
     const zipService = new FileProcessorService();
 
     const exportService = new ExportService({
-        projectId: 'sourceProjectId',
+        environmentId: 'sourceenvironmentId',
         exportAssets: true
     });
 

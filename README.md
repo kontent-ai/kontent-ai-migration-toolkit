@@ -39,7 +39,7 @@ Install package globally:
 
 | Config            | Value                                                                                                                                                                                                                         |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **projectId**     | Id of Kontent.ai project **(required)**                                                                                                                                                                                       |
+| **environmentId**     | Id of Kontent.ai project **(required)**                                                                                                                                                                                       |
 | **apiKey**        | Content management Api key **(required for import, not needed for export)**                                                                                                                                                   |
 | **action**        | Action. Available options: `restore` & `backup` **(required)**                                                                                                                                                                |
 | format            | Format used to export data. Available options: `csv` & `json`                                                                                                                                                                 |
@@ -61,11 +61,11 @@ Install package globally:
 
 To backup data use:
 
-`kdm --action=backup --projectId=xxx`
+`kdm --action=backup --environmentId=xxx`
 
 To restore data use:
 
-`kdm --action=restore --apiKey=xxx --projectId=xxx --filename=backup.zip|data.csv|data.json`
+`kdm --action=restore --apiKey=xxx --environmentId=xxx --filename=backup.zip|data.csv|data.json`
 
 To get some help you can use:
 
@@ -77,7 +77,7 @@ Create a `json` configuration file in the folder where you are attempting to run
 
 ```json
 {
-    "projectId": "xxx",
+    "environmentId": "xxx",
     "filename": "csv-backup",
     "format": "csv",
     "action": "backup",
@@ -105,7 +105,7 @@ const run = async () => {
     const fileService = new FileService();
 
     const exportService = new ExportService({
-        projectId: 'sourceProjectId',
+        environmentId: 'sourceenvironmentId',
         format: 'json', // or csv
         filename: 'mybackup.zip', // name of the zip
         exportTypes: [], // array of type codenames to export. If not provided, all items of all types are exported
@@ -137,8 +137,8 @@ const run = async () => {
     const fileProcessorService = new FileProcessorService();
 
     const importService = new ImportService({
-        projectId: 'targetProjectId',
-        apiKey: 'targetProjectId',
+        environmentId: 'targetenvironmentId',
+        apiKey: 'targetenvironmentId',
         skipFailedItems: true, // indicates if failed items should be skipped or if program should stop
         canImport: {
             contentItem: (item) => {
@@ -175,7 +175,7 @@ Example:
 
 ```typescript
 const exportService = new ExportService({
-    projectId: 'p',
+    environmentId: 'p',
     apiKey: 'z',
     previewApiKey: 'x',
     secureApiKey: 'y',
@@ -231,5 +231,5 @@ option (https://nodejs.org/api/cli.html#--max-http-header-sizesize)
 Example script call:
 
 ```
-node --max-http-header-size 150000 %USERPROFILE%\AppData\Roaming\npm\node_modules\xeno-test\dist\cjs\lib\node\cli\app --action=backup --apiKey=<key> --projectId=<projectId>
+node --max-http-header-size 150000 %USERPROFILE%\AppData\Roaming\npm\node_modules\xeno-test\dist\cjs\lib\node\cli\app --action=backup --apiKey=<key> --environmentId=<environmentId>
 ```

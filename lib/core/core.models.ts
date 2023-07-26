@@ -1,7 +1,7 @@
 import { ExportFormat } from '../file-processor';
 
 export interface ICliFileConfig {
-    projectId: string;
+    environmentId: string;
     apiKey?: string;
     format?: ExportFormat;
     secureApiKey?: string;
@@ -53,7 +53,7 @@ export interface IIdCodenameTranslationResult {
 }
 
 export interface IPackageMetadata {
-    projectId: string;
+    environmentId: string;
     timestamp: Date;
     dataOverview: IPackageDataOverview;
     csvManagerVersion: string;

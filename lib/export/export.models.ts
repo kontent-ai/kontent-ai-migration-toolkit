@@ -11,7 +11,7 @@ export interface IExportFilter {
 }
 
 export interface IExportConfig {
-    projectId: string;
+    environmentId: string;
     secureApiKey?: string;
     apiKey?: string;
     previewApiKey?: string;

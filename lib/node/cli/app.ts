@@ -18,15 +18,15 @@ import { green, red } from 'colors';
 
 const argv = yargs(process.argv.slice(2))
     .example(
-        'csvm --action=backup --format=csv|json --apiKey=xxx --projectId=xxx',
-        'Creates zip backup of Kontent.ai project'
+        'csvm --action=backup --format=csv|json --apiKey=xxx --environmentId=xxx',
+        'Creates zip backup of Kontent.ai environment'
     )
     .example(
-        'csvm --action=restore --apiKey=xxx --projectId=xxx --filename=backupFile',
-        'Read given zip file and recreates data in Kontent.ai project'
+        'csvm --action=restore --apiKey=xxx --environmentId=xxx --filename=backupFile',
+        'Read given zip file and recreates data in Kontent.ai environment'
     )
-    .alias('p', 'projectId')
-    .describe('p', 'ProjectId')
+    .alias('p', 'environmentId')
+    .describe('p', 'environmentId')
     .alias('ak', 'apiKey')
     .describe('ak', 'Management API Key')
     .alias('sk', 'secureApiKey')
@@ -58,7 +58,7 @@ const csvFormatService = new CsvProcessorService();
 
 const backupAsync = async (config: ICliFileConfig) => {
     const exportService = new ExportService({
-        projectId: config.projectId,
+        environmentId: config.environmentId,
         apiKey: config.apiKey,
         previewApiKey: config.previewApiKey,
         secureApiKey: config.secureApiKey,
@@ -102,7 +102,7 @@ const restoreAsync = async (config: ICliFileConfig) => {
     const importService = new ImportService({
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
-        projectId: config.projectId,
+        environmentId: config.environmentId,
         apiKey: config.apiKey,
         canImport: {
             contentItem: (item) => {
@@ -138,11 +138,11 @@ const validateConfig = (config?: ICliFileConfig) => {
         throw Error(`Invalid config file`);
     }
 
-    const projectId = config.projectId;
+    const environmentId = config.environmentId;
     const action = config.action;
 
-    if (!projectId) {
-        throw Error('Invalid project id');
+    if (!environmentId) {
+        throw Error('Invalid environment id');
     }
 
     if (!action) {
@@ -179,7 +179,7 @@ const getConfig = async () => {
     const apiKey: string | undefined = resolvedArgs.apiKey as string | undefined;
     const secureApiKey: string | undefined = resolvedArgs.secureApiKey as string | undefined;
     const previewApiKey: string | undefined = resolvedArgs.previewApiKey as string | undefined;
-    const projectId: string | undefined = resolvedArgs.projectId as string | undefined;
+    const environmentId: string | undefined = resolvedArgs.environmentId as string | undefined;
     const format: string | undefined = resolvedArgs.format as string | undefined;
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
     const filename: string | undefined = (resolvedArgs.filename as string | undefined) ?? getDefaultBackupFilename();
@@ -209,15 +209,15 @@ const getConfig = async () => {
         throw Error(`No action was provided`);
     }
 
-    if (!projectId) {
-        throw Error(`Project id was not provided`);
+    if (!environmentId) {
+        throw Error(`Environment id was not provided`);
     }
 
     // get config from command line
     const config: ICliFileConfig = {
         action,
         apiKey,
-        projectId,
+        environmentId,
         filename: filename,
         baseUrl,
         exportTypes: typesMapped,

@@ -28,7 +28,7 @@ export class ExportService {
         const retryStrategy = config.retryStrategy ?? defaultRetryStrategy;
 
         this.deliveryClient = createDeliveryClient({
-            projectId: config.projectId,
+            environmentId: config.environmentId,
             retryStrategy: retryStrategy,
             httpService: this.httpService,
             previewApiKey: config.previewApiKey,
@@ -44,7 +44,7 @@ export class ExportService {
     }
 
     async exportAllAsync(): Promise<IExportAllResult> {
-        console.log(`Project: '${yellow(this.config.projectId)}'\n`);
+        console.log(`Environment id: '${yellow(this.config.environmentId)}'\n`);
 
         const types = await this.getContentTypesAsync();
         const languages = await this.getLanguagesAsync();
@@ -71,7 +71,7 @@ export class ExportService {
             metadata: {
                 csvManagerVersion: version,
                 timestamp: new Date(),
-                projectId: this.config.projectId,
+                environmentId: this.config.environmentId,
                 dataOverview: {
                     contentItemsCount: data.contentItems.length,
                     assetsCount: data.assets.length
@@ -137,9 +137,7 @@ export class ExportService {
                                 // add items to result
                                 for (const contentItem of response.data.items) {
                                     this.processItem(
-                                        `${yellow(contentItem.system.name)} | ${magenta(
-                                            contentItem.system.language
-                                        )}`,
+                                        `${yellow(contentItem.system.name)} | ${magenta(contentItem.system.language)}`,
                                         'contentItem',
                                         'fetch',
                                         contentItem
@@ -249,7 +247,7 @@ export class ExportService {
 
             const managementClient = createManagementClient({
                 apiKey: this.config.apiKey,
-                projectId: this.config.projectId,
+                environmentId: this.config.environmentId,
                 retryStrategy: this.config.retryStrategy ?? defaultRetryStrategy
             });
 

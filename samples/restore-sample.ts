@@ -21,9 +21,9 @@ const run = async () => {
 
             contentItem: (item) => true // all content items will be imported
         },
-        projectId: 'targetProjectId',
-        apiKey: 'targetProjectId',
-        skipFailedItems: false,
+        environmentId: 'targetenvironmentId',
+        apiKey: 'targetenvironmentId',
+        skipFailedItems: false
     });
 
     // read file
@@ -31,10 +31,10 @@ const run = async () => {
 
     // extract file
     const data = await zipService.extractZipAsync(file, {
-        formatService: new JsonProcessorService(), // or 'CsvProcessorService' or custom service
+        formatService: new JsonProcessorService() // or 'CsvProcessorService' or custom service
     });
 
-    // restore into target project
+    // restore into target environment
     await importService.importFromSourceAsync(data);
 };
 

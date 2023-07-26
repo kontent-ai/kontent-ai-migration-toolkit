@@ -9,7 +9,7 @@ export interface IImportConfig {
 
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;
-    projectId: string;
+    environmentId: string;
     canImport?: {
         contentItem?: (item: IParsedContentItem) => boolean | Promise<boolean>;
         asset?: (item: IImportAsset) => boolean | Promise<boolean>;
@@ -19,7 +19,7 @@ export interface IImportConfig {
 export interface IImportAllResult {
     metadata: {
         timestamp: Date;
-        projectId: string;
+        environmentId: string;
     };
 }
 

@@ -1,4 +1,4 @@
-import { IManagementClient, ProjectModels, SharedModels } from '@kontent-ai/management-sdk';
+import { IManagementClient, EnvironmentModels, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { yellow } from 'colors';
 import { format } from 'bytes';
@@ -27,14 +27,14 @@ export function getExtension(url: string): string | undefined {
     return url.split('.').pop();
 }
 
-export async function printProjectInfoToConsoleAsync(
+export async function printProjectAndEnvironmentInfoToConsoleAsync(
     client: IManagementClient<any>
-): Promise<ProjectModels.ProjectInformationModel> {
-    const projectInformation = (await client.projectInformation().toPromise()).data;
-    console.log(`Project '${yellow(projectInformation.project.name)}'`);
-    console.log(`Environment '${yellow(projectInformation.project.environment)}'\n`);
+): Promise<EnvironmentModels.EnvironmentInformationModel> {
+    const environmentInformation = (await client.environmentInformation().toPromise()).data;
+    console.log(`Project '${yellow(environmentInformation.project.name)}'`);
+    console.log(`Environment '${yellow(environmentInformation.project.environment)}'\n`);
 
-    return projectInformation.project;
+    return environmentInformation.project;
 }
 
 export function getFilenameWithoutExtension(filename: string): string {
