@@ -5,7 +5,7 @@ import { IParsedContentItem, IParsedAsset } from '../lib/import';
 
 export class CustomProcessorService implements IFormatService {
     public readonly name: string = 'sample';
-    async transformLanguageVariantsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
+    async transformToExportDataAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
         const typeWrappers: IFileData[] = [];
 
         for (const contentType of types) {
@@ -28,7 +28,7 @@ export class CustomProcessorService implements IFormatService {
         return typeWrappers;
     }
 
-    async parseContentItemsAsync(text: string): Promise<IParsedContentItem[]> {
+    async parseFromExportDataAsync(text: string): Promise<IParsedContentItem[]> {
         const parsedItems: IParsedContentItem[] = [];
         const rawItems: any[] = text.split('\n') as string[];
 

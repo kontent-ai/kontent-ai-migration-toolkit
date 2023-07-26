@@ -65,7 +65,7 @@ const backupAsync = async (config: ICliFileConfig) => {
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
         exportAssets: config.exportAssets,
-        fetchAssetDetails: config.fetchAssetDetails,
+        fetchAssetDetails: config.fetchAssetDetails
     });
 
     const fileService = new FileService();
@@ -102,6 +102,7 @@ const restoreAsync = async (config: ICliFileConfig) => {
     const importService = new ImportService({
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
+        secureApiKey: config.secureApiKey,
         environmentId: config.environmentId,
         apiKey: config.apiKey,
         canImport: {
@@ -114,17 +115,19 @@ const restoreAsync = async (config: ICliFileConfig) => {
         }
     });
 
+    const contentTypes = await importService.getImportContentTypesAsync();
+
     const file = await fileService.loadFileAsync(config.filename);
     const fileExtension = getExtension(config.filename);
 
     if (fileExtension?.endsWith('zip')) {
-        const data = await fileProcessorService.extractZipAsync(file);
+        const data = await fileProcessorService.extractZipAsync(file, contentTypes);
         await importService.importFromSourceAsync(data);
     } else if (fileExtension?.endsWith('csv')) {
-        const data = await fileProcessorService.extractCsvFileAsync(file);
+        const data = await fileProcessorService.extractCsvFileAsync(file, contentTypes);
         await importService.importFromSourceAsync(data);
     } else if (fileExtension?.endsWith('json')) {
-        const data = await fileProcessorService.extractJsonFileAsync(file);
+        const data = await fileProcessorService.extractJsonFileAsync(file, contentTypes);
         await importService.importFromSourceAsync(data);
     } else {
         throw Error(`Unsupported file type '${fileExtension}'`);

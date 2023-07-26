@@ -1,7 +1,7 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IExportedAsset } from '../../export';
 import { translationHelper } from '../../core';
-import { IParsedAsset, IParsedContentItem } from '../../import';
+import { IImportContentType, IImportContentTypeElement, IParsedAsset, IParsedContentItem } from '../../import';
 import {
     IFormatService,
     ILanguageVariantDataModel as IFlattenedLanguageVariant,
@@ -10,20 +10,20 @@ import {
 
 export abstract class BaseProcessorService implements IFormatService {
     abstract name: string;
-    abstract transformLanguageVariantsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]>;
-    abstract parseContentItemsAsync(text: string): Promise<IParsedContentItem[]>;
+    abstract transformToExportDataAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]>;
+    abstract parseFromExportDataAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]>;
     abstract transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]>;
     abstract parseAssetsAsync(text: string): Promise<IParsedAsset[]>;
 
-    protected getBaseContentItemFields(): string[] {
+    protected getSystemContentItemFields(): string[] {
         return ['codename', 'name', 'language', 'type', 'collection', 'last_modified', 'workflow_step'];
     }
 
-    protected getBaseAssetFields(): string[] {
+    protected getSystemAssetFields(): string[] {
         return ['assetId', 'filename', 'extension', 'url'];
     }
 
-    protected flattenLanguageVariants(items: IContentItem[], types: IContentType[]): IFlattenedLanguageVariant[] {
+    protected flattenContentItems(items: IContentItem[], types: IContentType[]): IFlattenedLanguageVariant[] {
         const mappedItems: IFlattenedLanguageVariant[] = [];
 
         for (const item of items) {
@@ -33,10 +33,10 @@ export abstract class BaseProcessorService implements IFormatService {
                 throw Error(`Could not find type '${item.system.type}'`);
             }
             const model: IFlattenedLanguageVariant = {
+                type: item.system.type,
                 codename: item.system.codename,
                 name: item.system.name,
                 collection: item.system.collection,
-                type: item.system.type,
                 language: item.system.language,
                 last_modified: item.system.lastModified,
                 workflow_step: item.system.workflowStep ?? undefined
@@ -47,7 +47,7 @@ export abstract class BaseProcessorService implements IFormatService {
                     const variantElement = item.elements[element.codename];
 
                     if (variantElement) {
-                        model[element.codename] = translationHelper.transformToExportValue(
+                        model[element.codename] = translationHelper.transformToExportElementValue(
                             variantElement,
                             items,
                             types
@@ -60,5 +60,25 @@ export abstract class BaseProcessorService implements IFormatService {
         }
 
         return mappedItems;
+    }
+
+    protected getElement(
+        types: IImportContentType[],
+        contentItemType: string,
+        elementCodename: string
+    ): IImportContentTypeElement {
+        const type = types.find((m) => m.contentTypeCodename.toLowerCase() === contentItemType.toLowerCase());
+
+        if (!type) {
+            throw Error(`Could not find content type '${type}'`);
+        }
+
+        const element = type.elements.find((m) => m.codename.toLowerCase() === elementCodename.toLowerCase());
+
+        if (!element) {
+            throw Error(`Could not find element with codename '${elementCodename}' for type '${type}'`);
+        }
+
+        return element;
     }
 }

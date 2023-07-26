@@ -10,6 +10,7 @@ export interface IImportConfig {
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;
     environmentId: string;
+    secureApiKey?: string;
     canImport?: {
         contentItem?: (item: IParsedContentItem) => boolean | Promise<boolean>;
         asset?: (item: IImportAsset) => boolean | Promise<boolean>;
@@ -81,4 +82,14 @@ export interface IParsedContentItem {
     [prop: string]: any;
 
     elements: IParsedElement[];
+}
+
+export interface IImportContentTypeElement {
+    codename: string;
+    type: ElementType;
+}
+
+export interface IImportContentType {
+    contentTypeCodename: string;
+    elements: IImportContentTypeElement[];
 }

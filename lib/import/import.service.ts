@@ -22,12 +22,22 @@ import {
     ItemType,
     defaultWorkflowCodename
 } from '../core';
-import { IImportAsset, IImportConfig, IParsedContentItem, IParsedElement, IImportSource } from './import.models';
+import {
+    IImportAsset,
+    IImportConfig,
+    IParsedContentItem,
+    IParsedElement,
+    IImportSource,
+    IImportContentType,
+    IImportContentTypeElement
+} from './import.models';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { green, magenta, red, yellow, cyan } from 'colors';
+import { DeliveryClient, ElementType } from '@kontent-ai/delivery-sdk';
 
 export class ImportService {
-    private readonly client: ManagementClient;
+    private readonly managementClient: ManagementClient;
+    private readonly deliveryClient: DeliveryClient;
 
     /**
      * Maximum allowed size of asset in Bytes.
@@ -36,7 +46,7 @@ export class ImportService {
     // private readonly maxAllowedAssetSizeInBytes: number = 1e8;
 
     constructor(private config: IImportConfig) {
-        this.client = new ManagementClient({
+        this.managementClient = new ManagementClient({
             apiKey: config.apiKey,
             baseUrl: config.baseUrl,
             environmentId: config.environmentId,
@@ -45,15 +55,49 @@ export class ImportService {
             }),
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
         });
+        this.deliveryClient = new DeliveryClient({
+            environmentId: config.environmentId,
+            secureApiKey: config.secureApiKey,
+            httpService: new HttpService({
+                logErrorsToConsole: false
+            }),
+            defaultQueryConfig: {
+                useSecuredMode: config.secureApiKey ? true : false
+            },
+            proxy: {
+                baseUrl: config.baseUrl
+            },
+            retryStrategy: config.retryStrategy ?? defaultRetryStrategy
+        });
     }
 
-    public async importFromSourceAsync(sourceData: IImportSource): Promise<IImportItemResult[]> {
+    async getImportContentTypesAsync(): Promise<IImportContentType[]> {
+        const contentTypes = (await this.deliveryClient.types().toAllPromise()).data.items;
+
+        return contentTypes.map((contentType) => {
+            const importType: IImportContentType = {
+                contentTypeCodename: contentType.system.codename,
+                elements: contentType.elements.map((element) => {
+                    const importElement: IImportContentTypeElement = {
+                        codename: element.codename ?? '',
+                        type: element.type as ElementType
+                    };
+
+                    return importElement;
+                })
+            };
+
+            return importType;
+        });
+    }
+
+    async importFromSourceAsync(sourceData: IImportSource): Promise<IImportItemResult[]> {
         return await this.importAsync(sourceData);
     }
 
-    public async importAsync(sourceData: IImportSource): Promise<IImportItemResult[]> {
+    async importAsync(sourceData: IImportSource): Promise<IImportItemResult[]> {
         const importedItems: IImportItemResult[] = [];
-        await printProjectAndEnvironmentInfoToConsoleAsync(this.client);
+        await printProjectAndEnvironmentInfoToConsoleAsync(this.managementClient);
 
         // log information regarding version mismatch
         if (sourceData.metadata) {
@@ -142,7 +186,7 @@ export class ImportService {
             try {
                 // when target project is the same as source project, the id of asset would be the same
                 // and such asset should not be imported again
-                existingAsset = await this.client.viewAsset().byAssetExternalId(asset.assetId).toPromise();
+                existingAsset = await this.managementClient.viewAsset().byAssetExternalId(asset.assetId).toPromise();
             } catch (error) {
                 let throwError = true;
 
@@ -159,7 +203,7 @@ export class ImportService {
 
             try {
                 // check if asset with given external id was already created
-                existingAsset = await this.client.viewAsset().byAssetExternalId(assetExternalId).toPromise();
+                existingAsset = await this.managementClient.viewAsset().byAssetExternalId(assetExternalId).toPromise();
             } catch (error) {
                 let throwError = true;
 
@@ -176,7 +220,7 @@ export class ImportService {
 
             if (!existingAsset) {
                 // only import asset if it wasn't already there
-                const uploadedBinaryFile = await this.client
+                const uploadedBinaryFile = await this.managementClient
                     .uploadBinaryFile()
                     .withData({
                         binaryData: asset.binaryData,
@@ -193,7 +237,7 @@ export class ImportService {
                     originalId: undefined
                 });
 
-                const createdAsset = await this.client
+                const createdAsset = await this.managementClient
                     .addAsset()
                     .withData((builder) => {
                         return {
@@ -263,7 +307,7 @@ export class ImportService {
                 // check if name should be updated, no other changes are supported
                 if (this.shouldUpdateContentItem(importContentItem, preparedContentItem, collections)) {
                     const upsertedContentItem = (
-                        await this.client
+                        await this.managementClient
                             .upsertContentItem()
                             .byItemCodename(importContentItem.codename)
                             .withData({
@@ -332,7 +376,7 @@ export class ImportService {
 
                 await this.prepareLanguageVariantForImportAsync(importContentItem, workflows, importedItems);
 
-                const upsertedLanguageVariant = await this.client
+                const upsertedLanguageVariant = await this.managementClient
                     .upsertLanguageVariant()
                     .byItemCodename(upsertedContentItem.codename)
                     .byLanguageCodename(importContentItem.language)
@@ -361,7 +405,7 @@ export class ImportService {
                     if (
                         this.doesWorkflowStepCodenameRepresentPublishedStep(importContentItem.workflow_step, workflows)
                     ) {
-                        await this.client
+                        await this.managementClient
                             .publishLanguageVariant()
                             .byItemCodename(importContentItem.codename)
                             .byLanguageCodename(importContentItem.language)
@@ -386,7 +430,7 @@ export class ImportService {
                             workflows
                         );
 
-                        await this.client
+                        await this.managementClient
                             .changeWorkflowOfLanguageVariant()
                             .byItemCodename(importContentItem.codename)
                             .byLanguageCodename(importContentItem.language)
@@ -416,7 +460,7 @@ export class ImportService {
                             workflows
                         );
 
-                        await this.client
+                        await this.managementClient
                             .changeWorkflowOfLanguageVariant()
                             .byItemCodename(importContentItem.codename)
                             .byLanguageCodename(importContentItem.language)
@@ -536,7 +580,7 @@ export class ImportService {
     ): Promise<ContentItemModels.ContentItem> {
         try {
             const contentItem = (
-                await this.client.viewContentItem().byItemCodename(importContentItem.codename).toPromise()
+                await this.managementClient.viewContentItem().byItemCodename(importContentItem.codename).toPromise()
             ).data;
 
             this.processItem(importedItems, 'fetch', 'contentItem', {
@@ -553,7 +597,7 @@ export class ImportService {
             if (error instanceof SharedModels.ContentManagementBaseKontentError) {
                 if (error.originalError?.response?.status === 404) {
                     const contentItem = (
-                        await this.client
+                        await this.managementClient
                             .addContentItem()
                             .withData({
                                 name: importContentItem.name,
@@ -594,7 +638,7 @@ export class ImportService {
 
         try {
             languageVariantOfContentItem = (
-                await this.client
+                await this.managementClient
                     .viewLanguageVariant()
                     .byItemCodename(importContentItem.codename)
                     .byLanguageCodename(importContentItem.language)
@@ -625,7 +669,7 @@ export class ImportService {
             // check if variant is published or archived
             if (this.isLanguageVariantPublished(languageVariantOfContentItem, workflows)) {
                 // create new version
-                await this.client
+                await this.managementClient
                     .createNewVersionOfLanguageVariant()
                     .byItemCodename(importContentItem.codename)
                     .byLanguageCodename(importContentItem.language)
@@ -645,7 +689,7 @@ export class ImportService {
                     );
                     const newWorkflowStep = workflow.steps[0];
 
-                    await this.client
+                    await this.managementClient
                         .changeWorkflowStepOfLanguageVariant()
                         .byItemCodename(importContentItem.codename)
                         .byLanguageCodename(importContentItem.language)
@@ -665,11 +709,11 @@ export class ImportService {
     }
 
     private async getWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
-        return (await this.client.listWorkflows().toPromise()).data;
+        return (await this.managementClient.listWorkflows().toPromise()).data;
     }
 
     private async getCollectionsAsync(): Promise<CollectionModels.Collection[]> {
-        return (await this.client.listCollections().toPromise()).data.collections;
+        return (await this.managementClient.listCollections().toPromise()).data.collections;
     }
 
     private isLanguageVariantPublished(

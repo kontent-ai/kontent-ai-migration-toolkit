@@ -3,7 +3,7 @@ import * as JSZip from 'jszip';
 import { Blob } from 'buffer';
 
 import { IExportAllResult, IExportedAsset } from '../export';
-import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset } from '../import';
+import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset, IImportContentType } from '../import';
 import {
     IFileData,
     IFileProcessorConfig,
@@ -36,7 +36,11 @@ export class FileProcessorService {
         this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 50;
     }
 
-    async extractZipAsync(file: Buffer, config?: { formatService?: IFormatService }): Promise<IImportSource> {
+    async extractZipAsync(
+        file: Buffer,
+        types: IImportContentType[],
+        config?: { formatService?: IFormatService }
+    ): Promise<IImportSource> {
         console.log(`Loading zip file`);
 
         const zipFile = await JSZip.loadAsync(file, {});
@@ -44,7 +48,7 @@ export class FileProcessorService {
         console.log(`Parsing zip data`);
         const result: IImportSource = {
             importData: {
-                items: await this.parseContentItemsFromFileAsync(zipFile, config?.formatService),
+                items: await this.parseContentItemsFromFileAsync(zipFile, types, config?.formatService),
                 assets: await this.parseAssetsFromFileAsync(zipFile, config?.formatService)
             },
             metadata: await this.parseMetadataFromFileAsync(zipFile, this.metadataName)
@@ -55,12 +59,12 @@ export class FileProcessorService {
         return result;
     }
 
-    async extractCsvFileAsync(file: Buffer): Promise<IImportSource> {
+    async extractCsvFileAsync(file: Buffer, types: IImportContentType[]): Promise<IImportSource> {
         console.log(`Reading CSV file`);
 
         const result: IImportSource = {
             importData: {
-                items: await this.csvProcessorService.parseContentItemsAsync(file.toString()),
+                items: await this.csvProcessorService.parseFromExportDataAsync(file.toString(), types),
                 assets: []
             },
             metadata: undefined
@@ -71,12 +75,12 @@ export class FileProcessorService {
         return result;
     }
 
-    async extractJsonFileAsync(file: Buffer): Promise<IImportSource> {
+    async extractJsonFileAsync(file: Buffer, types: IImportContentType[]): Promise<IImportSource> {
         console.log(`Reading JSON file`);
 
         const result: IImportSource = {
             importData: {
-                items: await this.jsonProcessorService.parseContentItemsAsync(file.toString()),
+                items: await this.jsonProcessorService.parseFromExportDataAsync(file.toString(), types),
                 assets: []
             },
             metadata: undefined
@@ -194,7 +198,7 @@ export class FileProcessorService {
         items: IContentItem[],
         formatService: IFormatService
     ): Promise<IFileData[]> {
-        return await formatService.transformLanguageVariantsAsync(types, items);
+        return await formatService.transformToExportDataAsync(types, items);
     }
 
     private async transformAssetsAsync(assets: IExportedAsset[], formatService: IFormatService): Promise<IFileData[]> {
@@ -319,6 +323,7 @@ export class FileProcessorService {
 
     private async parseContentItemsFromFileAsync(
         fileContents: JSZip,
+        types: IImportContentType[],
         formatService?: IFormatService
     ): Promise<IParsedContentItem[]> {
         const files = fileContents.files;
@@ -338,11 +343,11 @@ export class FileProcessorService {
 
             if (formatService) {
                 // use custom format service
-                parsedItems.push(...(await formatService.parseContentItemsAsync(text)));
+                parsedItems.push(...(await formatService.parseFromExportDataAsync(text, types)));
             } else if (file.name?.toLowerCase()?.endsWith('.csv')) {
-                parsedItems.push(...(await this.csvProcessorService.parseContentItemsAsync(text)));
+                parsedItems.push(...(await this.csvProcessorService.parseFromExportDataAsync(text, types)));
             } else if (file.name?.toLowerCase()?.endsWith('.json')) {
-                parsedItems.push(...(await this.jsonProcessorService.parseContentItemsAsync(text)));
+                parsedItems.push(...(await this.jsonProcessorService.parseFromExportDataAsync(text, types)));
             } else {
                 throw Error(`Could not extract file '${file.name}'`);
             }

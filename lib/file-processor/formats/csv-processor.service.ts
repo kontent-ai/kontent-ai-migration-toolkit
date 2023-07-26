@@ -1,7 +1,7 @@
 import { ElementType, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
-import { IParsedAsset, IParsedContentItem } from '../../import';
+import { IImportContentType, IParsedAsset, IParsedContentItem } from '../../import';
 import { Readable } from 'stream';
 import { ILanguageVariantDataModel, IFileData } from '../file-processor.models';
 import { BaseProcessorService } from './base-processor.service';
@@ -11,9 +11,9 @@ export class CsvProcessorService extends BaseProcessorService {
     private readonly csvDelimiter: string = ',';
     public readonly name: string = 'csv';
 
-    async transformLanguageVariantsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
+    async transformToExportDataAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
         const typeWrappers: IFileData[] = [];
-        const flattenedContentItems: ILanguageVariantDataModel[] = super.flattenLanguageVariants(items, types);
+        const flattenedContentItems: ILanguageVariantDataModel[] = super.flattenContentItems(items, types);
         for (const contentType of types) {
             const contentItemsOfType = flattenedContentItems.filter((m) => m.type === contentType.system.codename);
 
@@ -39,7 +39,7 @@ export class CsvProcessorService extends BaseProcessorService {
         return typeWrappers;
     }
 
-    async parseContentItemsAsync(text: string): Promise<IParsedContentItem[]> {
+    async parseFromExportDataAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]> {
         const parsedItems: IParsedContentItem[] = [];
         let index = 0;
         const parser = parse(text, {
@@ -48,6 +48,7 @@ export class CsvProcessorService extends BaseProcessorService {
         });
 
         let parsedColumns: string[] = [];
+        const systemFields = super.getSystemContentItemFields();
 
         for await (const record of parser) {
             if (index === 0) {
@@ -56,32 +57,33 @@ export class CsvProcessorService extends BaseProcessorService {
             } else {
                 // process data row
                 const contentItem: IParsedContentItem = {
+                    type: '',
                     codename: '',
                     collection: '',
                     elements: [],
                     language: '',
                     last_modified: '',
                     name: '',
-                    type: '',
                     workflow_step: ''
                 };
 
                 let fieldIndex: number = 0;
+                const contentItemTypeCodename: string = record[0]; // type is set in first index
                 for (const columnName of parsedColumns) {
                     const columnValue = record[fieldIndex];
 
-                    if (columnName.includes(')') && columnName.includes(')')) {
-                        // process user defined element
-                        const parsedElementName = this.parseCsvElementName(columnName);
+                    if (systemFields.find((m) => m.toLowerCase() === columnName.toLowerCase())) {
+                        // column is system field
+                        contentItem[columnName] = columnValue;
+                    } else {
+                        // column is element field
+                        const element = super.getElement(types, contentItemTypeCodename, columnName);
 
                         contentItem.elements.push({
-                            type: parsedElementName.elementType,
-                            codename: parsedElementName.elementCodename,
-                            value: columnValue
+                            codename: element.codename,
+                            value: columnValue,
+                            type: element.type
                         });
-                    } else {
-                        // process base element
-                        contentItem[columnName] = columnValue;
                     }
 
                     fieldIndex++;
@@ -153,19 +155,6 @@ export class CsvProcessorService extends BaseProcessorService {
         return parsedAssets;
     }
 
-    private parseCsvElementName(elementName: string): { elementCodename: string; elementType: ElementType } {
-        const matchedResult = elementName.match(/\(([^)]+)\)/);
-
-        if (matchedResult && matchedResult.length > 1) {
-            return {
-                elementType: matchedResult[1].trim() as ElementType,
-                elementCodename: elementName.replace(/ *\([^)]*\) */g, '').trim()
-            };
-        }
-
-        throw Error(`Could not parse CSV element name '${elementName}' to determine element type & codename`);
-    }
-
     private geCsvParser(config: { fields: string[] | FieldInfo<any>[] }): AsyncParser<any> {
         return new AsyncParser({
             delimiter: this.csvDelimiter,
@@ -179,7 +168,7 @@ export class CsvProcessorService extends BaseProcessorService {
 
     private getLanguageVariantFields(contentType: IContentType): FieldInfo<any>[] {
         return [
-            ...this.getBaseContentItemFields().map((m) => {
+            ...this.getSystemContentItemFields().map((m) => {
                 const field: FieldInfo<any> = {
                     label: m,
                     value: m
@@ -207,7 +196,7 @@ export class CsvProcessorService extends BaseProcessorService {
 
     private getAssetFields(): FieldInfo<any>[] {
         return [
-            ...this.getBaseAssetFields().map((m) => {
+            ...this.getSystemAssetFields().map((m) => {
                 const field: FieldInfo<any> = {
                     label: m,
                     value: m

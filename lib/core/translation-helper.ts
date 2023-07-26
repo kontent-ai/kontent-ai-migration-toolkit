@@ -270,7 +270,7 @@ export class TranslationHelper {
         }
     ];
 
-    transformToExportValue(
+    transformToExportElementValue(
         element: ContentItemElementsIndexer,
         items: IContentItem[],
         types: IContentType[]

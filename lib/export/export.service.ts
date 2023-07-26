@@ -20,8 +20,6 @@ export class ExportService {
         logErrorsToConsole: false
     });
 
-    private readonly contentItemsLimit: number = 200;
-
     private readonly deliveryClient: IDeliveryClient;
 
     constructor(private config: IExportConfig) {
@@ -131,7 +129,6 @@ export class ExportService {
                         .type(type.system.codename)
                         .equalsFilter('system.language', language.system.codename)
                         .depthParameter(0)
-                        .limitParameter(this.contentItemsLimit)
                         .toAllPromise({
                             responseFetched: (response) => {
                                 // add items to result
