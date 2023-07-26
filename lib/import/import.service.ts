@@ -114,23 +114,23 @@ export class ImportService {
         }
 
         // this is an optional step where users can exclude certain objects from being imported
-        this.removeSkippedItemsFromImport(sourceData);
+        const dataToImport = this.getDataToImport(sourceData);
 
         // import order matters
         try {
             //  Assets
-            if (sourceData.importData.assets.length) {
+            if (dataToImport.importData.assets.length) {
                 logDebug('info', `Importing assets`);
-                const importedAssets = await this.importAssetsAsync(sourceData.importData.assets);
+                const importedAssets = await this.importAssetsAsync(dataToImport.importData.assets);
                 importedItems.push(...importedAssets);
             } else {
                 logDebug('info', `There are no assets to import`);
             }
 
             // Content items
-            if (sourceData.importData.items.length) {
+            if (dataToImport.importData.items.length) {
                 logDebug('info', `Importing content items`);
-                await this.importContentItemsAsync(sourceData.importData.items, importedItems);
+                await this.importContentItemsAsync(dataToImport.importData.items, importedItems);
             } else {
                 logDebug('info', `There are no content items to import`);
             }
@@ -142,28 +142,40 @@ export class ImportService {
         return importedItems;
     }
 
-    private removeSkippedItemsFromImport(source: IImportSource): void {
+    private getDataToImport(source: IImportSource): IImportSource {
+        const dataToImport: IImportSource = {
+            importData: {
+                assets: [],
+                items: []
+            },
+            metadata: source.metadata
+        };
+
         let removedAssets: number = 0;
         let removedContentItems: number = 0;
 
-        if (this.config.canImport && this.config.canImport.asset) {
+        if (this.config?.canImport?.asset) {
             for (const asset of source.importData.assets) {
-                const shouldImport = this.config.canImport.asset(asset);
-                if (!shouldImport) {
-                    source.importData.assets = source.importData.assets.filter((m) => m.assetId !== asset.assetId);
+                const canImport = this.config.canImport.asset(asset);
+                if (canImport) {
+                    dataToImport.importData.assets.push(asset);
                     removedAssets++;
                 }
             }
+        } else {
+            dataToImport.importData.assets = source.importData.assets;
         }
 
-        if (this.config.canImport && this.config.canImport.contentItem) {
+        if (this.config?.canImport?.contentItem) {
             for (const item of source.importData.items) {
-                const shouldImport = this.config.canImport.contentItem(item);
-                if (!shouldImport) {
-                    source.importData.items = source.importData.items.filter((m) => m.codename !== item.codename);
+                const canImport = this.config.canImport.contentItem(item);
+                if (canImport) {
+                    dataToImport.importData.items.push(item);
                     removedContentItems++;
                 }
             }
+        } else {
+            dataToImport.importData.items = source.importData.items;
         }
 
         if (removedAssets > 0) {
@@ -173,6 +185,8 @@ export class ImportService {
         if (removedContentItems) {
             logDebug('info', `Removed '${removedContentItems.toString()}' content items from import`);
         }
+
+        return dataToImport;
     }
 
     private async importAssetsAsync(assets: IImportAsset[]): Promise<IImportItemResult[]> {
