@@ -127,7 +127,7 @@ export class FileProcessorService {
         );
 
         for (const fileInfo of transformedLanguageVariantsFileData) {
-            logDebug('info', `Adding to zip`, fileInfo.filename);
+            logDebug('zip', `Adding to zip`, fileInfo.filename);
             contentItemsFolder.file(fileInfo.filename, fileInfo.data);
         }
 
@@ -140,7 +140,7 @@ export class FileProcessorService {
             );
 
             for (const fileInfo of transformedAssetsFileData) {
-                logDebug('info', `Adding to zip`, fileInfo.filename);
+                logDebug('zip', `Adding to zip`, fileInfo.filename);
                 assetsFolder.file(fileInfo.filename, fileInfo.data);
             }
 

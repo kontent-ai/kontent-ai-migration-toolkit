@@ -24,6 +24,7 @@ export type ActionType =
     | 'skipUpdate'
     | 'save'
     | 'download'
+    | 'zip'
     | 'read'
     | 'archive'
     | 'upsert'
