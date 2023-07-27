@@ -71,6 +71,8 @@ export interface IParsedElement {
 }
 
 export interface IParsedContentItem {
+    [name: string]: any;
+
     codename: string;
     name: string;
     language: string;
@@ -78,9 +80,6 @@ export interface IParsedContentItem {
     collection: string;
     last_modified: string;
     workflow_step?: string;
-
-    [prop: string]: any;
-
     elements: IParsedElement[];
 }
 
