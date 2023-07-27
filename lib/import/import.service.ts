@@ -12,7 +12,7 @@ import {
     handleError,
     defaultRetryStrategy,
     printProjectAndEnvironmentInfoToConsoleAsync,
-    httpService
+    defaultHttpService
 } from '../core';
 import {
     IImportConfig,
@@ -36,13 +36,13 @@ export class ImportService {
             apiKey: config.apiKey,
             baseUrl: config.baseUrl,
             environmentId: config.environmentId,
-            httpService: httpService,
+            httpService: defaultHttpService,
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
         });
         this.deliveryClient = new DeliveryClient({
             environmentId: config.environmentId,
             secureApiKey: config.secureApiKey,
-            httpService: httpService,
+            httpService: defaultHttpService,
             defaultQueryConfig: {
                 useSecuredMode: config.secureApiKey ? true : false
             },

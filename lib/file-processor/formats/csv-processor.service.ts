@@ -1,9 +1,9 @@
-import { ElementType, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
+import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
 import { IImportContentType, IParsedAsset, IParsedContentItem } from '../../import';
 import { Readable } from 'stream';
-import { ILanguageVariantDataModel, IFileData } from '../file-processor.models';
+import { IFlattenedContentItem, IFileData } from '../file-processor.models';
 import { BaseProcessorService } from './base-processor.service';
 import { IExportedAsset } from '../../export';
 
@@ -13,13 +13,13 @@ export class CsvProcessorService extends BaseProcessorService {
 
     async transformToExportDataAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
         const typeWrappers: IFileData[] = [];
-        const flattenedContentItems: ILanguageVariantDataModel[] = super.flattenContentItems(items, types);
+        const flattenedContentItems: IFlattenedContentItem[] = super.flattenContentItems(items, types);
         for (const contentType of types) {
             const contentItemsOfType = flattenedContentItems.filter((m) => m.type === contentType.system.codename);
 
             const filename: string = `${contentType.system.codename}.csv`;
 
-            const languageVariantFields: FieldInfo<any>[] = this.getLanguageVariantFields(contentType);
+            const languageVariantFields: FieldInfo<unknown>[] = this.getLanguageVariantFields(contentType);
             const languageVariantsStream = new Readable();
             languageVariantsStream.push(JSON.stringify(contentItemsOfType));
             languageVariantsStream.push(null); // required to end the stream
@@ -98,7 +98,7 @@ export class CsvProcessorService extends BaseProcessorService {
     }
 
     async transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]> {
-        const asssetFiels: FieldInfo<any>[] = this.getAssetFields();
+        const asssetFiels: FieldInfo<unknown>[] = this.getAssetFields();
         const stream = new Readable();
         stream.push(JSON.stringify(assets));
         stream.push(null); // required to end the stream
@@ -155,21 +155,21 @@ export class CsvProcessorService extends BaseProcessorService {
         return parsedAssets;
     }
 
-    private geCsvParser(config: { fields: string[] | FieldInfo<any>[] }): AsyncParser<any> {
+    private geCsvParser(config: { fields: string[] | FieldInfo<unknown>[] }): AsyncParser<unknown> {
         return new AsyncParser({
             delimiter: this.csvDelimiter,
             fields: config.fields
         });
     }
 
-    private getCsvElementName(elementCodename: string, elementType: ElementType): string {
-        return `${elementCodename} (${elementType})`;
+    private getCsvElementName(elementCodename: string): string {
+        return `${elementCodename}`;
     }
 
-    private getLanguageVariantFields(contentType: IContentType): FieldInfo<any>[] {
+    private getLanguageVariantFields(contentType: IContentType): FieldInfo<unknown>[] {
         return [
             ...this.getSystemContentItemFields().map((m) => {
-                const field: FieldInfo<any> = {
+                const field: FieldInfo<unknown> = {
                     label: m,
                     value: m
                 };
@@ -184,8 +184,8 @@ export class CsvProcessorService extends BaseProcessorService {
                     return false;
                 })
                 .map((m) => {
-                    const field: FieldInfo<any> = {
-                        label: this.getCsvElementName(m.codename ?? '', m.type as ElementType),
+                    const field: FieldInfo<unknown> = {
+                        label: this.getCsvElementName(m.codename ?? ''),
                         value: m.codename ?? ''
                     };
 
@@ -194,10 +194,10 @@ export class CsvProcessorService extends BaseProcessorService {
         ];
     }
 
-    private getAssetFields(): FieldInfo<any>[] {
+    private getAssetFields(): FieldInfo<unknown>[] {
         return [
             ...this.getSystemAssetFields().map((m) => {
-                const field: FieldInfo<any> = {
+                const field: FieldInfo<unknown> = {
                     label: m,
                     value: m
                 };

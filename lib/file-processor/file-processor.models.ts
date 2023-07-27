@@ -32,7 +32,7 @@ export interface IFileProcessorConfig {
     delayBetweenAssetDownloadRequestsMs?: number;
 }
 
-export interface ILanguageVariantDataModel {
+export interface IFlattenedContentItem {
     codename: string;
     name: string;
     language: string;

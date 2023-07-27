@@ -7,13 +7,17 @@ import { HttpService } from '@kontent-ai/core-sdk';
 
 const rateExceededErrorCode: number = 10000;
 
+export const defaultHttpService: HttpService = new HttpService({
+    logErrorsToConsole: false
+});
+
 export function formatBytes(bytes: number): string {
     return format(bytes);
 }
 
-export const httpService: HttpService = new HttpService({
-    logErrorsToConsole: false
-});
+export function sleepAsync(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export const defaultRetryStrategy: IRetryStrategyOptions = {
     addJitter: true,
@@ -55,18 +59,6 @@ export function logAction(
     logDebug(actionType, data.title, itemType, data.language, data.workflowStep);
 }
 
-export function getFilenameWithoutExtension(filename: string): string {
-    if (!filename) {
-        throw Error(`Invalid filename`);
-    }
-
-    if (!filename.includes('.')) {
-        return filename;
-    }
-
-    return filename.split('.').slice(0, -1).join('.');
-}
-
 export function extractErrorMessage(error: any): string {
     if (error instanceof SharedModels.ContentManagementBaseKontentError) {
         let message: string = `${error.message}`;
@@ -95,16 +87,16 @@ export function is404Error(error: any): boolean {
 }
 
 export function handleError(error: any | SharedModels.ContentManagementBaseKontentError): void {
-    let result = error;
     if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-        result = {
+        throw {
             Message: `Failed to import data with error: ${error.message}`,
             ErrorCode: error.errorCode,
             RequestId: error.requestId,
             ValidationErrors: `${error.validationErrors.map((m) => m.message).join(', ')}`
         };
     }
-    throw result;
+
+    throw error;
 }
 
 export function extractAssetIdFromUrl(assetUrl: string): string {

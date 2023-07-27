@@ -1,7 +1,7 @@
 import { createDeliveryClient, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
 
 import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models';
-import { defaultRetryStrategy, httpService } from '../core';
+import { defaultRetryStrategy, defaultHttpService } from '../core';
 import { version } from '../../package.json';
 import { logDebug } from '../core/log-helper';
 import { exportContentItemHelper } from './helpers/export-content-item.helper';
@@ -16,7 +16,7 @@ export class ExportService {
         this.deliveryClient = createDeliveryClient({
             environmentId: config.environmentId,
             retryStrategy: retryStrategy,
-            httpService: httpService,
+            httpService: defaultHttpService,
             previewApiKey: config.previewApiKey,
             secureApiKey: config.secureApiKey,
             defaultQueryConfig: {

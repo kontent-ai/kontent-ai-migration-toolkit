@@ -13,7 +13,7 @@ import {
     ZipContext
 } from './file-processor.models';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { formatBytes, getExtension } from '../core';
+import { formatBytes, getExtension, sleepAsync } from '../core';
 import { getType } from 'mime';
 import { CsvProcessorService } from './formats/csv-processor.service';
 import { JsonProcessorService } from './formats/json-processor.service';
@@ -49,10 +49,10 @@ export class FileProcessorService {
 
         const result: IImportSource = {
             importData: {
-                items: await this.parseContentItemsFromFileAsync(zipFile, types, config?.formatService),
+                items: await this.parseContentItemsFromZipAsync(zipFile, types, config?.formatService),
                 assets: await this.parseAssetsFromFileAsync(zipFile, config?.formatService)
             },
-            metadata: await this.parseMetadataFromFileAsync(zipFile, this.metadataName)
+            metadata: await this.parseMetadataFromZipAsync(zipFile, this.metadataName)
         };
 
         logDebug('info', 'Parsing completed');
@@ -154,7 +154,7 @@ export class FileProcessorService {
                 });
 
                 // create artificial delay between request to prevent network errors
-                await this.sleepAsync(this.delayBetweenAssetRequestsMs);
+                await sleepAsync(this.delayBetweenAssetRequestsMs);
             }
 
             logDebug('info', `All assets added to zip`);
@@ -185,6 +185,8 @@ export class FileProcessorService {
             zipSizeInBytes = zipData.size;
         } else if (zipData instanceof Buffer) {
             zipSizeInBytes = zipData.byteLength;
+        } else {
+            throw Error(`Unrecognized zip data type '${typeof zipData}'`);
         }
 
         logDebug('info', `Zip successfully generated with size '${formatBytes(zipSizeInBytes)}'`);
@@ -202,10 +204,6 @@ export class FileProcessorService {
 
     private async transformAssetsAsync(assets: IExportedAsset[], formatService: IFormatService): Promise<IFileData[]> {
         return await formatService.transformAssetsAsync(assets);
-    }
-
-    private sleepAsync(ms: number): Promise<any> {
-        return new Promise((resolve: any) => setTimeout(resolve, ms));
     }
 
     private async parseAssetsFromFileAsync(zip: JSZip, formatService?: IFormatService): Promise<IImportAsset[]> {
@@ -301,6 +299,14 @@ export class FileProcessorService {
         return extractedFiles;
     }
 
+    private isContentItemsFolders(file: JSZip.JSZipObject): boolean {
+        if (file?.name?.startsWith(`${this.contentItemsFolderName}/`)) {
+            return true;
+        }
+
+        return false;
+    }
+
     private getAssetIdFromFilename(filename: string): string {
         const split = filename.split('/');
         const filenameWithExtension = split[1];
@@ -320,7 +326,7 @@ export class FileProcessorService {
         throw Error(`Unsupported context '${context}'`);
     }
 
-    private async parseContentItemsFromFileAsync(
+    private async parseContentItemsFromZipAsync(
         fileContents: JSZip,
         types: IImportContentType[],
         formatService?: IFormatService
@@ -328,8 +334,8 @@ export class FileProcessorService {
         const files = fileContents.files;
         const parsedItems: IParsedContentItem[] = [];
 
-        for (const [, file] of Object.entries(files)) {
-            if (!file?.name?.startsWith(`${this.contentItemsFolderName}/`)) {
+        for (const file of Object.values(files)) {
+            if (!this.isContentItemsFolders(file)) {
                 // iterate through content item files only
                 continue;
             }
@@ -355,7 +361,7 @@ export class FileProcessorService {
         return parsedItems;
     }
 
-    private async parseMetadataFromFileAsync(fileContents: JSZip, filename: string): Promise<any> {
+    private async parseMetadataFromZipAsync(fileContents: JSZip, filename: string): Promise<any> {
         const files = fileContents.files;
         const file = files[filename];
 

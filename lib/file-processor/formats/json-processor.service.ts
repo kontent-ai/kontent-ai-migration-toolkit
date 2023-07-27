@@ -1,7 +1,7 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IExportedAsset } from '../../export';
 import { IImportContentType, IParsedAsset, IParsedContentItem } from '../../import';
-import { ILanguageVariantDataModel, IFileData } from '../file-processor.models';
+import { IFlattenedContentItem, IFileData } from '../file-processor.models';
 import { BaseProcessorService } from './base-processor.service';
 
 interface IJsonItem {
@@ -24,7 +24,7 @@ export class JsonProcessorService extends BaseProcessorService {
     async transformToExportDataAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
         const systemProperties = super.getSystemContentItemFields();
         const typeWrappers: IFileData[] = [];
-        const flattenedContentItems: ILanguageVariantDataModel[] = super.flattenContentItems(items, types);
+        const flattenedContentItems: IFlattenedContentItem[] = super.flattenContentItems(items, types);
         for (const contentType of types) {
             const contentItemsOfType = flattenedContentItems.filter((m) => m.type === contentType.system.codename);
 

@@ -30,7 +30,7 @@ export class CustomProcessorService implements IFormatService {
 
     async parseFromExportDataAsync(text: string): Promise<IParsedContentItem[]> {
         const parsedItems: IParsedContentItem[] = [];
-        const rawItems: any[] = text.split('\n') as string[];
+        const rawItems: string[] = text.split('\n');
 
         for (const rawItem of rawItems) {
             const splitData = rawItem.split(':');

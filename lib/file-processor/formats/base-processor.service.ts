@@ -2,11 +2,7 @@ import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IExportedAsset } from '../../export';
 import { translationHelper } from '../../core';
 import { IImportContentType, IImportContentTypeElement, IParsedAsset, IParsedContentItem } from '../../import';
-import {
-    IFormatService,
-    ILanguageVariantDataModel as IFlattenedLanguageVariant,
-    IFileData
-} from '../file-processor.models';
+import { IFormatService, IFlattenedContentItem, IFileData } from '../file-processor.models';
 
 export abstract class BaseProcessorService implements IFormatService {
     abstract name: string;
@@ -16,15 +12,15 @@ export abstract class BaseProcessorService implements IFormatService {
     abstract parseAssetsAsync(text: string): Promise<IParsedAsset[]>;
 
     protected getSystemContentItemFields(): string[] {
-        return ['codename', 'name', 'language', 'type', 'collection', 'last_modified', 'workflow_step'];
+        return ['type', 'codename', 'name', 'language', 'collection', 'last_modified', 'workflow_step'];
     }
 
     protected getSystemAssetFields(): string[] {
         return ['assetId', 'filename', 'extension', 'url'];
     }
 
-    protected flattenContentItems(items: IContentItem[], types: IContentType[]): IFlattenedLanguageVariant[] {
-        const mappedItems: IFlattenedLanguageVariant[] = [];
+    protected flattenContentItems(items: IContentItem[], types: IContentType[]): IFlattenedContentItem[] {
+        const mappedItems: IFlattenedContentItem[] = [];
 
         for (const item of items) {
             const type = types.find((m) => m.system.codename.toLowerCase() === item.system.type.toLowerCase());
@@ -32,7 +28,7 @@ export abstract class BaseProcessorService implements IFormatService {
             if (!type) {
                 throw Error(`Could not find type '${item.system.type}'`);
             }
-            const model: IFlattenedLanguageVariant = {
+            const model: IFlattenedContentItem = {
                 type: item.system.type,
                 codename: item.system.codename,
                 name: item.system.name,
