@@ -1,6 +1,4 @@
 import {
-    AssetFolderContracts,
-    AssetFolderModels,
     AssetResponses,
     CollectionModels,
     ContentItemModels,
@@ -73,7 +71,10 @@ export class ImportService {
 
     async getImportContentTypesAsync(): Promise<IImportContentType[]> {
         logDebug('info', `Fetching content types from environment`);
-        const contentTypes = (await this.deliveryClient.types().toAllPromise()).data.items;
+        const contentTypes = await this.deliveryClient
+            .types()
+            .toAllPromise()
+            .then((m) => m.data.items);
         logDebug('info', `Fetched '${contentTypes.length}' content types`);
 
         return contentTypes.map((contentType) => {
@@ -322,18 +323,17 @@ export class ImportService {
 
                 // check if name should be updated, no other changes are supported
                 if (this.shouldUpdateContentItem(importContentItem, preparedContentItem, collections)) {
-                    const upsertedContentItem = (
-                        await this.managementClient
-                            .upsertContentItem()
-                            .byItemCodename(importContentItem.codename)
-                            .withData({
-                                name: importContentItem.name,
-                                collection: {
-                                    codename: importContentItem.collection
-                                }
-                            })
-                            .toPromise()
-                    ).data;
+                    const upsertedContentItem = await this.managementClient
+                        .upsertContentItem()
+                        .byItemCodename(importContentItem.codename)
+                        .withData({
+                            name: importContentItem.name,
+                            collection: {
+                                codename: importContentItem.collection
+                            }
+                        })
+                        .toPromise()
+                        .then((m) => m.data);
 
                     this.logItem(importedItems, 'upsert', 'contentItem', {
                         title: `${importContentItem.name}`,
@@ -593,9 +593,11 @@ export class ImportService {
         importedItems: IImportItemResult[]
     ): Promise<ContentItemModels.ContentItem> {
         try {
-            const contentItem = (
-                await this.managementClient.viewContentItem().byItemCodename(importContentItem.codename).toPromise()
-            ).data;
+            const contentItem = await this.managementClient
+                .viewContentItem()
+                .byItemCodename(importContentItem.codename)
+                .toPromise()
+                .then((m) => m.data);
 
             this.logItem(importedItems, 'fetch', 'contentItem', {
                 title: `${contentItem.name}`,
@@ -610,21 +612,20 @@ export class ImportService {
         } catch (error) {
             if (error instanceof SharedModels.ContentManagementBaseKontentError) {
                 if (error.originalError?.response?.status === 404) {
-                    const contentItem = (
-                        await this.managementClient
-                            .addContentItem()
-                            .withData({
-                                name: importContentItem.name,
-                                type: {
-                                    codename: importContentItem.type
-                                },
-                                codename: importContentItem.codename,
-                                collection: {
-                                    codename: importContentItem.collection
-                                }
-                            })
-                            .toPromise()
-                    ).data;
+                    const contentItem = await this.managementClient
+                        .addContentItem()
+                        .withData({
+                            name: importContentItem.name,
+                            type: {
+                                codename: importContentItem.type
+                            },
+                            codename: importContentItem.codename,
+                            collection: {
+                                codename: importContentItem.collection
+                            }
+                        })
+                        .toPromise()
+                        .then((m) => m.data);
 
                     this.logItem(importedItems, 'create', 'contentItem', {
                         title: `${contentItem.name}`,
@@ -651,13 +652,12 @@ export class ImportService {
         let languageVariantOfContentItem: undefined | LanguageVariantModels.ContentItemLanguageVariant;
 
         try {
-            languageVariantOfContentItem = (
-                await this.managementClient
-                    .viewLanguageVariant()
-                    .byItemCodename(importContentItem.codename)
-                    .byLanguageCodename(importContentItem.language)
-                    .toPromise()
-            ).data;
+            languageVariantOfContentItem = await this.managementClient
+                .viewLanguageVariant()
+                .byItemCodename(importContentItem.codename)
+                .byLanguageCodename(importContentItem.language)
+                .toPromise()
+                .then((m) => m.data);
 
             this.logItem(importItems, 'fetch', 'languageVariant', {
                 title: `${importContentItem.name}`,
@@ -725,11 +725,17 @@ export class ImportService {
     }
 
     private async getWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
-        return (await this.managementClient.listWorkflows().toPromise()).data;
+        return await this.managementClient
+            .listWorkflows()
+            .toPromise()
+            .then((m) => m.data);
     }
 
     private async getCollectionsAsync(): Promise<CollectionModels.Collection[]> {
-        return (await this.managementClient.listCollections().toPromise()).data.collections;
+        return await this.managementClient
+            .listCollections()
+            .toPromise()
+            .then((m) => m.data.collections);
     }
 
     private isLanguageVariantPublished(
@@ -816,16 +822,6 @@ export class ImportService {
         }
 
         logDebug(actionType, data.title, itemType, data.language, data.workflowStep);
-    }
-
-    private mapAssetFolder(
-        folder: AssetFolderContracts.IAssetFolderContract
-    ): AssetFolderModels.IAddOrModifyAssetFolderData {
-        return {
-            name: folder.name,
-            external_id: folder.external_id,
-            folders: folder.folders?.map((m) => this.mapAssetFolder(m)) ?? []
-        };
     }
 
     private getElementContract(

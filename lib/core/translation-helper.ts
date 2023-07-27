@@ -26,7 +26,7 @@ export type ImportTransformFunc = (data: {
 }) => ElementContracts.IContentItemElementContract;
 
 export class TranslationHelper {
-    private readonly csvManagerLinkCodenameAttributeName: string = 'csvm-link-codename';
+    private readonly linkCodenameAttributeName: string = 'data-manager-link-codename';
     private readonly elementsBuilder = new LanguageVariantElementsBuilder();
 
     private readonly exportTransforms: Readonly<Record<ElementType, ExportTransformFunc>> = {
@@ -291,7 +291,7 @@ export class TranslationHelper {
                     );
                 } else {
                     objectTag = objectTag.replace(id, contentItemWithGivenId.system.codename);
-                    objectTag = objectTag.replace('data-item-id', this.csvManagerLinkCodenameAttributeName);
+                    objectTag = objectTag.replace('data-item-id', this.linkCodenameAttributeName);
                 }
             }
             return objectTag;
@@ -356,7 +356,7 @@ export class TranslationHelper {
         const linkStart: string = '<a';
         const linkEnd: string = '</a>';
 
-        const csvmLinkCodenameStart: string = this.csvManagerLinkCodenameAttributeName + '=\\"';
+        const csvmLinkCodenameStart: string = this.linkCodenameAttributeName + '=\\"';
         const csvmLinkCodenameEnd: string = '\\"';
 
         const linkRegex = new RegExp(`${linkStart}(.+?)${linkEnd}`, 'g');
@@ -379,7 +379,7 @@ export class TranslationHelper {
                     );
                 } else {
                     objectTag = objectTag.replace(codename, contentItemWithGivenCodename.importId ?? '');
-                    objectTag = objectTag.replace(this.csvManagerLinkCodenameAttributeName, 'data-item-id');
+                    objectTag = objectTag.replace(this.linkCodenameAttributeName, 'data-item-id');
                 }
             }
             return objectTag;
