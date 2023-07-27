@@ -5,7 +5,11 @@ import { logDebug } from '../../core/log-helper';
 import { IExportConfig, IExportedAsset } from '../export.models';
 
 export class ExportAssetsHelper {
-    async extractAssetsAsync(config: IExportConfig,items: IContentItem[], types: IContentType[]): Promise<IExportedAsset[]> {
+    async extractAssetsAsync(
+        config: IExportConfig,
+        items: IContentItem[],
+        types: IContentType[]
+    ): Promise<IExportedAsset[]> {
         const assets: IExportedAsset[] = [];
 
         for (const type of types) {
@@ -77,7 +81,7 @@ export class ExportAssetsHelper {
             for (const asset of uniqueAssets) {
                 const assetResponse = await managementClient.viewAsset().byAssetId(asset.assetId).toPromise();
 
-                logDebug('info', 'Fetched asset details', asset.assetId, assetResponse.data.fileName);
+                logDebug('fetch', 'Fetched asset details', asset.assetId, assetResponse.data.fileName);
 
                 asset.filename = assetResponse.data.fileName;
             }
