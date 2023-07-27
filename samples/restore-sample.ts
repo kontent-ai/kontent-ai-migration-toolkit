@@ -30,7 +30,7 @@ const run = async () => {
     const file = await fileService.loadFileAsync('fileName');
 
     // extract file
-    const data = await zipService.extractZipAsync(file, {
+    const data = await zipService.extractZipAsync(file, await importService.getImportContentTypesAsync(), {
         formatService: new JsonProcessorService() // or 'CsvProcessorService' or custom service
     });
 

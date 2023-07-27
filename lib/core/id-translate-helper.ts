@@ -1,13 +1,12 @@
 import { IImportItemResult } from './core.models';
 
 export class IdTranslateHelper {
-
     replaceIdsInRichText(text: string, items: IImportItemResult[]): string {
-        const codename = { regex: /data-codename=\"(.*?)\"/g, attr: 'data-id' };
-        const itemId = { regex: /data-item-id=\"(.*?)\"/g, attr: 'data-item-id' };
-        const assetId = { regex: /data-asset-id=\"(.*?)\"/g, attr: 'data-asset-id' };
-        const imageId = { regex: /data-image-id=\"(.*?)\"/g, attr: 'data-image-id' };
-        const dataId = { regex: /data-id=\"(.*?)\"/g, attr: 'data-id' };
+        const codename = { regex: /data-codename="(.*?)"/g, attr: 'data-id' };
+        const itemId = { regex: /data-item-id="(.*?)"/g, attr: 'data-item-id' };
+        const assetId = { regex: /data-asset-id="(.*?)"/g, attr: 'data-asset-id' };
+        const imageId = { regex: /data-image-id="(.*?)"/g, attr: 'data-image-id' };
+        const dataId = { regex: /data-id="(.*?)"/g, attr: 'data-id' };
 
         text = this.replaceCodenameWithRegex(codename.regex, text, codename.attr, items);
         text = this.replaceIdWithRegex(itemId.regex, text, itemId.attr, items);

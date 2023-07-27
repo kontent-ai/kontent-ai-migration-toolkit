@@ -11,8 +11,8 @@
     "type": "git",
     "url": "https://github.com/Enngage/kontent-csv-manager"
   },
-  "engines" : { 
-    "node" : ">=16.0.0"
+  "engines": {
+    "node": ">=16.0.0"
   },
   "author": "Richard Sustek",
   "main": "./dist/cjs/lib/index.js",
@@ -35,8 +35,7 @@
     "test:all": "npm run build:all",
     "test:backup": "npm run build:cjs && cd output && node --max-http-header-size 150000 ../dist/cjs/lib/node/cli/app --max-http-header-size=80000000 --config=backup-config.json ",
     "test:restore": "npm run build:cjs && cd output && node --max-http-header-size 150000 ../dist/cjs/lib/node/cli/app --config=restore-config.json",
-    "ts-lint:fix": "tslint --project ./tsconfig.json --fix",
-    "ts-lint:check": "tslint --project ./tsconfig.json"
+    "lint": "npx eslint lib"
   },
   "keywords": [
     "Kontent.ai",
@@ -48,27 +47,29 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@kontent-ai/management-sdk": "5.0.0",
     "@kontent-ai/delivery-sdk": "14.2.0",
-    "json2csv": "5.0.7",
-    "csv-parse": "5.4.0",
-    "jszip": "3.10.1",
-    "yargs": "17.7.2",
+    "@kontent-ai/management-sdk": "5.0.0",
+    "bytes": "3.1.2",
     "colors": "1.4.0",
+    "csv-parse": "5.4.0",
+    "json2csv": "5.0.7",
+    "jszip": "3.10.1",
     "mime": "3.0.0",
-    "bytes": "3.1.2"
+    "yargs": "17.7.2"
   },
   "devDependencies": {
-    "tslib": "2.6.1",
-    "@types/jszip": "3.4.1",
+    "@types/bytes": "3.1.1",
     "@types/json2csv": "5.0.3",
+    "@types/jszip": "3.4.1",
+    "@types/mime": "3.0.1",
     "@types/node": "20.4.5",
     "@types/yargs": "17.0.24",
+    "@typescript-eslint/eslint-plugin": "6.2.0",
+    "@typescript-eslint/parser": "6.2.0",
+    "eslint": "^8.45.0",
     "standard-version": "9.5.0",
     "ts-node": "10.9.1",
-    "tslint": "6.1.3",
-    "typescript": "5.1.6",
-    "@types/mime": "3.0.1",
-    "@types/bytes": "3.1.1"
+    "tslib": "2.6.1",
+    "typescript": "^5.1.6"
   }
 }
