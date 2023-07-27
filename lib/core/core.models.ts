@@ -67,10 +67,10 @@ export interface IIdCodenameTranslationResult {
 }
 
 export interface IPackageMetadata {
+    version: string;
+    created: Date;
     environmentId: string;
-    timestamp: Date;
     dataOverview: IPackageDataOverview;
-    csvManagerVersion: string;
 }
 
 export interface IPackageDataOverview {

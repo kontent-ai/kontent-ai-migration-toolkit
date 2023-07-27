@@ -92,12 +92,12 @@ export class ImportService {
 
         // log information regarding version mismatch
         if (sourceData.metadata) {
-            if (version !== sourceData.metadata.csvManagerVersion) {
+            if (version !== sourceData.metadata.version) {
                 console.warn(
-                    `WARNING: Version mismatch. Current version of '${name}' is '${version}', but export was created using version '${sourceData.metadata.csvManagerVersion}'.`
+                    `WARNING: Version mismatch. Current version of '${name}' is '${version}', but export was created using version '${sourceData.metadata.version}'.`
                 );
                 console.warn(
-                    `Import may still succeed, but if it doesn't, please try using '${sourceData.metadata.csvManagerVersion}' version of this library.`
+                    `Import may still succeed, but if it doesn't, please try using '${sourceData.metadata.version}' version of this library.`
                 );
             }
         }

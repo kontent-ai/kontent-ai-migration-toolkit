@@ -60,8 +60,8 @@ export class ExportService {
 
         return {
             metadata: {
-                csvManagerVersion: version,
-                timestamp: new Date(),
+                version: version,
+                created: new Date(),
                 environmentId: this.config.environmentId,
                 dataOverview: {
                     contentItemsCount: data.contentItems.length,

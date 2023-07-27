@@ -1,9 +1,8 @@
 import { promises } from 'fs';
-import { IFileServiceConfig } from './file.models';
 import { logDebug } from '../../core/log-helper';
 
 export class FileService {
-    constructor(public config?: IFileServiceConfig) {}
+    constructor() {}
 
     async loadFileAsync(filename: string): Promise<Buffer> {
         const filePath = this.getFilePath(filename);
