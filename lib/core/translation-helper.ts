@@ -97,34 +97,34 @@ export class TranslationHelper {
         {
             type: ElementType.Text,
             toImportValue: (data) => {
-                return {
+                return this.elementsBuilder.textElement({
                     element: {
                         codename: data.elementCodename
                     },
-                    value: data.value ?? ''
-                };
+                    value: data.value ?? undefined
+                });
             }
         },
         {
             type: ElementType.Number,
             toImportValue: (data) => {
-                return {
+                return this.elementsBuilder.numberElement({
                     element: {
                         codename: data.elementCodename
                     },
-                    value: data.value ?? ''
-                };
+                    value: data.value ? +data.value : undefined
+                });
             }
         },
         {
             type: ElementType.DateTime,
             toImportValue: (data) => {
-                return {
+                return this.elementsBuilder.dateTimeElement({
                     element: {
                         codename: data.elementCodename
                     },
-                    value: data.value ?? ''
-                };
+                    value: data.value ?? undefined
+                });
             }
         },
         {
@@ -178,7 +178,7 @@ export class TranslationHelper {
         {
             type: ElementType.Asset,
             toImportValue: (data) => {
-                return {
+                return this.elementsBuilder.assetElement({
                     element: {
                         codename: data.elementCodename
                     },
@@ -196,13 +196,13 @@ export class TranslationHelper {
                             id: importedAsset.importId
                         };
                     })
-                };
+                });
             }
         },
         {
             type: ElementType.Taxonomy,
             toImportValue: (data) => {
-                return {
+                return this.elementsBuilder.taxonomyElement({
                     element: {
                         codename: data.elementCodename
                     },
@@ -211,13 +211,13 @@ export class TranslationHelper {
                             codename: m
                         };
                     })
-                };
+                });
             }
         },
         {
             type: ElementType.ModularContent,
             toImportValue: (data) => {
-                return {
+                return this.elementsBuilder.linkedItemsElement({
                     element: {
                         codename: data.elementCodename
                     },
@@ -226,37 +226,37 @@ export class TranslationHelper {
                             codename: m
                         };
                     })
-                };
+                });
             }
         },
         {
             type: ElementType.UrlSlug,
             toImportValue: (data) => {
-                return {
+                return this.elementsBuilder.urlSlugElement({
                     element: {
                         codename: data.elementCodename
                     },
                     value: data.value ?? '',
                     mode: 'custom'
-                };
+                });
             }
         },
         {
             type: ElementType.Custom,
             toImportValue: (data) => {
-                return {
+                return this.elementsBuilder.customElement({
                     element: {
                         codename: data.elementCodename
                     },
                     value: data.value ?? ''
-                };
+                });
             }
         },
         {
             type: ElementType.MultipleChoice,
 
             toImportValue: (data) => {
-                return {
+                return this.elementsBuilder.multipleChoiceElement({
                     element: {
                         codename: data.elementCodename
                     },
@@ -265,7 +265,7 @@ export class TranslationHelper {
                             codename: m
                         };
                     })
-                };
+                });
             }
         }
     ];
@@ -443,11 +443,10 @@ export class TranslationHelper {
                 );
 
                 if (!contentItemWithGivenCodename) {
-                     logDebug(
-                         'warning',
-                         `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
-                     );
-                    
+                    logDebug(
+                        'warning',
+                        `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
+                    );
                 } else {
                     objectTag = objectTag.replace(codename, contentItemWithGivenCodename.importId ?? '');
                     objectTag = objectTag.replace(this.csvManagerLinkCodenameAttributeName, 'data-item-id');
