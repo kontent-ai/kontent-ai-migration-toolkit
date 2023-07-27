@@ -1,4 +1,6 @@
+import { AssetModels, ContentItemModels, LanguageVariantModels } from '@kontent-ai/management-sdk';
 import { ExportFormat } from '../file-processor';
+import { IImportAsset, IParsedContentItem } from '../import';
 
 export interface ICliFileConfig {
     environmentId: string;
@@ -43,13 +45,20 @@ export interface IProcessedItem {
     data: any;
 }
 
-export interface IImportItemResult {
-    original: any;
-    imported: any;
+export interface IImportedData {
+    assets: {
+        original: IImportAsset;
+        imported: AssetModels.Asset;
+    }[];
+    contentItems: {
+        original: IParsedContentItem;
+        imported: ContentItemModels.ContentItem;
+    }[];
 
-    originalId?: string;
-    originalCodename?: string;
-    importId?: string;
+    languageVariants: {
+        original: any;
+        imported: LanguageVariantModels.ContentItemLanguageVariant;
+    }[];
 }
 
 export interface IIdCodenameTranslationResult {

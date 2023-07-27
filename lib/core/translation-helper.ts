@@ -5,9 +5,14 @@ import {
     IContentItem,
     IContentType
 } from '@kontent-ai/delivery-sdk';
-import { ElementContracts, LanguageVariantElements, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
+import {
+    ContentItemModels,
+    ElementContracts,
+    LanguageVariantElements,
+    LanguageVariantElementsBuilder
+} from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import';
-import { IImportItemResult } from './core.models';
+import { IImportedData } from './core.models';
 import { extractAssetIdFromUrl } from './global-helper';
 import { idTranslateHelper } from './id-translate-helper';
 import { logDebug } from './log-helper';
@@ -21,7 +26,7 @@ export type ExportTransformFunc = (data: {
 export type ImportTransformFunc = (data: {
     value: string | undefined;
     elementCodename: string;
-    importedItems: IImportItemResult[];
+    importedData: IImportedData;
     sourceItems: IParsedContentItem[];
 }) => ElementContracts.IContentItemElementContract;
 
@@ -68,14 +73,14 @@ export class TranslationHelper {
                     const assetId = extractAssetIdFromUrl(m);
 
                     // find id of imported asset
-                    const importedAsset = data.importedItems.find((s) => s.originalId === assetId);
+                    const importedAsset = data.importedData.assets.find((s) => s.original.assetId === assetId);
 
                     if (!importedAsset) {
                         throw Error(`Could not find imported asset for asset with original id '${assetId}'`);
                     }
 
                     return {
-                        id: importedAsset.importId
+                        id: importedAsset.imported.id
                     };
                 })
             });
@@ -129,7 +134,7 @@ export class TranslationHelper {
             });
         },
         rich_text: (data) => {
-            const processedRte = this.processImportRichTextHtmlValue(data.value ?? '', data.importedItems);
+            const processedRte = this.processImportRichTextHtmlValue(data.value ?? '', data.importedData);
             const componentItems: IParsedContentItem[] = [];
 
             for (const componentCodename of processedRte.componentCodenames) {
@@ -153,7 +158,7 @@ export class TranslationHelper {
                                 e.value,
                                 e.codename,
                                 e.type,
-                                data.importedItems,
+                                data.importedData,
                                 data.sourceItems
                             )
                         )
@@ -230,13 +235,13 @@ export class TranslationHelper {
         value: string,
         elementCodename: string,
         type: ElementType,
-        importedITems: IImportItemResult[],
+        importedData: IImportedData,
         sourceItems: IParsedContentItem[]
     ): ElementContracts.IContentItemElementContract | undefined {
         const transformFunc = this.importTransforms[type];
 
         return transformFunc({
-            importedItems: importedITems,
+            importedData: importedData,
             elementCodename: elementCodename,
             value: value,
             sourceItems: sourceItems
@@ -304,7 +309,7 @@ export class TranslationHelper {
 
     private processImportRichTextHtmlValue(
         richTextHtml: string | undefined,
-        importItems: IImportItemResult[]
+        importedData: IImportedData
     ): {
         processedHtml: string;
         linkedItemCodenames: string[];
@@ -368,9 +373,8 @@ export class TranslationHelper {
                 const codename = codenameMatch[1];
 
                 // find content item with given codename and replace it with id
-                const contentItemWithGivenCodename: IImportItemResult | undefined = importItems.find(
-                    (m) => m.originalCodename === codename
-                );
+                const contentItemWithGivenCodename: ContentItemModels.ContentItem | undefined =
+                    importedData.contentItems.find((m) => m.original.codename === codename)?.imported;
 
                 if (!contentItemWithGivenCodename) {
                     logDebug(
@@ -378,7 +382,7 @@ export class TranslationHelper {
                         `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
                     );
                 } else {
-                    objectTag = objectTag.replace(codename, contentItemWithGivenCodename.importId ?? '');
+                    objectTag = objectTag.replace(codename, contentItemWithGivenCodename.id);
                     objectTag = objectTag.replace(this.linkCodenameAttributeName, 'data-item-id');
                 }
             }
@@ -403,7 +407,7 @@ export class TranslationHelper {
         });
 
         // replace old ids with new ids
-        processedRichText = idTranslateHelper.replaceIdsInRichText(processedRichText, importItems);
+        processedRichText = idTranslateHelper.replaceIdsInRichText(processedRichText, importedData);
 
         // remove unsupported attributes
         processedRichText = processedRichText.replaceAll(`data-rel="link"`, '');

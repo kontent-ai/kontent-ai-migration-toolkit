@@ -1,5 +1,5 @@
 import {
-    AssetResponses,
+    AssetModels,
     CollectionModels,
     ContentItemModels,
     ElementContracts,
@@ -11,7 +11,7 @@ import {
 import { version, name } from '../../package.json';
 
 import {
-    IImportItemResult,
+    IImportedData,
     ActionType,
     handleError,
     defaultRetryStrategy,
@@ -36,12 +36,6 @@ import { logDebug } from '../core/log-helper';
 export class ImportService {
     private readonly managementClient: ManagementClient;
     private readonly deliveryClient: DeliveryClient;
-
-    /**
-     * Maximum allowed size of asset in Bytes.
-     * Currently 1e8 = 100 MB
-     */
-    // private readonly maxAllowedAssetSizeInBytes: number = 1e8;
 
     constructor(private config: IImportConfig) {
         this.managementClient = new ManagementClient({
@@ -94,12 +88,16 @@ export class ImportService {
         });
     }
 
-    async importFromSourceAsync(sourceData: IImportSource): Promise<IImportItemResult[]> {
+    async importFromSourceAsync(sourceData: IImportSource): Promise<IImportedData> {
         return await this.importAsync(sourceData);
     }
 
-    async importAsync(sourceData: IImportSource): Promise<IImportItemResult[]> {
-        const importedItems: IImportItemResult[] = [];
+    async importAsync(sourceData: IImportSource): Promise<IImportedData> {
+        const importedData: IImportedData = {
+            assets: [],
+            contentItems: [],
+            languageVariants: []
+        };
         await printProjectAndEnvironmentInfoToConsoleAsync(this.managementClient);
 
         // log information regarding version mismatch
@@ -122,8 +120,7 @@ export class ImportService {
             //  Assets
             if (dataToImport.importData.assets.length) {
                 logDebug('info', `Importing assets`);
-                const importedAssets = await this.importAssetsAsync(dataToImport.importData.assets);
-                importedItems.push(...importedAssets);
+                await this.importAssetsAsync(dataToImport.importData.assets, importedData);
             } else {
                 logDebug('info', `There are no assets to import`);
             }
@@ -131,7 +128,7 @@ export class ImportService {
             // Content items
             if (dataToImport.importData.items.length) {
                 logDebug('info', `Importing content items`);
-                await this.importContentItemsAsync(dataToImport.importData.items, importedItems);
+                await this.importContentDataAsync(dataToImport.importData.items, importedData);
             } else {
                 logDebug('info', `There are no content items to import`);
             }
@@ -140,7 +137,7 @@ export class ImportService {
         } catch (error) {
             this.handleImportError(error);
         }
-        return importedItems;
+        return importedData;
     }
 
     private getDataToImport(source: IImportSource): IImportSource {
@@ -190,20 +187,22 @@ export class ImportService {
         return dataToImport;
     }
 
-    private async importAssetsAsync(assets: IImportAsset[]): Promise<IImportItemResult[]> {
-        const importedItems: IImportItemResult[] = [];
-
+    private async importAssetsAsync(assets: IImportAsset[], importedData: IImportedData): Promise<void> {
         for (const asset of assets) {
             // use asset id as external id
             const assetExternalId: string = asset.assetId;
 
             // check if asset with given external id already exists
-            let existingAsset: AssetResponses.ViewAssetResponse | undefined;
+            let existingAsset: AssetModels.Asset | undefined;
 
             try {
                 // when target project is the same as source project, the id of asset would be the same
                 // and such asset should not be imported again
-                existingAsset = await this.managementClient.viewAsset().byAssetExternalId(asset.assetId).toPromise();
+                existingAsset = await this.managementClient
+                    .viewAsset()
+                    .byAssetExternalId(asset.assetId)
+                    .toPromise()
+                    .then((m) => m.data);
             } catch (error) {
                 let throwError = true;
 
@@ -220,7 +219,11 @@ export class ImportService {
 
             try {
                 // check if asset with given external id was already created
-                existingAsset = await this.managementClient.viewAsset().byAssetExternalId(assetExternalId).toPromise();
+                existingAsset = await this.managementClient
+                    .viewAsset()
+                    .byAssetExternalId(assetExternalId)
+                    .toPromise()
+                    .then((m) => m.data);
             } catch (error) {
                 let throwError = true;
 
@@ -246,12 +249,8 @@ export class ImportService {
                     })
                     .toPromise();
 
-                this.logItem(importedItems, 'upload', 'binaryFile', {
-                    imported: uploadedBinaryFile,
-                    original: asset,
-                    title: asset.filename,
-                    importedId: undefined,
-                    originalId: undefined
+                this.logAction('upload', 'binaryFile', {
+                    title: asset.filename
                 });
 
                 const createdAsset = await this.managementClient
@@ -265,269 +264,45 @@ export class ImportService {
                             external_id: assetExternalId
                         };
                     })
-                    .toPromise();
+                    .toPromise()
+                    .then((m) => m.data);
 
-                this.logItem(importedItems, 'create', 'asset', {
+                importedData.assets.push({
                     imported: createdAsset,
-                    original: asset,
-                    title: asset.filename,
-                    importedId: createdAsset.data.id,
-                    originalId: asset.assetId
+                    original: asset
+                });
+
+                this.logAction('create', 'asset', {
+                    title: asset.filename
                 });
             } else {
-                this.logItem(importedItems, 'fetch', 'asset', {
+                importedData.assets.push({
                     imported: existingAsset,
-                    original: asset,
-                    title: asset.filename,
-                    importedId: existingAsset.data.id,
-                    originalId: asset.assetId
+                    original: asset
                 });
-                this.logItem(importedItems, 'skipUpdate', 'asset', {
-                    imported: existingAsset,
-                    original: asset,
-                    title: asset.filename,
-                    importedId: existingAsset.data.id,
-                    originalId: asset.assetId
+                this.logAction('skipUpdate', 'asset', {
+                    title: asset.filename
                 });
             }
         }
-
-        return importedItems;
     }
 
-    private async importContentItemsAsync(
+    private async importContentDataAsync(
         importContentItems: IParsedContentItem[],
-        importedItems: IImportItemResult[]
-    ): Promise<{
-        importedItems: ContentItemModels.ContentItem[];
-        importedLanguageVariants: LanguageVariantModels.ContentItemLanguageVariant[];
-    }> {
-        const preparedItems: ContentItemModels.ContentItem[] = [];
-        const upsertedLanguageVariants: LanguageVariantModels.ContentItemLanguageVariant[] = [];
-
+        importedData: IImportedData
+    ): Promise<void> {
         const workflows = await this.getWorkflowsAsync();
         const collections = await this.getCollectionsAsync();
 
-        // first process content items
-        for (const importContentItem of importContentItems) {
-            try {
-                if (!importContentItem.workflow_step) {
-                    continue;
-                }
-
-                const preparedContentItem: ContentItemModels.ContentItem = await this.prepareContentItemForImportAsync(
-                    importContentItem,
-                    importedItems
-                );
-                preparedItems.push(preparedContentItem);
-
-                // check if name should be updated, no other changes are supported
-                if (this.shouldUpdateContentItem(importContentItem, preparedContentItem, collections)) {
-                    const upsertedContentItem = await this.managementClient
-                        .upsertContentItem()
-                        .byItemCodename(importContentItem.codename)
-                        .withData({
-                            name: importContentItem.name,
-                            collection: {
-                                codename: importContentItem.collection
-                            }
-                        })
-                        .toPromise()
-                        .then((m) => m.data);
-
-                    this.logItem(importedItems, 'upsert', 'contentItem', {
-                        title: `${importContentItem.name}`,
-                        imported: importContentItem,
-                        importedId: upsertedContentItem.id,
-                        originalCodename: importContentItem.codename,
-                        originalId: undefined,
-                        original: importContentItem
-                    });
-                } else {
-                    this.logItem(importedItems, 'skipUpdate', 'contentItem', {
-                        title: `${importContentItem.name}`,
-                        imported: importContentItem,
-                        importedId: preparedContentItem.id,
-                        originalCodename: importContentItem.codename,
-                        originalId: undefined,
-                        original: importContentItem
-                    });
-                }
-            } catch (error) {
-                if (this.config.skipFailedItems) {
-                    let errorMessage: any;
-
-                    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                        errorMessage = error.message;
-                    } else if (error instanceof Error) {
-                        errorMessage = error.message;
-                    } else {
-                        errorMessage = error;
-                    }
-
-                    logDebug('error', `Failed to import content item`, importContentItem.codename, errorMessage);
-                } else {
-                    throw error;
-                }
-            }
-        }
+        // first prepare content items
+        const preparedContentItems: ContentItemModels.ContentItem[] = await this.importContentItemsAsync(
+            importContentItems,
+            collections,
+            importedData
+        );
 
         // then process language variants
-        for (const importContentItem of importContentItems) {
-            try {
-                // if content item does not have a workflow step it means it is used as a component within Rich text element
-                // such items are procesed within element transform
-                if (!importContentItem.workflow_step) {
-                    continue;
-                }
-
-                const upsertedContentItem = preparedItems.find((m) => m.codename === importContentItem.codename);
-
-                if (!upsertedContentItem) {
-                    throw Error(`Invalid content item for codename '${importContentItem.codename}'`);
-                }
-
-                await this.prepareLanguageVariantForImportAsync(importContentItem, workflows, importedItems);
-
-                const upsertedLanguageVariant = await this.managementClient
-                    .upsertLanguageVariant()
-                    .byItemCodename(upsertedContentItem.codename)
-                    .byLanguageCodename(importContentItem.language)
-                    .withData((builder) => {
-                        return {
-                            elements: importContentItem.elements.map((m) =>
-                                this.getElementContract(importContentItems, m, importedItems)
-                            )
-                        };
-                    })
-                    .toPromise();
-
-                upsertedLanguageVariants.push(upsertedLanguageVariant.data);
-
-                this.logItem(importedItems, 'upsert', 'languageVariant', {
-                    title: `${upsertedContentItem.name}`,
-                    language: importContentItem.language,
-                    imported: upsertedLanguageVariants,
-                    importedId: upsertedContentItem.id,
-                    originalCodename: importContentItem.codename,
-                    originalId: undefined,
-                    original: importContentItem
-                });
-
-                // set workflow of language variant
-                if (importContentItem.workflow_step) {
-                    if (
-                        this.doesWorkflowStepCodenameRepresentPublishedStep(importContentItem.workflow_step, workflows)
-                    ) {
-                        await this.managementClient
-                            .publishLanguageVariant()
-                            .byItemCodename(importContentItem.codename)
-                            .byLanguageCodename(importContentItem.language)
-                            .withoutData()
-                            .toPromise();
-
-                        this.logItem(importedItems, 'publish', 'languageVariant', {
-                            title: `${upsertedContentItem.name}`,
-                            imported: upsertedLanguageVariants,
-                            workflowStep: importContentItem.workflow_step,
-                            language: importContentItem.language,
-                            importedId: upsertedContentItem.id,
-                            originalCodename: importContentItem.codename,
-                            originalId: undefined,
-                            original: importContentItem
-                        });
-                    } else if (
-                        this.doesWorkflowStepCodenameRepresentArchivedStep(importContentItem.workflow_step, workflows)
-                    ) {
-                        const workflow = this.getWorkflowForGivenStepByCodename(
-                            importContentItem.workflow_step,
-                            workflows
-                        );
-
-                        await this.managementClient
-                            .changeWorkflowOfLanguageVariant()
-                            .byItemCodename(importContentItem.codename)
-                            .byLanguageCodename(importContentItem.language)
-                            .withData({
-                                step_identifier: {
-                                    codename: workflow.archivedStep.codename
-                                },
-                                workflow_identifier: {
-                                    codename: workflow.codename
-                                }
-                            })
-                            .toPromise();
-
-                        this.logItem(importedItems, 'archive', 'languageVariant', {
-                            title: `${upsertedContentItem.name}`,
-                            imported: upsertedLanguageVariants,
-                            workflowStep: importContentItem.workflow_step,
-                            language: importContentItem.language,
-                            importedId: upsertedContentItem.id,
-                            originalCodename: importContentItem.codename,
-                            originalId: undefined,
-                            original: importContentItem
-                        });
-                    } else {
-                        const workflow = this.getWorkflowForGivenStepByCodename(
-                            importContentItem.workflow_step,
-                            workflows
-                        );
-
-                        await this.managementClient
-                            .changeWorkflowOfLanguageVariant()
-                            .byItemCodename(importContentItem.codename)
-                            .byLanguageCodename(importContentItem.language)
-                            .withData({
-                                step_identifier: {
-                                    codename: importContentItem.workflow_step
-                                },
-                                workflow_identifier: {
-                                    codename: workflow.codename
-                                }
-                            })
-                            .toPromise();
-
-                        this.logItem(importedItems, 'changeWorkflowStep', 'languageVariant', {
-                            title: `${upsertedContentItem.name}`,
-                            imported: upsertedLanguageVariants,
-                            workflowStep: importContentItem.workflow_step,
-                            language: importContentItem.language,
-                            importedId: upsertedContentItem.id,
-                            originalCodename: importContentItem.codename,
-                            originalId: undefined,
-                            original: importContentItem
-                        });
-                    }
-                }
-            } catch (error) {
-                if (this.config.skipFailedItems) {
-                    let errorMessage: any;
-
-                    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                        errorMessage = error.message;
-                    } else if (error instanceof Error) {
-                        errorMessage = error.message;
-                    } else {
-                        errorMessage = error;
-                    }
-
-                    logDebug(
-                        'error',
-                        ` Failed to import language variant '${importContentItem.language}'`,
-                        importContentItem.codename,
-                        errorMessage
-                    );
-                } else {
-                    throw error;
-                }
-            }
-        }
-
-        return {
-            importedItems: preparedItems,
-            importedLanguageVariants: upsertedLanguageVariants
-        };
+        await this.importLanguageVariantsAsync(importContentItems, workflows, preparedContentItems, importedData);
     }
 
     private getWorkflowForGivenStepByCodename(
@@ -588,9 +363,213 @@ export class ImportService {
         return defaultWorkflow;
     }
 
-    private async prepareContentItemForImportAsync(
+    private async importLanguageVariantsAsync(
+        importContentItems: IParsedContentItem[],
+        workflows: WorkflowModels.Workflow[],
+        preparedContentItems: ContentItemModels.ContentItem[],
+        importedData: IImportedData
+    ): Promise<void> {
+        for (const importContentItem of importContentItems) {
+            try {
+                // if content item does not have a workflow step it means it is used as a component within Rich text element
+                // such items are procesed within element transform
+                if (!importContentItem.workflow_step) {
+                    continue;
+                }
+
+                const upsertedContentItem = preparedContentItems.find((m) => m.codename === importContentItem.codename);
+
+                if (!upsertedContentItem) {
+                    throw Error(`Invalid content item for codename '${importContentItem.codename}'`);
+                }
+
+                await this.prepareLanguageVariantForImportAsync(importContentItem, workflows);
+
+                const upsertedLanguageVariant = await this.managementClient
+                    .upsertLanguageVariant()
+                    .byItemCodename(upsertedContentItem.codename)
+                    .byLanguageCodename(importContentItem.language)
+                    .withData((builder) => {
+                        return {
+                            elements: importContentItem.elements.map((m) =>
+                                this.getElementContract(importContentItems, m, importedData)
+                            )
+                        };
+                    })
+                    .toPromise()
+                    .then((m) => m.data);
+
+                importedData.languageVariants.push({
+                    original: importContentItem,
+                    imported: upsertedLanguageVariant
+                });
+
+                this.logAction('upsert', 'languageVariant', {
+                    title: `${upsertedContentItem.name}`,
+                    language: importContentItem.language
+                });
+
+                // set workflow of language variant
+                if (importContentItem.workflow_step) {
+                    if (
+                        this.doesWorkflowStepCodenameRepresentPublishedStep(importContentItem.workflow_step, workflows)
+                    ) {
+                        await this.managementClient
+                            .publishLanguageVariant()
+                            .byItemCodename(importContentItem.codename)
+                            .byLanguageCodename(importContentItem.language)
+                            .withoutData()
+                            .toPromise();
+
+                        this.logAction('publish', 'languageVariant', {
+                            title: `${upsertedContentItem.name}`,
+                            workflowStep: importContentItem.workflow_step,
+                            language: importContentItem.language
+                        });
+                    } else if (
+                        this.doesWorkflowStepCodenameRepresentArchivedStep(importContentItem.workflow_step, workflows)
+                    ) {
+                        const workflow = this.getWorkflowForGivenStepByCodename(
+                            importContentItem.workflow_step,
+                            workflows
+                        );
+
+                        await this.managementClient
+                            .changeWorkflowOfLanguageVariant()
+                            .byItemCodename(importContentItem.codename)
+                            .byLanguageCodename(importContentItem.language)
+                            .withData({
+                                step_identifier: {
+                                    codename: workflow.archivedStep.codename
+                                },
+                                workflow_identifier: {
+                                    codename: workflow.codename
+                                }
+                            })
+                            .toPromise();
+
+                        this.logAction('archive', 'languageVariant', {
+                            title: `${upsertedContentItem.name}`,
+                            workflowStep: importContentItem.workflow_step,
+                            language: importContentItem.language
+                        });
+                    } else {
+                        const workflow = this.getWorkflowForGivenStepByCodename(
+                            importContentItem.workflow_step,
+                            workflows
+                        );
+
+                        await this.managementClient
+                            .changeWorkflowOfLanguageVariant()
+                            .byItemCodename(importContentItem.codename)
+                            .byLanguageCodename(importContentItem.language)
+                            .withData({
+                                step_identifier: {
+                                    codename: importContentItem.workflow_step
+                                },
+                                workflow_identifier: {
+                                    codename: workflow.codename
+                                }
+                            })
+                            .toPromise();
+
+                        this.logAction('changeWorkflowStep', 'languageVariant', {
+                            title: `${upsertedContentItem.name}`,
+                            workflowStep: importContentItem.workflow_step,
+                            language: importContentItem.language
+                        });
+                    }
+                }
+            } catch (error) {
+                if (this.config.skipFailedItems) {
+                    let errorMessage: any;
+
+                    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+                        errorMessage = error.message;
+                    } else if (error instanceof Error) {
+                        errorMessage = error.message;
+                    } else {
+                        errorMessage = error;
+                    }
+
+                    logDebug(
+                        'error',
+                        ` Failed to import language variant '${importContentItem.language}'`,
+                        importContentItem.codename,
+                        errorMessage
+                    );
+                } else {
+                    throw error;
+                }
+            }
+        }
+    }
+
+    private async importContentItemsAsync(
+        importContentItems: IParsedContentItem[],
+        collections: CollectionModels.Collection[],
+        importedData: IImportedData
+    ): Promise<ContentItemModels.ContentItem[]> {
+        const preparedItems: ContentItemModels.ContentItem[] = [];
+        for (const importContentItem of importContentItems) {
+            try {
+                if (!importContentItem.workflow_step) {
+                    continue;
+                }
+
+                const preparedContentItem: ContentItemModels.ContentItem = await this.prepareContentItemAsync(
+                    importContentItem,
+                    importedData
+                );
+                preparedItems.push(preparedContentItem);
+
+                // check if name should be updated, no other changes are supported
+                if (this.shouldUpdateContentItem(importContentItem, preparedContentItem, collections)) {
+                    const upsertedContentItem = await this.managementClient
+                        .upsertContentItem()
+                        .byItemCodename(importContentItem.codename)
+                        .withData({
+                            name: importContentItem.name,
+                            collection: {
+                                codename: importContentItem.collection
+                            }
+                        })
+                        .toPromise()
+                        .then((m) => m.data);
+
+                    this.logAction('upsert', 'contentItem', {
+                        title: `${upsertedContentItem.name}`
+                    });
+                } else {
+                    this.logAction('skipUpdate', 'contentItem', {
+                        title: `${importContentItem.name}`
+                    });
+                }
+            } catch (error) {
+                if (this.config.skipFailedItems) {
+                    let errorMessage: any;
+
+                    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+                        errorMessage = error.message;
+                    } else if (error instanceof Error) {
+                        errorMessage = error.message;
+                    } else {
+                        errorMessage = error;
+                    }
+
+                    logDebug('error', `Failed to import content item`, importContentItem.codename, errorMessage);
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+        return preparedItems;
+    }
+
+    private async prepareContentItemAsync(
         importContentItem: IParsedContentItem,
-        importedItems: IImportItemResult[]
+        importedData: IImportedData
     ): Promise<ContentItemModels.ContentItem> {
         try {
             const contentItem = await this.managementClient
@@ -599,13 +578,13 @@ export class ImportService {
                 .toPromise()
                 .then((m) => m.data);
 
-            this.logItem(importedItems, 'fetch', 'contentItem', {
-                title: `${contentItem.name}`,
-                imported: contentItem,
-                importedId: contentItem.id,
-                originalCodename: contentItem.codename,
-                originalId: undefined,
-                original: contentItem
+            this.logAction('fetch', 'contentItem', {
+                title: `${contentItem.name}`
+            });
+
+            importedData.contentItems.push({
+                original: importContentItem,
+                imported: contentItem
             });
 
             return contentItem;
@@ -627,13 +606,13 @@ export class ImportService {
                         .toPromise()
                         .then((m) => m.data);
 
-                    this.logItem(importedItems, 'create', 'contentItem', {
-                        title: `${contentItem.name}`,
-                        imported: contentItem,
-                        importedId: contentItem.id,
-                        originalCodename: contentItem.codename,
-                        originalId: undefined,
-                        original: contentItem
+                    importedData.contentItems.push({
+                        original: importContentItem,
+                        imported: contentItem
+                    });
+
+                    this.logAction('create', 'contentItem', {
+                        title: `${contentItem.name}`
                     });
 
                     return contentItem;
@@ -646,8 +625,7 @@ export class ImportService {
 
     private async prepareLanguageVariantForImportAsync(
         importContentItem: IParsedContentItem,
-        workflows: WorkflowModels.Workflow[],
-        importItems: IImportItemResult[]
+        workflows: WorkflowModels.Workflow[]
     ): Promise<void> {
         let languageVariantOfContentItem: undefined | LanguageVariantModels.ContentItemLanguageVariant;
 
@@ -659,12 +637,16 @@ export class ImportService {
                 .toPromise()
                 .then((m) => m.data);
 
-            this.logItem(importItems, 'fetch', 'languageVariant', {
+            this.logAction('fetch', 'languageVariant', {
                 title: `${importContentItem.name}`,
-                imported: languageVariantOfContentItem,
-                original: importContentItem,
                 language: importContentItem.language
             });
+
+            if (!languageVariantOfContentItem) {
+                throw Error(
+                    `Invalid langauge variant for item '${importContentItem.codename}' of type '${importContentItem.type}' and language '${importContentItem.language}'`
+                );
+            }
         } catch (error) {
             let throwError: boolean = true;
 
@@ -690,10 +672,8 @@ export class ImportService {
                     .byLanguageCodename(importContentItem.language)
                     .toPromise();
 
-                this.logItem(importItems, 'createNewVersion', 'languageVariant', {
+                this.logAction('createNewVersion', 'languageVariant', {
                     title: `${importContentItem.name}`,
-                    imported: languageVariantOfContentItem,
-                    original: importContentItem,
                     language: importContentItem.language
                 });
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, workflows)) {
@@ -712,10 +692,8 @@ export class ImportService {
                         .byWorkflowStepCodename(newWorkflowStep.codename)
                         .toPromise();
 
-                    this.logItem(importItems, 'unArchive', 'languageVariant', {
+                    this.logAction('unArchive', 'languageVariant', {
                         title: `${importContentItem.name}`,
-                        imported: languageVariantOfContentItem,
-                        original: importContentItem,
                         language: importContentItem.language,
                         workflowStep: newWorkflowStep.codename
                     });
@@ -794,46 +772,28 @@ export class ImportService {
         handleError(error);
     }
 
-    private logItem(
-        importedItems: IImportItemResult[],
+    private logAction(
         actionType: ActionType,
         itemType: ItemType,
         data: {
             language?: string;
             workflowStep?: string;
             title: string;
-            originalId?: string;
-            originalCodename?: string;
-            importedId?: string;
-            imported: any;
-            original: any;
         }
     ): void {
-        importedItems.push({
-            imported: data.imported,
-            original: data.original,
-            importId: data.importedId,
-            originalId: data.originalId,
-            originalCodename: data.originalCodename
-        });
-
-        if (actionType === 'fetch') {
-            return;
-        }
-
         logDebug(actionType, data.title, itemType, data.language, data.workflowStep);
     }
 
     private getElementContract(
         sourceItems: IParsedContentItem[],
         element: IParsedElement,
-        importItems: IImportItemResult[]
+        importedData: IImportedData
     ): ElementContracts.IContentItemElementContract {
         const importContract = translationHelper.transformToImportValue(
             element.value,
             element.codename,
             element.type,
-            importItems,
+            importedData,
             sourceItems
         );
 
