@@ -18,7 +18,9 @@ import {
     printProjectAndEnvironmentInfoToConsoleAsync,
     translationHelper,
     ItemType,
-    defaultWorkflowCodename
+    defaultWorkflowCodename,
+    is404Error,
+    extractErrorMessage
 } from '../core';
 import {
     IImportAsset,
@@ -204,15 +206,7 @@ export class ImportService {
                     .toPromise()
                     .then((m) => m.data);
             } catch (error) {
-                let throwError = true;
-
-                if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                    if (error.originalError?.response?.status === 404) {
-                        throwError = false;
-                    }
-                }
-
-                if (throwError) {
+                if (!is404Error(error)) {
                     throw error;
                 }
             }
@@ -225,15 +219,7 @@ export class ImportService {
                     .toPromise()
                     .then((m) => m.data);
             } catch (error) {
-                let throwError = true;
-
-                if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                    if (error.originalError?.response?.status === 404) {
-                        throwError = false;
-                    }
-                }
-
-                if (throwError) {
+                if (!is404Error(error)) {
                     throw error;
                 }
             }
@@ -484,21 +470,11 @@ export class ImportService {
                 }
             } catch (error) {
                 if (this.config.skipFailedItems) {
-                    let errorMessage: any;
-
-                    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                        errorMessage = error.message;
-                    } else if (error instanceof Error) {
-                        errorMessage = error.message;
-                    } else {
-                        errorMessage = error;
-                    }
-
                     logDebug(
                         'error',
                         ` Failed to import language variant '${importContentItem.language}'`,
                         importContentItem.codename,
-                        errorMessage
+                        extractErrorMessage(error)
                     );
                 } else {
                     throw error;
@@ -549,17 +525,12 @@ export class ImportService {
                 }
             } catch (error) {
                 if (this.config.skipFailedItems) {
-                    let errorMessage: any;
-
-                    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                        errorMessage = error.message;
-                    } else if (error instanceof Error) {
-                        errorMessage = error.message;
-                    } else {
-                        errorMessage = error;
-                    }
-
-                    logDebug('error', `Failed to import content item`, importContentItem.codename, errorMessage);
+                    logDebug(
+                        'error',
+                        `Failed to import content item`,
+                        importContentItem.codename,
+                        extractErrorMessage(error)
+                    );
                 } else {
                     throw error;
                 }
@@ -591,34 +562,32 @@ export class ImportService {
 
             return contentItem;
         } catch (error) {
-            if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                if (error.originalError?.response?.status === 404) {
-                    const contentItem = await this.managementClient
-                        .addContentItem()
-                        .withData({
-                            name: importContentItem.name,
-                            type: {
-                                codename: importContentItem.type
-                            },
-                            codename: importContentItem.codename,
-                            collection: {
-                                codename: importContentItem.collection
-                            }
-                        })
-                        .toPromise()
-                        .then((m) => m.data);
+            if (is404Error(error)) {
+                const contentItem = await this.managementClient
+                    .addContentItem()
+                    .withData({
+                        name: importContentItem.name,
+                        type: {
+                            codename: importContentItem.type
+                        },
+                        codename: importContentItem.codename,
+                        collection: {
+                            codename: importContentItem.collection
+                        }
+                    })
+                    .toPromise()
+                    .then((m) => m.data);
 
-                    importedData.contentItems.push({
-                        original: importContentItem,
-                        imported: contentItem
-                    });
+                importedData.contentItems.push({
+                    original: importContentItem,
+                    imported: contentItem
+                });
 
-                    this.logAction('create', 'contentItem', {
-                        title: `${contentItem.name}`
-                    });
+                this.logAction('create', 'contentItem', {
+                    title: `${contentItem.name}`
+                });
 
-                    return contentItem;
-                }
+                return contentItem;
             }
 
             throw error;
@@ -650,15 +619,7 @@ export class ImportService {
                 );
             }
         } catch (error) {
-            let throwError: boolean = true;
-
-            if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                if (error.originalError?.response?.status === 404) {
-                    throwError = false;
-                }
-            }
-
-            if (throwError) {
+            if (!is404Error(error)) {
                 throw error;
             }
         }

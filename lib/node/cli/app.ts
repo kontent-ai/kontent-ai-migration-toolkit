@@ -2,7 +2,7 @@
 import { readFileSync } from 'fs';
 import * as yargs from 'yargs';
 
-import { ICliFileConfig, CliAction, getExtension } from '../../core';
+import { ICliFileConfig, CliAction, getExtension, extractErrorMessage } from '../../core';
 import { ExportService } from '../../export';
 import { ImportService } from '../../import';
 import {
@@ -12,7 +12,6 @@ import {
     IFormatService,
     JsonProcessorService
 } from '../../file-processor';
-import { SharedModels } from '@kontent-ai/management-sdk';
 import { FileService } from '../file/file.service';
 import { logDebug } from '../../core/log-helper';
 
@@ -245,13 +244,5 @@ const getDefaultBackupFilename = () => {
 run()
     .then((m) => {})
     .catch((err) => {
-        if (err instanceof SharedModels.ContentManagementBaseKontentError) {
-            logDebug('error', err.message);
-
-            for (const validationError of err.validationErrors) {
-                logDebug('error', validationError.message);
-            }
-        } else {
-            logDebug('error', err?.message ?? 'There was an error processing your request');
-        }
+        logDebug('error', extractErrorMessage(err));
     });

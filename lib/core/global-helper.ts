@@ -49,6 +49,33 @@ export function getFilenameWithoutExtension(filename: string): string {
     return filename.split('.').slice(0, -1).join('.');
 }
 
+export function extractErrorMessage(error: any): string {
+    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+        let message: string = `${error.message}`;
+
+        for (const validationError of error.validationErrors) {
+            message += ` ${validationError.message}`;
+        }
+        return message;
+    }
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    return `Unknown error`;
+}
+
+export function is404Error(error: any): boolean {
+    if (
+        error instanceof SharedModels.ContentManagementBaseKontentError &&
+        error.originalError?.response?.status === 404
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
 export function handleError(error: any | SharedModels.ContentManagementBaseKontentError): void {
     let result = error;
     if (error instanceof SharedModels.ContentManagementBaseKontentError) {
