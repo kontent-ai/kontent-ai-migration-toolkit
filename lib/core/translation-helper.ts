@@ -12,282 +12,218 @@ import { extractAssetIdFromUrl } from './global-helper';
 import { idTranslateHelper } from './id-translate-helper';
 import { logDebug } from './log-helper';
 
-export interface IExportTransform {
-    type: ElementType;
-    toExportValue: (data: {
-        element: ContentItemElementsIndexer;
-        items: IContentItem[];
-        types: IContentType[];
-    }) => string | string[] | undefined;
-}
+export type ExportTransformFunc = (data: {
+    element: ContentItemElementsIndexer;
+    items: IContentItem[];
+    types: IContentType[];
+}) => string | string[] | undefined;
 
-export interface IImportTransform {
-    type: ElementType;
-    toImportValue: (data: {
-        value: string | undefined;
-        elementCodename: string;
-        importedItems: IImportItemResult[];
-        sourceItems: IParsedContentItem[];
-    }) => ElementContracts.IContentItemElementContract;
-}
+export type ImportTransformFunc = (data: {
+    value: string | undefined;
+    elementCodename: string;
+    importedItems: IImportItemResult[];
+    sourceItems: IParsedContentItem[];
+}) => ElementContracts.IContentItemElementContract;
 
 export class TranslationHelper {
     private readonly csvManagerLinkCodenameAttributeName: string = 'csvm-link-codename';
     private readonly elementsBuilder = new LanguageVariantElementsBuilder();
 
-    private readonly exportTransforms: IExportTransform[] = [
-        {
-            type: ElementType.Text,
-            toExportValue: (data) => data.element.value
+    private readonly exportTransforms: Readonly<Record<ElementType, ExportTransformFunc>> = {
+        text: (data) => data.element.value,
+        number: (data) => data.element.value,
+        date_time: (data) => data.element.value,
+        rich_text: (data) => {
+            const mappedElement = data.element as Elements.RichTextElement;
+            return this.processExportRichTextHtmlValue(mappedElement.value, data.items, data.types).processedHtml;
         },
-        {
-            type: ElementType.Number,
-            toExportValue: (data) => data.element.value
+        asset: (data) => {
+            const mappedElement = data.element as Elements.AssetsElement;
+            return mappedElement.value.map((m) => m.url);
         },
-        {
-            type: ElementType.DateTime,
-            toExportValue: (data) => data.element.value
+        taxonomy: (data) => {
+            const mappedElement = data.element as Elements.TaxonomyElement;
+            return mappedElement.value.map((m) => m.codename);
         },
-        {
-            type: ElementType.RichText,
-            toExportValue: (data) => {
-                const mappedElement = data.element as Elements.RichTextElement;
-                return this.processExportRichTextHtmlValue(mappedElement.value, data.items, data.types).processedHtml;
-            }
+        modular_content: (data) => {
+            const mappedElement = data.element as Elements.LinkedItemsElement;
+            return mappedElement.value.map((m) => m);
         },
-        {
-            type: ElementType.Asset,
-            toExportValue: (data) => {
-                const mappedElement = data.element as Elements.AssetsElement;
-                return mappedElement.value.map((m) => m.url);
-            }
+        custom: (data) => data.element.value,
+        url_slug: (data) => data.element.value,
+        multiple_choice: (data) => {
+            const mappedElement = data.element as Elements.MultipleChoiceElement;
+            return mappedElement.value.map((m) => m.codename);
         },
-        {
-            type: ElementType.Taxonomy,
-            toExportValue: (data) => {
-                const mappedElement = data.element as Elements.TaxonomyElement;
-                return mappedElement.value.map((m) => m.codename);
-            }
-        },
-        {
-            type: ElementType.ModularContent,
-            toExportValue: (data) => {
-                const mappedElement = data.element as Elements.LinkedItemsElement;
-                return mappedElement.value.map((m) => m);
-            }
-        },
-        {
-            type: ElementType.UrlSlug,
-            toExportValue: (data) => data.element.value
-        },
-        {
-            type: ElementType.Custom,
-            toExportValue: (data) => data.element.value
-        },
-        {
-            type: ElementType.MultipleChoice,
-            toExportValue: (data) => {
-                const mappedElement = data.element as Elements.MultipleChoiceElement;
-                return mappedElement.value.map((m) => m.codename);
-            }
-        }
-    ];
+        unknown: (data) => data.element.value
+    };
 
-    private readonly importTransforms: IImportTransform[] = [
-        {
-            type: ElementType.Text,
-            toImportValue: (data) => {
-                return this.elementsBuilder.textElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    value: data.value ?? undefined
-                });
-            }
-        },
-        {
-            type: ElementType.Number,
-            toImportValue: (data) => {
-                return this.elementsBuilder.numberElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    value: data.value ? +data.value : undefined
-                });
-            }
-        },
-        {
-            type: ElementType.DateTime,
-            toImportValue: (data) => {
-                return this.elementsBuilder.dateTimeElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    value: data.value ?? undefined
-                });
-            }
-        },
-        {
-            type: ElementType.RichText,
-            toImportValue: (data) => {
-                const processedRte = this.processImportRichTextHtmlValue(data.value ?? '', data.importedItems);
-                const componentItems: IParsedContentItem[] = [];
+    private readonly importTransforms: Readonly<Record<ElementType, ImportTransformFunc>> = {
+        asset: (data) => {
+            return this.elementsBuilder.assetElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: this.parseArrayValue(data.value).map((m) => {
+                    const assetId = extractAssetIdFromUrl(m);
 
-                for (const componentCodename of processedRte.componentCodenames) {
-                    const componentItem = data.sourceItems.find((m) => m.codename === componentCodename);
+                    // find id of imported asset
+                    const importedAsset = data.importedItems.find((s) => s.originalId === assetId);
 
-                    if (!componentItem) {
-                        throw Error(`Could not find component item with codename '${componentCodename}'`);
+                    if (!importedAsset) {
+                        throw Error(`Could not find imported asset for asset with original id '${assetId}'`);
                     }
 
-                    componentItems.push(componentItem);
+                    return {
+                        id: importedAsset.importId
+                    };
+                })
+            });
+        },
+        custom: (data) => {
+            return this.elementsBuilder.customElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: data.value ?? ''
+            });
+        },
+        date_time: (data) => {
+            return this.elementsBuilder.dateTimeElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: data.value ?? undefined
+            });
+        },
+        modular_content: (data) => {
+            return this.elementsBuilder.linkedItemsElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: this.parseArrayValue(data.value).map((m) => {
+                    return {
+                        codename: m
+                    };
+                })
+            });
+        },
+        multiple_choice: (data) => {
+            return this.elementsBuilder.multipleChoiceElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: this.parseArrayValue(data.value).map((m) => {
+                    return {
+                        codename: m
+                    };
+                })
+            });
+        },
+        number: (data) => {
+            return this.elementsBuilder.numberElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: data.value ? +data.value : undefined
+            });
+        },
+        rich_text: (data) => {
+            const processedRte = this.processImportRichTextHtmlValue(data.value ?? '', data.importedItems);
+            const componentItems: IParsedContentItem[] = [];
+
+            for (const componentCodename of processedRte.componentCodenames) {
+                const componentItem = data.sourceItems.find((m) => m.codename === componentCodename);
+
+                if (!componentItem) {
+                    throw Error(`Could not find component item with codename '${componentCodename}'`);
                 }
 
-                return this.elementsBuilder.richTextElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    components: componentItems.map((m) => {
-                        const itemElements: LanguageVariantElements.ILanguageVariantElementBase[] = m.elements
-                            .map((e) =>
-                                this.transformToImportValue(
-                                    e.value,
-                                    e.codename,
-                                    e.type,
-                                    data.importedItems,
-                                    data.sourceItems
-                                )
+                componentItems.push(componentItem);
+            }
+
+            return this.elementsBuilder.richTextElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                components: componentItems.map((m) => {
+                    const itemElements: LanguageVariantElements.ILanguageVariantElementBase[] = m.elements
+                        .map((e) =>
+                            this.transformToImportValue(
+                                e.value,
+                                e.codename,
+                                e.type,
+                                data.importedItems,
+                                data.sourceItems
                             )
-                            .filter((s) => s)
-                            .map((s) => s as LanguageVariantElements.ILanguageVariantElementBase);
+                        )
+                        .filter((s) => s)
+                        .map((s) => s as LanguageVariantElements.ILanguageVariantElementBase);
 
-                        const componentContract: LanguageVariantElements.IRichTextComponent = {
-                            id: this.convertComponentCodenameToId(m.codename),
-                            type: {
-                                codename: m.type
-                            },
-                            elements: itemElements
-                        };
+                    const componentContract: LanguageVariantElements.IRichTextComponent = {
+                        id: this.convertComponentCodenameToId(m.codename),
+                        type: {
+                            codename: m.type
+                        },
+                        elements: itemElements
+                    };
 
-                        return componentContract;
-                    }),
-                    value: processedRte.processedHtml
-                });
-            }
+                    return componentContract;
+                }),
+                value: processedRte.processedHtml
+            });
         },
-        {
-            type: ElementType.Asset,
-            toImportValue: (data) => {
-                return this.elementsBuilder.assetElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    value: this.parseArrayValue(data.value).map((m) => {
-                        const assetId = extractAssetIdFromUrl(m);
-
-                        // find id of imported asset
-                        const importedAsset = data.importedItems.find((s) => s.originalId === assetId);
-
-                        if (!importedAsset) {
-                            throw Error(`Could not find imported asset for asset with original id '${assetId}'`);
-                        }
-
-                        return {
-                            id: importedAsset.importId
-                        };
-                    })
-                });
-            }
+        taxonomy: (data) => {
+            return this.elementsBuilder.taxonomyElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: this.parseArrayValue(data.value).map((m) => {
+                    return {
+                        codename: m
+                    };
+                })
+            });
         },
-        {
-            type: ElementType.Taxonomy,
-            toImportValue: (data) => {
-                return this.elementsBuilder.taxonomyElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    value: this.parseArrayValue(data.value).map((m) => {
-                        return {
-                            codename: m
-                        };
-                    })
-                });
-            }
+        text: (data) => {
+            return this.elementsBuilder.textElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: data.value ?? undefined
+            });
         },
-        {
-            type: ElementType.ModularContent,
-            toImportValue: (data) => {
-                return this.elementsBuilder.linkedItemsElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    value: this.parseArrayValue(data.value).map((m) => {
-                        return {
-                            codename: m
-                        };
-                    })
-                });
-            }
+        unknown: (data) => {
+            return this.elementsBuilder.customElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: data.value ?? undefined
+            });
         },
-        {
-            type: ElementType.UrlSlug,
-            toImportValue: (data) => {
-                return this.elementsBuilder.urlSlugElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    value: data.value ?? '',
-                    mode: 'custom'
-                });
-            }
-        },
-        {
-            type: ElementType.Custom,
-            toImportValue: (data) => {
-                return this.elementsBuilder.customElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    value: data.value ?? ''
-                });
-            }
-        },
-        {
-            type: ElementType.MultipleChoice,
-
-            toImportValue: (data) => {
-                return this.elementsBuilder.multipleChoiceElement({
-                    element: {
-                        codename: data.elementCodename
-                    },
-                    value: this.parseArrayValue(data.value).map((m) => {
-                        return {
-                            codename: m
-                        };
-                    })
-                });
-            }
+        url_slug: (data) => {
+            return this.elementsBuilder.urlSlugElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: data.value ?? '',
+                mode: 'custom'
+            });
         }
-    ];
+    };
 
     transformToExportElementValue(
         element: ContentItemElementsIndexer,
         items: IContentItem[],
         types: IContentType[]
     ): string | string[] | undefined {
-        const transform = this.exportTransforms.find((m) => m.type === element.type);
+        const transformFunc = this.exportTransforms[element.type];
 
-        if (transform) {
-            return transform.toExportValue({
-                element: element,
-                items: items,
-                types: types
-            });
-        }
-
-        logDebug('warning', 'Missing export transform for element type', element.type);
-
-        return '';
+        return transformFunc({
+            element: element,
+            items: items,
+            types: types
+        });
     }
 
     transformToImportValue(
@@ -297,20 +233,14 @@ export class TranslationHelper {
         importedITems: IImportItemResult[],
         sourceItems: IParsedContentItem[]
     ): ElementContracts.IContentItemElementContract | undefined {
-        const transform = this.importTransforms.find((m) => m.type === type);
+        const transformFunc = this.importTransforms[type];
 
-        if (transform) {
-            return transform.toImportValue({
-                importedItems: importedITems,
-                elementCodename: elementCodename,
-                value: value,
-                sourceItems: sourceItems
-            });
-        }
-
-        logDebug('warning', 'Missing import transform for element type', type);
-
-        return undefined;
+        return transformFunc({
+            importedItems: importedITems,
+            elementCodename: elementCodename,
+            value: value,
+            sourceItems: sourceItems
+        });
     }
 
     private parseArrayValue(value: string | Array<string> | undefined): string[] {
