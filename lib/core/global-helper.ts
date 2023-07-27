@@ -2,12 +2,18 @@ import { IManagementClient, EnvironmentModels, SharedModels } from '@kontent-ai/
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
 import { logDebug } from './log-helper';
+import { ActionType, ItemType } from './core.models';
+import { HttpService } from '@kontent-ai/core-sdk';
 
 const rateExceededErrorCode: number = 10000;
 
 export function formatBytes(bytes: number): string {
     return format(bytes);
 }
+
+export const httpService: HttpService = new HttpService({
+    logErrorsToConsole: false
+});
 
 export const defaultRetryStrategy: IRetryStrategyOptions = {
     addJitter: true,
@@ -35,6 +41,18 @@ export async function printProjectAndEnvironmentInfoToConsoleAsync(
     logDebug('info', 'Environment', environmentInformation.project.environment);
 
     return environmentInformation.project;
+}
+
+export function logAction(
+    actionType: ActionType,
+    itemType: ItemType,
+    data: {
+        language?: string;
+        workflowStep?: string;
+        title: string;
+    }
+): void {
+    logDebug(actionType, data.title, itemType, data.language, data.workflowStep);
 }
 
 export function getFilenameWithoutExtension(filename: string): string {
