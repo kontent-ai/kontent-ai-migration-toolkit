@@ -38,8 +38,10 @@ const argv = yargs(process.argv.slice(2))
     .describe('pk', 'Use if you want to export data using Preview API')
     .alias('a', 'action')
     .describe('a', 'Action to perform. One of: "backup" | "restore"')
-    .alias('f', 'filename')
-    .describe('f', 'Name of file to export / restore')
+    .alias('if', 'itemsFilename')
+    .describe('if', 'Name of items file to export / restore')
+    .alias('af', 'assetsFilename')
+    .describe('af', 'Name of assets file to export / restore')
     .alias('of', 'format')
     .describe('of', 'Format of the export. One of: "csv" | "json" | "jsonSingle"')
     .alias('b', 'baseUrl')
@@ -51,8 +53,6 @@ const argv = yargs(process.argv.slice(2))
         'et',
         'Can be used to export only selected content types. Expects CSV of type codenames. If not provided, all content items of all types are exported'
     )
-    .alias('ea', 'exportAssets')
-    .describe('at', 'Indicated if assets should be exported. Supported values are "true" | "false"')
     .help('h')
     .alias('h', 'help').argv;
 
@@ -74,12 +74,17 @@ const backupAsync = async (config: ICliFileConfig) => {
 
     const response = await exportService.exportAllAsync();
 
-    const zipFileData = await fileProcessorService.createZipAsync(response, {
-        itemFormatService: getItemFormatService(config.format),
-        assetFormatService: getAssetFormatService(config.format)
+    const itemsZipFileData = await fileProcessorService.createItemsZipAsync(response, {
+        itemFormatService: getItemFormatService(config.format)
     });
+    await fileService.writeFileAsync(config.itemsFilename, itemsZipFileData);
 
-    await fileService.writeFileAsync(config.filename, zipFileData);
+    if (config.exportAssets && config.assetsFilename) {
+        const assetsZipFileData = await fileProcessorService.createAssetsZipAsync(response, {
+            assetFormatService: getAssetFormatService(config.format)
+        });
+        await fileService.writeFileAsync(config.assetsFilename, assetsZipFileData);
+    }
 
     logDebug('info', `Completed`);
 };
@@ -111,23 +116,33 @@ const restoreAsync = async (config: ICliFileConfig) => {
 
     const contentTypes = await importService.getImportContentTypesAsync();
 
-    const file = await fileService.loadFileAsync(config.filename);
-    const fileExtension = getExtension(config.filename);
+    const itemsFile = await fileService.loadFileAsync(config.itemsFilename);
+    const itemsFileExtension = getExtension(config.itemsFilename);
 
-    if (fileExtension?.endsWith('zip')) {
-        const data = await fileProcessorService.extractZipAsync(file, contentTypes, {
+    let assetsFile: Buffer | undefined = undefined;
+    if (config.assetsFilename) {
+        assetsFile = await fileService.loadFileAsync(config.assetsFilename);
+        const assetsFileExtension = getExtension(config.assetsFilename);
+
+        if (!assetsFileExtension?.endsWith('zip')) {
+            throw Error(`Assets required zip folder. Received '${config.assetsFilename}'`);
+        }
+    }
+
+    if (itemsFileExtension?.endsWith('zip')) {
+        const data = await fileProcessorService.extractZipAsync(itemsFile, assetsFile, contentTypes, {
             assetFormatService: getAssetFormatService(config.format),
             itemFormatService: getItemFormatService(config.format)
         });
         await importService.importFromSourceAsync(data);
-    } else if (fileExtension?.endsWith('csv')) {
-        const data = await fileProcessorService.extractCsvFileAsync(file, contentTypes);
+    } else if (itemsFileExtension?.endsWith('csv')) {
+        const data = await fileProcessorService.extractCsvFileAsync(itemsFile, contentTypes);
         await importService.importFromSourceAsync(data);
-    } else if (fileExtension?.endsWith('json')) {
-        const data = await fileProcessorService.extractJsonFileAsync(file, contentTypes);
+    } else if (itemsFileExtension?.endsWith('json')) {
+        const data = await fileProcessorService.extractJsonFileAsync(itemsFile, contentTypes);
         await importService.importFromSourceAsync(data);
     } else {
-        throw Error(`Unsupported file type '${fileExtension}'`);
+        throw Error(`Unsupported file type '${itemsFileExtension}'`);
     }
 
     logDebug('info', `Completed`);
@@ -186,7 +201,9 @@ const getConfig = async () => {
     const environmentId: string | undefined = resolvedArgs.environmentId as string | undefined;
     const format: string | undefined = resolvedArgs.format as string | undefined;
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
-    const filename: string | undefined = (resolvedArgs.filename as string | undefined) ?? getDefaultBackupFilename();
+    const itemsFilename: string | undefined =
+        (resolvedArgs.itemsFilename as string | undefined) ?? getDefaultBackupFilename('items');
+    const assetsFilename: string | undefined = resolvedArgs.assetsFilename as string | undefined;
     const exportTypes: string | undefined = resolvedArgs.exportTypes as string | undefined;
     const exportAssets: boolean =
         (resolvedArgs.exportAssets as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
@@ -222,7 +239,8 @@ const getConfig = async () => {
         action,
         apiKey,
         environmentId,
-        filename: filename,
+        itemsFilename: itemsFilename,
+        assetsFilename: assetsFilename,
         baseUrl,
         exportTypes: typesMapped,
         exportAssets: exportAssets,
@@ -236,9 +254,9 @@ const getConfig = async () => {
     return config;
 };
 
-const getDefaultBackupFilename = () => {
+const getDefaultBackupFilename = (type: 'items') => {
     const date = new Date();
-    return `csv-backup-${date.getDate()}-${
+    return `${type}-backup-${date.getDate()}-${
         date.getMonth() + 1
     }-${date.getFullYear()}-${date.getHours()}-${date.getMinutes()}.zip`;
 };

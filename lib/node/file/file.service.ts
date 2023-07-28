@@ -7,7 +7,7 @@ export class FileService {
     async loadFileAsync(filename: string): Promise<Buffer> {
         const filePath = this.getFilePath(filename);
 
-        logDebug('read', filePath);
+        logDebug('readFs', filePath);
         const file = await promises.readFile(filePath);
 
         return file;
@@ -16,8 +16,8 @@ export class FileService {
     async writeFileAsync(fileNameWithoutExtension: string, content: any): Promise<void> {
         const filePath = this.getFilePath(fileNameWithoutExtension);
 
+        logDebug('writeFs', filePath);
         await promises.writeFile(filePath, content);
-        logDebug('save', filePath);
     }
 
     private getFilePath(filename: string) {

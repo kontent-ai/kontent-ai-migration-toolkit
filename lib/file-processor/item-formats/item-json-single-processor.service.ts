@@ -40,7 +40,7 @@ export class ItemJsonSingleProcessorService extends BaseItemProcessorService {
         const joinedFileData: IFileData[] = [
             {
                 data: JSON.stringify(allJsonItems),
-                filename: 'export.json'
+                filename: 'items.json'
             }
         ];
 

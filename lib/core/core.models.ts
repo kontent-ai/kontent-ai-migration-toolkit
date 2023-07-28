@@ -10,7 +10,8 @@ export interface ICliFileConfig {
     previewApiKey?: string;
     skipFailedItems: boolean;
     action: CliAction;
-    filename: string;
+    itemsFilename: string;
+    assetsFilename?: string;
     baseUrl?: string;
     exportTypes?: string[];
     exportAssets: boolean;
@@ -23,6 +24,8 @@ export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset'
 export type ActionType =
     | 'skipUpdate'
     | 'save'
+    | 'readFs'
+    | 'writeFs'
     | 'download'
     | 'zip'
     | 'read'
