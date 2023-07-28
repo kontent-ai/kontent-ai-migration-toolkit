@@ -56,11 +56,11 @@ Install package globally:
 
 Backup without assets:
 
-`kdm --action=backup --environmentId=xxx --format=csv`
+`kdm --action=backup --environmentId=xxx --format=csv --itemsFilename=items-backup.zip`
 
 Backup with assets:
 
-`kdm --action=backup --environmentId=xxx --format=csv --assetsFilename=assets-backup` 
+`kdm --action=backup --environmentId=xxx --format=csv --itemsFilename=items-backup.zip --assetsFilename=assets-backup` 
 
 Restore without assets:
 
@@ -68,7 +68,7 @@ Restore without assets:
 
 Restore with assets:
 
-`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=backup.zip|data.csv|data.json --assetsFilename=assets-backup.zip`
+`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=backup.zip --assetsFilename=assets-backup.zip`
 
 To get some help you can use:
 
