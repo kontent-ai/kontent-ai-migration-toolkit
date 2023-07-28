@@ -8,7 +8,7 @@ export abstract class BaseItemProcessorService implements IItemFormatService {
     abstract parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]>;
 
     protected getSystemContentItemFields(): string[] {
-        return ['codename', 'name', 'language', 'type', 'collection', 'last_modified', 'workflow_step'];
+        return ['type', 'codename', 'name', 'language', 'collection', 'last_modified', 'workflow_step'];
     }
 
     protected getElement(
