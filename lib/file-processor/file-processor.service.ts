@@ -2,21 +2,22 @@ import { HttpService } from '@kontent-ai/core-sdk';
 import * as JSZip from 'jszip';
 import { Blob } from 'buffer';
 
-import { IExportAllResult, IExportedAsset } from '../export';
+import { IExportAllResult } from '../export';
 import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset, IImportContentType } from '../import';
 import {
     IFileData,
     IFileProcessorConfig,
-    IFormatService,
+    IItemFormatService,
     IExtractedBinaryFileData,
     ZipCompressionLevel,
-    ZipContext
+    ZipContext,
+    IAssetFormatService
 } from './file-processor.models';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { formatBytes, getExtension, sleepAsync } from '../core';
 import { getType } from 'mime';
-import { CsvProcessorService } from './formats/csv-processor.service';
-import { JsonProcessorService } from './formats/json-processor.service';
+import { ItemCsvProcessorService } from './item-formats/item-csv-processor.service';
+import { ItemJsonProcessorService } from './item-formats/item-json-processor.service';
 import { logDebug } from '../core/log-helper';
 
 export class FileProcessorService {
@@ -29,8 +30,8 @@ export class FileProcessorService {
     private readonly contentItemsFolderName: string = 'items';
 
     private readonly httpService: HttpService = new HttpService();
-    private readonly csvProcessorService: CsvProcessorService = new CsvProcessorService();
-    private readonly jsonProcessorService: JsonProcessorService = new JsonProcessorService();
+    private readonly itemCsvProcessorService: ItemCsvProcessorService = new ItemCsvProcessorService();
+    private readonly itemJsonProcessorService: ItemJsonProcessorService = new ItemJsonProcessorService();
 
     constructor(config?: IFileProcessorConfig) {
         this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 50;
@@ -39,7 +40,7 @@ export class FileProcessorService {
     async extractZipAsync(
         file: Buffer,
         types: IImportContentType[],
-        config?: { formatService?: IFormatService }
+        config: { itemFormatService: IItemFormatService; assetFormatService: IAssetFormatService }
     ): Promise<IImportSource> {
         logDebug('info', 'Loading zip file');
 
@@ -49,8 +50,8 @@ export class FileProcessorService {
 
         const result: IImportSource = {
             importData: {
-                items: await this.parseContentItemsFromZipAsync(zipFile, types, config?.formatService),
-                assets: await this.parseAssetsFromFileAsync(zipFile, config?.formatService)
+                items: await this.parseContentItemsFromZipAsync(zipFile, types, config.itemFormatService),
+                assets: await this.parseAssetsFromFileAsync(zipFile, config.assetFormatService)
             },
             metadata: await this.parseMetadataFromZipAsync(zipFile, this.metadataName)
         };
@@ -65,7 +66,7 @@ export class FileProcessorService {
 
         const result: IImportSource = {
             importData: {
-                items: await this.csvProcessorService.parseContentItemsAsync(file.toString(), types),
+                items: await this.itemCsvProcessorService.parseContentItemsAsync(file.toString(), types),
                 assets: []
             },
             metadata: undefined
@@ -81,7 +82,7 @@ export class FileProcessorService {
 
         const result: IImportSource = {
             importData: {
-                items: await this.jsonProcessorService.parseContentItemsAsync(file.toString(), types),
+                items: await this.itemJsonProcessorService.parseContentItemsAsync(file.toString(), types),
                 assets: []
             },
             metadata: undefined
@@ -94,7 +95,11 @@ export class FileProcessorService {
 
     async createZipAsync(
         exportData: IExportAllResult,
-        config: { formatService: IFormatService; compressionLevel?: ZipCompressionLevel }
+        config: {
+            itemFormatService: IItemFormatService;
+            assetFormatService: IAssetFormatService;
+            compressionLevel?: ZipCompressionLevel;
+        }
     ): Promise<any> {
         const zip = new JSZip();
 
@@ -114,16 +119,19 @@ export class FileProcessorService {
             throw Error(`Could not create folder '${this.contentItemsFolderName}'`);
         }
 
+        logDebug('info', `Storing metadata`, this.metadataName);
+        zip.file(this.metadataName, JSON.stringify(exportData.metadata));
+
         logDebug(
             'info',
-            `Transforming content '${exportData.data.contentItems.length.toString()}' items`,
-            config.formatService?.name
+            `Transforming '${exportData.data.contentItems.length.toString()}' content items`,
+            config.itemFormatService?.name
         );
 
         const transformedLanguageVariantsFileData = await this.transformLanguageVariantsAsync(
             exportData.data.contentTypes,
             exportData.data.contentItems,
-            config.formatService
+            config.itemFormatService
         );
 
         for (const fileInfo of transformedLanguageVariantsFileData) {
@@ -131,12 +139,14 @@ export class FileProcessorService {
             contentItemsFolder.file(fileInfo.filename, fileInfo.data);
         }
 
-        zip.file(this.metadataName, JSON.stringify(exportData.metadata));
-
         if (exportData.data.assets.length) {
-            const transformedAssetsFileData = await this.transformAssetsAsync(
-                exportData.data.assets,
-                config.formatService
+            logDebug(
+                'info',
+                `Transforming '${exportData.data.assets.length.toString()}' asssets`,
+                config.assetFormatService?.name
+            );
+            const transformedAssetsFileData = await config.assetFormatService.transformAssetsAsync(
+                exportData.data.assets
             );
 
             for (const fileInfo of transformedAssetsFileData) {
@@ -197,16 +207,15 @@ export class FileProcessorService {
     private async transformLanguageVariantsAsync(
         types: IContentType[],
         items: IContentItem[],
-        formatService: IFormatService
+        formatService: IItemFormatService
     ): Promise<IFileData[]> {
         return await formatService.transformContentItemsAsync(types, items);
     }
 
-    private async transformAssetsAsync(assets: IExportedAsset[], formatService: IFormatService): Promise<IFileData[]> {
-        return await formatService.transformAssetsAsync(assets);
-    }
-
-    private async parseAssetsFromFileAsync(zip: JSZip, formatService?: IFormatService): Promise<IImportAsset[]> {
+    private async parseAssetsFromFileAsync(
+        zip: JSZip,
+        assetFormatService: IAssetFormatService
+    ): Promise<IImportAsset[]> {
         const importAssets: IImportAsset[] = [];
         const parsedAssets: IParsedAsset[] = [];
 
@@ -226,16 +235,7 @@ export class FileProcessorService {
 
             const text = await file.async('string');
 
-            if (formatService) {
-                // use custom format service
-                parsedAssets.push(...(await formatService.parseAssetsAsync(text)));
-            } else if (file.name?.toLowerCase()?.endsWith('.csv')) {
-                parsedAssets.push(...(await this.csvProcessorService.parseAssetsAsync(text)));
-            } else if (file.name?.toLowerCase()?.endsWith('.json')) {
-                parsedAssets.push(...(await this.jsonProcessorService.parseAssetsAsync(text)));
-            } else {
-                throw Error(`Could not extract file '${file.name}'`);
-            }
+            parsedAssets.push(...(await assetFormatService.parseAssetsAsync(text)));
         }
 
         for (const parsedAsset of parsedAssets) {
@@ -329,7 +329,7 @@ export class FileProcessorService {
     private async parseContentItemsFromZipAsync(
         fileContents: JSZip,
         types: IImportContentType[],
-        formatService?: IFormatService
+        formatService: IItemFormatService
     ): Promise<IParsedContentItem[]> {
         const files = fileContents.files;
         const parsedItems: IParsedContentItem[] = [];
@@ -346,16 +346,7 @@ export class FileProcessorService {
 
             const text = await file.async('text');
 
-            if (formatService) {
-                // use custom format service
-                parsedItems.push(...(await formatService.parseContentItemsAsync(text, types)));
-            } else if (file.name?.toLowerCase()?.endsWith('.csv')) {
-                parsedItems.push(...(await this.csvProcessorService.parseContentItemsAsync(text, types)));
-            } else if (file.name?.toLowerCase()?.endsWith('.json')) {
-                parsedItems.push(...(await this.jsonProcessorService.parseContentItemsAsync(text, types)));
-            } else {
-                throw Error(`Could not extract file '${file.name}'`);
-            }
+            parsedItems.push(...(await formatService.parseContentItemsAsync(text, types)));
         }
 
         return parsedItems;

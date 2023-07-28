@@ -1,4 +1,4 @@
-import { FileProcessorService, JsonProcessorService } from '../lib/file-processor';
+import { FileProcessorService, ItemJsonProcessorService } from '../lib/file-processor';
 
 import { ExportService } from '../lib/export';
 import { FileService } from '../lib/node';
@@ -16,7 +16,7 @@ const run = async () => {
     const data = await exportService.exportAllAsync();
 
     // prepare zip file
-    const zipFile = await zipService.createZipAsync(data, { formatService: new JsonProcessorService() });
+    const zipFile = await zipService.createZipAsync(data, { itemFormatService: new ItemJsonProcessorService() });
 
     // save zip to file system (node.js only)
     await fileService.writeFileAsync('filename', zipFile);

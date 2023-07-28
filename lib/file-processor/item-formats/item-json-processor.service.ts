@@ -1,8 +1,7 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IExportedAsset } from '../../export';
-import { IImportContentType, IParsedAsset, IParsedContentItem, IParsedElement } from '../../import';
+import { IImportContentType, IParsedContentItem, IParsedElement } from '../../import';
 import { IFileData } from '../file-processor.models';
-import { BaseProcessorService } from './base-processor.service';
+import { BaseItemProcessorService } from '../base-item-processor.service';
 import { translationHelper } from '../../core';
 
 interface IJsonItem {
@@ -20,7 +19,7 @@ interface IJsonItem {
     };
 }
 
-export class JsonProcessorService extends BaseProcessorService {
+export class ItemJsonProcessorService extends BaseItemProcessorService {
     public readonly name: string = 'json';
     async transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
         const fileData: IFileData[] = [];
@@ -73,29 +72,6 @@ export class JsonProcessorService extends BaseProcessorService {
         }
 
         return parsedItems;
-    }
-
-    async transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]> {
-        return [
-            {
-                filename: 'assets.json',
-                data: JSON.stringify(
-                    assets.map((m) => {
-                        const parsedAsset: IParsedAsset = {
-                            assetId: m.assetId,
-                            extension: m.extension,
-                            filename: m.filename,
-                            url: m.url
-                        };
-
-                        return parsedAsset;
-                    })
-                )
-            }
-        ];
-    }
-    async parseAssetsAsync(text: string): Promise<IParsedAsset[]> {
-        return JSON.parse(text) as IParsedAsset[];
     }
 
     private mapToJsonItem(item: IContentItem, types: IContentType[], items: IContentItem[]): IJsonItem {

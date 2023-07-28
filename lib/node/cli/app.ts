@@ -6,12 +6,15 @@ import { ICliFileConfig, CliAction, getExtension, extractErrorMessage } from '..
 import { ExportService } from '../../export';
 import { ImportService } from '../../import';
 import {
-    CsvProcessorService,
-    ExportFormat,
+    ItemCsvProcessorService,
+    ProcessingFormat,
     FileProcessorService,
-    IFormatService,
-    JsonProcessorService,
-    JsonSingleProcessorService
+    IItemFormatService,
+    ItemJsonProcessorService,
+    ItemJsonSingleProcessorService,
+    IAssetFormatService,
+    AssetCsvProcessorService,
+    AssetJsonProcessorService
 } from '../../file-processor';
 import { FileService } from '../file/file.service';
 import { logDebug } from '../../core/log-helper';
@@ -38,7 +41,7 @@ const argv = yargs(process.argv.slice(2))
     .alias('f', 'filename')
     .describe('f', 'Name of file to export / restore')
     .alias('of', 'format')
-    .describe('of', 'Format of the export. One of: "csv" | "json"')
+    .describe('of', 'Format of the export. One of: "csv" | "json" | "jsonSingle"')
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
     .alias('sfi', 'skipFailedItems')
@@ -52,10 +55,6 @@ const argv = yargs(process.argv.slice(2))
     .describe('at', 'Indicated if assets should be exported. Supported values are "true" | "false"')
     .help('h')
     .alias('h', 'help').argv;
-
-const jsonFormatService = new JsonProcessorService();
-const jsonSingleFormatService = new JsonSingleProcessorService();
-const csvFormatService = new CsvProcessorService();
 
 const backupAsync = async (config: ICliFileConfig) => {
     const exportService = new ExportService({
@@ -75,18 +74,10 @@ const backupAsync = async (config: ICliFileConfig) => {
 
     const response = await exportService.exportAllAsync();
 
-    let formatService: IFormatService;
-    if (config.format === 'csv') {
-        formatService = csvFormatService;
-    } else if (config.format === 'json') {
-        formatService = jsonFormatService;
-    } else if (config.format === 'jsonSingle') {
-        formatService = jsonSingleFormatService;
-    } else {
-        throw Error(`Unsupported export format '${config.format}'`);
-    }
-
-    const zipFileData = await fileProcessorService.createZipAsync(response, { formatService: formatService });
+    const zipFileData = await fileProcessorService.createZipAsync(response, {
+        itemFormatService: getItemFormatService(config.format),
+        assetFormatService: getAssetFormatService(config.format)
+    });
 
     await fileService.writeFileAsync(config.filename, zipFileData);
 
@@ -124,7 +115,10 @@ const restoreAsync = async (config: ICliFileConfig) => {
     const fileExtension = getExtension(config.filename);
 
     if (fileExtension?.endsWith('zip')) {
-        const data = await fileProcessorService.extractZipAsync(file, contentTypes);
+        const data = await fileProcessorService.extractZipAsync(file, contentTypes, {
+            assetFormatService: getAssetFormatService(config.format),
+            itemFormatService: getItemFormatService(config.format)
+        });
         await importService.importFromSourceAsync(data);
     } else if (fileExtension?.endsWith('csv')) {
         const data = await fileProcessorService.extractCsvFileAsync(file, contentTypes);
@@ -142,6 +136,10 @@ const restoreAsync = async (config: ICliFileConfig) => {
 const validateConfig = (config?: ICliFileConfig) => {
     if (!config) {
         throw Error(`Invalid config file`);
+    }
+
+    if (!config.format) {
+        throw Error(`Please specify 'format'`);
     }
 
     const environmentId = config.environmentId;
@@ -199,7 +197,7 @@ const getConfig = async () => {
 
     const typesMapped: string[] = exportTypes ? exportTypes.split(',').map((m) => m.trim()) : [];
 
-    let mappedFormat: ExportFormat = 'csv';
+    let mappedFormat: ProcessingFormat = 'csv';
 
     if (format?.toLowerCase() === 'csv') {
         mappedFormat = 'csv';
@@ -251,3 +249,31 @@ run()
         console.error(err);
         logDebug('error', extractErrorMessage(err));
     });
+
+function getAssetFormatService(format: ProcessingFormat | undefined): IAssetFormatService {
+    if (format === 'csv') {
+        return new AssetCsvProcessorService();
+    }
+
+    if (format === 'json' || format === 'jsonSingle') {
+        return new AssetJsonProcessorService();
+    }
+
+    throw Error(`Unsupported format '${format}' for exporting assets`);
+}
+
+function getItemFormatService(format: ProcessingFormat | undefined): IItemFormatService {
+    if (format === 'csv') {
+        return new ItemCsvProcessorService();
+    }
+
+    if (format === 'json') {
+        return new ItemJsonProcessorService();
+    }
+
+    if (format === 'jsonSingle') {
+        return new ItemJsonSingleProcessorService();
+    }
+
+    throw Error(`Unsupported format '${format}' for exporting assets`);
+}

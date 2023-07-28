@@ -1,9 +1,9 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IExportedAsset } from '../lib/export';
-import { IFormatService, IFileData } from '../lib/file-processor';
+import { IItemFormatService, IFileData } from '../lib/file-processor';
 import { IParsedContentItem, IParsedAsset } from '../lib/import';
 
-export class CustomProcessorService implements IFormatService {
+export class CustomProcessorService implements IItemFormatService {
     public readonly name: string = 'sample';
     async transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
         const typeWrappers: IFileData[] = [];

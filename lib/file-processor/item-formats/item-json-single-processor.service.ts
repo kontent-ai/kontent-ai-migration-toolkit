@@ -1,9 +1,8 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IExportedAsset } from '../../export';
-import { IImportContentType, IParsedAsset, IParsedContentItem } from '../../import';
+import { IImportContentType, IParsedContentItem } from '../../import';
 import { IFileData } from '../file-processor.models';
-import { BaseProcessorService } from './base-processor.service';
-import { JsonProcessorService } from './json-processor.service';
+import { BaseItemProcessorService } from '../base-item-processor.service';
+import { ItemJsonProcessorService } from './item-json-processor.service';
 
 interface IJsonItem {
     system: {
@@ -20,8 +19,8 @@ interface IJsonItem {
     };
 }
 
-export class JsonSingleProcessorService extends BaseProcessorService {
-    private readonly jsonProcessorService = new JsonProcessorService();
+export class ItemJsonSingleProcessorService extends BaseItemProcessorService {
+    private readonly jsonProcessorService = new ItemJsonProcessorService();
 
     public readonly name: string = 'json';
     async transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
@@ -50,12 +49,5 @@ export class JsonSingleProcessorService extends BaseProcessorService {
 
     async parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]> {
         return await this.jsonProcessorService.parseContentItemsAsync(text, types);
-    }
-
-    async transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]> {
-        return await this.jsonProcessorService.transformAssetsAsync(assets);
-    }
-    async parseAssetsAsync(text: string): Promise<IParsedAsset[]> {
-        return await this.jsonProcessorService.parseAssetsAsync(text);
     }
 }

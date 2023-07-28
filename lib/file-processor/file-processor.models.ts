@@ -7,15 +7,20 @@ import { IImportContentType, IParsedAsset, IParsedContentItem as IParsedContentI
  */
 export type ZipContext = 'node.js' | 'browser';
 
-export type ExportFormat = 'csv' | 'json' | 'jsonSingle';
+export type ProcessingFormat = 'csv' | 'json' | 'jsonSingle';
 
 export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-export interface IFormatService {
+export interface IItemFormatService {
     name: string;
 
     transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]>;
     parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]>;
+}
+
+export interface IAssetFormatService {
+    name: string;
+
     transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]>;
     parseAssetsAsync(text: string): Promise<IParsedAsset[]>;
 }

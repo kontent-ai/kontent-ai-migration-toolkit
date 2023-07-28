@@ -1,11 +1,11 @@
 import { AssetModels, ContentItemModels, LanguageVariantModels } from '@kontent-ai/management-sdk';
-import { ExportFormat } from '../file-processor';
+import { ProcessingFormat } from '../file-processor';
 import { IImportAsset, IParsedContentItem } from '../import';
 
 export interface ICliFileConfig {
     environmentId: string;
     apiKey?: string;
-    format?: ExportFormat;
+    format?: ProcessingFormat;
     secureApiKey?: string;
     previewApiKey?: string;
     skipFailedItems: boolean;

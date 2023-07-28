@@ -1,4 +1,4 @@
-import { FileProcessorService, JsonProcessorService } from '../lib/file-processor';
+import { FileProcessorService, ItemJsonProcessorService } from '../lib/file-processor';
 import { ImportService } from '../lib/import';
 import { FileService } from '../lib/node';
 
@@ -31,7 +31,7 @@ const run = async () => {
 
     // extract file
     const data = await zipService.extractZipAsync(file, await importService.getImportContentTypesAsync(), {
-        formatService: new JsonProcessorService() // or 'CsvProcessorService' or custom service
+        formatService: new ItemJsonProcessorService() // or 'CsvProcessorService' or custom service
     });
 
     // restore into target environment

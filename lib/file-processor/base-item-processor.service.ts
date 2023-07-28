@@ -1,21 +1,14 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IExportedAsset } from '../../export';
-import { IImportContentType, IImportContentTypeElement, IParsedAsset, IParsedContentItem } from '../../import';
-import { IFormatService, IFileData } from '../file-processor.models';
+import { IImportContentType, IImportContentTypeElement, IParsedContentItem } from '../import';
+import { IItemFormatService, IFileData } from './file-processor.models';
 
-export abstract class BaseProcessorService implements IFormatService {
+export abstract class BaseItemProcessorService implements IItemFormatService {
     abstract name: string;
     abstract transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]>;
     abstract parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]>;
-    abstract transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]>;
-    abstract parseAssetsAsync(text: string): Promise<IParsedAsset[]>;
 
     protected getSystemContentItemFields(): string[] {
         return ['codename', 'name', 'language', 'type', 'collection', 'last_modified', 'workflow_step'];
-    }
-
-    protected getSystemAssetFields(): string[] {
-        return ['assetId', 'filename', 'extension', 'url'];
     }
 
     protected getElement(
