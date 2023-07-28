@@ -70,6 +70,14 @@ Restore with assets:
 
 `kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=backup.zip --assetsFilename=assets-backup.zip`
 
+Restore from json file:
+
+`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=data.json`
+
+Restore from csv file:
+
+`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv`
+
 To get some help you can use:
 
 `kdm --help`
