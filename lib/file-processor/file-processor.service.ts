@@ -65,7 +65,7 @@ export class FileProcessorService {
 
         const result: IImportSource = {
             importData: {
-                items: await this.csvProcessorService.parseFromExportDataAsync(file.toString(), types),
+                items: await this.csvProcessorService.parseContentItemsAsync(file.toString(), types),
                 assets: []
             },
             metadata: undefined
@@ -81,7 +81,7 @@ export class FileProcessorService {
 
         const result: IImportSource = {
             importData: {
-                items: await this.jsonProcessorService.parseFromExportDataAsync(file.toString(), types),
+                items: await this.jsonProcessorService.parseContentItemsAsync(file.toString(), types),
                 assets: []
             },
             metadata: undefined
@@ -199,7 +199,7 @@ export class FileProcessorService {
         items: IContentItem[],
         formatService: IFormatService
     ): Promise<IFileData[]> {
-        return await formatService.transformToExportDataAsync(types, items);
+        return await formatService.transformContentItemsAsync(types, items);
     }
 
     private async transformAssetsAsync(assets: IExportedAsset[], formatService: IFormatService): Promise<IFileData[]> {
@@ -348,11 +348,11 @@ export class FileProcessorService {
 
             if (formatService) {
                 // use custom format service
-                parsedItems.push(...(await formatService.parseFromExportDataAsync(text, types)));
+                parsedItems.push(...(await formatService.parseContentItemsAsync(text, types)));
             } else if (file.name?.toLowerCase()?.endsWith('.csv')) {
-                parsedItems.push(...(await this.csvProcessorService.parseFromExportDataAsync(text, types)));
+                parsedItems.push(...(await this.csvProcessorService.parseContentItemsAsync(text, types)));
             } else if (file.name?.toLowerCase()?.endsWith('.json')) {
-                parsedItems.push(...(await this.jsonProcessorService.parseFromExportDataAsync(text, types)));
+                parsedItems.push(...(await this.jsonProcessorService.parseContentItemsAsync(text, types)));
             } else {
                 throw Error(`Could not extract file '${file.name}'`);
             }

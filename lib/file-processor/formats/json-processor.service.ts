@@ -1,8 +1,9 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IExportedAsset } from '../../export';
-import { IImportContentType, IParsedAsset, IParsedContentItem } from '../../import';
-import { IFlattenedContentItem, IFileData } from '../file-processor.models';
+import { IImportContentType, IParsedAsset, IParsedContentItem, IParsedElement } from '../../import';
+import { IFileData } from '../file-processor.models';
 import { BaseProcessorService } from './base-processor.service';
+import { translationHelper } from '../../core';
 
 interface IJsonItem {
     system: {
@@ -15,85 +16,60 @@ interface IJsonItem {
         workflow_step?: string;
     };
     elements: {
-        [elementCodename: string]: string;
+        [elementCodename: string]: string | string[] | undefined;
     };
 }
 
 export class JsonProcessorService extends BaseProcessorService {
     public readonly name: string = 'json';
-    async transformToExportDataAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
-        const systemProperties = super.getSystemContentItemFields();
-        const typeWrappers: IFileData[] = [];
-        const flattenedContentItems: IFlattenedContentItem[] = super.flattenContentItems(items, types);
+    async transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
+        const fileData: IFileData[] = [];
         for (const contentType of types) {
-            const contentItemsOfType = flattenedContentItems.filter((m) => m.type === contentType.system.codename);
+            const contentItemsOfType = items.filter((m) => m.system.type === contentType.system.codename);
 
             const filename: string = `${contentType.system.codename}.json`;
-            const jsonItems: IJsonItem[] = contentItemsOfType.map((m) => {
-                const elements: { [elementCodename: string]: string } = {};
-                for (const property of Object.keys(m)) {
-                    if (!systemProperties.find((s) => s === property)) {
-                        elements[property] = m[property];
-                    }
-                }
+            const jsonItems: IJsonItem[] = contentItemsOfType.map((m) => this.mapToJsonItem(m, types, items));
 
-                const jsonItem: IJsonItem = {
-                    system: {
-                        codename: m.codename,
-                        collection: m.collection,
-                        language: m.language,
-                        last_modified: m.language,
-                        name: m.name,
-                        type: m.type,
-                        workflow_step: m.workflow_step
-                    },
-                    elements: elements
-                };
-                return jsonItem;
-            });
-
-            typeWrappers.push({
+            fileData.push({
                 data: jsonItems.length ? JSON.stringify(jsonItems) : '[]',
                 filename: filename
             });
         }
 
-        return typeWrappers;
+        return fileData;
     }
 
-    async parseFromExportDataAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]> {
+    async parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]> {
         const parsedItems: IParsedContentItem[] = [];
         const rawItems: IJsonItem[] = JSON.parse(text) as IJsonItem[];
-        const systemFields: string[] = this.getSystemContentItemFields();
 
         for (const rawItem of rawItems) {
-            const contentItem: IParsedContentItem = {
-                codename: rawItem.system.codename,
-                collection: rawItem.system.collection,
-                elements: [],
-                language: rawItem.system.language,
-                last_modified: rawItem.system.last_modified,
-                name: rawItem.system.name,
-                type: rawItem.system.type,
-                workflow_step: rawItem.system.workflow_step
-            };
+            const elements: IParsedElement[] = [];
 
             for (const propertyName of Object.keys(rawItem.elements)) {
-                if (systemFields.includes(propertyName)) {
-                    // skip base field
-                    continue;
-                }
-
                 const element = super.getElement(types, rawItem.system.type, propertyName);
 
-                contentItem.elements.push({
+                elements.push({
                     codename: propertyName,
                     value: rawItem.elements[propertyName],
                     type: element.type
                 });
             }
 
-            parsedItems.push(contentItem);
+            const parsedItem: IParsedContentItem = {
+                system: {
+                    codename: rawItem.system.codename,
+                    collection: rawItem.system.collection,
+                    language: rawItem.system.language,
+                    last_modified: rawItem.system.last_modified,
+                    name: rawItem.system.name,
+                    type: rawItem.system.type,
+                    workflow_step: rawItem.system.workflow_step
+                },
+                elements: elements
+            };
+
+            parsedItems.push(parsedItem);
         }
 
         return parsedItems;
@@ -120,5 +96,43 @@ export class JsonProcessorService extends BaseProcessorService {
     }
     async parseAssetsAsync(text: string): Promise<IParsedAsset[]> {
         return JSON.parse(text) as IParsedAsset[];
+    }
+
+    private mapToJsonItem(item: IContentItem, types: IContentType[], items: IContentItem[]): IJsonItem {
+        const elements: { [elementCodename: string]: string | string[] | undefined } = {};
+
+        const type = types.find((m) => m.system.codename === item.system.type);
+
+        if (!type) {
+            throw Error(`Missing content type '${item.system.type}' for item '${item.system.codename}'`);
+        }
+
+        for (const element of type.elements) {
+            if (element.codename) {
+                const variantElement = item.elements[element.codename];
+
+                if (variantElement) {
+                    elements[element.codename] = translationHelper.transformToExportElementValue(
+                        variantElement,
+                        items,
+                        types
+                    );
+                }
+            }
+        }
+
+        const jsonItem: IJsonItem = {
+            system: {
+                codename: item.system.codename,
+                collection: item.system.collection,
+                language: item.system.language,
+                last_modified: item.system.lastModified,
+                name: item.system.name,
+                type: item.system.type,
+                workflow_step: item.system.workflowStep ?? undefined
+            },
+            elements: elements
+        };
+        return jsonItem;
     }
 }

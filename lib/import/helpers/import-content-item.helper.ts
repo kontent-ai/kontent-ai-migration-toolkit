@@ -16,7 +16,7 @@ export class ImportContentItemHelper {
         const preparedItems: ContentItemModels.ContentItem[] = [];
         for (const importContentItem of parsedContentItems) {
             try {
-                if (!importContentItem.workflow_step) {
+                if (!importContentItem.system.workflow_step) {
                     continue;
                 }
 
@@ -31,11 +31,11 @@ export class ImportContentItemHelper {
                 if (this.shouldUpdateContentItem(importContentItem, preparedContentItem, collections)) {
                     const upsertedContentItem = await managementClient
                         .upsertContentItem()
-                        .byItemCodename(importContentItem.codename)
+                        .byItemCodename(importContentItem.system.codename)
                         .withData({
-                            name: importContentItem.name,
+                            name: importContentItem.system.name,
                             collection: {
-                                codename: importContentItem.collection
+                                codename: importContentItem.system.collection
                             }
                         })
                         .toPromise()
@@ -46,7 +46,7 @@ export class ImportContentItemHelper {
                     });
                 } else {
                     logAction('skipUpdate', 'contentItem', {
-                        title: `${importContentItem.name}`
+                        title: `${importContentItem.system.name}`
                     });
                 }
             } catch (error) {
@@ -54,7 +54,7 @@ export class ImportContentItemHelper {
                     logDebug(
                         'error',
                         `Failed to import content item`,
-                        importContentItem.codename,
+                        importContentItem.system.codename,
                         extractErrorMessage(error)
                     );
                 } else {
@@ -71,12 +71,15 @@ export class ImportContentItemHelper {
         contentItem: ContentItemModels.ContentItem,
         collections: CollectionModels.Collection[]
     ): boolean {
-        const collection = collections.find((m) => m.codename === parsedContentItem.collection);
+        const collection = collections.find((m) => m.codename === parsedContentItem.system.collection);
 
         if (!collection) {
-            throw Error(`Invalid collection '${parsedContentItem.collection}'`);
+            throw Error(`Invalid collection '${parsedContentItem.system.collection}'`);
         }
-        return parsedContentItem.name !== contentItem.name || parsedContentItem.collection !== collection.codename;
+        return (
+            parsedContentItem.system.name !== contentItem.name ||
+            parsedContentItem.system.collection !== collection.codename
+        );
     }
 
     private async prepareContentItemAsync(
@@ -87,7 +90,7 @@ export class ImportContentItemHelper {
         try {
             const contentItem = await managementClient
                 .viewContentItem()
-                .byItemCodename(parsedContentItem.codename)
+                .byItemCodename(parsedContentItem.system.codename)
                 .toPromise()
                 .then((m) => m.data);
 
@@ -106,13 +109,13 @@ export class ImportContentItemHelper {
                 const contentItem = await managementClient
                     .addContentItem()
                     .withData({
-                        name: parsedContentItem.name,
+                        name: parsedContentItem.system.name,
                         type: {
-                            codename: parsedContentItem.type
+                            codename: parsedContentItem.system.type
                         },
-                        codename: parsedContentItem.codename,
+                        codename: parsedContentItem.system.codename,
                         collection: {
-                            codename: parsedContentItem.collection
+                            codename: parsedContentItem.system.collection
                         }
                     })
                     .toPromise()

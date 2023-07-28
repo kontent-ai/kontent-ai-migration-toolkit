@@ -72,23 +72,23 @@ export class ImportWorkflowHelper {
         if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
             await managementClient
                 .publishLanguageVariant()
-                .byItemCodename(importContentItem.codename)
-                .byLanguageCodename(importContentItem.language)
+                .byItemCodename(importContentItem.system.codename)
+                .byLanguageCodename(importContentItem.system.language)
                 .withoutData()
                 .toPromise();
 
             logAction('publish', 'languageVariant', {
-                title: `${importContentItem.name}`,
-                workflowStep: importContentItem.workflow_step,
-                language: importContentItem.language
+                title: `${importContentItem.system.name}`,
+                workflowStep: importContentItem.system.workflow_step,
+                language: importContentItem.system.language
             });
         } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
             const workflow = this.getWorkflowForGivenStepByCodename(workflowStepCodename, workflows);
 
             await managementClient
                 .changeWorkflowOfLanguageVariant()
-                .byItemCodename(importContentItem.codename)
-                .byLanguageCodename(importContentItem.language)
+                .byItemCodename(importContentItem.system.codename)
+                .byLanguageCodename(importContentItem.system.language)
                 .withData({
                     step_identifier: {
                         codename: workflow.archivedStep.codename
@@ -100,20 +100,20 @@ export class ImportWorkflowHelper {
                 .toPromise();
 
             logAction('archive', 'languageVariant', {
-                title: `${importContentItem.name}`,
-                workflowStep: importContentItem.workflow_step,
-                language: importContentItem.language
+                title: `${importContentItem.system.name}`,
+                workflowStep: importContentItem.system.workflow_step,
+                language: importContentItem.system.language
             });
         } else {
             const workflow = this.getWorkflowForGivenStepByCodename(workflowStepCodename, workflows);
 
             await managementClient
                 .changeWorkflowOfLanguageVariant()
-                .byItemCodename(importContentItem.codename)
-                .byLanguageCodename(importContentItem.language)
+                .byItemCodename(importContentItem.system.codename)
+                .byLanguageCodename(importContentItem.system.language)
                 .withData({
                     step_identifier: {
-                        codename: importContentItem.workflow_step
+                        codename: importContentItem.system.workflow_step
                     },
                     workflow_identifier: {
                         codename: workflow.codename
@@ -122,9 +122,9 @@ export class ImportWorkflowHelper {
                 .toPromise();
 
             logAction('changeWorkflowStep', 'languageVariant', {
-                title: `${importContentItem.name}`,
-                workflowStep: importContentItem.workflow_step,
-                language: importContentItem.language
+                title: `${importContentItem.system.name}`,
+                workflowStep: importContentItem.system.workflow_step,
+                language: importContentItem.system.language
             });
         }
     }

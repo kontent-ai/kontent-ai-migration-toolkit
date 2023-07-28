@@ -244,5 +244,6 @@ const getDefaultBackupFilename = () => {
 run()
     .then((m) => {})
     .catch((err) => {
+        console.error(err);
         logDebug('error', extractErrorMessage(err));
     });

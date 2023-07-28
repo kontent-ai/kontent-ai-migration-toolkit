@@ -40,7 +40,7 @@ export class IdTranslateHelper {
                 const flattened: IFlattenedImportData = {
                     importedCodename: m.imported.codename,
                     importedId: m.imported.id,
-                    originalCodename: m.original.codename
+                    originalCodename: m.original.system.codename
                 };
 
                 return flattened;

@@ -25,14 +25,16 @@ export class ImportLanguageVariantHelper {
             try {
                 // if content item does not have a workflow step it means it is used as a component within Rich text element
                 // such items are procesed within element transform
-                if (!importContentItem.workflow_step) {
+                if (!importContentItem.system.workflow_step) {
                     continue;
                 }
 
-                const upsertedContentItem = preparedContentItems.find((m) => m.codename === importContentItem.codename);
+                const upsertedContentItem = preparedContentItems.find(
+                    (m) => m.codename === importContentItem.system.codename
+                );
 
                 if (!upsertedContentItem) {
-                    throw Error(`Invalid content item for codename '${importContentItem.codename}'`);
+                    throw Error(`Invalid content item for codename '${importContentItem.system.codename}'`);
                 }
 
                 await this.prepareLanguageVariantForImportAsync(managementClient, importContentItem, workflows);
@@ -40,7 +42,7 @@ export class ImportLanguageVariantHelper {
                 const upsertedLanguageVariant = await managementClient
                     .upsertLanguageVariant()
                     .byItemCodename(upsertedContentItem.codename)
-                    .byLanguageCodename(importContentItem.language)
+                    .byLanguageCodename(importContentItem.system.language)
                     .withData((builder) => {
                         return {
                             elements: importContentItem.elements.map((m) =>
@@ -58,14 +60,14 @@ export class ImportLanguageVariantHelper {
 
                 logAction('upsert', 'languageVariant', {
                     title: `${upsertedContentItem.name}`,
-                    language: importContentItem.language
+                    language: importContentItem.system.language
                 });
 
                 // set workflow of language variant
-                if (importContentItem.workflow_step) {
+                if (importContentItem.system.workflow_step) {
                     await importWorkflowHelper.setWorkflowOfLanguageVariantAsync(
                         managementClient,
-                        importContentItem.workflow_step,
+                        importContentItem.system.workflow_step,
                         importContentItem,
                         workflows
                     );
@@ -74,8 +76,8 @@ export class ImportLanguageVariantHelper {
                 if (config.skipFailedItems) {
                     logDebug(
                         'error',
-                        ` Failed to import language variant '${importContentItem.language}'`,
-                        importContentItem.codename,
+                        ` Failed to import language variant '${importContentItem.system.language}'`,
+                        importContentItem.system.codename,
                         extractErrorMessage(error)
                     );
                 } else {
@@ -95,19 +97,19 @@ export class ImportLanguageVariantHelper {
         try {
             languageVariantOfContentItem = await managementClient
                 .viewLanguageVariant()
-                .byItemCodename(importContentItem.codename)
-                .byLanguageCodename(importContentItem.language)
+                .byItemCodename(importContentItem.system.codename)
+                .byLanguageCodename(importContentItem.system.language)
                 .toPromise()
                 .then((m) => m.data);
 
             logAction('fetch', 'languageVariant', {
-                title: `${importContentItem.name}`,
-                language: importContentItem.language
+                title: `${importContentItem.system.name}`,
+                language: importContentItem.system.language
             });
 
             if (!languageVariantOfContentItem) {
                 throw Error(
-                    `Invalid langauge variant for item '${importContentItem.codename}' of type '${importContentItem.type}' and language '${importContentItem.language}'`
+                    `Invalid langauge variant for item '${importContentItem.system.codename}' of type '${importContentItem.system.type}' and language '${importContentItem.system.language}'`
                 );
             }
         } catch (error) {
@@ -123,13 +125,13 @@ export class ImportLanguageVariantHelper {
                 // create new version
                 await managementClient
                     .createNewVersionOfLanguageVariant()
-                    .byItemCodename(importContentItem.codename)
-                    .byLanguageCodename(importContentItem.language)
+                    .byItemCodename(importContentItem.system.codename)
+                    .byLanguageCodename(importContentItem.system.language)
                     .toPromise();
 
                 logAction('createNewVersion', 'languageVariant', {
-                    title: `${importContentItem.name}`,
-                    language: importContentItem.language
+                    title: `${importContentItem.system.name}`,
+                    language: importContentItem.system.language
                 });
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, workflows)) {
                 // change workflow step to draft
@@ -142,14 +144,14 @@ export class ImportLanguageVariantHelper {
 
                     await managementClient
                         .changeWorkflowStepOfLanguageVariant()
-                        .byItemCodename(importContentItem.codename)
-                        .byLanguageCodename(importContentItem.language)
+                        .byItemCodename(importContentItem.system.codename)
+                        .byLanguageCodename(importContentItem.system.language)
                         .byWorkflowStepCodename(newWorkflowStep.codename)
                         .toPromise();
 
                     logAction('unArchive', 'languageVariant', {
-                        title: `${importContentItem.name}`,
-                        language: importContentItem.language,
+                        title: `${importContentItem.system.name}`,
+                        language: importContentItem.system.language,
                         workflowStep: newWorkflowStep.codename
                     });
                 }

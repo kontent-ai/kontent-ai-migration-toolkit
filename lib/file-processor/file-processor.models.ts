@@ -14,8 +14,8 @@ export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 export interface IFormatService {
     name: string;
 
-    transformToExportDataAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]>;
-    parseFromExportDataAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]>;
+    transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]>;
+    parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]>;
     transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]>;
     parseAssetsAsync(text: string): Promise<IParsedAsset[]>;
 }
@@ -30,18 +30,6 @@ export interface IExtractedBinaryFileData {
 
 export interface IFileProcessorConfig {
     delayBetweenAssetDownloadRequestsMs?: number;
-}
-
-export interface IFlattenedContentItem {
-    codename: string;
-    name: string;
-    language: string;
-    type: string;
-    collection: string;
-    last_modified: string;
-    workflow_step?: string;
-
-    [elementCodename: string]: any;
 }
 
 export interface IFileData {

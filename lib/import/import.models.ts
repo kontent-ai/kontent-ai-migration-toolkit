@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { ItemType, IPackageMetadata } from '../core';
+import { IPackageMetadata } from '../core';
 import { ElementType } from '@kontent-ai/delivery-sdk';
 
 export interface IImportConfig {
@@ -22,13 +22,6 @@ export interface IImportAllResult {
         timestamp: Date;
         environmentId: string;
     };
-}
-
-export interface IPreparedImportItem<TItem> {
-    type: ItemType;
-    codename: string;
-    item: TItem;
-    deps: string[];
 }
 
 export interface IImportAsset {
@@ -54,10 +47,6 @@ export interface IImportSource {
     metadata?: IPackageMetadata;
 }
 
-export interface IImportData {
-    orderedImportItems: IPreparedImportItem<any>[];
-}
-
 export interface IFlattenedFolder {
     name: string;
     externalId?: string;
@@ -65,21 +54,21 @@ export interface IFlattenedFolder {
 }
 
 export interface IParsedElement {
-    value: string;
+    value: string | undefined | string[];
     type: ElementType;
     codename: string;
 }
 
 export interface IParsedContentItem {
-    [name: string]: any;
-
-    codename: string;
-    name: string;
-    language: string;
-    type: string;
-    collection: string;
-    last_modified: string;
-    workflow_step?: string;
+    system: {
+        codename: string;
+        name: string;
+        language: string;
+        type: string;
+        collection: string;
+        last_modified: string;
+        workflow_step?: string;
+    };
     elements: IParsedElement[];
 }
 

@@ -24,7 +24,7 @@ export type ExportTransformFunc = (data: {
 }) => string | string[] | undefined;
 
 export type ImportTransformFunc = (data: {
-    value: string | undefined;
+    value: string | string[] | undefined;
     elementCodename: string;
     importedData: IImportedData;
     sourceItems: IParsedContentItem[];
@@ -90,7 +90,7 @@ export class TranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: data.value ?? ''
+                value: data.value?.toString() ?? ''
             });
         },
         date_time: (data) => {
@@ -98,7 +98,7 @@ export class TranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: data.value ?? undefined
+                value: data.value?.toString() ?? undefined
             });
         },
         modular_content: (data) => {
@@ -134,11 +134,11 @@ export class TranslationHelper {
             });
         },
         rich_text: (data) => {
-            const processedRte = this.processImportRichTextHtmlValue(data.value ?? '', data.importedData);
+            const processedRte = this.processImportRichTextHtmlValue(data.value?.toString() ?? '', data.importedData);
             const componentItems: IParsedContentItem[] = [];
 
             for (const componentCodename of processedRte.componentCodenames) {
-                const componentItem = data.sourceItems.find((m) => m.codename === componentCodename);
+                const componentItem = data.sourceItems.find((m) => m.system.codename === componentCodename);
 
                 if (!componentItem) {
                     throw Error(`Could not find component item with codename '${componentCodename}'`);
@@ -166,9 +166,9 @@ export class TranslationHelper {
                         .map((s) => s as LanguageVariantElements.ILanguageVariantElementBase);
 
                     const componentContract: LanguageVariantElements.IRichTextComponent = {
-                        id: this.convertComponentCodenameToId(m.codename),
+                        id: this.convertComponentCodenameToId(m.system.codename),
                         type: {
-                            codename: m.type
+                            codename: m.system.type
                         },
                         elements: itemElements
                     };
@@ -195,7 +195,7 @@ export class TranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: data.value ?? undefined
+                value: data.value?.toString() ?? undefined
             });
         },
         unknown: (data) => {
@@ -203,7 +203,7 @@ export class TranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: data.value ?? undefined
+                value: data.value?.toString() ?? undefined
             });
         },
         url_slug: (data) => {
@@ -211,7 +211,7 @@ export class TranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: data.value ?? '',
+                value: data.value?.toString() ?? '',
                 mode: 'custom'
             });
         }
@@ -232,7 +232,7 @@ export class TranslationHelper {
     }
 
     transformToImportValue(
-        value: string,
+        value: string | string[] | undefined,
         elementCodename: string,
         type: ElementType,
         importedData: IImportedData,
@@ -374,7 +374,7 @@ export class TranslationHelper {
 
                 // find content item with given codename and replace it with id
                 const contentItemWithGivenCodename: ContentItemModels.ContentItem | undefined =
-                    importedData.contentItems.find((m) => m.original.codename === codename)?.imported;
+                    importedData.contentItems.find((m) => m.original.system.codename === codename)?.imported;
 
                 if (!contentItemWithGivenCodename) {
                     logDebug(
