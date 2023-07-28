@@ -10,7 +10,8 @@ import {
     ExportFormat,
     FileProcessorService,
     IFormatService,
-    JsonProcessorService
+    JsonProcessorService,
+    JsonSingleProcessorService
 } from '../../file-processor';
 import { FileService } from '../file/file.service';
 import { logDebug } from '../../core/log-helper';
@@ -53,6 +54,7 @@ const argv = yargs(process.argv.slice(2))
     .alias('h', 'help').argv;
 
 const jsonFormatService = new JsonProcessorService();
+const jsonSingleFormatService = new JsonSingleProcessorService();
 const csvFormatService = new CsvProcessorService();
 
 const backupAsync = async (config: ICliFileConfig) => {
@@ -78,6 +80,8 @@ const backupAsync = async (config: ICliFileConfig) => {
         formatService = csvFormatService;
     } else if (config.format === 'json') {
         formatService = jsonFormatService;
+    } else if (config.format === 'jsonSingle') {
+        formatService = jsonSingleFormatService;
     } else {
         throw Error(`Unsupported export format '${config.format}'`);
     }
