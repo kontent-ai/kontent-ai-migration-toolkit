@@ -107,15 +107,14 @@ Example:
 
 ```typescript
 const exportService = new ExportService({
-    environmentId: 'p',
-    apiKey: 'z',
+    environmentId: 'x',
+    apiKey: 'x',
     previewApiKey: 'x',
-    secureApiKey: 'y',
     exportAssets: true,
     fetchAssetDetails: false,
     customItemsExport: async (client) => {
         // return only the items you want to export by applying filters, parameters etc..
-        const response = await client.items().equalsFilter('elements.title', 'Warrior').toAllPromise();
+        const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();
         return response.data.items;
     }
 });
@@ -130,16 +129,11 @@ inspire from these services:
 
 | Service                          | Link                                                                                                           |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| CSV `IFormatService`             | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/formats/csv-processor.service.ts  |
-| JSON `IFormatService`            | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/formats/json-processor.service.ts |
-| Simplified demo `IFormatService` | https://github.com/Enngage/kontent-data-manager/blob/main/lib/samples/sample-custom-processor.service.ts       |
+| CSV `IItemFormatService `             | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts  |
+| JSON `IItemFormatService `            | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/item-formats/item-json-processor.service.ts |
 
 To use your custom formatting service simply pass it to `createZipAsync` or `extractZipAsync`
 
-```typescript
-await fileProcessorService.createZipAsync(response, { formatService: YourService });
-await fileProcessorService.extractZipAsync(file, { formatService: YourService });
-```
 ### Export limitations
 
 Export is made with `Delivery API` for speed and efficiency, but this brings some limitations:
