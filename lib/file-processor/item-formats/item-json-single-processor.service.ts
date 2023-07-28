@@ -28,7 +28,7 @@ export class ItemJsonSingleProcessorService extends BaseItemProcessorService {
 
         const allJsonItems: IJsonItem[] = multiFileJsonFileData
             .map((m) => {
-                let items: IJsonItem[] = JSON.parse(m.data);
+                const items: IJsonItem[] = JSON.parse(m.data);
                 return items;
             })
             .reduce<IJsonItem[]>((prev, current) => {
