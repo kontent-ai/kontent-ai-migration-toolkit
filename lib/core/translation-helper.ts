@@ -9,7 +9,8 @@ import {
     ContentItemModels,
     ElementContracts,
     LanguageVariantElements,
-    LanguageVariantElementsBuilder
+    LanguageVariantElementsBuilder,
+    SharedContracts
 } from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import';
 import { IImportedData } from './core.models';
@@ -65,24 +66,33 @@ export class TranslationHelper {
 
     private readonly importTransforms: Readonly<Record<ElementType, ImportTransformFunc>> = {
         asset: (data) => {
+            const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
+
+            for (const assetUrl of this.parseArrayValue(data.value)) {
+                const assetId = extractAssetIdFromUrl(assetUrl);
+
+                // find id of imported asset
+                const importedAsset = data.importedData.assets.find((s) => s.original.assetId === assetId);
+
+                if (!importedAsset) {
+                    logDebug(
+                        'warning',
+                        `Could not find imported asset for asset with original id. Skipping asset.`,
+                        assetId
+                    );
+                    continue;
+                }
+
+                assetReferences.push({
+                    id: importedAsset.imported.id
+                });
+            }
+
             return this.elementsBuilder.assetElement({
                 element: {
                     codename: data.elementCodename
                 },
-                value: this.parseArrayValue(data.value).map((m) => {
-                    const assetId = extractAssetIdFromUrl(m);
-
-                    // find id of imported asset
-                    const importedAsset = data.importedData.assets.find((s) => s.original.assetId === assetId);
-
-                    if (!importedAsset) {
-                        throw Error(`Could not find imported asset for asset with original id '${assetId}'`);
-                    }
-
-                    return {
-                        id: importedAsset.imported.id
-                    };
-                })
+                value: assetReferences
             });
         },
         custom: (data) => {

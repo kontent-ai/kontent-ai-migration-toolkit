@@ -57,6 +57,8 @@ const argv = yargs(process.argv.slice(2))
     .alias('h', 'help').argv;
 
 const backupAsync = async (config: ICliFileConfig) => {
+    const fetchAssetDetails: boolean = config.assetsFilename && config.fetchAssetDetails ? true : false;
+
     const exportService = new ExportService({
         environmentId: config.environmentId,
         apiKey: config.apiKey,
@@ -65,7 +67,7 @@ const backupAsync = async (config: ICliFileConfig) => {
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
         exportAssets: config.exportAssets,
-        fetchAssetDetails: config.fetchAssetDetails
+        fetchAssetDetails: fetchAssetDetails
     });
 
     const fileService = new FileService();
