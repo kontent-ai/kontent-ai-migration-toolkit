@@ -1,4 +1,4 @@
-import { FileProcessorService, ItemJsonProcessorService } from '../lib/file-processor';
+import { AssetJsonProcessorService, FileProcessorService, ItemJsonProcessorService } from '../lib/file-processor';
 
 import { ExportService } from '../lib/export';
 import { FileService } from '../lib/node';
@@ -8,18 +8,24 @@ const run = async () => {
     const zipService = new FileProcessorService();
 
     const exportService = new ExportService({
-        environmentId: 'sourceenvironmentId',
+        environmentId: 'environmentId',
         exportAssets: true
     });
 
     // data contains entire project content
     const data = await exportService.exportAllAsync();
 
-    // prepare zip file
-    const zipFile = await zipService.createZipAsync(data, { itemFormatService: new ItemJsonProcessorService() });
+    // prepare zip files
+    const itemsZipFile = await zipService.createItemsZipAsync(data, {
+        itemFormatService: new ItemJsonProcessorService()
+    });
+    const assetsZipFile = await zipService.createAssetsZipAsync(data, {
+        assetFormatService: new AssetJsonProcessorService()
+    });
 
     // save zip to file system (node.js only)
-    await fileService.writeFileAsync('filename', zipFile);
+    await fileService.writeFileAsync('items-backup', itemsZipFile);
+    await fileService.writeFileAsync('assets-backup', assetsZipFile);
 };
 
 run();

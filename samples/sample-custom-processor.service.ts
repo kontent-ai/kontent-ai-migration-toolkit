@@ -1,7 +1,6 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IExportedAsset } from '../lib/export';
 import { IItemFormatService, IFileData } from '../lib/file-processor';
-import { IParsedContentItem, IParsedAsset } from '../lib/import';
+import { IParsedContentItem } from '../lib/import';
 
 export class CustomProcessorService implements IItemFormatService {
     public readonly name: string = 'sample';
@@ -47,42 +46,21 @@ export class CustomProcessorService implements IItemFormatService {
             }
 
             const contentItem: IParsedContentItem = {
-                codename: codename,
-                collection: collection,
-                elements: [],
-                language: language,
-                last_modified: '',
-                name: name,
-                type: type,
-                workflow_step: workflowStep
+                system: {
+                    codename: codename,
+                    collection: collection,
+                    language: language,
+                    last_modified: '',
+                    name: name,
+                    type: type,
+                    workflow_step: workflowStep
+                },
+                elements: []
             };
 
             parsedItems.push(contentItem);
         }
 
         return parsedItems;
-    }
-
-    async transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]> {
-        return [
-            {
-                filename: 'assets.json',
-                data: JSON.stringify(
-                    assets.map((m) => {
-                        const parsedAsset: IParsedAsset = {
-                            assetId: m.assetId,
-                            extension: m.extension,
-                            filename: m.filename,
-                            url: m.url
-                        };
-
-                        return parsedAsset;
-                    })
-                )
-            }
-        ];
-    }
-    async parseAssetsAsync(text: string): Promise<IParsedAsset[]> {
-        return JSON.parse(text) as IParsedAsset[];
     }
 }
