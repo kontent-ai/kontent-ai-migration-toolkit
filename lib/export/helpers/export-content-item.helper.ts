@@ -34,10 +34,9 @@ export class ExportContentItemHelper {
             for (const type of typesToExport) {
                 for (const language of languages) {
                     await deliveryClient
-                        .items()
+                        .itemsFeed()
                         .type(type.system.codename)
                         .equalsFilter('system.language', language.system.codename)
-                        .depthParameter(0)
                         .toAllPromise({
                             responseFetched: (response) => {
                                 // add items to result
