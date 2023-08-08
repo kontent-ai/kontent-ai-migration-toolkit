@@ -4,7 +4,7 @@ The purpose of this project is to export & import content data to & from [Konten
 
 Data is exported via `Delivery Api` and imported back via `Management Api`. There are 3 default formats for data:
 `json`, `jsonSingle` and `csv`. It is possible to write custom transformer if you need to add some extra processing or
-functionality.
+use different format all together.
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
 
