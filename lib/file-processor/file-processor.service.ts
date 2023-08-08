@@ -116,7 +116,7 @@ export class FileProcessorService {
             throw Error(`Could not create folder '${this.contentItemsFolderName}'`);
         }
 
-        logDebug('info', `Adding to zip`, this.metadataName);
+        logDebug('zip', `Adding to zip`, this.metadataName);
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
 
         logDebug(
