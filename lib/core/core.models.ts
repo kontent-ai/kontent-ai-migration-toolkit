@@ -14,7 +14,6 @@ export interface ICliFileConfig {
     assetsFilename?: string;
     baseUrl?: string;
     exportTypes?: string[];
-    exportAssets: boolean;
     fetchAssetDetails?: boolean;
 }
 

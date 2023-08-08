@@ -60,7 +60,7 @@ Backup without assets:
 
 Backup with assets:
 
-`kdm --action=backup --environmentId=xxx --format=csv --itemsFilename=items-backup.zip --assetsFilename=assets-backup` 
+`kdm --action=backup --environmentId=xxx --format=csv --itemsFilename=items-backup.zip --assetsFilename=assets-backup.zip` 
 
 Restore without assets:
 

@@ -24,7 +24,7 @@ export class FileProcessorService {
     private readonly delayBetweenAssetRequestsMs: number;
     private readonly zipContext: ZipContext = 'node.js';
 
-    private readonly metadataName: string = 'metadata.json';
+    private readonly metadataName: string = 'metadata';
     private readonly assetsFolderName: string = 'assets';
     private readonly binaryFilesFolderName: string = 'files';
     private readonly contentItemsFolderName: string = 'items';
@@ -116,7 +116,7 @@ export class FileProcessorService {
             throw Error(`Could not create folder '${this.contentItemsFolderName}'`);
         }
 
-        logDebug('info', `Storing metadata`, this.metadataName);
+        logDebug('info', `Addint to zip`, this.metadataName);
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
 
         logDebug(

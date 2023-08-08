@@ -66,7 +66,7 @@ const backupAsync = async (config: ICliFileConfig) => {
         secureApiKey: config.secureApiKey,
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
-        exportAssets: config.exportAssets,
+        exportAssets: config.assetsFilename ? true : false,
         fetchAssetDetails: fetchAssetDetails
     });
 
@@ -81,7 +81,7 @@ const backupAsync = async (config: ICliFileConfig) => {
     });
     await fileService.writeFileAsync(config.itemsFilename, itemsZipFileData);
 
-    if (config.exportAssets && config.assetsFilename) {
+    if (config.assetsFilename) {
         const assetsZipFileData = await fileProcessorService.createAssetsZipAsync(response, {
             assetFormatService: getAssetFormatService(config.format)
         });
@@ -207,8 +207,6 @@ const getConfig = async () => {
         (resolvedArgs.itemsFilename as string | undefined) ?? getDefaultBackupFilename('items');
     const assetsFilename: string | undefined = resolvedArgs.assetsFilename as string | undefined;
     const exportTypes: string | undefined = resolvedArgs.exportTypes as string | undefined;
-    const exportAssets: boolean =
-        (resolvedArgs.exportAssets as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
     const skipFailedItems: boolean =
         (resolvedArgs.skipFailedItems as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
     const fetchAssetDetails: boolean =
@@ -245,7 +243,6 @@ const getConfig = async () => {
         assetsFilename: assetsFilename,
         baseUrl,
         exportTypes: typesMapped,
-        exportAssets: exportAssets,
         skipFailedItems: skipFailedItems,
         previewApiKey: previewApiKey,
         secureApiKey: secureApiKey,
