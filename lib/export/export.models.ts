@@ -12,7 +12,9 @@ export interface IExportFilter {
 
 export interface IExportConfig {
     environmentId: string;
-    apiKey?: string;
+    managementApiKey?: string;
+    secureApiKey?: string;
+    previewApiKey?: string;
     isPreview: boolean;
     isSecure: boolean;
     baseUrl?: string;

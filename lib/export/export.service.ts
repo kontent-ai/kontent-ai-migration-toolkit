@@ -17,8 +17,8 @@ export class ExportService {
             environmentId: config.environmentId,
             retryStrategy: retryStrategy,
             httpService: defaultHttpService,
-            previewApiKey: config.apiKey,
-            secureApiKey: config.apiKey,
+            previewApiKey: config.previewApiKey,
+            secureApiKey: config.secureApiKey,
             defaultQueryConfig: {
                 usePreviewMode: config.isPreview ? true : false,
                 useSecuredMode: config.isSecure ? true : false

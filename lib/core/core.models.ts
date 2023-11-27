@@ -4,7 +4,9 @@ import { IImportAsset, IParsedContentItem } from '../import';
 
 export interface ICliFileConfig {
     environmentId: string;
-    apiKey?: string;
+    previewApiKey?: string;
+    secureApiKey?: string;
+    managementApiKey?: string;
     format?: ProcessingFormat;
     isPreview: boolean;
     isSecure: boolean;

@@ -22,7 +22,7 @@ const run = async () => {
             contentItem: (item) => true // all content items will be imported
         },
         environmentId: 'environmentId',
-        apiKey: 'managementApiKey',
+        managementApiKey: 'managementApiKey',
         skipFailedItems: false
     });
 

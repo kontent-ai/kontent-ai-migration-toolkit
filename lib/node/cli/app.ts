@@ -19,6 +19,8 @@ import {
 import { FileService } from '../file/file.service';
 import { logDebug } from '../../core/log-helper';
 
+type Args = { [key: string]: string | unknown };
+
 const argv = yargs(process.argv.slice(2))
     .example(
         'csvm --action=export --format=csv|json --apiKey=xxx --environmentId=xxx',
@@ -28,14 +30,18 @@ const argv = yargs(process.argv.slice(2))
         'csvm --action=restore --apiKey=xxx --environmentId=xxx --filename=exportFile',
         'Read given zip file and recreates data in Kontent.ai environment'
     )
-    .alias('p', 'environmentId')
-    .describe('p', 'environmentId')
-    .alias('ak', 'apiKey')
-    .describe('ak', 'Management API Key')
-    .alias('sk', 'secureApiKey')
-    .describe('sk', 'API Key required when Delivery API has secure access enabled')
-    .alias('pk', 'previewApiKey')
-    .describe('pk', 'Use if you want to export data using Preview API')
+    .alias('e', 'environmentId')
+    .describe('e', 'environmentId')
+    .alias('mapi', 'apiKey')
+    .describe('mapi', 'Management API Key')
+    .alias('sapi', 'secureApiKey')
+    .describe('sapi', 'API Key required when Delivery API has secure access enabled')
+    .alias('papi', 'previewApiKey')
+    .describe('papi', 'Use if you want to export data using Preview API')
+    .alias('ip', 'isPreview')
+    .describe('ip', 'Disables / enables use of preview API for export')
+    .alias('is', 'isSecure')
+    .describe('is', 'Disables / enables use of Secure API for export')
     .alias('a', 'action')
     .describe('a', 'Action to perform. One of: "export" | "restore"')
     .alias('if', 'itemsFilename')
@@ -61,7 +67,9 @@ const exportAsync = async (config: ICliFileConfig) => {
 
     const exportService = new ExportService({
         environmentId: config.environmentId,
-        apiKey: config.apiKey,
+        managementApiKey: config.managementApiKey,
+        previewApiKey: config.previewApiKey,
+        secureApiKey: config.secureApiKey,
         isPreview: config.isPreview,
         isSecure: config.isSecure,
         baseUrl: config.baseUrl,
@@ -93,17 +101,16 @@ const exportAsync = async (config: ICliFileConfig) => {
 const restoreAsync = async (config: ICliFileConfig) => {
     const fileProcessorService = new FileProcessorService();
 
-    if (!config.apiKey) {
-        throw Error(`Missing 'apiKey' configuration option`);
+    if (!config.managementApiKey) {
+        throw Error(`Missing 'managementApiKey' configuration option`);
     }
 
     const fileService = new FileService();
-
     const importService = new ImportService({
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
         environmentId: config.environmentId,
-        apiKey: config.apiKey,
+        managementApiKey: config.managementApiKey,
         canImport: {
             contentItem: (item) => {
                 return true;
@@ -115,7 +122,6 @@ const restoreAsync = async (config: ICliFileConfig) => {
     });
 
     const contentTypes = await importService.getImportContentTypesAsync();
-
     const itemsFile = await fileService.loadFileAsync(config.itemsFilename);
     const itemsFileExtension = getExtension(config.itemsFilename);
 
@@ -148,31 +154,8 @@ const restoreAsync = async (config: ICliFileConfig) => {
     logDebug({ type: 'info', message: `Completed` });
 };
 
-const validateConfig = (config?: ICliFileConfig) => {
-    if (!config) {
-        throw Error(`Invalid config file`);
-    }
-
-    if (!config.format) {
-        throw Error(`Please specify 'format'`);
-    }
-
-    const environmentId = config.environmentId;
-    const action = config.action;
-
-    if (!environmentId) {
-        throw Error('Invalid environment id');
-    }
-
-    if (!action) {
-        throw Error('Invalid action');
-    }
-};
-
 const run = async () => {
     const config = await getConfig();
-
-    validateConfig(config);
 
     if (config.action === 'export') {
         await exportAsync(config);
@@ -184,8 +167,8 @@ const run = async () => {
 };
 
 const getConfig = async () => {
-    let resolvedArgs: { [key: string]: string | unknown } = await argv;
-    const configFilename: string = (await resolvedArgs.config) as string;
+    let resolvedArgs: Args = await argv;
+    const configFilename: string | undefined = getOptionalArgumentValue(resolvedArgs, 'config');
 
     if (configFilename) {
         // get config from file
@@ -193,27 +176,8 @@ const getConfig = async () => {
         resolvedArgs = JSON.parse(configFile.toString());
     }
 
-    const action: CliAction | undefined = resolvedArgs.action as CliAction | undefined;
-    const apiKey: string | undefined = resolvedArgs.apiKey as string | undefined;
-    const isSecure: boolean =
-        (resolvedArgs.isSecure as string | undefined)?.toString()?.toLowerCase() === 'true'.toLowerCase() ?? true;
-    const isPreview: boolean =
-        (resolvedArgs.isPreview as string | undefined)?.toString()?.toLowerCase() === 'true'.toLowerCase() ?? true;
-    const environmentId: string | undefined = resolvedArgs.environmentId as string | undefined;
-    const format: string | undefined = resolvedArgs.format as string | undefined;
-    const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
-    const itemsFilename: string | undefined =
-        (resolvedArgs.itemsFilename as string | undefined) ?? getDefaultExportFilename('items');
-    const assetsFilename: string | undefined = resolvedArgs.assetsFilename as string | undefined;
-    const exportTypes: string | undefined = resolvedArgs.exportTypes?.toString() as string | undefined;
-    const skipFailedItems: boolean =
-        (resolvedArgs.skipFailedItems as string | undefined)?.toString()?.toLowerCase() === 'true'.toLowerCase() ??
-        true;
-    const fetchAssetDetails: boolean =
-        (resolvedArgs.fetchAssetDetails as string | undefined)?.toString()?.toLowerCase() === 'true'.toLowerCase() ??
-        false;
-
-    const typesMapped: string[] = exportTypes ? exportTypes.split(',').map((m) => m.trim()) : [];
+    const action: CliAction = getRequiredArgumentValue(resolvedArgs, 'action') as CliAction;
+    const format: string | undefined = getOptionalArgumentValue(resolvedArgs, 'format');
 
     let mappedFormat: ProcessingFormat = 'csv';
 
@@ -227,27 +191,23 @@ const getConfig = async () => {
         }
     }
 
-    if (!action) {
-        throw Error(`No action was provided`);
-    }
-
-    if (!environmentId) {
-        throw Error(`Environment id was not provided`);
-    }
-
-    // get config from command line
     const config: ICliFileConfig = {
-        action,
-        apiKey,
-        environmentId,
-        itemsFilename: itemsFilename,
-        assetsFilename: assetsFilename,
-        baseUrl,
-        exportTypes: typesMapped,
-        skipFailedItems: skipFailedItems,
-        isPreview: isPreview,
-        isSecure: isSecure,
-        fetchAssetDetails: fetchAssetDetails,
+        action: action,
+        managementApiKey: getOptionalArgumentValue(resolvedArgs, 'managementApiKey'),
+        environmentId: getRequiredArgumentValue(resolvedArgs, 'environmentId'),
+        itemsFilename: getOptionalArgumentValue(resolvedArgs, 'itemsFilename') ?? getDefaultExportFilename('items'),
+        assetsFilename: getOptionalArgumentValue(resolvedArgs, 'assetsFilename'),
+        baseUrl: getOptionalArgumentValue(resolvedArgs, 'baseUrl'),
+        exportTypes:
+            getOptionalArgumentValue(resolvedArgs, 'exportTypes')
+                ?.split(',')
+                .map((m) => m.trim()) ?? [],
+        skipFailedItems: getBooleanArgumentvalue(resolvedArgs, 'skipFailedItems'),
+        fetchAssetDetails: getBooleanArgumentvalue(resolvedArgs, 'fetchAssetDetails'),
+        secureApiKey: getOptionalArgumentValue(resolvedArgs, 'secureApiKey'),
+        previewApiKey: getOptionalArgumentValue(resolvedArgs, 'previewApiKey'),
+        isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview'),
+        isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure'),
         format: mappedFormat
     };
 
@@ -294,4 +254,22 @@ function getItemFormatService(format: ProcessingFormat | undefined): IItemFormat
     }
 
     throw Error(`Unsupported format '${format}' for exporting assets`);
+}
+
+function getOptionalArgumentValue(args: Args, argName: string): string | undefined {
+    return args[argName]?.toString();
+}
+
+function getRequiredArgumentValue(args: Args, argName: string): string {
+    const value = getOptionalArgumentValue(args, argName);
+
+    if (!value) {
+        throw Error(`Missing '${argName}' argument value`);
+    }
+
+    return value;
+}
+
+function getBooleanArgumentvalue(args: Args, argName: string): boolean {
+    return getOptionalArgumentValue(args, argName)?.toLowerCase() === 'true'.toLowerCase();
 }

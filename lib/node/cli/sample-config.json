@@ -1,6 +1,9 @@
 {
     "environmentId": "x",
-    "apiKey": "y",
+    "secureApiKey": "y",
+    "previewApiKey": null,
+    "isSecure": true,
+    "isPreview": false,
     "action": "export",
     "force": false,
     "baseUrl": null,

@@ -9,7 +9,9 @@ const run = async () => {
 
     const exportService = new ExportService({
         environmentId: 'environmentId',
-        exportAssets: true
+        exportAssets: true,
+        isPreview: false,
+        isSecure: false
     });
 
     // data contains entire project content

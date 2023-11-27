@@ -3,7 +3,7 @@ import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { ContentElementType, IPackageMetadata } from '../core';
 
 export interface IImportConfig {
-    apiKey: string;
+    managementApiKey: string;
     skipFailedItems: boolean;
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;
