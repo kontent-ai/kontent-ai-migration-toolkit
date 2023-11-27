@@ -17,11 +17,11 @@ export class ExportService {
             environmentId: config.environmentId,
             retryStrategy: retryStrategy,
             httpService: defaultHttpService,
-            previewApiKey: config.previewApiKey,
-            secureApiKey: config.secureApiKey,
+            previewApiKey: config.apiKey,
+            secureApiKey: config.apiKey,
             defaultQueryConfig: {
-                usePreviewMode: config.previewApiKey ? true : false,
-                useSecuredMode: config.secureApiKey ? true : false
+                usePreviewMode: config.isPreview ? true : false,
+                useSecuredMode: config.isSecure ? true : false
             },
             proxy: {
                 baseUrl: config.baseUrl
@@ -31,6 +31,8 @@ export class ExportService {
 
     async exportAllAsync(): Promise<IExportAllResult> {
         logDebug('info', `Environment id`, this.config.environmentId);
+        logDebug('info', `Using Secure API`, this.config.isSecure ? 'true' : 'false');
+        logDebug('info', `Using Preview API`, this.config.isPreview ? 'true' : 'false');
 
         const types = await this.getContentTypesAsync();
         const languages = await this.getLanguagesAsync();

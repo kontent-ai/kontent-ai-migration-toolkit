@@ -15,13 +15,15 @@ This library can only be used in `node.js`. Use in Browsers is not supported.
 
 ### How are content items imported?
 
-The Data manager creates content items that are not present in target project. If the content item exists in target project
-(based on item's `codename`) the item will be updated. The workflow will be preserved.
+The Data manager creates content items that are not present in target project. If the content item exists in target
+project (based on item's `codename`) the item will be updated. The workflow will be preserved.
 
 ### How are assets imported?
 
-If asset exists in target project, the asset upload will be skipped and not uploaded at all.
-If asset doesn't exist, the asset from the zip folder will be uploaded and it's id will be used as a filename unless you enable the `fetchAssetsDetails` option. The data Manager will also set `external_id` of newly uploaded assets to equal their original id. Folder structure of imported assets is not preserved.
+If asset exists in target project, the asset upload will be skipped and not uploaded at all. If asset doesn't exist, the
+asset from the zip folder will be uploaded and it's id will be used as a filename unless you enable the
+`fetchAssetsDetails` option. The data Manager will also set `external_id` of newly uploaded assets to equal their
+original id. Folder structure of imported assets is not preserved.
 
 ## Installation
 
@@ -36,14 +38,14 @@ Install package globally:
 | Config            | Value                                                                                                                                                                                                                         |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **environmentId** | Id of Kontent.ai project **(required)**                                                                                                                                                                                       |
-| **apiKey**        | Content Management Api key **(required for import, not needed for export)**                                                                                                                                                   |
+| **apiKey**        | Management / Delivery API key **(required for import, optional export)**                                                                                                                                                      |
 | **action**        | Action. Available options: `restore` & `export` **(required)**                                                                                                                                                                |
-| **format**            | Format used to export data. Available options: `csv`, `json` and `jsonSingle`  **(required)**                                                                                                                                                                |
-| previewApiKey     | When set, Preview API will be used to make data export                                                                                                                                                                        |
-| secureApiKey      | When set, Secure API will be used to make data export                                                                                                                                                                         |
-| itemsFilename          | Name of zip used for export / restore items                                          |
-| assetsFilename          | Name of zip used for export / restore assets          
-| baseUrl           | Custom base URL for Management API calls.  |
+| **format**        | Format used to export data. Available options: `csv`, `json` and `jsonSingle` **(required)**                                                                                                                                  |
+| isSecure          | When set to `true`, Secure API will be used to make data export                                                                                                                                                               |
+| isPreview         | When set to `true`, Preview API will be used to make data export                                                                                                                                                              |
+| itemsFilename     | Name of zip used for export / restore items                                                                                                                                                                                   |
+| assetsFilename    | Name of zip used for export / restore assets                                                                                                                                                                                  |
+| baseUrl           | Custom base URL for Management API calls.                                                                                                                                                                                     |
 | exportTypes       | Array of content types codenames of which content items should be exported. By default all items of all types are exported                                                                                                    |
 | skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`                                                                                            |
 | fetchAssetDetails | Indicates if asset details should be fetched when making data export. If you enable this option, you also must use provide `apiKey` because fetching asset data relies on Management API. Available options: `true` & `false` |
@@ -51,8 +53,8 @@ Install package globally:
 ### Execution
 
 > We do not recommend importing data back to your production environment directly. Instead, we recommend that you create
-> a new environment based on your production and test the import first. If the import completes successfully,
-> you may swap environments or run it again on the production.
+> a new environment based on your production and test the import first. If the import completes successfully, you may
+> swap environments or run it again on the production.
 
 Export without assets:
 
@@ -60,7 +62,7 @@ Export without assets:
 
 Export with assets:
 
-`kdm --action=export --environmentId=xxx --format=csv --itemsFilename=items-export.zip --assetsFilename=assets-export.zip` 
+`kdm --action=export --environmentId=xxx --format=csv --itemsFilename=items-export.zip --assetsFilename=assets-export.zip`
 
 Restore without assets:
 
@@ -91,7 +93,7 @@ Create a `json` configuration file in the folder where you are attempting to run
     "environmentId": "xxx",
     "filename": "csv-export",
     "format": "csv",
-    "action": "export",
+    "action": "export"
 }
 ```
 
@@ -101,9 +103,8 @@ To execute your action run:
 
 ## Use via code
 
-See https://github.com/Enngage/kontent-data-manager/tree/main/samples for examples of how to run this library in code rather then via command line.
-
-
+See https://github.com/Enngage/kontent-data-manager/tree/main/samples for examples of how to run this library in code
+rather then via command line.
 
 ## Customizing exported items
 
@@ -117,7 +118,6 @@ Example:
 const exportService = new ExportService({
     environmentId: 'x',
     apiKey: 'x',
-    previewApiKey: 'x',
     exportAssets: true,
     fetchAssetDetails: false,
     customItemsExport: async (client) => {
@@ -135,10 +135,10 @@ format or otherwise change how items are processed. For example, you can use thi
 format, `xlxs`, some custom `txt` format and so on. By implementing `IFormatService` you can do just that. You may
 inspire from these services:
 
-| Service                          | Link                                                                                                           |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| CSV `IItemFormatService `             | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts  |
-| JSON `IItemFormatService `            | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/item-formats/item-json-processor.service.ts |
+| Service                    | Link                                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| CSV `IItemFormatService `  | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts  |
+| JSON `IItemFormatService ` | https://github.com/Enngage/kontent-data-manager/blob/main/lib/file-processor/item-formats/item-json-processor.service.ts |
 
 To use your custom formatting service simply pass it to `createZipAsync` or `extractZipAsync`
 

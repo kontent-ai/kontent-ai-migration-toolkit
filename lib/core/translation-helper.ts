@@ -13,7 +13,7 @@ import {
     SharedContracts
 } from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import';
-import { IImportedData } from './core.models';
+import { ContentElementType, IImportedData } from './core.models';
 import { extractAssetIdFromUrl } from './global-helper';
 import { idTranslateHelper } from './id-translate-helper';
 import { logDebug } from './log-helper';
@@ -64,7 +64,16 @@ export class TranslationHelper {
         unknown: (data) => data.element.value
     };
 
-    private readonly importTransforms: Readonly<Record<ElementType, ImportTransformFunc>> = {
+    private readonly importTransforms: Readonly<Record<ContentElementType, ImportTransformFunc>> = {
+        guidelines: (data) => {
+            throw Error(`Guidelines import transform not supported`);
+        },
+        snippet: (data) => {
+            throw Error(`Content type snippet import transform not supported`);
+        },
+        subpages: (data) => {
+            throw Error(`Guidelines import transform not supported`);
+        },
         asset: (data) => {
             const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
 
@@ -208,14 +217,6 @@ export class TranslationHelper {
                 value: data.value?.toString() ?? undefined
             });
         },
-        unknown: (data) => {
-            return this.elementsBuilder.customElement({
-                element: {
-                    codename: data.elementCodename
-                },
-                value: data.value?.toString() ?? undefined
-            });
-        },
         url_slug: (data) => {
             return this.elementsBuilder.urlSlugElement({
                 element: {
@@ -244,7 +245,7 @@ export class TranslationHelper {
     transformToImportValue(
         value: string | string[] | undefined,
         elementCodename: string,
-        type: ElementType,
+        type: ContentElementType,
         importedData: IImportedData,
         sourceItems: IParsedContentItem[]
     ): ElementContracts.IContentItemElementContract | undefined {

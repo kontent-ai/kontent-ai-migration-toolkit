@@ -21,7 +21,6 @@ import {
     IImportContentType,
     IImportContentTypeElement
 } from './import.models';
-import { DeliveryClient, ElementType } from '@kontent-ai/delivery-sdk';
 import { logDebug } from '../core/log-helper';
 import { importAssetsHelper } from './helpers/import-assets.helper';
 import { importContentItemHelper } from './helpers/import-content-item.helper';
@@ -29,7 +28,6 @@ import { importLanguageVariantHelper } from './helpers/import-language-variant.h
 
 export class ImportService {
     private readonly managementClient: ManagementClient;
-    private readonly deliveryClient: DeliveryClient;
 
     constructor(private config: IImportConfig) {
         this.managementClient = new ManagementClient({
@@ -39,35 +37,20 @@ export class ImportService {
             httpService: defaultHttpService,
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
         });
-        this.deliveryClient = new DeliveryClient({
-            environmentId: config.environmentId,
-            secureApiKey: config.secureApiKey,
-            httpService: defaultHttpService,
-            defaultQueryConfig: {
-                useSecuredMode: config.secureApiKey ? true : false
-            },
-            proxy: {
-                baseUrl: config.baseUrl
-            },
-            retryStrategy: config.retryStrategy ?? defaultRetryStrategy
-        });
     }
 
     async getImportContentTypesAsync(): Promise<IImportContentType[]> {
         logDebug('info', `Fetching content types from environment`);
-        const contentTypes = await this.deliveryClient
-            .types()
-            .toAllPromise()
-            .then((m) => m.data.items);
+        const contentTypes = (await this.managementClient.listContentTypes().toAllPromise()).data.items;
         logDebug('info', `Fetched '${contentTypes.length}' content types`);
 
         return contentTypes.map((contentType) => {
             const importType: IImportContentType = {
-                contentTypeCodename: contentType.system.codename,
+                contentTypeCodename: contentType.codename,
                 elements: contentType.elements.map((element) => {
                     const importElement: IImportContentTypeElement = {
                         codename: element.codename ?? '',
-                        type: element.type as ElementType
+                        type: element.type
                     };
 
                     return importElement;

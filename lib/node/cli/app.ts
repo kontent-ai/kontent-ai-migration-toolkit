@@ -62,8 +62,8 @@ const exportAsync = async (config: ICliFileConfig) => {
     const exportService = new ExportService({
         environmentId: config.environmentId,
         apiKey: config.apiKey,
-        previewApiKey: config.previewApiKey,
-        secureApiKey: config.secureApiKey,
+        isPreview: config.isPreview,
+        isSecure: config.isSecure,
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
         exportAssets: config.assetsFilename ? true : false,
@@ -71,7 +71,6 @@ const exportAsync = async (config: ICliFileConfig) => {
     });
 
     const fileService = new FileService();
-
     const fileProcessorService = new FileProcessorService();
 
     const response = await exportService.exportAllAsync();
@@ -103,7 +102,6 @@ const restoreAsync = async (config: ICliFileConfig) => {
     const importService = new ImportService({
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
-        secureApiKey: config.secureApiKey,
         environmentId: config.environmentId,
         apiKey: config.apiKey,
         canImport: {
@@ -197,19 +195,23 @@ const getConfig = async () => {
 
     const action: CliAction | undefined = resolvedArgs.action as CliAction | undefined;
     const apiKey: string | undefined = resolvedArgs.apiKey as string | undefined;
-    const secureApiKey: string | undefined = resolvedArgs.secureApiKey as string | undefined;
-    const previewApiKey: string | undefined = resolvedArgs.previewApiKey as string | undefined;
+    const isSecure: boolean =
+        (resolvedArgs.isSecure as string | undefined)?.toString()?.toLowerCase() === 'true'.toLowerCase() ?? true;
+    const isPreview: boolean =
+        (resolvedArgs.isPreview as string | undefined)?.toString()?.toLowerCase() === 'true'.toLowerCase() ?? true;
     const environmentId: string | undefined = resolvedArgs.environmentId as string | undefined;
     const format: string | undefined = resolvedArgs.format as string | undefined;
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
     const itemsFilename: string | undefined =
         (resolvedArgs.itemsFilename as string | undefined) ?? getDefaultExportFilename('items');
     const assetsFilename: string | undefined = resolvedArgs.assetsFilename as string | undefined;
-    const exportTypes: string | undefined = resolvedArgs.exportTypes as string | undefined;
+    const exportTypes: string | undefined = resolvedArgs.exportTypes?.toString() as string | undefined;
     const skipFailedItems: boolean =
-        (resolvedArgs.skipFailedItems as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? true;
+        (resolvedArgs.skipFailedItems as string | undefined)?.toString()?.toLowerCase() === 'true'.toLowerCase() ??
+        true;
     const fetchAssetDetails: boolean =
-        (resolvedArgs.fetchAssetDetails as string | undefined)?.toLowerCase() === 'true'.toLowerCase() ?? false;
+        (resolvedArgs.fetchAssetDetails as string | undefined)?.toString()?.toLowerCase() === 'true'.toLowerCase() ??
+        false;
 
     const typesMapped: string[] = exportTypes ? exportTypes.split(',').map((m) => m.trim()) : [];
 
@@ -243,8 +245,8 @@ const getConfig = async () => {
         baseUrl,
         exportTypes: typesMapped,
         skipFailedItems: skipFailedItems,
-        previewApiKey: previewApiKey,
-        secureApiKey: secureApiKey,
+        isPreview: isPreview,
+        isSecure: isSecure,
         fetchAssetDetails: fetchAssetDetails,
         format: mappedFormat
     };

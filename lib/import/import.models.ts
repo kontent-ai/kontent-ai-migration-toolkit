@@ -1,16 +1,13 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { IPackageMetadata } from '../core';
-import { ElementType } from '@kontent-ai/delivery-sdk';
+import { ContentElementType, IPackageMetadata } from '../core';
 
 export interface IImportConfig {
     apiKey: string;
     skipFailedItems: boolean;
-
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;
     environmentId: string;
-    secureApiKey?: string;
     canImport?: {
         contentItem?: (item: IParsedContentItem) => boolean | Promise<boolean>;
         asset?: (item: IImportAsset) => boolean | Promise<boolean>;
@@ -55,7 +52,7 @@ export interface IFlattenedFolder {
 
 export interface IParsedElement {
     value: string | undefined | string[];
-    type: ElementType;
+    type: ContentElementType;
     codename: string;
 }
 
@@ -74,7 +71,7 @@ export interface IParsedContentItem {
 
 export interface IImportContentTypeElement {
     codename: string;
-    type: ElementType;
+    type: ContentElementType;
 }
 
 export interface IImportContentType {

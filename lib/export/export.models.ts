@@ -12,15 +12,15 @@ export interface IExportFilter {
 
 export interface IExportConfig {
     environmentId: string;
-    secureApiKey?: string;
     apiKey?: string;
-    previewApiKey?: string;
+    isPreview: boolean;
+    isSecure: boolean;
     baseUrl?: string;
     exportTypes?: string[];
     exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;
     fetchAssetDetails?: boolean;
-    customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>
+    customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;
 }
 
 export interface IExportData {

@@ -1,4 +1,4 @@
-import { AssetModels, ContentItemModels, LanguageVariantModels } from '@kontent-ai/management-sdk';
+import { AssetModels, ContentItemModels, ElementModels, LanguageVariantModels } from '@kontent-ai/management-sdk';
 import { ProcessingFormat } from '../file-processor';
 import { IImportAsset, IParsedContentItem } from '../import';
 
@@ -6,8 +6,8 @@ export interface ICliFileConfig {
     environmentId: string;
     apiKey?: string;
     format?: ProcessingFormat;
-    secureApiKey?: string;
-    previewApiKey?: string;
+    isPreview: boolean;
+    isSecure: boolean;
     skipFailedItems: boolean;
     action: CliAction;
     itemsFilename: string;
@@ -40,6 +40,8 @@ export type ActionType =
     | 'unArchive'
     | 'extractedBinaryData'
     | 'update';
+
+export type ContentElementType = ElementModels.ElementType;
 
 export interface IProcessedItem {
     title: string;
