@@ -16,7 +16,8 @@ export interface ICliFileConfig {
     assetsFilename?: string;
     baseUrl?: string;
     exportTypes?: string[];
-    fetchAssetDetails?: boolean;
+    exportAssets: boolean;
+    exportAssetsDetails: boolean;
 }
 
 export type CliAction = 'export' | 'restore';

@@ -45,12 +45,13 @@ Install package globally:
 | isSecure             | When set to `true`, Secure API will be used to make data export                                                                                                                                                               |
 | previewApiKey        | API key for preview                                                                                                                                                                                                           |
 | isPreview            | When set to `true`, Preview API will be used to make data export                                                                                                                                                              |
+| exportAssets         | When set to `true`, Binary data of assets is exported. Optionally, you may use `exportAssetsDetails` to fetch asset etails such as filename using Management API. Otherwise assets won't preserve their original names.        |
+| exportAssetsDetails   | Indicates if asset details should be fetched when making data export. If you enable this option, you also must use provide `apiKey` because fetching asset data relies on Management API. Available options: `true` & `false` |
 | itemsFilename        | Name of zip used for export / restore items                                                                                                                                                                                   |
 | assetsFilename       | Name of zip used for export / restore assets                                                                                                                                                                                  |
 | baseUrl              | Custom base URL for Management API calls.                                                                                                                                                                                     |
 | exportTypes          | Array of content types codenames of which content items should be exported. By default all items of all types are exported                                                                                                    |
 | skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`                                                                                            |
-| fetchAssetDetails    | Indicates if asset details should be fetched when making data export. If you enable this option, you also must use provide `apiKey` because fetching asset data relies on Management API. Available options: `true` & `false` |
 
 ### Execution
 
@@ -121,7 +122,7 @@ const exportService = new ExportService({
     environmentId: 'x',
     apiKey: 'x',
     exportAssets: true,
-    fetchAssetDetails: false,
+    exportAssetsDetails: false,
     customItemsExport: async (client) => {
         // return only the items you want to export by applying filters, parameters etc..
         const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();
@@ -150,7 +151,7 @@ Export is made with `Delivery API` for speed and efficiency, but this brings som
 
 -   Assets are exported without their original `filename`. If you import these assets back to a different project, the
     `Asset Id` is used as a filename. However, if you import back to the same project, the asset will not be imported if
-    it is already there. You may enable `fetchAssetDetails` option to fetch asset details including filenames using the
+    it is already there. You may enable `exportAssetsDetails` option to fetch asset details including filenames using the
     Management API. If you enable this option you also need to provide `apiKey`
 
 ### FAQ

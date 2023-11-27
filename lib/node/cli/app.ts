@@ -63,7 +63,7 @@ const argv = yargs(process.argv.slice(2))
     .alias('h', 'help').argv;
 
 const exportAsync = async (config: ICliFileConfig) => {
-    const fetchAssetDetails: boolean = config.assetsFilename && config.fetchAssetDetails ? true : false;
+    const exportAssetsDetails: boolean = config.assetsFilename && config.exportAssetsDetails ? true : false;
 
     const exportService = new ExportService({
         environmentId: config.environmentId,
@@ -74,8 +74,8 @@ const exportAsync = async (config: ICliFileConfig) => {
         isSecure: config.isSecure,
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
-        exportAssets: config.assetsFilename ? true : false,
-        fetchAssetDetails: fetchAssetDetails
+        exportAssets: config.exportAssets,
+        exportAssetsDetails: exportAssetsDetails
     });
 
     const fileService = new FileService();
@@ -196,16 +196,17 @@ const getConfig = async () => {
         managementApiKey: getOptionalArgumentValue(resolvedArgs, 'managementApiKey'),
         environmentId: getRequiredArgumentValue(resolvedArgs, 'environmentId'),
         itemsFilename: getOptionalArgumentValue(resolvedArgs, 'itemsFilename') ?? getDefaultExportFilename('items'),
-        assetsFilename: getOptionalArgumentValue(resolvedArgs, 'assetsFilename'),
+        assetsFilename: getOptionalArgumentValue(resolvedArgs, 'assetsFilename') ?? getDefaultExportFilename('assets'),
         baseUrl: getOptionalArgumentValue(resolvedArgs, 'baseUrl'),
         exportTypes:
             getOptionalArgumentValue(resolvedArgs, 'exportTypes')
                 ?.split(',')
                 .map((m) => m.trim()) ?? [],
         skipFailedItems: getBooleanArgumentvalue(resolvedArgs, 'skipFailedItems'),
-        fetchAssetDetails: getBooleanArgumentvalue(resolvedArgs, 'fetchAssetDetails'),
+        exportAssetsDetails: getBooleanArgumentvalue(resolvedArgs, 'exportAssetsDetails'),
         secureApiKey: getOptionalArgumentValue(resolvedArgs, 'secureApiKey'),
         previewApiKey: getOptionalArgumentValue(resolvedArgs, 'previewApiKey'),
+        exportAssets: getBooleanArgumentvalue(resolvedArgs, 'exportAssets'),
         isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview'),
         isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure'),
         format: mappedFormat
@@ -214,7 +215,7 @@ const getConfig = async () => {
     return config;
 };
 
-const getDefaultExportFilename = (type: 'items') => {
+const getDefaultExportFilename = (type: 'items' | 'assets') => {
     const date = new Date();
     return `${type}-export-${date.getDate()}-${
         date.getMonth() + 1

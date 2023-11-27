@@ -21,7 +21,7 @@ export interface IExportConfig {
     exportTypes?: string[];
     exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;
-    fetchAssetDetails?: boolean;
+    exportAssetsDetails?: boolean;
     customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;
 }
 

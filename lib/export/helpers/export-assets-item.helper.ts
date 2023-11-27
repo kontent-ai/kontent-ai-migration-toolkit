@@ -67,7 +67,7 @@ export class ExportAssetsHelper {
 
         const uniqueAssets = [...new Map(assets.map((item) => [item.url, item])).values()]; // filters unique values
 
-        if (config.fetchAssetDetails === true) {
+        if (config.exportAssetsDetails === true) {
             if (!config.managementApiKey) {
                 throw Error(`Management API key is required to fetch asset details`);
             }
