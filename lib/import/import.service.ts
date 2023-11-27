@@ -40,9 +40,17 @@ export class ImportService {
     }
 
     async getImportContentTypesAsync(): Promise<IImportContentType[]> {
-        logDebug('info', `Fetching content types from environment`);
+        logDebug({
+            type: 'info',
+            message: `Fetching content types from environment`
+        });
+
         const contentTypes = (await this.managementClient.listContentTypes().toAllPromise()).data.items;
-        logDebug('info', `Fetched '${contentTypes.length}' content types`);
+
+        logDebug({
+            type: 'info',
+            message: `Fetched '${contentTypes.length}' content types`
+        });
 
         return contentTypes.map((contentType) => {
             const importType: IImportContentType = {
@@ -92,25 +100,40 @@ export class ImportService {
         try {
             //  Assets
             if (dataToImport.importData.assets.length) {
-                logDebug('info', `Importing assets`);
+                logDebug({
+                    type: 'info',
+                    message: `Importing assets`
+                });
                 await importAssetsHelper.importAssetsAsync(
                     this.managementClient,
                     dataToImport.importData.assets,
                     importedData
                 );
             } else {
-                logDebug('info', `There are no assets to import`);
+                logDebug({
+                    type: 'info',
+                    message: `There are no assets to import`
+                });
             }
 
             // Content items
             if (dataToImport.importData.items.length) {
-                logDebug('info', `Importing content items`);
+                logDebug({
+                    type: 'info',
+                    message: `Importing content items`
+                });
                 await this.importParsedContentItemsAsync(dataToImport.importData.items, importedData);
             } else {
-                logDebug('info', `There are no content items to import`);
+                logDebug({
+                    type: 'info',
+                    message: `There are no content items to import`
+                });
             }
 
-            logDebug('info', `Finished import`);
+            logDebug({
+                type: 'info',
+                message: `Finished import`
+            });
         } catch (error) {
             this.handleImportError(error);
         }
@@ -154,11 +177,17 @@ export class ImportService {
         }
 
         if (removedAssets > 0) {
-            logDebug('info', `Removed '${removedAssets.toString()}' assets from import`);
+            logDebug({
+                type: 'info',
+                message: `Removed '${removedAssets.toString()}' assets from import`
+            });
         }
 
         if (removedContentItems) {
-            logDebug('info', `Removed '${removedContentItems.toString()}' content items from import`);
+            logDebug({
+                type: 'info',
+                message: `Removed '${removedContentItems.toString()}' content items from import`
+            });
         }
 
         return dataToImport;

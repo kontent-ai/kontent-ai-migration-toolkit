@@ -25,7 +25,8 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
         return [
             {
                 filename: 'assets.csv',
-                data: data
+                data: data,
+                itemsCount: assets.length
             }
         ];
     }

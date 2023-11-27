@@ -41,8 +41,17 @@ export async function printProjectAndEnvironmentInfoToConsoleAsync(
     client: IManagementClient<any>
 ): Promise<EnvironmentModels.EnvironmentInformationModel> {
     const environmentInformation = (await client.environmentInformation().toPromise()).data;
-    logDebug('info', 'Project', environmentInformation.project.name);
-    logDebug('info', 'Environment', environmentInformation.project.environment);
+
+    logDebug({
+        type: 'info',
+        message: 'Project information',
+        partA: environmentInformation.project.name
+    });
+    logDebug({
+        type: 'info',
+        message: 'Environment information',
+        partA: environmentInformation.project.environment
+    });
 
     return environmentInformation.project;
 }
@@ -56,7 +65,13 @@ export function logAction(
         title: string;
     }
 ): void {
-    logDebug(actionType, data.title, itemType, data.language, data.workflowStep);
+    logDebug({
+        type: actionType,
+        message: data.title,
+        partA: itemType,
+        partB: data.language,
+        partC: data.workflowStep
+    });
 }
 
 export function extractErrorMessage(error: any): string {

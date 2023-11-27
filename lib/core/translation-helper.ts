@@ -84,11 +84,12 @@ export class TranslationHelper {
                 const importedAsset = data.importedData.assets.find((s) => s.original.assetId === assetId);
 
                 if (!importedAsset) {
-                    logDebug(
-                        'warning',
-                        `Could not find imported asset for asset with original id. Skipping asset.`,
-                        assetId
-                    );
+                    logDebug({
+                        type: 'warning',
+                        message: `Could not find imported asset for asset with original id. Skipping asset.`,
+                        partA: assetId
+                    });
+
                     continue;
                 }
 
@@ -301,10 +302,10 @@ export class TranslationHelper {
                 const contentItemWithGivenId: IContentItem | undefined = items.find((m) => m.system.id === id);
 
                 if (!contentItemWithGivenId) {
-                    logDebug(
-                        'warning',
-                        `Could not find content item with id '${id}'. This item was referenced as a link in Rich text element.`
-                    );
+                    logDebug({
+                        type: 'warning',
+                        message: `Could not find content item with id '${id}'. This item was referenced as a link in Rich text element.`
+                    });
                 } else {
                     objectTag = objectTag.replace(id, contentItemWithGivenId.system.codename);
                     objectTag = objectTag.replace('data-item-id', this.linkCodenameAttributeName);
@@ -388,10 +389,10 @@ export class TranslationHelper {
                     importedData.contentItems.find((m) => m.original.system.codename === codename)?.imported;
 
                 if (!contentItemWithGivenCodename) {
-                    logDebug(
-                        'warning',
-                        `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
-                    );
+                    logDebug({
+                        type: 'warning',
+                        message: `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
+                    });
                 } else {
                     objectTag = objectTag.replace(codename, contentItemWithGivenCodename.id);
                     objectTag = objectTag.replace(this.linkCodenameAttributeName, 'data-item-id');

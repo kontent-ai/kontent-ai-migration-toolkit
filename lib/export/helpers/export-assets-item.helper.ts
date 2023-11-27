@@ -81,7 +81,12 @@ export class ExportAssetsHelper {
             for (const asset of uniqueAssets) {
                 const assetResponse = await managementClient.viewAsset().byAssetId(asset.assetId).toPromise();
 
-                logDebug('fetch', 'Fetched asset details', asset.assetId, assetResponse.data.fileName);
+                logDebug({
+                    type: 'fetch',
+                    message: 'Fetched asset details',
+                    partA: asset.assetId,
+                    partB: assetResponse.data.fileName
+                });
 
                 asset.filename = assetResponse.data.fileName;
             }

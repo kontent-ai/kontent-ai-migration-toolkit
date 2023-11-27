@@ -51,12 +51,12 @@ export class ImportContentItemHelper {
                 }
             } catch (error) {
                 if (config.skipFailedItems) {
-                    logDebug(
-                        'error',
-                        `Failed to import content item`,
-                        importContentItem.system.codename,
-                        extractErrorMessage(error)
-                    );
+                    logDebug({
+                        type: 'error',
+                        message: `Failed to import content item`,
+                        partA: importContentItem.system.codename,
+                        partB: extractErrorMessage(error)
+                    });
                 } else {
                     throw error;
                 }

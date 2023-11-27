@@ -87,7 +87,7 @@ const exportAsync = async (config: ICliFileConfig) => {
         await fileService.writeFileAsync(config.assetsFilename, assetsZipFileData);
     }
 
-    logDebug('info', `Completed`);
+    logDebug({ type: 'info', message: `Completed` });
 };
 
 const restoreAsync = async (config: ICliFileConfig) => {
@@ -145,7 +145,7 @@ const restoreAsync = async (config: ICliFileConfig) => {
         throw Error(`Unsupported file type '${itemsFileExtension}'`);
     }
 
-    logDebug('info', `Completed`);
+    logDebug({ type: 'info', message: `Completed` });
 };
 
 const validateConfig = (config?: ICliFileConfig) => {
@@ -265,7 +265,7 @@ run()
     .then((m) => {})
     .catch((err) => {
         console.error(err);
-        logDebug('error', extractErrorMessage(err));
+        logDebug({ type: 'error', message: extractErrorMessage(err) });
     });
 
 function getAssetFormatService(format: ProcessingFormat | undefined): IAssetFormatService {

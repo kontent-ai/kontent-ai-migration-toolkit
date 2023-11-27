@@ -43,15 +43,28 @@ export class FileProcessorService {
         types: IImportContentType[],
         config: { itemFormatService: IItemFormatService; assetFormatService: IAssetFormatService }
     ): Promise<IImportSource> {
-        logDebug('info', 'Loading items zip file');
+        logDebug({
+            type: 'info',
+            message: 'Loading items zip file'
+        });
         const itemsZipFile = await JSZip.loadAsync(itemsFile, {});
-        logDebug('info', 'Parsing items zip data');
+        logDebug({
+            type: 'info',
+            message: 'Parsing items zip data'
+        });
 
         let assetsZipFile: JSZip | undefined = undefined;
         if (assetsFile) {
-            logDebug('info', 'Loading assets zip file');
+            logDebug({
+                type: 'info',
+                message: 'Loading assets zip file'
+            });
             assetsZipFile = await JSZip.loadAsync(assetsFile, {});
-            logDebug('info', 'Parsing assets zip data');
+
+            logDebug({
+                type: 'info',
+                message: 'Parsing assets zip data'
+            });
         }
 
         const result: IImportSource = {
@@ -64,13 +77,19 @@ export class FileProcessorService {
             metadata: await this.parseMetadataFromZipAsync(itemsZipFile, this.metadataName)
         };
 
-        logDebug('info', 'Parsing completed');
+        logDebug({
+            type: 'info',
+            message: 'Parsing completed'
+        });
 
         return result;
     }
 
     async extractCsvFileAsync(file: Buffer, types: IImportContentType[]): Promise<IImportSource> {
-        logDebug('info', 'Reading CSV file');
+        logDebug({
+            type: 'info',
+            message: 'Reading CSV file'
+        });
 
         const result: IImportSource = {
             importData: {
@@ -80,13 +99,19 @@ export class FileProcessorService {
             metadata: undefined
         };
 
-        logDebug('info', 'Reading CSV file completed');
+        logDebug({
+            type: 'info',
+            message: 'Reading CSV file completed'
+        });
 
         return result;
     }
 
     async extractJsonFileAsync(file: Buffer, types: IImportContentType[]): Promise<IImportSource> {
-        logDebug('info', 'Reading JSON file');
+        logDebug({
+            type: 'info',
+            message: 'Reading JSON file'
+        });
 
         const result: IImportSource = {
             importData: {
@@ -96,7 +121,10 @@ export class FileProcessorService {
             metadata: undefined
         };
 
-        logDebug('info', 'Reading JSON file completed');
+        logDebug({
+            type: 'info',
+            message: 'Reading JSON file completed'
+        });
 
         return result;
     }
@@ -116,14 +144,18 @@ export class FileProcessorService {
             throw Error(`Could not create folder '${this.contentItemsFolderName}'`);
         }
 
-        logDebug('zip', `Adding to zip`, this.metadataName);
+        logDebug({
+            type: 'info',
+            message: `Adding metadata to zip`,
+            partA: this.metadataName
+        });
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
 
-        logDebug(
-            'info',
-            `Transforming '${exportData.data.contentItems.length.toString()}' content items`,
-            config.itemFormatService?.name
-        );
+        logDebug({
+            type: 'info',
+            message: `Transforming '${exportData.data.contentItems.length.toString()}' content items`,
+            partA: config.itemFormatService?.name
+        });
 
         const transformedLanguageVariantsFileData = await this.transformLanguageVariantsAsync(
             exportData.data.contentTypes,
@@ -132,17 +164,22 @@ export class FileProcessorService {
         );
 
         for (const fileInfo of transformedLanguageVariantsFileData) {
-            logDebug('zip', `Adding to zip`, fileInfo.filename);
+            logDebug({
+                type: 'info',
+                message: `Adding '${fileInfo.itemsCount}' items to file within zip`,
+                partA: fileInfo.filename
+            });
+
             contentItemsFolder.file(fileInfo.filename, fileInfo.data);
         }
 
         const zipOutputType = this.getZipOutputType(this.zipContext);
         const compressionLevel: number = config.compressionLevel ?? 9;
 
-        logDebug(
-            'info',
-            `Creating zip file using '${zipOutputType}' with compression level '${compressionLevel.toString()}'`
-        );
+        logDebug({
+            type: 'info',
+            message: `Creating zip file using '${zipOutputType}' with compression level '${compressionLevel.toString()}'`
+        });
 
         const zipData = await zip.generateAsync({
             type: zipOutputType,
@@ -153,7 +190,12 @@ export class FileProcessorService {
             streamFiles: true
         });
 
-        logDebug('info', `Zip successfully generated`, formatBytes(this.getZipSizeInBytes(zipData)));
+        logDebug({
+            type: 'info',
+            message: `Zip successfully generated`,
+            partA: formatBytes(this.getZipSizeInBytes(zipData))
+        });
+
         return zipData;
     }
 
@@ -177,25 +219,37 @@ export class FileProcessorService {
             throw Error(`Could not create folder '${this.assetsFolderName}'`);
         }
 
-        logDebug('info', `Storing metadata`, this.metadataName);
+        logDebug({
+            type: 'info',
+            message: `Storing metadata`,
+            partA: this.metadataName
+        });
         zip.file(this.metadataName, JSON.stringify(exportData.metadata));
 
         if (exportData.data.assets.length) {
-            logDebug(
-                'info',
-                `Transforming '${exportData.data.assets.length.toString()}' asssets`,
-                config.assetFormatService?.name
-            );
+            logDebug({
+                type: 'info',
+                message: `Transforming '${exportData.data.assets.length.toString()}' asssets`,
+                partA: config.assetFormatService?.name
+            });
+
             const transformedAssetsFileData = await config.assetFormatService.transformAssetsAsync(
                 exportData.data.assets
             );
 
             for (const fileInfo of transformedAssetsFileData) {
-                logDebug('zip', `Adding to zip`, fileInfo.filename);
+                logDebug({
+                    type: 'info',
+                    message: `Adding '${fileInfo.itemsCount}' items to file within zip`,
+                    partA: fileInfo.filename
+                });
                 assetsFolder.file(fileInfo.filename, fileInfo.data);
             }
 
-            logDebug('info', `Preparing to download '${exportData.data.assets.length.toString()}' assets`);
+            logDebug({
+                type: 'info',
+                message: `Preparing to download '${exportData.data.assets.length.toString()}' assets`
+            });
 
             for (const asset of exportData.data.assets) {
                 const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
@@ -208,18 +262,24 @@ export class FileProcessorService {
                 await sleepAsync(this.delayBetweenAssetRequestsMs);
             }
 
-            logDebug('info', `All assets added to zip`);
+            logDebug({
+                type: 'info',
+                message: `All assets added to zip`
+            });
         } else {
-            logDebug('info', `There are no assets`);
+            logDebug({
+                type: 'info',
+                message: `There are no assets`
+            });
         }
 
         const zipOutputType = this.getZipOutputType(this.zipContext);
         const compressionLevel: number = config.compressionLevel ?? 9;
 
-        logDebug(
-            'info',
-            `Creating zip file using '${zipOutputType}' with compression level '${compressionLevel.toString()}'`
-        );
+        logDebug({
+            type: 'info',
+            message: `Creating zip file using '${zipOutputType}' with compression level '${compressionLevel.toString()}'`
+        });
 
         const zipData = await zip.generateAsync({
             type: zipOutputType,
@@ -230,7 +290,11 @@ export class FileProcessorService {
             streamFiles: true
         });
 
-        logDebug('info', `Zip successfully generated`, formatBytes(this.getZipSizeInBytes(zipData)));
+        logDebug({
+            type: 'info',
+            message: `Zip successfully generated`,
+            partA: formatBytes(this.getZipSizeInBytes(zipData))
+        });
 
         return zipData;
     }
@@ -314,12 +378,12 @@ export class FileProcessorService {
 
             const binaryData = await file.async(this.getZipOutputType(this.zipContext));
 
-            logDebug(
-                'extractedBinaryData',
-                `Extracted binary data`,
-                file.name,
-                formatBytes(this.getZipSizeInBytes(binaryData))
-            );
+            logDebug({
+                type: 'extractBinaryData',
+                message: `Extracted binary data`,
+                partA: file.name,
+                partB: formatBytes(this.getZipSizeInBytes(binaryData))
+            });
 
             const assetId = this.getAssetIdFromFilename(file.name);
             const extension = getExtension(file.name) ?? '';
@@ -420,7 +484,11 @@ export class FileProcessorService {
         const contentLengthHeader = response.headers.find((m) => m.header.toLowerCase() === 'content-length');
         const contentLength = contentLengthHeader ? +contentLengthHeader.value : 0;
 
-        logDebug('download', url, formatBytes(contentLength));
+        logDebug({
+            type: 'download',
+            message: url,
+            partA: formatBytes(contentLength)
+        });
 
         return response.data;
     }

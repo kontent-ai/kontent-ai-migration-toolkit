@@ -31,7 +31,8 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
 
             fileData.push({
                 data: jsonItems.length ? JSON.stringify(jsonItems) : '[]',
-                filename: filename
+                filename: filename,
+                itemsCount: jsonItems.length
             });
         }
 

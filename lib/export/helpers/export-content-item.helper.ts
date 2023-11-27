@@ -14,7 +14,10 @@ export class ExportContentItemHelper {
         const contentItems: IContentItem[] = [];
 
         if (config.customItemsExport) {
-            logDebug('info', `Using custom items export`);
+            logDebug({
+                type: 'info',
+                message: `Using custom items export`
+            });
 
             const customItems = await config.customItemsExport(deliveryClient);
 
@@ -25,11 +28,11 @@ export class ExportContentItemHelper {
                 contentItems.push(contentItem);
             }
         } else {
-            logDebug(
-                'info',
-                `Exporting content items of types`,
-                typesToExport.map((m) => m.system.codename).join(', ')
-            );
+            logDebug({
+                type: 'info',
+                message: `Exporting content items of types`,
+                partA: typesToExport.map((m) => m.system.codename).join(', ')
+            });
 
             for (const type of typesToExport) {
                 for (const language of languages) {
@@ -73,7 +76,12 @@ export class ExportContentItemHelper {
             language?: string;
         }
     ): void {
-        logDebug(actionType, title, itemType, data.language);
+        logDebug({
+            type: actionType,
+            message: title,
+            partA: itemType,
+            partB: data.language
+        });
     }
 
     private getTypesToExport(config: IExportConfig, types: IContentType[]): IContentType[] {

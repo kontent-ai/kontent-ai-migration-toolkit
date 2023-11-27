@@ -30,9 +30,9 @@ export class ExportService {
     }
 
     async exportAllAsync(): Promise<IExportAllResult> {
-        logDebug('info', `Environment id`, this.config.environmentId);
-        logDebug('info', `Using Secure API`, this.config.isSecure ? 'true' : 'false');
-        logDebug('info', `Using Preview API`, this.config.isPreview ? 'true' : 'false');
+        logDebug({ type: 'info', message: 'Environment id', partA: this.config.environmentId });
+        logDebug({ type: 'info', message: 'Using Secure API', partA: this.config.isSecure ? 'true' : 'false' });
+        logDebug({ type: 'info', message: 'Using Preview API', partA: this.config.isPreview ? 'true' : 'false' });
 
         const types = await this.getContentTypesAsync();
         const languages = await this.getLanguagesAsync();
@@ -46,11 +46,11 @@ export class ExportService {
         let assets: IExportedAsset[] = [];
 
         if (this.config.exportAssets) {
-            logDebug('info', `Extracting assets referenced by content items`);
+            logDebug({ type: 'info', message: `Extracting assets referenced by content items` });
 
             assets = await exportAssetsHelper.extractAssetsAsync(this.config, contentItems, types);
         } else {
-            logDebug('info', `Assets export is disabled`);
+            logDebug({ type: 'info', message: `Assets export is disabled` });
         }
 
         const data: IExportData = {

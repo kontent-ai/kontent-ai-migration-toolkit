@@ -10,6 +10,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
         return [
             {
                 filename: 'assets.json',
+                itemsCount: assets.length,
                 data: JSON.stringify(
                     assets.map((m) => {
                         const parsedAsset: IParsedAsset = {

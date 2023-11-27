@@ -43,7 +43,8 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
 
             fileData.push({
                 data: data,
-                filename: filename
+                filename: filename,
+                itemsCount: contentItemsOfType.length
             });
         }
 

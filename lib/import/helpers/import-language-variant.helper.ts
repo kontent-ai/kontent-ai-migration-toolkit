@@ -74,12 +74,12 @@ export class ImportLanguageVariantHelper {
                 }
             } catch (error) {
                 if (config.skipFailedItems) {
-                    logDebug(
-                        'error',
-                        ` Failed to import language variant '${importContentItem.system.language}'`,
-                        importContentItem.system.codename,
-                        extractErrorMessage(error)
-                    );
+                    logDebug({
+                        type: 'error',
+                        message: `Failed to import language variant '${importContentItem.system.language}'`,
+                        partA: importContentItem.system.codename,
+                        partB: extractErrorMessage(error)
+                    });
                 } else {
                     throw error;
                 }

@@ -38,7 +38,7 @@ export type ActionType =
     | 'create'
     | 'publish'
     | 'unArchive'
-    | 'extractedBinaryData'
+    | 'extractBinaryData'
     | 'update';
 
 export type ContentElementType = ElementModels.ElementType;

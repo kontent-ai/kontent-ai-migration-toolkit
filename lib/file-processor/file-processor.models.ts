@@ -40,4 +40,5 @@ export interface IFileProcessorConfig {
 export interface IFileData {
     filename: string;
     data: string;
+    itemsCount: number;
 }

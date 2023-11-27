@@ -1,24 +1,31 @@
-import { green, yellow, cyan, Color, red, magenta } from 'colors';
+import { green, yellow, cyan, Color, red, blue, bgYellow, black } from 'colors';
 import { ActionType } from './core.models';
 
 export type DebugType = 'error' | 'warning' | 'info' | ActionType;
 
-export function logDebug(action: DebugType, message: string, info1?: string, info2?: string, info3?: string): void {
-    const infoMessages: string = `${info1 ? `[${yellow(info1)}]` : ''}${info2 ? `[${cyan(info2)}]` : ''}${
-        info3 ? `[${magenta(info3)}]` : ''
-    }`;
+export function logDebug(data: {
+    type: DebugType;
+    message: string;
+    partA?: string;
+    partB?: string;
+    partC?: string;
+    performance?: string;
+}): void {
+    let typeColor: Color = green;
 
-    if (action === 'info') {
-        console.log(`### ${message}${infoMessages.length ? ': ' : ''}${infoMessages}`);
-    } else {
-        let typeColor: Color = green;
-
-        if (action === 'error') {
-            typeColor = red;
-        } else if (action === 'warning') {
-            typeColor = red;
-        }
-
-        console.log(`[${typeColor(action)}]${infoMessages}${message ? ': ' : ''}${message}`);
+    if (data.type === 'error') {
+        typeColor = red;
+    } else if (data.type === 'info') {
+        typeColor = blue;
+    } else if (data.type === 'warning') {
+        typeColor = red;
     }
+
+    console.log(
+        `[${typeColor(data.type)}]${data.partA ? `[${yellow(data.partA)}]` : ''}${
+            data.partB ? `[${cyan(data.partB)}]` : ''
+        }${data.partC ? `[${red(data.partC)}]` : ''}${
+            data.performance ? `[${bgYellow(black(data.performance))}]` : ''
+        }: ${data.message}`
+    );
 }
