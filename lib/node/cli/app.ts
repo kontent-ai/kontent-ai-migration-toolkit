@@ -186,14 +186,13 @@ const run = async () => {
 };
 
 const getConfig = async () => {
-    const resolvedArgs = await argv;
+    let resolvedArgs: { [key: string]: string | unknown } = await argv;
     const configFilename: string = (await resolvedArgs.config) as string;
 
     if (configFilename) {
         // get config from file
         const configFile = readFileSync(`./${configFilename}`);
-
-        return JSON.parse(configFile.toString()) as ICliFileConfig;
+        resolvedArgs = JSON.parse(configFile.toString());
     }
 
     const action: CliAction | undefined = resolvedArgs.action as CliAction | undefined;
