@@ -21,11 +21,11 @@ import { logDebug } from '../../core/log-helper';
 
 const argv = yargs(process.argv.slice(2))
     .example(
-        'csvm --action=backup --format=csv|json --apiKey=xxx --environmentId=xxx',
-        'Creates zip backup of Kontent.ai environment'
+        'csvm --action=export --format=csv|json --apiKey=xxx --environmentId=xxx',
+        'Creates zip export of Kontent.ai content data'
     )
     .example(
-        'csvm --action=restore --apiKey=xxx --environmentId=xxx --filename=backupFile',
+        'csvm --action=restore --apiKey=xxx --environmentId=xxx --filename=exportFile',
         'Read given zip file and recreates data in Kontent.ai environment'
     )
     .alias('p', 'environmentId')
@@ -37,7 +37,7 @@ const argv = yargs(process.argv.slice(2))
     .alias('pk', 'previewApiKey')
     .describe('pk', 'Use if you want to export data using Preview API')
     .alias('a', 'action')
-    .describe('a', 'Action to perform. One of: "backup" | "restore"')
+    .describe('a', 'Action to perform. One of: "export" | "restore"')
     .alias('if', 'itemsFilename')
     .describe('if', 'Name of items file to export / restore')
     .alias('af', 'assetsFilename')
@@ -56,7 +56,7 @@ const argv = yargs(process.argv.slice(2))
     .help('h')
     .alias('h', 'help').argv;
 
-const backupAsync = async (config: ICliFileConfig) => {
+const exportAsync = async (config: ICliFileConfig) => {
     const fetchAssetDetails: boolean = config.assetsFilename && config.fetchAssetDetails ? true : false;
 
     const exportService = new ExportService({
@@ -176,8 +176,8 @@ const run = async () => {
 
     validateConfig(config);
 
-    if (config.action === 'backup') {
-        await backupAsync(config);
+    if (config.action === 'export') {
+        await exportAsync(config);
     } else if (config.action === 'restore') {
         await restoreAsync(config);
     } else {
@@ -203,7 +203,7 @@ const getConfig = async () => {
     const format: string | undefined = resolvedArgs.format as string | undefined;
     const baseUrl: string | undefined = resolvedArgs.baseUrl as string | undefined;
     const itemsFilename: string | undefined =
-        (resolvedArgs.itemsFilename as string | undefined) ?? getDefaultBackupFilename('items');
+        (resolvedArgs.itemsFilename as string | undefined) ?? getDefaultExportFilename('items');
     const assetsFilename: string | undefined = resolvedArgs.assetsFilename as string | undefined;
     const exportTypes: string | undefined = resolvedArgs.exportTypes as string | undefined;
     const skipFailedItems: boolean =
@@ -220,7 +220,7 @@ const getConfig = async () => {
     } else if (format?.toLowerCase() === 'json') {
         mappedFormat = 'json';
     } else {
-        if (action === 'backup') {
+        if (action === 'export') {
             throw Error(`Unsupported export format '${format}'`);
         }
     }
@@ -252,9 +252,9 @@ const getConfig = async () => {
     return config;
 };
 
-const getDefaultBackupFilename = (type: 'items') => {
+const getDefaultExportFilename = (type: 'items') => {
     const date = new Date();
-    return `${type}-backup-${date.getDate()}-${
+    return `${type}-export-${date.getDate()}-${
         date.getMonth() + 1
     }-${date.getFullYear()}-${date.getHours()}-${date.getMinutes()}.zip`;
 };

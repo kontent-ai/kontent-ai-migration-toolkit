@@ -24,8 +24,8 @@ const run = async () => {
     });
 
     // save zip to file system (node.js only)
-    await fileService.writeFileAsync('items-backup', itemsZipFile);
-    await fileService.writeFileAsync('assets-backup', assetsZipFile);
+    await fileService.writeFileAsync('items-export', itemsZipFile);
+    await fileService.writeFileAsync('assets-export', assetsZipFile);
 };
 
 run();

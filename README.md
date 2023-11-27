@@ -37,7 +37,7 @@ Install package globally:
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **environmentId** | Id of Kontent.ai project **(required)**                                                                                                                                                                                       |
 | **apiKey**        | Content Management Api key **(required for import, not needed for export)**                                                                                                                                                   |
-| **action**        | Action. Available options: `restore` & `backup` **(required)**                                                                                                                                                                |
+| **action**        | Action. Available options: `restore` & `export` **(required)**                                                                                                                                                                |
 | **format**            | Format used to export data. Available options: `csv`, `json` and `jsonSingle`  **(required)**                                                                                                                                                                |
 | previewApiKey     | When set, Preview API will be used to make data export                                                                                                                                                                        |
 | secureApiKey      | When set, Secure API will be used to make data export                                                                                                                                                                         |
@@ -54,21 +54,21 @@ Install package globally:
 > a new environment based on your production and test the import first. If the import completes successfully,
 > you may swap environments or run it again on the production.
 
-Backup without assets:
+Export without assets:
 
-`kdm --action=backup --environmentId=xxx --format=csv --itemsFilename=items-backup.zip`
+`kdm --action=export --environmentId=xxx --format=csv --itemsFilename=items-export.zip`
 
-Backup with assets:
+Export with assets:
 
-`kdm --action=backup --environmentId=xxx --format=csv --itemsFilename=items-backup.zip --assetsFilename=assets-backup.zip` 
+`kdm --action=export --environmentId=xxx --format=csv --itemsFilename=items-export.zip --assetsFilename=assets-export.zip` 
 
 Restore without assets:
 
-`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=items-backup.zip`
+`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=items-export.zip`
 
 Restore with assets:
 
-`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=backup.zip --assetsFilename=assets-backup.zip`
+`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=export.zip --assetsFilename=assets-export.zip`
 
 Restore from json file:
 
@@ -84,20 +84,20 @@ To get some help you can use:
 
 ### Use with config file
 
-Create a `json` configuration file in the folder where you are attempting to run script. (e.g. `backup-config.json`)
+Create a `json` configuration file in the folder where you are attempting to run script. (e.g. `export-config.json`)
 
 ```json
 {
     "environmentId": "xxx",
-    "filename": "csv-backup",
+    "filename": "csv-export",
     "format": "csv",
-    "action": "backup",
+    "action": "export",
 }
 ```
 
 To execute your action run:
 
-`kdm --config=backup-config.json`
+`kdm --config=export-config.json`
 
 ## Use via code
 
@@ -162,5 +162,5 @@ option (https://nodejs.org/api/cli.html#--max-http-header-sizesize)
 Example script call:
 
 ```
-node --max-http-header-size 150000 %USERPROFILE%\AppData\Roaming\npm\node_modules\xeno-test\dist\cjs\lib\node\cli\app --action=backup --apiKey=<key> --environmentId=<environmentId>
+node --max-http-header-size 150000 %USERPROFILE%\AppData\Roaming\npm\node_modules\xeno-test\dist\cjs\lib\node\cli\app --action=export --apiKey=<key> --environmentId=<environmentId>
 ```

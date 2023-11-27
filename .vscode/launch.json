@@ -7,13 +7,13 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Test backup",
+            "name": "Test export",
             "program": "${workspaceFolder}\\lib\\node\\cli\\app.ts",
             "preLaunchTask": "npm: build:cjs",
             "sourceMaps": true,
             "smartStep": true,
             "args": [
-                "--config", "./output/backup-config.json",
+                "--config", "./output/export-config.json",
             ],
             "internalConsoleOptions": "openOnSessionStart",
             "outFiles": [

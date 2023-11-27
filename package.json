@@ -1,75 +1,75 @@
 {
-  "name": "xeno-test",
-  "version": "0.0.15",
-  "description": "This utility enables users to export & import content data from / to Kontent.ai projects",
-  "preferGlobal": true,
-  "private": false,
-  "bin": {
-    "kdm": "./dist/cjs/lib/node/cli/app.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Enngage/kontent-csv-manager"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "author": "Richard Sustek",
-  "main": "./dist/cjs/lib/index.js",
-  "module": "./dist/esm5/lib/index.js",
-  "es2015": "./dist/esm/lib/index.js",
-  "types": "./dist/cjs/lib/index.d.ts",
-  "directories": {},
-  "scripts": {
-    "test": "echo \"no global test configured\"",
-    "release": "npm run lint && standard-version",
-    "release:major": "npm run lint && standard-version --release-as major",
-    "release:major:beta": "npm run lint && standard-version --prerelease --release-as major",
-    "release:beta": "standard-version --prerelease",
-    "prepublishOnly": "npm run lint && npm run build:all",
-    "publish:beta": "npm publish --tag=next",
-    "build:es2015": "tsc --p tsconfig.es2015.json",
-    "build:es5": "tsc --p tsconfig.es5.json",
-    "build:cjs": "tsc --p tsconfig.cjs.json",
-    "build:all": "npm run build:cjs && npm run build:es5 && npm run build:es2015",
-    "test:all": "npm run build:all",
-    "test:backup": "npm run build:cjs && cd output && node --max-http-header-size 150000 ../dist/cjs/lib/node/cli/app --max-http-header-size=80000000 --config=backup-config.json ",
-    "test:restore": "npm run build:cjs && cd output && node --max-http-header-size 150000 ../dist/cjs/lib/node/cli/app --config=restore-config.json",
-    "lint": "npx eslint lib"
-  },
-  "keywords": [
-    "Kontent.ai",
-    "Kontent.ai data manager",
-    "Kontent.ai CSV export",
-    "Kontent.ai CSV import",
-    "Kontent.ai data export",
-    "Kontent.ai data import"
-  ],
-  "license": "MIT",
-  "dependencies": {
-    "@kontent-ai/delivery-sdk": "14.5.0",
-    "@kontent-ai/management-sdk": "5.6.0",
-    "bytes": "3.1.2",
-    "colors": "1.4.0",
-    "csv-parse": "5.5.2",
-    "json2csv": "5.0.7",
-    "jszip": "3.10.1",
-    "mime": "3.0.0",
-    "yargs": "17.7.2"
-  },
-  "devDependencies": {
-    "@types/bytes": "3.1.4",
-    "@types/json2csv": "5.0.7",
-    "@types/jszip": "3.4.1",
-    "@types/mime": "3.0.4",
-    "@types/node": "20.10.0",
-    "@types/yargs": "17.0.32",
-    "@typescript-eslint/eslint-plugin": "6.12.0",
-    "@typescript-eslint/parser": "6.12.0",
-    "eslint": "8.54.0",
-    "standard-version": "9.5.0",
-    "ts-node": "10.9.1",
-    "tslib": "2.6.2",
-    "typescript": "5.3.2"
-  }
+    "name": "xeno-test",
+    "version": "0.0.15",
+    "description": "This utility enables users to export & import content data from / to Kontent.ai projects",
+    "preferGlobal": true,
+    "private": false,
+    "bin": {
+        "kdm": "./dist/cjs/lib/node/cli/app.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Enngage/kontent-csv-manager"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "author": "Richard Sustek",
+    "main": "./dist/cjs/lib/index.js",
+    "module": "./dist/esm5/lib/index.js",
+    "es2015": "./dist/esm/lib/index.js",
+    "types": "./dist/cjs/lib/index.d.ts",
+    "directories": {},
+    "scripts": {
+        "test": "echo \"no global test configured\"",
+        "release": "npm run lint && standard-version",
+        "release:major": "npm run lint && standard-version --release-as major",
+        "release:major:beta": "npm run lint && standard-version --prerelease --release-as major",
+        "release:beta": "standard-version --prerelease",
+        "prepublishOnly": "npm run lint && npm run build:all",
+        "publish:beta": "npm publish --tag=next",
+        "build:es2015": "tsc --p tsconfig.es2015.json",
+        "build:es5": "tsc --p tsconfig.es5.json",
+        "build:cjs": "tsc --p tsconfig.cjs.json",
+        "build:all": "npm run build:cjs && npm run build:es5 && npm run build:es2015",
+        "test:all": "npm run build:all",
+        "test:export": "npm run build:cjs && cd output && node --max-http-header-size 150000 ../dist/cjs/lib/node/cli/app --max-http-header-size=80000000 --config=export-config.json ",
+        "test:restore": "npm run build:cjs && cd output && node --max-http-header-size 150000 ../dist/cjs/lib/node/cli/app --config=restore-config.json",
+        "lint": "npx eslint lib"
+    },
+    "keywords": [
+        "Kontent.ai",
+        "Kontent.ai data manager",
+        "Kontent.ai CSV export",
+        "Kontent.ai CSV import",
+        "Kontent.ai data export",
+        "Kontent.ai data import"
+    ],
+    "license": "MIT",
+    "dependencies": {
+        "@kontent-ai/delivery-sdk": "14.5.0",
+        "@kontent-ai/management-sdk": "5.6.0",
+        "bytes": "3.1.2",
+        "colors": "1.4.0",
+        "csv-parse": "5.5.2",
+        "json2csv": "5.0.7",
+        "jszip": "3.10.1",
+        "mime": "3.0.0",
+        "yargs": "17.7.2"
+    },
+    "devDependencies": {
+        "@types/bytes": "3.1.4",
+        "@types/json2csv": "5.0.7",
+        "@types/jszip": "3.4.1",
+        "@types/mime": "3.0.4",
+        "@types/node": "20.10.0",
+        "@types/yargs": "17.0.32",
+        "@typescript-eslint/eslint-plugin": "6.12.0",
+        "@typescript-eslint/parser": "6.12.0",
+        "eslint": "8.54.0",
+        "standard-version": "9.5.0",
+        "ts-node": "10.9.1",
+        "tslib": "2.6.2",
+        "typescript": "5.3.2"
+    }
 }

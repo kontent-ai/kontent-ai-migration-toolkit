@@ -27,8 +27,8 @@ const run = async () => {
     });
 
     // read file
-    const itemsFile = await fileService.loadFileAsync('items-backup');
-    const assetsFile = await fileService.loadFileAsync('assets-backup');
+    const itemsFile = await fileService.loadFileAsync('items-export');
+    const assetsFile = await fileService.loadFileAsync('assets-export');
 
     // extract file
     const data = await zipService.extractZipAsync(

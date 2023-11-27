@@ -17,7 +17,7 @@ export interface ICliFileConfig {
     fetchAssetDetails?: boolean;
 }
 
-export type CliAction = 'backup' | 'restore';
+export type CliAction = 'export' | 'restore';
 export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile';
 
 export type ActionType =

@@ -10,7 +10,6 @@
 /out-tsc
 /test
 /output
-/backup.zip
 
 # dependencies
 /node_modules

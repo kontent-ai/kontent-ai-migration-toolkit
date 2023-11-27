@@ -1,8 +1,7 @@
 {
     "environmentId": "x",
     "apiKey": "y",
-    "zipFilename": "backup",
-    "action": "backup",
+    "action": "export",
     "force": false,
     "baseUrl": null,
     "exportFilter": null
