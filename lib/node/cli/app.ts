@@ -217,7 +217,7 @@ const getConfig = async () => {
 
 const getDefaultExportFilename = (type: 'items' | 'assets') => {
     const date = new Date();
-    return `${type}-export-${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}}.zip`;
+    return `${type}-export-${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}.zip`;
 };
 
 run()

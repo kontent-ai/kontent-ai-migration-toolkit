@@ -14,7 +14,7 @@ import {
     IAssetFormatService
 } from './file-processor.models';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { formatBytes, getExtension, sleepAsync } from '../core';
+import { IPackageMetadata, formatBytes, getExtension, sleepAsync } from '../core';
 import { getType } from 'mime';
 import { ItemCsvProcessorService } from './item-formats/item-csv-processor.service';
 import { ItemJsonProcessorService } from './item-formats/item-json-processor.service';
@@ -25,7 +25,6 @@ export class FileProcessorService {
     private readonly zipContext: ZipContext = 'node.js';
 
     private readonly metadataName: string = 'metadata';
-    private readonly assetsFolderName: string = 'assets';
     private readonly binaryFilesFolderName: string = 'files';
     private readonly contentItemsFolderName: string = 'items';
 
@@ -208,15 +207,11 @@ export class FileProcessorService {
     ): Promise<any> {
         const zip = new JSZip();
 
-        const assetsFolder = zip.folder(this.assetsFolderName);
+        const assetsFolder = zip;
         const filesFolder = zip.folder(this.binaryFilesFolderName);
 
         if (!filesFolder) {
             throw Error(`Could not create folder '${this.binaryFilesFolderName}'`);
-        }
-
-        if (!assetsFolder) {
-            throw Error(`Could not create folder '${this.assetsFolderName}'`);
         }
 
         logDebug({
@@ -329,11 +324,6 @@ export class FileProcessorService {
         const binaryFiles: IExtractedBinaryFileData[] = await this.extractBinaryFilesAsync(zip);
 
         for (const [, file] of Object.entries(files)) {
-            if (!file?.name?.startsWith(`${this.assetsFolderName}/`)) {
-                // iterate through assets files
-                continue;
-            }
-
             if (file?.name?.endsWith('/')) {
                 continue;
             }
@@ -455,12 +445,16 @@ export class FileProcessorService {
         return parsedItems;
     }
 
-    private async parseMetadataFromZipAsync(fileContents: JSZip, filename: string): Promise<any> {
+    private async parseMetadataFromZipAsync(
+        fileContents: JSZip,
+        filename: string
+    ): Promise<undefined | IPackageMetadata> {
         const files = fileContents.files;
         const file = files[filename];
 
         if (!file) {
-            throw Error(`Invalid file '${filename}'`);
+            // metadata is not required
+           return undefined;
         }
 
         const text = await file.async('text');
