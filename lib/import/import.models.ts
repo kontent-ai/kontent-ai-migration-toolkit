@@ -63,7 +63,7 @@ export interface IParsedContentItem {
         language: string;
         type: string;
         collection: string;
-        last_modified: string;
+        last_modified?: string;
         workflow_step?: string;
     };
     elements: IParsedElement[];
