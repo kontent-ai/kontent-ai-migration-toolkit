@@ -337,6 +337,10 @@ export class FileProcessorService {
                 continue;
             }
 
+            if (file?.name?.startsWith(this.binaryFilesFolderName)) {
+                continue;
+            }
+
             const text = await file.async('string');
 
             parsedAssets.push(...(await assetFormatService.parseAssetsAsync(text)));
@@ -379,9 +383,8 @@ export class FileProcessorService {
 
             logDebug({
                 type: 'extractBinaryData',
-                message: `Extracted binary data`,
-                partA: file.name,
-                partB: formatBytes(this.getZipSizeInBytes(binaryData))
+                message: file.name,
+                partA: formatBytes(this.getZipSizeInBytes(binaryData))
             });
 
             const assetId = this.getAssetIdFromFilename(file.name);
@@ -397,6 +400,11 @@ export class FileProcessorService {
                 extension: extension
             });
         }
+
+        logDebug({
+            type: 'info',
+            message: `All binary files (${extractedFiles.length}) were extracted`
+        });
 
         return extractedFiles;
     }
