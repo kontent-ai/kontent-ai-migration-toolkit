@@ -14,7 +14,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
                 data: JSON.stringify(
                     assets.map((m) => {
                         const parsedAsset: IParsedAsset = {
-                            assetId: m.assetId,
+                            assetId: m.id,
                             extension: m.extension,
                             filename: m.filename,
                             url: m.url

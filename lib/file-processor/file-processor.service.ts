@@ -24,9 +24,8 @@ export class FileProcessorService {
     private readonly delayBetweenAssetRequestsMs: number;
     private readonly zipContext: ZipContext = 'node.js';
 
-    private readonly metadataName: string = 'metadata';
+    private readonly metadataName: string = '_metadata.json';
     private readonly binaryFilesFolderName: string = 'files';
-    private readonly contentItemsFolderName: string = 'items';
 
     private readonly httpService: HttpService = new HttpService();
     private readonly itemCsvProcessorService: ItemCsvProcessorService = new ItemCsvProcessorService();
@@ -136,12 +135,7 @@ export class FileProcessorService {
         }
     ): Promise<any> {
         const zip = new JSZip();
-
-        const contentItemsFolder = zip.folder(this.contentItemsFolderName);
-
-        if (!contentItemsFolder) {
-            throw Error(`Could not create folder '${this.contentItemsFolderName}'`);
-        }
+        const contentItemsFolder = zip;
 
         logDebug({
             type: 'info',
@@ -247,7 +241,7 @@ export class FileProcessorService {
             });
 
             for (const asset of exportData.data.assets) {
-                const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
+                const assetFilename = `${asset.id}.${asset.extension}`; // use id as filename to prevent filename conflicts
                 const binaryData = await this.getBinaryDataFromUrlAsync(asset.url);
                 filesFolder.file(assetFilename, binaryData, {
                     binary: true
@@ -392,14 +386,6 @@ export class FileProcessorService {
         return extractedFiles;
     }
 
-    private isContentItemsFolders(file: JSZip.JSZipObject): boolean {
-        if (file?.name?.startsWith(`${this.contentItemsFolderName}/`)) {
-            return true;
-        }
-
-        return false;
-    }
-
     private getAssetIdFromFilename(filename: string): string {
         const split = filename.split('/');
         const filenameWithExtension = split[1];
@@ -428,11 +414,6 @@ export class FileProcessorService {
         const parsedItems: IParsedContentItem[] = [];
 
         for (const file of Object.values(files)) {
-            if (!this.isContentItemsFolders(file)) {
-                // iterate through content item files only
-                continue;
-            }
-
             if (file?.name?.endsWith('/')) {
                 continue;
             }
@@ -454,7 +435,7 @@ export class FileProcessorService {
 
         if (!file) {
             // metadata is not required
-           return undefined;
+            return undefined;
         }
 
         const text = await file.async('text');

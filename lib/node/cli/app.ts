@@ -63,8 +63,6 @@ const argv = yargs(process.argv.slice(2))
     .alias('h', 'help').argv;
 
 const exportAsync = async (config: ICliFileConfig) => {
-    const exportAssetsDetails: boolean = config.assetsFilename && config.exportAssetsDetails ? true : false;
-
     const exportService = new ExportService({
         environmentId: config.environmentId,
         managementApiKey: config.managementApiKey,
@@ -75,7 +73,6 @@ const exportAsync = async (config: ICliFileConfig) => {
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
         exportAssets: config.exportAssets,
-        exportAssetsDetails: exportAssetsDetails
     });
 
     const fileService = new FileService();
@@ -203,7 +200,6 @@ const getConfig = async () => {
                 ?.split(',')
                 .map((m) => m.trim()) ?? [],
         skipFailedItems: getBooleanArgumentvalue(resolvedArgs, 'skipFailedItems'),
-        exportAssetsDetails: getBooleanArgumentvalue(resolvedArgs, 'exportAssetsDetails'),
         secureApiKey: getOptionalArgumentValue(resolvedArgs, 'secureApiKey'),
         previewApiKey: getOptionalArgumentValue(resolvedArgs, 'previewApiKey'),
         exportAssets: getBooleanArgumentvalue(resolvedArgs, 'exportAssets'),

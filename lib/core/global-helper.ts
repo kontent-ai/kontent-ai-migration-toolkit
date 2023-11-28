@@ -116,7 +116,6 @@ export function handleError(error: any | SharedModels.ContentManagementBaseKonte
 
 export function extractAssetIdFromUrl(assetUrl: string): string {
     const url = new URL(assetUrl);
-
     const splitPaths = url.pathname.split('/');
 
     if (splitPaths.length < 3) {
@@ -124,4 +123,10 @@ export function extractAssetIdFromUrl(assetUrl: string): string {
     }
 
     return splitPaths[2];
+}
+
+export function extractFilenameFromUrl(assetUrl: string): string {
+    const url = new URL(assetUrl);
+    const splitPaths = url.pathname.split('/');
+    return splitPaths[splitPaths.length - 1];
 }

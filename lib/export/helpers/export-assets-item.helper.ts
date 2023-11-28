@@ -1,15 +1,9 @@
 import { IContentItem, IContentType, ElementType, Elements } from '@kontent-ai/delivery-sdk';
-import { createManagementClient } from '@kontent-ai/management-sdk';
-import { extractAssetIdFromUrl, getExtension, defaultRetryStrategy } from '../../core';
-import { logDebug } from '../../core/log-helper';
-import { IExportConfig, IExportedAsset } from '../export.models';
+import { extractAssetIdFromUrl, getExtension, extractFilenameFromUrl } from '../../core';
+import { IExportedAsset } from '../export.models';
 
 export class ExportAssetsHelper {
-    async extractAssetsAsync(
-        config: IExportConfig,
-        items: IContentItem[],
-        types: IContentType[]
-    ): Promise<IExportedAsset[]> {
+    async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IExportedAsset[]> {
         const assets: IExportedAsset[] = [];
 
         for (const type of types) {
@@ -26,13 +20,11 @@ export class ExportAssetsHelper {
                         if (assetElement.value.length) {
                             assets.push(
                                 ...assetElement.value.map((m) => {
-                                    const assetId = extractAssetIdFromUrl(m.url);
-                                    const extension = getExtension(m.url) ?? '';
                                     const asset: IExportedAsset = {
                                         url: m.url,
-                                        assetId: assetId,
-                                        filename: `${assetId}.${extension}`,
-                                        extension: extension
+                                        id: extractAssetIdFromUrl(m.url),
+                                        filename: extractFilenameFromUrl(m.url),
+                                        extension: getExtension(m.url) ?? ''
                                     };
 
                                     return asset;
@@ -47,13 +39,11 @@ export class ExportAssetsHelper {
                         if (richTextElement.images.length) {
                             assets.push(
                                 ...richTextElement.images.map((m) => {
-                                    const assetId = extractAssetIdFromUrl(m.url);
-                                    const extension = getExtension(m.url) ?? '';
                                     const asset: IExportedAsset = {
                                         url: m.url,
-                                        assetId: assetId,
-                                        filename: `${assetId}.${extension}`,
-                                        extension: extension
+                                        id: extractAssetIdFromUrl(m.url),
+                                        filename: extractFilenameFromUrl(m.url),
+                                        extension: getExtension(m.url) ?? ''
                                     };
 
                                     return asset;
@@ -66,31 +56,6 @@ export class ExportAssetsHelper {
         }
 
         const uniqueAssets = [...new Map(assets.map((item) => [item.url, item])).values()]; // filters unique values
-
-        if (config.exportAssetsDetails === true) {
-            if (!config.managementApiKey) {
-                throw Error(`Management API key is required to fetch asset details`);
-            }
-
-            const managementClient = createManagementClient({
-                apiKey: config.managementApiKey,
-                environmentId: config.environmentId,
-                retryStrategy: config.retryStrategy ?? defaultRetryStrategy
-            });
-
-            for (const asset of uniqueAssets) {
-                const assetResponse = await managementClient.viewAsset().byAssetId(asset.assetId).toPromise();
-
-                logDebug({
-                    type: 'fetch',
-                    message: 'Fetched asset details',
-                    partA: asset.assetId,
-                    partB: assetResponse.data.fileName
-                });
-
-                asset.filename = assetResponse.data.fileName;
-            }
-        }
 
         return uniqueAssets;
     }

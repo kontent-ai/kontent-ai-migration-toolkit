@@ -21,7 +21,6 @@ export interface IExportConfig {
     exportTypes?: string[];
     exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;
-    exportAssetsDetails?: boolean;
     customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;
 }
 
@@ -40,6 +39,6 @@ export interface IExportAllResult {
 export interface IExportedAsset {
     url: string;
     extension: string;
-    assetId: string;
+    id: string;
     filename: string;
 }
