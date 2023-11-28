@@ -249,7 +249,7 @@ export class FileProcessorService {
                     type: 'download',
                     message: asset.url,
                     partA: `${assetIndex}/${exportData.data.assets.length}`,
-                    partB: formatBytes(binaryDataResponse.contentLength),
+                    partB: formatBytes(binaryDataResponse.contentLength)
                 });
 
                 filesFolder.file(assetFilename, binaryDataResponse.data, {
@@ -330,6 +330,10 @@ export class FileProcessorService {
 
         for (const [, file] of Object.entries(files)) {
             if (file?.name?.endsWith('/')) {
+                continue;
+            }
+
+            if (file?.name?.toLowerCase() === this.metadataName.toLowerCase()) {
                 continue;
             }
 
@@ -426,6 +430,10 @@ export class FileProcessorService {
 
         for (const file of Object.values(files)) {
             if (file?.name?.endsWith('/')) {
+                continue;
+            }
+
+            if (file?.name?.toLowerCase() === this.metadataName.toLowerCase()) {
                 continue;
             }
 
