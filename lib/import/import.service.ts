@@ -1,6 +1,9 @@
 import {
     CollectionModels,
     ContentItemModels,
+    ContentTypeElements,
+    ContentTypeModels,
+    ContentTypeSnippetModels,
     ManagementClient,
     SharedModels,
     WorkflowModels
@@ -46,27 +49,28 @@ export class ImportService {
         });
 
         const contentTypes = (await this.managementClient.listContentTypes().toAllPromise()).data.items;
+        const contentTypeSnippets = (await this.managementClient.listContentTypeSnippets().toAllPromise()).data.items;
 
         logDebug({
             type: 'info',
             message: `Fetched '${contentTypes.length}' content types`
         });
 
-        return contentTypes.map((contentType) => {
-            const importType: IImportContentType = {
-                contentTypeCodename: contentType.codename,
-                elements: contentType.elements.map((element) => {
-                    const importElement: IImportContentTypeElement = {
-                        codename: element.codename ?? '',
-                        type: element.type
-                    };
-
-                    return importElement;
-                })
-            };
-
-            return importType;
+        logDebug({
+            type: 'info',
+            message: `Fetched '${contentTypeSnippets.length}' content type snippets`
         });
+
+        return [
+            ...contentTypes.map((contentType) => {
+                const importType: IImportContentType = {
+                    contentTypeCodename: contentType.codename,
+                    elements: this.getContentTypeElements(contentType, contentTypeSnippets)
+                };
+
+                return importType;
+            })
+        ];
     }
 
     async importFromSourceAsync(sourceData: IImportSource): Promise<IImportedData> {
@@ -138,6 +142,53 @@ export class ImportService {
             this.handleImportError(error);
         }
         return importedData;
+    }
+
+    private getContentTypeElements(
+        contentType: ContentTypeModels.ContentType,
+        contentTypeSnippets: ContentTypeSnippetModels.ContentTypeSnippet[]
+    ): IImportContentTypeElement[] {
+        const elements: IImportContentTypeElement[] = [];
+
+        for (const element of contentType.elements) {
+            if (!element.codename) {
+                continue;
+            }
+            const importElement: IImportContentTypeElement = {
+                codename: element.codename,
+                type: element.type
+            };
+
+            if (importElement.type === 'snippet') {
+                const snippetElement = element as ContentTypeElements.ISnippetElement;
+
+                // replace snippet element with actual elements
+                const contentTypeSnippet = contentTypeSnippets.find(
+                    (m) => m.id.toLowerCase() === snippetElement.snippet.id?.toLowerCase()
+                );
+
+                if (!contentTypeSnippet) {
+                    throw Error(
+                        `Could not find content type snippet for element. This snippet is referenced in type '${contentType.codename}'`
+                    );
+                }
+
+                for (const snippetElement of contentTypeSnippet.elements) {
+                    if (!snippetElement.codename) {
+                        continue;
+                    }
+
+                    elements.push({
+                        codename: snippetElement.codename,
+                        type: snippetElement.type
+                    });
+                }
+            } else {
+                elements.push(importElement);
+            }
+        }
+
+        return elements;
     }
 
     private getDataToImport(source: IImportSource): IImportSource {
