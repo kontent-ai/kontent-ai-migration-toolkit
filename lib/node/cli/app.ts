@@ -72,7 +72,7 @@ const exportAsync = async (config: ICliFileConfig) => {
         isSecure: config.isSecure,
         baseUrl: config.baseUrl,
         exportTypes: config.exportTypes,
-        exportAssets: config.exportAssets,
+        exportAssets: config.exportAssets
     });
 
     const fileService = new FileService();
@@ -83,13 +83,14 @@ const exportAsync = async (config: ICliFileConfig) => {
     const itemsZipFileData = await fileProcessorService.createItemsZipAsync(response, {
         itemFormatService: getItemFormatService(config.format)
     });
-    await fileService.writeFileAsync(config.itemsFilename, itemsZipFileData);
+
+    await fileService.writeFileAsync(getZipFilename(config.itemsFilename), itemsZipFileData);
 
     if (config.assetsFilename) {
         const assetsZipFileData = await fileProcessorService.createAssetsZipAsync(response, {
             assetFormatService: getAssetFormatService(config.format)
         });
-        await fileService.writeFileAsync(config.assetsFilename, assetsZipFileData);
+        await fileService.writeFileAsync(getZipFilename(config.assetsFilename), assetsZipFileData);
     }
 
     logDebug({ type: 'info', message: `Completed` });
@@ -267,4 +268,11 @@ function getRequiredArgumentValue(args: Args, argName: string): string {
 
 function getBooleanArgumentvalue(args: Args, argName: string): boolean {
     return getOptionalArgumentValue(args, argName)?.toLowerCase() === 'true'.toLowerCase();
+}
+
+function getZipFilename(filename: string): string {
+    if (filename.toLowerCase()?.endsWith('.zip')) {
+        return filename;
+    }
+    return `${filename}.zip`;
 }
