@@ -47,7 +47,6 @@ export class ExportService {
 
         if (this.config.exportAssets) {
             logDebug({ type: 'info', message: `Extracting assets referenced by content items` });
-
             assets = await exportAssetsHelper.extractAssetsAsync(contentItems, types);
         } else {
             logDebug({ type: 'info', message: `Assets export is disabled` });

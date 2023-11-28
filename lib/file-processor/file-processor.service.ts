@@ -240,15 +240,26 @@ export class FileProcessorService {
                 message: `Preparing to download '${exportData.data.assets.length.toString()}' assets`
             });
 
+            let assetIndex: number = 1;
             for (const asset of exportData.data.assets) {
                 const assetFilename = `${asset.id}.${asset.extension}`; // use id as filename to prevent filename conflicts
-                const binaryData = await this.getBinaryDataFromUrlAsync(asset.url);
-                filesFolder.file(assetFilename, binaryData, {
+                const binaryDataResponse = await this.getBinaryDataFromUrlAsync(asset.url);
+
+                logDebug({
+                    type: 'download',
+                    message: asset.url,
+                    partA: `${assetIndex}/${exportData.data.assets.length}`,
+                    partB: formatBytes(binaryDataResponse.contentLength),
+                });
+
+                filesFolder.file(assetFilename, binaryDataResponse.data, {
                     binary: true
                 });
 
                 // create artificial delay between request to prevent network errors
                 await sleepAsync(this.delayBetweenAssetRequestsMs);
+
+                assetIndex++;
             }
 
             logDebug({
@@ -443,7 +454,7 @@ export class FileProcessorService {
         return JSON.parse(text);
     }
 
-    private async getBinaryDataFromUrlAsync(url: string): Promise<any> {
+    private async getBinaryDataFromUrlAsync(url: string): Promise<{ data: any; contentLength: number }> {
         // temp fix for Kontent.ai Repository not validating url
         url = url.replace('#', '%23');
 
@@ -459,12 +470,6 @@ export class FileProcessorService {
         const contentLengthHeader = response.headers.find((m) => m.header.toLowerCase() === 'content-length');
         const contentLength = contentLengthHeader ? +contentLengthHeader.value : 0;
 
-        logDebug({
-            type: 'download',
-            message: url,
-            partA: formatBytes(contentLength)
-        });
-
-        return response.data;
+        return { data: response.data, contentLength: contentLength };
     }
 }
