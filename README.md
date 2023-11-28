@@ -92,11 +92,16 @@ Create a `json` configuration file in the folder where you are attempting to run
 
 ```json
 {
-    "environmentId": "xxx",
-    "filename": "csv-export",
-    "format": "csv",
-    "action": "export"
+    "environmentId": "x",
+    "secureApiKey": "y",
+    "isSecure": true,
+    "isPreview": false,
+    "exportAssets": true,
+    "action": "export",
+    "baseUrl": null,
+    "format": "json"
 }
+
 ```
 
 To execute your action run:
@@ -148,7 +153,9 @@ To use your custom formatting service simply pass it to `createZipAsync` or `ext
 Export is made with `Delivery API` for speed and efficiency, but this brings some limitations:
 
 -   Assets are exported without their `title`. If you import these assets back to a different project, the `filename` is
-    used as a `title`
+    used as a `title`. Similarly, folder structure of imported assets is not preserved. This only applies when asset is
+    actually imported as if the asset already exists in target project, it is skipped from import (this is often the
+    case if the export and import environments are one and the same)
 
 ### FAQ
 
