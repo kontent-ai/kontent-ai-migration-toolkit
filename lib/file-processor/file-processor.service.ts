@@ -242,7 +242,7 @@ export class FileProcessorService {
 
             let assetIndex: number = 1;
             for (const asset of exportData.data.assets) {
-                const assetFilename = `${asset.id}.${asset.extension}`; // use id as filename to prevent filename conflicts
+                const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
                 const binaryDataResponse = await this.getBinaryDataFromUrlAsync(asset.url);
 
                 logDebug({

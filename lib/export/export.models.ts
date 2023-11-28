@@ -39,6 +39,6 @@ export interface IExportAllResult {
 export interface IExportedAsset {
     url: string;
     extension: string;
-    id: string;
+    assetId: string;
     filename: string;
 }

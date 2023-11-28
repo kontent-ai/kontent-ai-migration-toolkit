@@ -22,7 +22,7 @@ export class ExportAssetsHelper {
                                 ...assetElement.value.map((m) => {
                                     const asset: IExportedAsset = {
                                         url: m.url,
-                                        id: extractAssetIdFromUrl(m.url),
+                                        assetId: extractAssetIdFromUrl(m.url),
                                         filename: extractFilenameFromUrl(m.url),
                                         extension: getExtension(m.url) ?? ''
                                     };
@@ -41,7 +41,7 @@ export class ExportAssetsHelper {
                                 ...richTextElement.images.map((m) => {
                                     const asset: IExportedAsset = {
                                         url: m.url,
-                                        id: extractAssetIdFromUrl(m.url),
+                                        assetId: extractAssetIdFromUrl(m.url),
                                         filename: extractFilenameFromUrl(m.url),
                                         extension: getExtension(m.url) ?? ''
                                     };
