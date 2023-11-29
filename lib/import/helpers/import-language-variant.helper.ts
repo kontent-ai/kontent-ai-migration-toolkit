@@ -5,7 +5,7 @@ import {
     ManagementClient,
     ElementContracts
 } from '@kontent-ai/management-sdk';
-import { logDebug } from '../../core/log-helper';
+import { logDebug, logProcessingDebug } from '../../core/log-helper';
 import { IImportedData, extractErrorMessage, is404Error, logAction, translationHelper } from '../../core';
 import { IParsedContentItem, IParsedElement } from '../import.models';
 import { importWorkflowHelper } from './import-workflow.helper';
@@ -26,23 +26,21 @@ export class ImportLanguageVariantHelper {
             try {
                 itemIndex++;
 
-                logDebug({
-                    type: 'info',
-                    processingIndex: {
-                        index: itemIndex,
-                        totalCount: importContentItems.length
-                    },
-                    message: `Processing language variant '${importContentItem.system.name}'`,
-                    partA: importContentItem.system.codename,
-                    partB: importContentItem.system.language
+                logProcessingDebug({
+                    index: itemIndex,
+                    totalCount: importContentItems.length,
+                    itemType: 'languageVariant',
+                    title: `'${importContentItem.system.name}' in language '${importContentItem.system.language}'`
                 });
 
                 // if content item does not have a workflow step it means it is used as a component within Rich text element
                 // such items are procesed within element transform
                 if (!importContentItem.system.workflow_step) {
-                    logAction('skip', 'contentItem', {
+                    logAction('skip', 'languageVariant', {
                         title: `Skipping item beause it's a component`,
-                        codename: importContentItem.system.codename
+                        language: importContentItem.system.language,
+                        codename: importContentItem.system.codename,
+                        workflowStep: importContentItem.system.workflow_step
                     });
                     continue;
                 }
@@ -78,7 +76,9 @@ export class ImportLanguageVariantHelper {
 
                 logAction('upsert', 'languageVariant', {
                     title: `${upsertedContentItem.name}`,
-                    language: importContentItem.system.language
+                    language: importContentItem.system.language,
+                    codename: importContentItem.system.codename,
+                    workflowStep: importContentItem.system.workflow_step
                 });
 
                 // set workflow of language variant
@@ -122,7 +122,9 @@ export class ImportLanguageVariantHelper {
 
             logAction('fetch', 'languageVariant', {
                 title: `${importContentItem.system.name}`,
-                language: importContentItem.system.language
+                language: importContentItem.system.language,
+                codename: importContentItem.system.codename,
+                workflowStep: importContentItem.system.workflow_step
             });
 
             if (!languageVariantOfContentItem) {
@@ -149,7 +151,9 @@ export class ImportLanguageVariantHelper {
 
                 logAction('createNewVersion', 'languageVariant', {
                     title: `${importContentItem.system.name}`,
-                    language: importContentItem.system.language
+                    language: importContentItem.system.language,
+                    codename: importContentItem.system.codename,
+                    workflowStep: importContentItem.system.workflow_step
                 });
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, workflows)) {
                 // change workflow step to draft
@@ -170,7 +174,8 @@ export class ImportLanguageVariantHelper {
                     logAction('unArchive', 'languageVariant', {
                         title: `${importContentItem.system.name}`,
                         language: importContentItem.system.language,
-                        workflowStep: newWorkflowStep.codename
+                        codename: importContentItem.system.codename,
+                        workflowStep: importContentItem.system.workflow_step
                     });
                 }
             }

@@ -1,6 +1,6 @@
 import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 import { IImportedData, logAction, extractErrorMessage, is404Error } from '../../core';
-import { logDebug } from '../../core/log-helper';
+import { logDebug, logProcessingDebug } from '../../core/log-helper';
 import { IParsedContentItem } from '../import.models';
 
 export class ImportContentItemHelper {
@@ -18,14 +18,11 @@ export class ImportContentItemHelper {
         for (const importContentItem of parsedContentItems) {
             itemIndex++;
 
-            logDebug({
-                type: 'info',
-                processingIndex: {
-                    index: itemIndex,
-                    totalCount: parsedContentItems.length
-                },
-                message: `Processing content item '${importContentItem.system.name}'`,
-                partA: importContentItem.system.codename
+            logProcessingDebug({
+                index: itemIndex,
+                totalCount: parsedContentItems.length,
+                itemType: 'contentItem',
+                title: `'${importContentItem.system.name}'`
             });
 
             // if content item does not have a workflow step it means it is used as a component within Rich text element

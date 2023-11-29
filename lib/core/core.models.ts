@@ -12,7 +12,7 @@ export interface ICliFileConfig {
     isSecure: boolean;
     skipFailedItems: boolean;
     action: CliAction;
-    itemsFilename: string;
+    itemsFilename?: string;
     assetsFilename?: string;
     baseUrl?: string;
     exportTypes?: string[];
@@ -20,7 +20,7 @@ export interface ICliFileConfig {
 }
 
 export type CliAction = 'export' | 'restore';
-export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile';
+export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile' | 'zipFile';
 
 export type ActionType =
     | 'skip'

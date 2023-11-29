@@ -18,7 +18,7 @@ import { IPackageMetadata, formatBytes, getExtension, sleepAsync } from '../core
 import { getType } from 'mime';
 import { ItemCsvProcessorService } from './item-formats/item-csv-processor.service';
 import { ItemJsonProcessorService } from './item-formats/item-json-processor.service';
-import { logDebug } from '../core/log-helper';
+import { logDebug, logProcessingDebug } from '../core/log-helper';
 
 export class FileProcessorService {
     private readonly delayBetweenAssetRequestsMs: number;
@@ -245,14 +245,11 @@ export class FileProcessorService {
                 const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
                 const binaryDataResponse = await this.getBinaryDataFromUrlAsync(asset.url);
 
-                logDebug({
-                    type: 'download',
-                    message: asset.url,
-                    partB: formatBytes(binaryDataResponse.contentLength),
-                    processingIndex: {
-                        index: assetIndex,
-                        totalCount: exportData.data.assets.length
-                    }
+                logProcessingDebug({
+                    index: assetIndex,
+                    totalCount: exportData.data.assets.length,
+                    itemType: 'binaryFile',
+                    title: asset.url
                 });
 
                 filesFolder.file(assetFilename, binaryDataResponse.data, {
@@ -375,14 +372,12 @@ export class FileProcessorService {
         const files = Object.entries(zip.files);
         for (const [, file] of files) {
             assetIndex++;
-            logDebug({
-                type: 'info',
-                message: `Processing zip file`,
-                partA: file.name,
-                processingIndex: {
-                    index: assetIndex,
-                    totalCount: files.length
-                }
+
+            logProcessingDebug({
+                index: assetIndex,
+                totalCount: files.length,
+                itemType: 'zipFile',
+                title: file.name
             });
 
             if (!file?.name?.startsWith(`${this.binaryFilesFolderName}/`)) {

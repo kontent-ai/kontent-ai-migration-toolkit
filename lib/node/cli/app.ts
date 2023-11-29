@@ -84,7 +84,8 @@ const exportAsync = async (config: ICliFileConfig) => {
         itemFormatService: getItemFormatService(config.format)
     });
 
-    await fileService.writeFileAsync(getZipFilename(config.itemsFilename), itemsZipFileData);
+    const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
+    await fileService.writeFileAsync(getZipFilename(itemsFilename), itemsZipFileData);
 
     if (config.assetsFilename) {
         const assetsZipFileData = await fileProcessorService.createAssetsZipAsync(response, {
@@ -119,9 +120,11 @@ const restoreAsync = async (config: ICliFileConfig) => {
         }
     });
 
+    const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
+
     const contentTypes = await importService.getImportContentTypesAsync();
-    const itemsFile = await fileService.loadFileAsync(config.itemsFilename);
-    const itemsFileExtension = getExtension(config.itemsFilename);
+    const itemsFile = await fileService.loadFileAsync(itemsFilename);
+    const itemsFileExtension = getExtension(itemsFilename);
 
     let assetsFile: Buffer | undefined = undefined;
     if (config.assetsFilename) {
@@ -193,8 +196,8 @@ const getConfig = async () => {
         action: action,
         managementApiKey: getOptionalArgumentValue(resolvedArgs, 'managementApiKey'),
         environmentId: getRequiredArgumentValue(resolvedArgs, 'environmentId'),
-        itemsFilename: getOptionalArgumentValue(resolvedArgs, 'itemsFilename') ?? getDefaultExportFilename('items'),
-        assetsFilename: getOptionalArgumentValue(resolvedArgs, 'assetsFilename') ?? getDefaultExportFilename('assets'),
+        itemsFilename: getOptionalArgumentValue(resolvedArgs, 'itemsFilename'),
+        assetsFilename: getOptionalArgumentValue(resolvedArgs, 'assetsFilename'),
         baseUrl: getOptionalArgumentValue(resolvedArgs, 'baseUrl'),
         exportTypes:
             getOptionalArgumentValue(resolvedArgs, 'exportTypes')
