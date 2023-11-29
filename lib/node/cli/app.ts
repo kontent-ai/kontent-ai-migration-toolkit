@@ -200,12 +200,12 @@ const getConfig = async () => {
             getOptionalArgumentValue(resolvedArgs, 'exportTypes')
                 ?.split(',')
                 .map((m) => m.trim()) ?? [],
-        skipFailedItems: getBooleanArgumentvalue(resolvedArgs, 'skipFailedItems'),
+        skipFailedItems: getBooleanArgumentvalue(resolvedArgs, 'skipFailedItems', true),
         secureApiKey: getOptionalArgumentValue(resolvedArgs, 'secureApiKey'),
         previewApiKey: getOptionalArgumentValue(resolvedArgs, 'previewApiKey'),
-        exportAssets: getBooleanArgumentvalue(resolvedArgs, 'exportAssets'),
-        isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview'),
-        isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure'),
+        exportAssets: getBooleanArgumentvalue(resolvedArgs, 'exportAssets', false),
+        isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview', false),
+        isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure', false),
         format: mappedFormat
     };
 
@@ -266,8 +266,14 @@ function getRequiredArgumentValue(args: Args, argName: string): string {
     return value;
 }
 
-function getBooleanArgumentvalue(args: Args, argName: string): boolean {
-    return getOptionalArgumentValue(args, argName)?.toLowerCase() === 'true'.toLowerCase();
+function getBooleanArgumentvalue(args: Args, argName: string, defaultValue: boolean): boolean {
+    const value = getOptionalArgumentValue(args, argName);
+
+    if (!value) {
+        return defaultValue;
+    }
+
+    return value.toLowerCase() === 'true'.toLowerCase();
 }
 
 function getZipFilename(filename: string): string {

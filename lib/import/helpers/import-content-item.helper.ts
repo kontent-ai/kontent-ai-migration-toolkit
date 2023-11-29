@@ -14,40 +14,69 @@ export class ImportContentItemHelper {
         }
     ): Promise<ContentItemModels.ContentItem[]> {
         const preparedItems: ContentItemModels.ContentItem[] = [];
+        let itemIndex: number = 0;
         for (const importContentItem of parsedContentItems) {
-            try {
-                if (!importContentItem.system.workflow_step) {
-                    continue;
-                }
+            itemIndex++;
 
-                const preparedContentItem: ContentItemModels.ContentItem = await this.prepareContentItemAsync(
+            logDebug({
+                type: 'info',
+                processingIndex: {
+                    index: itemIndex,
+                    totalCount: parsedContentItems.length
+                },
+                message: `Processing content item '${importContentItem.system.name}'`,
+                partA: importContentItem.system.codename
+            });
+
+            // if content item does not have a workflow step it means it is used as a component within Rich text element
+            // such items are procesed within element transform
+            if (!importContentItem.system.workflow_step) {
+                logAction('skip', 'contentItem', {
+                    title: `Skipping item beause it's a component`,
+                    codename: importContentItem.system.codename
+                });
+                continue;
+            }
+
+            try {
+                const preparedContentItemResult = await this.prepareContentItemAsync(
                     managementClient,
                     importContentItem,
                     importedData
                 );
-                preparedItems.push(preparedContentItem);
+                preparedItems.push(preparedContentItemResult.contentItem);
 
                 // check if name should be updated, no other changes are supported
-                if (this.shouldUpdateContentItem(importContentItem, preparedContentItem, collections)) {
-                    const upsertedContentItem = await managementClient
-                        .upsertContentItem()
-                        .byItemCodename(importContentItem.system.codename)
-                        .withData({
-                            name: importContentItem.system.name,
-                            collection: {
-                                codename: importContentItem.system.collection
-                            }
-                        })
-                        .toPromise()
-                        .then((m) => m.data);
+                if (preparedContentItemResult.status === 'itemAlreadyExists') {
+                    if (
+                        this.shouldUpdateContentItem(
+                            importContentItem,
+                            preparedContentItemResult.contentItem,
+                            collections
+                        )
+                    ) {
+                        const upsertedContentItem = await managementClient
+                            .upsertContentItem()
+                            .byItemCodename(importContentItem.system.codename)
+                            .withData({
+                                name: importContentItem.system.name,
+                                collection: {
+                                    codename: importContentItem.system.collection
+                                }
+                            })
+                            .toPromise()
+                            .then((m) => m.data);
 
-                    logAction('upsert', 'contentItem', {
-                        title: `${upsertedContentItem.name}`
-                    });
-                } else {
-                    logAction('skipUpdate', 'contentItem', {
-                        title: `${importContentItem.system.name}`
-                    });
+                        logAction('upsert', 'contentItem', {
+                            title: `Upserting item '${upsertedContentItem.name}'`,
+                            codename: importContentItem.system.codename
+                        });
+                    } else {
+                        logAction('skip', 'contentItem', {
+                            title: `item '${importContentItem.system.name}' already exists`,
+                            codename: importContentItem.system.codename
+                        });
+                    }
                 }
             } catch (error) {
                 if (config.skipFailedItems) {
@@ -86,7 +115,7 @@ export class ImportContentItemHelper {
         managementClient: ManagementClient,
         parsedContentItem: IParsedContentItem,
         importedData: IImportedData
-    ): Promise<ContentItemModels.ContentItem> {
+    ): Promise<{ contentItem: ContentItemModels.ContentItem; status: 'created' | 'itemAlreadyExists' }> {
         try {
             const contentItem = await managementClient
                 .viewContentItem()
@@ -95,7 +124,8 @@ export class ImportContentItemHelper {
                 .then((m) => m.data);
 
             logAction('fetch', 'contentItem', {
-                title: `${contentItem.name}`
+                title: `Loading item '${contentItem.name}'`,
+                codename: contentItem.codename
             });
 
             importedData.contentItems.push({
@@ -103,7 +133,10 @@ export class ImportContentItemHelper {
                 imported: contentItem
             });
 
-            return contentItem;
+            return {
+                contentItem: contentItem,
+                status: 'itemAlreadyExists'
+            };
         } catch (error) {
             if (is404Error(error)) {
                 const contentItem = await managementClient
@@ -127,10 +160,14 @@ export class ImportContentItemHelper {
                 });
 
                 logAction('create', 'contentItem', {
-                    title: `${contentItem.name}`
+                    title: `Creating item '${contentItem.name}'`,
+                    codename: contentItem.codename
                 });
 
-                return contentItem;
+                return {
+                    contentItem: contentItem,
+                    status: 'created'
+                };
             }
 
             throw error;

@@ -9,6 +9,7 @@ export function logDebug(data: {
     partA?: string;
     partB?: string;
     partC?: string;
+    partD?: string;
     processingIndex?: {
         index: number;
         totalCount: number;
@@ -32,7 +33,7 @@ export function logDebug(data: {
                 : ''
         }[${typeColor(data.type)}]${data.partA ? `[${yellow(data.partA)}]` : ''}${
             data.partB ? `[${cyan(data.partB)}]` : ''
-        }${data.partC ? `[${red(data.partC)}]` : ''}${
+        }${data.partC ? `[${red(data.partC)}]` : ''}${data.partD ? `[${cyan(data.partD)}]` : ''}${
             data.performance ? `[${bgYellow(black(data.performance))}]` : ''
         }: ${data.message}`
     );

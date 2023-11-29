@@ -21,11 +21,29 @@ export class ImportLanguageVariantHelper {
             skipFailedItems: boolean;
         }
     ): Promise<void> {
+        let itemIndex: number = 0;
         for (const importContentItem of importContentItems) {
             try {
+                itemIndex++;
+
+                logDebug({
+                    type: 'info',
+                    processingIndex: {
+                        index: itemIndex,
+                        totalCount: importContentItems.length
+                    },
+                    message: `Processing language variant '${importContentItem.system.name}'`,
+                    partA: importContentItem.system.codename,
+                    partB: importContentItem.system.language
+                });
+
                 // if content item does not have a workflow step it means it is used as a component within Rich text element
                 // such items are procesed within element transform
                 if (!importContentItem.system.workflow_step) {
+                    logAction('skip', 'contentItem', {
+                        title: `Skipping item beause it's a component`,
+                        codename: importContentItem.system.codename
+                    });
                     continue;
                 }
 
@@ -76,7 +94,7 @@ export class ImportLanguageVariantHelper {
                 if (config.skipFailedItems) {
                     logDebug({
                         type: 'error',
-                        message: `Failed to import language variant '${importContentItem.system.language}'`,
+                        message: `Failed to import language variant '${importContentItem.system.name}' in language '${importContentItem.system.language}'`,
                         partA: importContentItem.system.codename,
                         partB: extractErrorMessage(error)
                     });

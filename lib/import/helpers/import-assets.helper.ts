@@ -97,7 +97,7 @@ export class ImportAssetsHelper {
                     imported: existingAsset,
                     original: asset
                 });
-                logAction('skipUpdate', 'asset', {
+                logAction('skip', 'asset', {
                     title: asset.filename
                 });
             }

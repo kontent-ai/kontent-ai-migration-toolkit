@@ -35,22 +35,22 @@ Install package globally:
 
 ### Configuration
 
-| Config               | Value                                                                                                                              |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **environmentId**    | Id of Kontent.ai project **(required)**                                                                                            |
-| **managementApiKey** | Management API key **(required for import, optional export)**                                                                      |
-| **action**           | Action. Available options: `restore` & `export` **(required)**                                                                     |
-| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonSingle` **(required)**                                       |
-| secureApiKey         | API key for secure Access                                                                                                          |
-| isSecure             | When set to `true`, Secure API will be used to make data export                                                                    |
-| previewApiKey        | API key for preview                                                                                                                |
-| isPreview            | When set to `true`, Preview API will be used to make data export                                                                   |
-| exportAssets         | When set to `true`, Binary data of assets is exported.                                                                             |
-| itemsFilename        | Name of zip used for export / restore items                                                                                        |
-| assetsFilename       | Name of zip used for export / restore assets                                                                                       |
-| baseUrl              | Custom base URL for Management API calls.                                                                                          |
-| exportTypes          | Array of content types codenames of which content items should be exported. By default all items of all types are exported         |
-| skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false` |
+| Config               | Value                                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **environmentId**    | Id of Kontent.ai project **(required)**                                                                                                                |
+| **managementApiKey** | Management API key **(required for import, optional export)**                                                                                          |
+| **action**           | Action. Available options: `restore` & `export` **(required)**                                                                                         |
+| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonSingle` **(required)**                                                           |
+| secureApiKey         | API key for secure Access                                                                                                                              |
+| isSecure             | When set to `true`, Secure API will be used to make data export                                                                                        |
+| previewApiKey        | API key for preview                                                                                                                                    |
+| isPreview            | When set to `true`, Preview API will be used to make data export                                                                                       |
+| exportAssets         | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                             |
+| itemsFilename        | Name of zip used for export / restore items                                                                                                            |
+| assetsFilename       | Name of zip used for export / restore assets                                                                                                           |
+| baseUrl              | Custom base URL for Management API calls.                                                                                                              |
+| exportTypes          | Array of content types codenames of which content items should be exported. By default all items of all types are exported                             |
+| skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `true` |
 
 ### Execution
 
@@ -101,7 +101,6 @@ Create a `json` configuration file in the folder where you are attempting to run
     "baseUrl": null,
     "format": "json"
 }
-
 ```
 
 To execute your action run:

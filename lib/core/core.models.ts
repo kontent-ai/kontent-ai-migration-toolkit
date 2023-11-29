@@ -23,7 +23,7 @@ export type CliAction = 'export' | 'restore';
 export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile';
 
 export type ActionType =
-    | 'skipUpdate'
+    | 'skip'
     | 'save'
     | 'readFs'
     | 'writeFs'

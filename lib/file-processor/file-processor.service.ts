@@ -32,7 +32,7 @@ export class FileProcessorService {
     private readonly itemJsonProcessorService: ItemJsonProcessorService = new ItemJsonProcessorService();
 
     constructor(config?: IFileProcessorConfig) {
-        this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 50;
+        this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 10;
     }
 
     async extractZipAsync(

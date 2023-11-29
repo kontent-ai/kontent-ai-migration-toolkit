@@ -107,25 +107,29 @@ export class ImportWorkflowHelper {
         } else {
             const workflow = this.getWorkflowForGivenStepByCodename(workflowStepCodename, workflows);
 
-            await managementClient
-                .changeWorkflowOfLanguageVariant()
-                .byItemCodename(importContentItem.system.codename)
-                .byLanguageCodename(importContentItem.system.language)
-                .withData({
-                    step_identifier: {
-                        codename: importContentItem.system.workflow_step
-                    },
-                    workflow_identifier: {
-                        codename: workflow.codename
-                    }
-                })
-                .toPromise();
+            if (workflow.codename === workflowStepCodename) {
+                // item is already in the target workflow step
+            } else {
+                await managementClient
+                    .changeWorkflowOfLanguageVariant()
+                    .byItemCodename(importContentItem.system.codename)
+                    .byLanguageCodename(importContentItem.system.language)
+                    .withData({
+                        step_identifier: {
+                            codename: importContentItem.system.workflow_step
+                        },
+                        workflow_identifier: {
+                            codename: workflow.codename
+                        }
+                    })
+                    .toPromise();
 
-            logAction('changeWorkflowStep', 'languageVariant', {
-                title: `${importContentItem.system.name}`,
-                workflowStep: importContentItem.system.workflow_step,
-                language: importContentItem.system.language
-            });
+                logAction('changeWorkflowStep', 'languageVariant', {
+                    title: `${importContentItem.system.name}`,
+                    workflowStep: importContentItem.system.workflow_step,
+                    language: importContentItem.system.language
+                });
+            }
         }
     }
 

@@ -63,14 +63,16 @@ export function logAction(
         language?: string;
         workflowStep?: string;
         title: string;
+        codename?: string;
     }
 ): void {
     logDebug({
         type: actionType,
         message: data.title,
         partA: itemType,
-        partB: data.language,
-        partC: data.workflowStep
+        partB: data.codename,
+        partC: data.language,
+        partD: data.workflowStep
     });
 }
 
