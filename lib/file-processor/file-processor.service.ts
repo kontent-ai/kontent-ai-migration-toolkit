@@ -248,8 +248,11 @@ export class FileProcessorService {
                 logDebug({
                     type: 'download',
                     message: asset.url,
-                    partA: `${assetIndex}/${exportData.data.assets.length}`,
-                    partB: formatBytes(binaryDataResponse.contentLength)
+                    partB: formatBytes(binaryDataResponse.contentLength),
+                    processingIndex: {
+                        index: assetIndex,
+                        totalCount: exportData.data.assets.length
+                    }
                 });
 
                 filesFolder.file(assetFilename, binaryDataResponse.data, {
@@ -368,8 +371,20 @@ export class FileProcessorService {
     private async extractBinaryFilesAsync(zip: JSZip): Promise<IExtractedBinaryFileData[]> {
         const extractedFiles: IExtractedBinaryFileData[] = [];
 
-        const files = zip.files;
-        for (const [, file] of Object.entries(files)) {
+        let assetIndex: number = 0;
+        const files = Object.entries(zip.files);
+        for (const [, file] of files) {
+            assetIndex++;
+            logDebug({
+                type: 'info',
+                message: `Processing zip file`,
+                partA: file.name,
+                processingIndex: {
+                    index: assetIndex,
+                    totalCount: files.length
+                }
+            });
+
             if (!file?.name?.startsWith(`${this.binaryFilesFolderName}/`)) {
                 // iterate through assets only
                 continue;

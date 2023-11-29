@@ -9,6 +9,10 @@ export function logDebug(data: {
     partA?: string;
     partB?: string;
     partC?: string;
+    processingIndex?: {
+        index: number;
+        totalCount: number;
+    };
     performance?: string;
 }): void {
     let typeColor: Color = green;
@@ -22,7 +26,11 @@ export function logDebug(data: {
     }
 
     console.log(
-        `[${typeColor(data.type)}]${data.partA ? `[${yellow(data.partA)}]` : ''}${
+        `${
+            data.processingIndex
+                ? `[${bgYellow(black(`${data.processingIndex.index}/${data.processingIndex.totalCount}`))}]`
+                : ''
+        }[${typeColor(data.type)}]${data.partA ? `[${yellow(data.partA)}]` : ''}${
             data.partB ? `[${cyan(data.partB)}]` : ''
         }${data.partC ? `[${red(data.partC)}]` : ''}${
             data.performance ? `[${bgYellow(black(data.performance))}]` : ''

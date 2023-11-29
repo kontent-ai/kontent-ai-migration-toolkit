@@ -1,6 +1,7 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
 import { IImportedData, is404Error, logAction } from '../../core';
 import { IImportAsset } from '../import.models';
+import { logDebug } from '../../core/log-helper';
 
 export class ImportAssetsHelper {
     async importAssetsAsync(
@@ -8,7 +9,19 @@ export class ImportAssetsHelper {
         assets: IImportAsset[],
         importedData: IImportedData
     ): Promise<void> {
+        let assetIndex: number = 1;
         for (const asset of assets) {
+            logDebug({
+                type: 'info',
+                message: `Processing asset`,
+                partA: asset.filename,
+                partB: asset.mimeType,
+                processingIndex: {
+                    index: assetIndex,
+                    totalCount: assets.length
+                }
+            });
+
             // use asset id as external id
             const assetExternalId: string = asset.assetId;
 
@@ -88,6 +101,8 @@ export class ImportAssetsHelper {
                     title: asset.filename
                 });
             }
+
+            assetIndex++;
         }
     }
 }
