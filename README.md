@@ -147,7 +147,7 @@ inspire from these services:
 
 To use your custom formatting service simply pass it to `createZipAsync` or `extractZipAsync`
 
-### Export limitations
+### Limitations
 
 Export is made with `Delivery API` for speed and efficiency, but this brings some limitations:
 
@@ -155,6 +155,8 @@ Export is made with `Delivery API` for speed and efficiency, but this brings som
     used as a `title`. Similarly, folder structure of imported assets is not preserved. This only applies when asset is
     actually imported as if the asset already exists in target project, it is skipped from import (this is often the
     case if the export and import environments are one and the same)
+-   Language variants in `Scheduled` workflow step are not migrated to this workflow step because the API is missing the
+    information about scheduled time so there is no way to specify scheduled publish time
 
 ### FAQ
 
