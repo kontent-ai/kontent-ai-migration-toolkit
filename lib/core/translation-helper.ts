@@ -35,6 +35,7 @@ export type ImportTransformFunc = (data: {
 
 export class TranslationHelper {
     private readonly linkCodenameAttributeName: string = 'data-manager-link-codename';
+    private readonly dataNewWindowAttributeName: string = 'data-new-window';
     private readonly elementsBuilder = new LanguageVariantElementsBuilder();
 
     private readonly exportTransforms: Readonly<Record<ElementType, ExportTransformFunc>> = {
@@ -296,7 +297,6 @@ export class TranslationHelper {
 
         const processedRichText = richTextHtml.replaceAll(linkRegex, (linkTag) => {
             const idMatch = linkTag.match(dataItemIdRegex);
-            console.log(idMatch);
             if (idMatch && (idMatch?.length ?? 0) >= 2) {
                 const id = idMatch[1];
 
@@ -381,8 +381,12 @@ export class TranslationHelper {
         const linkRegex = new RegExp(`${linkStart}(.+?)${linkEnd}`, 'g');
         const csvmLinkCodenameRegex = new RegExp(`${csvmLinkCodenameStart}(.+?)${csvmLinkCodenameEnd}`);
 
-        processedRichText = processedRichText.replaceAll(linkRegex, (objectTag) => {
-            const codenameMatch = objectTag.match(csvmLinkCodenameRegex);
+        const relStart: string = 'rel="';
+        const relEnd: string = '"';
+        const relRegex = new RegExp(`${relStart}(.+?)${relEnd}`, 'g');
+
+        processedRichText = processedRichText.replaceAll(linkRegex, (linkTag) => {
+            const codenameMatch = linkTag.match(csvmLinkCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
@@ -395,13 +399,28 @@ export class TranslationHelper {
                         type: 'warning',
                         message: `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
                     });
-                    console.log(richTextHtml);
                 } else {
-                    objectTag = objectTag.replace(codename, contentItemWithGivenCodename.id);
-                    objectTag = objectTag.replace(this.linkCodenameAttributeName, 'data-item-id');
+                    linkTag = linkTag.replace(codename, contentItemWithGivenCodename.id);
+                    linkTag = linkTag.replace(this.linkCodenameAttributeName, 'data-item-id');
                 }
             }
-            return objectTag;
+
+            // make sure only valid RTE attributes for links are present
+            const targetBlankAttr = 'target="_blank"';
+            if (linkTag.includes(targetBlankAttr)) {
+                if (linkTag.includes(this.dataNewWindowAttributeName)) {
+                    linkTag = linkTag.replace(targetBlankAttr, '');
+                } else {
+                    linkTag = linkTag.replace(targetBlankAttr, this.dataNewWindowAttributeName);
+                }
+            }
+
+            // remove rel attribute
+            linkTag = linkTag.replaceAll(relRegex, (relTag) => {
+                return '';
+            });
+
+            return linkTag;
         });
 
         // remove data-image-id attribute if it's present
