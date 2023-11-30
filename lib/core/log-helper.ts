@@ -39,7 +39,7 @@ export function logDebug(data: {
     console.log(
         `[${typeColor(data.type)}]${data.partA ? `[${colors.yellow(data.partA)}]` : ''}${
             data.partB ? `[${colors.cyan(data.partB)}]` : ''
-        }${data.partC ? `[${colors.red(data.partC)}]` : ''}${data.partD ? `[${colors.cyan(data.partD)}]` : ''}${
+        }${data.partC ? `[${colors.red(data.partC)}]` : ''}${data.partD ? `[${colors.magenta(data.partD)}]` : ''}${
             data.performance ? `[${colors.bgYellow(colors.black(data.performance))}]` : ''
         }: ${data.message}`
     );

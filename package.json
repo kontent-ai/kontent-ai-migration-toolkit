@@ -47,6 +47,7 @@
     "dependencies": {
         "@kontent-ai/delivery-sdk": "14.5.0",
         "@kontent-ai/management-sdk": "5.6.0",
+        "uuid-by-string": "4.0.0",
         "bytes": "3.1.2",
         "colors": "1.4.0",
         "csv-parse": "5.5.2",

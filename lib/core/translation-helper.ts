@@ -6,6 +6,7 @@ import {
     IContentType
 } from '@kontent-ai/delivery-sdk';
 import { validate } from 'uuid';
+import uuidByString from 'uuid-by-string';
 import {
     ContentItemModels,
     ElementContracts,
@@ -435,13 +436,14 @@ export class TranslationHelper {
     }
 
     private convertComponentCodenameToId(codename: string): string {
-        const uuid = codename.replaceAll('_', '-');
+        const uuidCandidate = codename.replaceAll('_', '-');
 
-        if (!validate(uuid)) {
-            throw Error(`Invalid uuid '${uuid}'`);
+        if (!validate(uuidCandidate)) {
+            // generate hash of uuid from the source
+            return uuidByString(codename);
         }
 
-        return uuid;
+        return uuidCandidate;
     }
 }
 

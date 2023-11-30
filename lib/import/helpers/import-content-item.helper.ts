@@ -18,14 +18,6 @@ export class ImportContentItemHelper {
         for (const importContentItem of parsedContentItems) {
             itemIndex++;
 
-            if (
-                !['sync_api_limitations', 'delivery_api', 'cdn_and_content_caching'].find(
-                    (m) => m === importContentItem.system.codename
-                )
-            ) {
-                continue;
-            }
-
             logProcessingDebug({
                 index: itemIndex,
                 totalCount: parsedContentItems.length,
