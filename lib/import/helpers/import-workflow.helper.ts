@@ -35,6 +35,9 @@ export class ImportWorkflowHelper {
             if (workflow.publishedStep.codename === itemWorkflowCodename) {
                 return true;
             }
+            if (workflow.scheduledStep.codename === itemWorkflowCodename) {
+                return true;
+            }
             const step = workflow.steps.find((m) => m.codename === itemWorkflowCodename);
 
             if (step) {
@@ -51,6 +54,9 @@ export class ImportWorkflowHelper {
                 return true;
             }
             if (workflow.publishedStep.id === workflowId) {
+                return true;
+            }
+            if (workflow.scheduledStep.id === workflowId) {
                 return true;
             }
             const step = workflow.steps.find((m) => m.id === workflowId);
