@@ -1,6 +1,6 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IExportedAsset } from '../export';
-import { IImportContentType, IParsedAsset, IParsedContentItem as IParsedContentItem } from '../import';
+import { IExportedAsset } from '../export/index.js';
+import { IImportContentType, IParsedAsset, IParsedContentItem } from '../import/index.js';
 
 /**
  * Browser is currently not generally upported as we depend on few node.js specific APIs

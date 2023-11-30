@@ -5,6 +5,7 @@ import {
     IContentItem,
     IContentType
 } from '@kontent-ai/delivery-sdk';
+import { validate } from 'uuid';
 import {
     ContentItemModels,
     ElementContracts,
@@ -12,11 +13,11 @@ import {
     LanguageVariantElementsBuilder,
     SharedContracts
 } from '@kontent-ai/management-sdk';
-import { IParsedContentItem } from '../import';
-import { ContentElementType, IImportedData } from './core.models';
-import { extractAssetIdFromUrl } from './global-helper';
-import { idTranslateHelper } from './id-translate-helper';
-import { logDebug } from './log-helper';
+import { IParsedContentItem } from '../import/index.js';
+import { ContentElementType, IImportedData } from './core.models.js';
+import { extractAssetIdFromUrl } from './global-helper.js';
+import { idTranslateHelper } from './id-translate-helper.js';
+import { logDebug } from './log-helper.js';
 
 export type ExportTransformFunc = (data: {
     element: ContentItemElementsIndexer;
@@ -283,7 +284,6 @@ export class TranslationHelper {
             };
         }
 
-        // extract linked items / components
         const linkStart: string = '<a';
         const linkEnd: string = '</a>';
 
@@ -293,12 +293,13 @@ export class TranslationHelper {
         const linkRegex = new RegExp(`${linkStart}(.+?)${linkEnd}`, 'g');
         const dataItemIdRegex = new RegExp(`${dataItemIdStart}(.+?)${dataItemIdEnd}`);
 
-        const processedRichText = richTextHtml.replaceAll(linkRegex, (objectTag) => {
-            const idMatch = objectTag.match(dataItemIdRegex);
+        const processedRichText = richTextHtml.replaceAll(linkRegex, (linkTag) => {
+            const idMatch = linkTag.match(dataItemIdRegex);
+            console.log(idMatch);
             if (idMatch && (idMatch?.length ?? 0) >= 2) {
                 const id = idMatch[1];
 
-                // find content item with given id
+                // find content item with given id and replace it with codename
                 const contentItemWithGivenId: IContentItem | undefined = items.find((m) => m.system.id === id);
 
                 if (!contentItemWithGivenId) {
@@ -307,11 +308,11 @@ export class TranslationHelper {
                         message: `Could not find content item with id '${id}'. This item was referenced as a link in Rich text element.`
                     });
                 } else {
-                    objectTag = objectTag.replace(id, contentItemWithGivenId.system.codename);
-                    objectTag = objectTag.replace('data-item-id', this.linkCodenameAttributeName);
+                    linkTag = linkTag.replace(id, contentItemWithGivenId.system.codename);
+                    linkTag = linkTag.replace('data-item-id', this.linkCodenameAttributeName);
                 }
             }
-            return objectTag;
+            return linkTag;
         });
 
         return {
@@ -393,6 +394,7 @@ export class TranslationHelper {
                         type: 'warning',
                         message: `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
                     });
+                    console.log(richTextHtml);
                 } else {
                     objectTag = objectTag.replace(codename, contentItemWithGivenCodename.id);
                     objectTag = objectTag.replace(this.linkCodenameAttributeName, 'data-item-id');
@@ -433,7 +435,13 @@ export class TranslationHelper {
     }
 
     private convertComponentCodenameToId(codename: string): string {
-        return codename.replaceAll('_', '-');
+        const uuid = codename.replaceAll('_', '-');
+
+        if (!validate(uuid)) {
+            throw Error(`Invalid uuid '${uuid}'`);
+        }
+
+        return uuid;
     }
 }
 

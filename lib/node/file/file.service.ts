@@ -1,5 +1,5 @@
 import { promises } from 'fs';
-import { logDebug } from '../../core/log-helper';
+import { logDebug } from '../../core/log-helper.js';
 
 export class FileService {
     constructor() {}

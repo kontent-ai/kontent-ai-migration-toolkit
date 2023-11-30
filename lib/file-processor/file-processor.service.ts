@@ -1,9 +1,9 @@
 import { HttpService } from '@kontent-ai/core-sdk';
-import * as JSZip from 'jszip';
+import JSZip from 'jszip';
 import { Blob } from 'buffer';
 
-import { IExportAllResult } from '../export';
-import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset, IImportContentType } from '../import';
+import { IExportAllResult } from '../export/index.js';
+import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset, IImportContentType } from '../import/index.js';
 import {
     IFileData,
     IFileProcessorConfig,
@@ -12,13 +12,13 @@ import {
     ZipCompressionLevel,
     ZipContext,
     IAssetFormatService
-} from './file-processor.models';
+} from './file-processor.models.js';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IPackageMetadata, formatBytes, getExtension, sleepAsync } from '../core';
-import { getType } from 'mime';
-import { ItemCsvProcessorService } from './item-formats/item-csv-processor.service';
-import { ItemJsonProcessorService } from './item-formats/item-json-processor.service';
-import { logDebug, logProcessingDebug } from '../core/log-helper';
+import { IPackageMetadata, defaultRetryStrategy, formatBytes, getExtension, sleepAsync } from '../core/index.js';
+import mime from 'mime';
+import { ItemCsvProcessorService } from './item-formats/item-csv-processor.service.js';
+import { ItemJsonProcessorService } from './item-formats/item-json-processor.service.js';
+import { logDebug, logProcessingDebug } from '../core/log-helper.js';
 
 export class FileProcessorService {
     private readonly delayBetweenAssetRequestsMs: number;
@@ -255,7 +255,8 @@ export class FileProcessorService {
                 logDebug({
                     type: 'download',
                     message: `Binary file downloaded`,
-                    partA: asset.url
+                    partA: asset.url,
+                    partB: formatBytes(binaryDataResponse.contentLength)
                 });
 
                 filesFolder.file(assetFilename, binaryDataResponse.data, {
@@ -406,7 +407,7 @@ export class FileProcessorService {
             const assetId = this.getAssetIdFromFilename(file.name);
             const extension = getExtension(file.name) ?? '';
             const filename = file.name;
-            const mimeType = getType(file.name) ?? '';
+            const mimeType = mime.getType(file.name) ?? '';
 
             extractedFiles.push({
                 assetId: assetId,
@@ -495,7 +496,8 @@ export class FileProcessorService {
                 url
             },
             {
-                responseType: 'arraybuffer'
+                responseType: 'arraybuffer',
+                retryStrategy: defaultRetryStrategy
             }
         );
 

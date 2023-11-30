@@ -1,11 +1,11 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
-import { IImportContentType, IParsedContentItem } from '../../import';
+import { IImportContentType, IParsedContentItem } from '../../import/index.js';
 import { Readable } from 'stream';
-import { IFileData } from '../file-processor.models';
-import { BaseItemProcessorService } from '../base-item-processor.service';
-import { translationHelper } from '../../core';
+import { IFileData } from '../file-processor.models.js';
+import { BaseItemProcessorService } from '../base-item-processor.service.js';
+import { translationHelper } from '../../core/index.js';
 
 interface ICsvItem {
     type: string;

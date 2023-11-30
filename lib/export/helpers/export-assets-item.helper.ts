@@ -1,6 +1,6 @@
 import { IContentItem, IContentType, ElementType, Elements } from '@kontent-ai/delivery-sdk';
-import { extractAssetIdFromUrl, getExtension, extractFilenameFromUrl } from '../../core';
-import { IExportedAsset } from '../export.models';
+import { extractAssetIdFromUrl, getExtension, extractFilenameFromUrl } from '../../core/index.js';
+import { IExportedAsset } from '../export.models.js';
 
 export class ExportAssetsHelper {
     async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IExportedAsset[]> {

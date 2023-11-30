@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { readFileSync } from 'fs';
-import * as yargs from 'yargs';
+import yargs from 'yargs';
 
-import { ICliFileConfig, CliAction, getExtension, extractErrorMessage } from '../../core';
-import { ExportService } from '../../export';
-import { ImportService } from '../../import';
+import { ICliFileConfig, CliAction, getExtension, extractErrorMessage } from '../../core/index.js';
+import { ExportService } from '../../export/index.js';
+import { ImportService } from '../../import/index.js';
 import {
     ItemCsvProcessorService,
     ProcessingFormat,
@@ -15,9 +15,9 @@ import {
     IAssetFormatService,
     AssetCsvProcessorService,
     AssetJsonProcessorService
-} from '../../file-processor';
-import { FileService } from '../file/file.service';
-import { logDebug } from '../../core/log-helper';
+} from '../../file-processor/index.js';
+import { FileService } from '../file/file.service.js';
+import { logDebug } from '../../core/log-helper.js';
 
 type Args = { [key: string]: string | unknown };
 

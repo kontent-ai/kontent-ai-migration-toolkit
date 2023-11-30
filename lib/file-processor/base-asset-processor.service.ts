@@ -1,6 +1,6 @@
-import { IExportedAsset } from '../export';
-import { IParsedAsset } from '../import';
-import { IFileData, IAssetFormatService } from './file-processor.models';
+import { IExportedAsset } from '../export/index.js';
+import { IParsedAsset } from '../import/index.js';
+import { IFileData, IAssetFormatService } from './file-processor.models.js';
 
 export abstract class BaseAssetProcessorService implements IAssetFormatService {
     abstract name: string;

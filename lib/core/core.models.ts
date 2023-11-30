@@ -1,6 +1,6 @@
 import { AssetModels, ContentItemModels, ElementModels, LanguageVariantModels } from '@kontent-ai/management-sdk';
-import { ProcessingFormat } from '../file-processor';
-import { IImportAsset, IParsedContentItem } from '../import';
+import { ProcessingFormat } from '../file-processor/index.js';
+import { IImportAsset, IParsedContentItem } from '../import/index.js';
 
 export interface ICliFileConfig {
     environmentId: string;
@@ -73,7 +73,6 @@ export interface IIdCodenameTranslationResult {
 }
 
 export interface IPackageMetadata {
-    version: string;
     created: Date;
     environmentId: string;
     dataOverview: IPackageDataOverview;

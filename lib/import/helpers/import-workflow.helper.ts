@@ -1,6 +1,6 @@
 import { ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
-import { IParsedContentItem } from '../import.models';
-import { defaultWorkflowCodename, logAction } from '../../core';
+import { IParsedContentItem } from '../import.models.js';
+import { defaultWorkflowCodename, logAction } from '../../core/index.js';
 
 export class ImportWorkflowHelper {
     private getWorkflowForGivenStep(
@@ -79,8 +79,9 @@ export class ImportWorkflowHelper {
 
             logAction('publish', 'languageVariant', {
                 title: `${importContentItem.system.name}`,
-                workflowStep: importContentItem.system.workflow_step,
-                language: importContentItem.system.language
+                language: importContentItem.system.language,
+                codename: importContentItem.system.codename,
+                workflowStep: importContentItem.system.workflow_step
             });
         } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
             const workflow = this.getWorkflowForGivenStepByCodename(workflowStepCodename, workflows);
@@ -101,8 +102,9 @@ export class ImportWorkflowHelper {
 
             logAction('archive', 'languageVariant', {
                 title: `${importContentItem.system.name}`,
-                workflowStep: importContentItem.system.workflow_step,
-                language: importContentItem.system.language
+                language: importContentItem.system.language,
+                codename: importContentItem.system.codename,
+                workflowStep: importContentItem.system.workflow_step
             });
         } else {
             const workflow = this.getWorkflowForGivenStepByCodename(workflowStepCodename, workflows);
@@ -126,8 +128,9 @@ export class ImportWorkflowHelper {
 
                 logAction('changeWorkflowStep', 'languageVariant', {
                     title: `${importContentItem.system.name}`,
-                    workflowStep: importContentItem.system.workflow_step,
-                    language: importContentItem.system.language
+                    language: importContentItem.system.language,
+                    codename: importContentItem.system.codename,
+                    workflowStep: importContentItem.system.workflow_step
                 });
             }
         }

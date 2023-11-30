@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { IPackageMetadata } from '../core';
+import { IPackageMetadata } from '../core/index.js';
 import { IContentItem, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
 
 export interface IExportFilter {

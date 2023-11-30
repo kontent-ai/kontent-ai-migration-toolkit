@@ -1,4 +1,4 @@
-import { IImportedData } from './core.models';
+import { IImportedData } from './core.models.js';
 
 interface IFlattenedImportData {
     originalId?: string;

@@ -1,8 +1,8 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IImportContentType, IParsedContentItem } from '../../import';
-import { IFileData } from '../file-processor.models';
-import { BaseItemProcessorService } from '../base-item-processor.service';
-import { ItemJsonProcessorService } from './item-json-processor.service';
+import { IImportContentType, IParsedContentItem } from '../../import/index.js';
+import { IFileData } from '../file-processor.models.js';
+import { BaseItemProcessorService } from '../base-item-processor.service.js';
+import { ItemJsonProcessorService } from './item-json-processor.service.js';
 
 interface IJsonItem {
     system: {

@@ -1,8 +1,8 @@
 import { IManagementClient, EnvironmentModels, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
-import { logDebug } from './log-helper';
-import { ActionType, ItemType } from './core.models';
+import { logDebug } from './log-helper.js';
+import { ActionType, ItemType } from './core.models.js';
 import { HttpService } from '@kontent-ai/core-sdk';
 
 const rateExceededErrorCode: number = 10000;

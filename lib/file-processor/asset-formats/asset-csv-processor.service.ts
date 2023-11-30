@@ -1,10 +1,10 @@
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
-import { IParsedAsset } from '../../import';
+import { IParsedAsset } from '../../import/index.js';
 import { Readable } from 'stream';
-import { IFileData } from '../file-processor.models';
-import { IExportedAsset } from '../../export';
-import { BaseAssetProcessorService } from '../base-asset-processor.service';
+import { IFileData } from '../file-processor.models.js';
+import { IExportedAsset } from '../../export/index.js';
+import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
 
 export class AssetCsvProcessorService extends BaseAssetProcessorService {
     private readonly csvDelimiter: string = ',';

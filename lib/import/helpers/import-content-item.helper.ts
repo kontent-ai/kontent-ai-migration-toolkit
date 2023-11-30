@@ -1,7 +1,7 @@
 import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportedData, logAction, extractErrorMessage, is404Error } from '../../core';
-import { logDebug, logProcessingDebug } from '../../core/log-helper';
-import { IParsedContentItem } from '../import.models';
+import { IImportedData, logAction, extractErrorMessage, is404Error } from '../../core/index.js';
+import { logDebug, logProcessingDebug } from '../../core/log-helper.js';
+import { IParsedContentItem } from '../import.models.js';
 
 export class ImportContentItemHelper {
     async importContentItemsAsync(
@@ -17,6 +17,14 @@ export class ImportContentItemHelper {
         let itemIndex: number = 0;
         for (const importContentItem of parsedContentItems) {
             itemIndex++;
+
+            if (
+                !['sync_api_limitations', 'delivery_api', 'cdn_and_content_caching'].find(
+                    (m) => m === importContentItem.system.codename
+                )
+            ) {
+                continue;
+            }
 
             logProcessingDebug({
                 index: itemIndex,
@@ -70,7 +78,7 @@ export class ImportContentItemHelper {
                         });
                     } else {
                         logAction('skip', 'contentItem', {
-                            title: `item '${importContentItem.system.name}' already exists`,
+                            title: `Item '${importContentItem.system.name}' already exists`,
                             codename: importContentItem.system.codename
                         });
                     }

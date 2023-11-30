@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { ContentElementType, IPackageMetadata } from '../core';
+import { ContentElementType, IPackageMetadata } from '../core/index.js';
 
 export interface IImportConfig {
     managementApiKey: string;

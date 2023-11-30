@@ -1,11 +1,11 @@
 import { createDeliveryClient, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
 
-import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models';
-import { defaultRetryStrategy, defaultHttpService } from '../core';
-import { version } from '../../package.json';
-import { logDebug } from '../core/log-helper';
-import { exportContentItemHelper } from './helpers/export-content-item.helper';
-import { exportAssetsHelper } from './helpers/export-assets-item.helper';
+import { IExportAllResult, IExportConfig, IExportData, IExportedAsset } from './export.models.js';
+import { defaultRetryStrategy, defaultHttpService } from '../core/index.js';
+
+import { logDebug } from '../core/log-helper.js';
+import { exportContentItemHelper } from './helpers/export-content-item.helper.js';
+import { exportAssetsHelper } from './helpers/export-assets-item.helper.js';
 
 export class ExportService {
     private readonly deliveryClient: IDeliveryClient;
@@ -61,7 +61,6 @@ export class ExportService {
 
         return {
             metadata: {
-                version: version,
                 created: new Date(),
                 environmentId: this.config.environmentId,
                 dataOverview: {

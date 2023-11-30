@@ -1,7 +1,7 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportedData, is404Error, logAction } from '../../core';
-import { IImportAsset } from '../import.models';
-import { logProcessingDebug } from '../../core/log-helper';
+import { IImportedData, is404Error, logAction } from '../../core/index.js';
+import { IImportAsset } from '../import.models.js';
+import { logProcessingDebug } from '../../core/log-helper.js';
 
 export class ImportAssetsHelper {
     async importAssetsAsync(

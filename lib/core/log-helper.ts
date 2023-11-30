@@ -1,5 +1,6 @@
-import { green, yellow, cyan, Color, red, blue, bgYellow, black } from 'colors';
-import { ActionType, ItemType } from './core.models';
+import colors from 'colors';
+
+import { ActionType, ItemType } from './core.models.js';
 
 export type DebugType = 'error' | 'warning' | 'info' | ActionType;
 
@@ -10,7 +11,9 @@ export function logProcessingDebug(data: {
     title: string;
 }): void {
     console.log(
-        `[${bgYellow(black(`${data.index}/${data.totalCount}`))}][${yellow(data.itemType)}]: Starts processing ${data.title}`
+        `[${colors.bgYellow(colors.black(`${data.index}/${data.totalCount}`))}][${colors.yellow(
+            data.itemType
+        )}]: Starts processing ${data.title}`
     );
 }
 
@@ -23,21 +26,21 @@ export function logDebug(data: {
     partD?: string;
     performance?: string;
 }): void {
-    let typeColor: Color = green;
+    let typeColor: colors.Color = colors.green;
 
     if (data.type === 'error') {
-        typeColor = red;
+        typeColor = colors.red;
     } else if (data.type === 'info') {
-        typeColor = blue;
+        typeColor = colors.blue;
     } else if (data.type === 'warning') {
-        typeColor = red;
+        typeColor = colors.red;
     }
 
     console.log(
-        `[${typeColor(data.type)}]${data.partA ? `[${yellow(data.partA)}]` : ''}${
-            data.partB ? `[${cyan(data.partB)}]` : ''
-        }${data.partC ? `[${red(data.partC)}]` : ''}${data.partD ? `[${cyan(data.partD)}]` : ''}${
-            data.performance ? `[${bgYellow(black(data.performance))}]` : ''
+        `[${typeColor(data.type)}]${data.partA ? `[${colors.yellow(data.partA)}]` : ''}${
+            data.partB ? `[${colors.cyan(data.partB)}]` : ''
+        }${data.partC ? `[${colors.red(data.partC)}]` : ''}${data.partD ? `[${colors.cyan(data.partD)}]` : ''}${
+            data.performance ? `[${colors.bgYellow(colors.black(data.performance))}]` : ''
         }: ${data.message}`
     );
 }

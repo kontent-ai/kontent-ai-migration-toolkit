@@ -3,12 +3,14 @@ import {
     ContentItemModels,
     LanguageVariantModels,
     ManagementClient,
-    ElementContracts
+    ElementContracts,
+    LanguageVariantElements
 } from '@kontent-ai/management-sdk';
-import { logDebug, logProcessingDebug } from '../../core/log-helper';
-import { IImportedData, extractErrorMessage, is404Error, logAction, translationHelper } from '../../core';
-import { IParsedContentItem, IParsedElement } from '../import.models';
-import { importWorkflowHelper } from './import-workflow.helper';
+import { logDebug, logProcessingDebug } from '../../core/log-helper.js';
+import { IImportedData, extractErrorMessage, is404Error, logAction, translationHelper } from '../../core/index.js';
+import { IParsedContentItem, IParsedElement } from '../import.models.js';
+import { importWorkflowHelper } from './import-workflow.helper.js';
+import { FileService } from '../../node/index.js';
 
 export class ImportLanguageVariantHelper {
     async importLanguageVariantsAsync(
@@ -25,6 +27,14 @@ export class ImportLanguageVariantHelper {
         for (const importContentItem of importContentItems) {
             try {
                 itemIndex++;
+
+                if (
+                    !['sync_api_limitations', 'delivery_api', 'cdn_and_content_caching'].find(
+                        (m) => m === importContentItem.system.codename
+                    )
+                ) {
+                    continue;
+                }
 
                 logProcessingDebug({
                     index: itemIndex,
@@ -60,10 +70,111 @@ export class ImportLanguageVariantHelper {
                     .byItemCodename(upsertedContentItem.codename)
                     .byLanguageCodename(importContentItem.system.language)
                     .withData((builder) => {
-                        return {
-                            elements: importContentItem.elements.map((m) =>
+                        let mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] | any =
+                            importContentItem.elements.map((m) =>
                                 this.getElementContract(importContentItems, m, importedData)
-                            )
+                            );
+
+                        if (importContentItem.system.codename === 'delivery_api') {
+                            mappedElements = [
+                                { element: { codename: 'title' }, value: 'Delivery REST API' },
+                                { element: { codename: 'description' }, components: [], value: '<p><br></p>' },
+                                {
+                                    element: { codename: 'content' },
+                                    components: [
+                                        {
+                                            id: '325e2acb-1c14-47f6-af9a-27bc8b6c16fe',
+                                            type: { codename: 'zapi_section_group' },
+                                            elements: [
+                                                { element: { codename: 'title' }, value: 'Introduction' },
+                                                {
+                                                    element: { codename: 'sections' },
+                                                    value: [
+                                                        { codename: 'about_delivery_api' },
+                                                        { codename: 'published_content_vs__preview' },
+                                                        { codename: 'try_the_api_with_postman' },
+                                                        { codename: 'sdks_9d7355e' },
+                                                        { codename: 'authentication_in_delivery_api' },
+                                                        { codename: 'delivery_api_keys' },
+                                                        { codename: 'api_limitations' },
+                                                        { codename: 'cdn_and_content_caching' },
+                                                        { codename: 'errors_f80180f' }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                    ],
+                                    value: '<object type="application/kenticocloud" data-type="component" data-id="325e2acb-1c14-47f6-af9a-27bc8b6c16fe"></object>'
+                                },
+                                {
+                                    element: { codename: 'categories' },
+                                    value: [
+                                        { codename: 'try_the_api_with_postman' },
+                                        { codename: 'sdks_9d7355e' },
+                                        { codename: 'cdn_and_content_caching' },
+                                        { codename: 'api_limitations' },
+                                        { codename: 'errors_f80180f' },
+                                        { codename: 'filtering_content' },
+                                        { codename: 'linked_content_and_components' },
+                                        { codename: 'content_items' },
+                                        { codename: 'content_elements' },
+                                        { codename: 'content_types' },
+                                        { codename: 'languages_28f769b' },
+                                        { codename: 'taxonomy_groups' },
+                                        { codename: 'delivery_api_keys' },
+                                        { codename: 'authentication_in_delivery_api' },
+                                        { codename: 'published_content_vs__preview' }
+                                    ]
+                                },
+                                { element: { codename: 'url' }, value: 'openapi/delivery-api', mode: 'custom' },
+                                {
+                                    element: { codename: 'redirect_urls' },
+                                    value: '/reference/delivery-rest-api;\n/reference/delivery-api;\n/reference/openapi/delivery-api;'
+                                },
+                                { element: { codename: 'version' }, value: '1' },
+                                {
+                                    element: { codename: 'servers' },
+                                    components: [
+                                        // {
+                                        //     id: 'n607dd188-8849-0177-5ff8-487f2d71ce9f',
+                                        //     type: { codename: 'zapi_base_url' },
+                                        //     elements: [
+                                        //         { element: { codename: 'description' }, value: 'Delivery API' },
+                                        //         {
+                                        //             element: { codename: 'url' },
+                                        //             value: 'https://deliver.kontent.ai'
+                                        //         }
+                                        //     ]
+                                        // },
+                                        // {
+                                        //     id: 'd1581862-4f14-0193-d56c-44485f2aa6b1',
+                                        //     type: { codename: 'zapi_base_url' },
+                                        //     elements: [
+                                        //         {
+                                        //             element: { codename: 'description' },
+                                        //             value: 'Delivery Preview API'
+                                        //         },
+                                        //         {
+                                        //             element: { codename: 'url' },
+                                        //             value: 'https://preview-deliver.kontent.ai'
+                                        //         }
+                                        //     ]
+                                        // }
+                                    ],
+                                    value: '<p></p>'
+                                },
+                                {
+                                    element: { codename: 'security' },
+                                    value: [{ codename: 'delivery_api_bearer_authentication' }]
+                                },
+                                { element: { codename: 'api_reference' }, value: [{ codename: 'delivery_api' }] },
+                                { element: { codename: 'build_an_open_api_document_for_this_api' }, value: '' }
+                            ];
+                        }
+
+                        new FileService().writeFileAsync('log.json', JSON.stringify(mappedElements));
+                        return {
+                            elements: mappedElements
                         };
                     })
                     .toPromise()

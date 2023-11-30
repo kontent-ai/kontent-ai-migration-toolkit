@@ -8,7 +8,6 @@ import {
     SharedModels,
     WorkflowModels
 } from '@kontent-ai/management-sdk';
-import { version, name } from '../../package.json';
 
 import {
     IImportedData,
@@ -16,18 +15,18 @@ import {
     defaultRetryStrategy,
     printProjectAndEnvironmentInfoToConsoleAsync,
     defaultHttpService
-} from '../core';
+} from '../core/index.js';
 import {
     IImportConfig,
     IParsedContentItem,
     IImportSource,
     IImportContentType,
     IImportContentTypeElement
-} from './import.models';
-import { logDebug } from '../core/log-helper';
-import { importAssetsHelper } from './helpers/import-assets.helper';
-import { importContentItemHelper } from './helpers/import-content-item.helper';
-import { importLanguageVariantHelper } from './helpers/import-language-variant.helper';
+} from './import.models.js';
+import { logDebug } from '../core/log-helper.js';
+import { importAssetsHelper } from './helpers/import-assets.helper.js';
+import { importContentItemHelper } from './helpers/import-content-item.helper.js';
+import { importLanguageVariantHelper } from './helpers/import-language-variant.helper.js';
 
 export class ImportService {
     private readonly managementClient: ManagementClient;
@@ -84,18 +83,6 @@ export class ImportService {
             languageVariants: []
         };
         await printProjectAndEnvironmentInfoToConsoleAsync(this.managementClient);
-
-        // log information regarding version mismatch
-        if (sourceData.metadata) {
-            if (version !== sourceData.metadata.version) {
-                console.warn(
-                    `WARNING: Version mismatch. Current version of '${name}' is '${version}', but export was created using version '${sourceData.metadata.version}'.`
-                );
-                console.warn(
-                    `Import may still succeed, but if it doesn't, please try using '${sourceData.metadata.version}' version of this library.`
-                );
-            }
-        }
 
         // this is an optional step where users can exclude certain objects from being imported
         const dataToImport = this.getDataToImport(sourceData);

@@ -1,6 +1,6 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IImportContentType, IImportContentTypeElement, IParsedContentItem } from '../import';
-import { IItemFormatService, IFileData } from './file-processor.models';
+import { IImportContentType, IImportContentTypeElement, IParsedContentItem } from '../import/index.js';
+import { IItemFormatService, IFileData } from './file-processor.models.js';
 
 export abstract class BaseItemProcessorService implements IItemFormatService {
     abstract name: string;

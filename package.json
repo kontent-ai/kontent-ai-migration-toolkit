@@ -5,20 +5,19 @@
     "preferGlobal": true,
     "private": false,
     "bin": {
-        "kdm": "./dist/cjs/lib/node/cli/app.js"
+        "kdm": "./dist/es2022/node/cli/app.js"
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/Enngage/kontent-csv-manager"
     },
     "engines": {
-        "node": ">=16.0.0"
+        "node": ">=16"
     },
     "author": "Richard Sustek",
-    "main": "./dist/cjs/lib/index.js",
-    "module": "./dist/esm5/lib/index.js",
-    "es2015": "./dist/esm/lib/index.js",
-    "types": "./dist/cjs/lib/index.d.ts",
+    "exports": "./dist/es2022/index.js",
+    "types": "./dist/es2022/index.d.ts",
+    "type": "module",
     "directories": {},
     "scripts": {
         "test": "echo \"no global test configured\"",
@@ -28,13 +27,11 @@
         "release:beta": "standard-version --prerelease",
         "prepublishOnly": "npm run lint && npm run build:all",
         "publish:beta": "npm publish --tag=next",
-        "build:es2015": "tsc --p tsconfig.es2015.json",
-        "build:es5": "tsc --p tsconfig.es5.json",
-        "build:cjs": "tsc --p tsconfig.cjs.json",
-        "build:all": "npm run build:cjs && npm run build:es5 && npm run build:es2015",
+        "build:es2022": "tsc --p tsconfig.es2022.json",
+        "build:all": "npm run build:es2022",
         "test:all": "npm run build:all",
-        "test:export": "npm run build:cjs && cd output && node --max-http-header-size 150000 ../dist/cjs/lib/node/cli/app --max-http-header-size=80000000 --config=export-config.json ",
-        "test:restore": "npm run build:cjs && cd output && node --max-http-header-size 150000 ../dist/cjs/lib/node/cli/app --config=restore-config.json",
+        "test:export": "npm run build:es2022 && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --max-http-header-size=80000000 --config=export-config.json ",
+        "test:restore": "npm run build:es2022 && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --config=restore-config.json",
         "lint": "npx eslint lib"
     },
     "keywords": [
@@ -54,7 +51,8 @@
         "csv-parse": "5.5.2",
         "json2csv": "5.0.7",
         "jszip": "3.10.1",
-        "mime": "3.0.0",
+        "mime": "4.0.0",
+        "uuid": "9.0.1",
         "yargs": "17.7.2"
     },
     "devDependencies": {
@@ -62,10 +60,11 @@
         "@types/json2csv": "5.0.7",
         "@types/jszip": "3.4.1",
         "@types/mime": "3.0.4",
-        "@types/node": "20.10.0",
+        "@types/node": "20.10.1",
+        "@types/uuid": "^9.0.7",
         "@types/yargs": "17.0.32",
-        "@typescript-eslint/eslint-plugin": "6.12.0",
-        "@typescript-eslint/parser": "6.12.0",
+        "@typescript-eslint/eslint-plugin": "6.13.1",
+        "@typescript-eslint/parser": "6.13.1",
         "eslint": "8.54.0",
         "standard-version": "9.5.0",
         "ts-node": "10.9.1",

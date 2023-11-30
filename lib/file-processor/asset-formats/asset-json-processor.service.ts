@@ -1,7 +1,7 @@
-import { IExportedAsset } from '../../export';
-import { IParsedAsset } from '../../import';
-import { IFileData } from '../file-processor.models';
-import { BaseAssetProcessorService } from '../base-asset-processor.service';
+import { IExportedAsset } from '../../export/index.js';
+import { IParsedAsset } from '../../import/index.js';
+import { IFileData } from '../file-processor.models.js';
+import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
 
 export class AssetJsonProcessorService extends BaseAssetProcessorService {
     public readonly name: string = 'json';
