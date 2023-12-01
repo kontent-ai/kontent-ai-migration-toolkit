@@ -1,6 +1,6 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IItemFormatService, IFileData } from '../lib/file-processor';
-import { IParsedContentItem } from '../lib/import';
+import { IItemFormatService, IFileData } from '../lib/file-processor/index.js';
+import { IParsedContentItem } from '../lib/import/index.js';
 
 export class CustomProcessorService implements IItemFormatService {
     public readonly name: string = 'sample';
@@ -20,7 +20,8 @@ export class CustomProcessorService implements IItemFormatService {
 
             typeWrappers.push({
                 data: data,
-                filename: filename
+                filename: filename,
+                itemsCount: contentItemsOfType.length
             });
         }
 

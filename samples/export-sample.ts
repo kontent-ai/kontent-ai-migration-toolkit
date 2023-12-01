@@ -1,14 +1,18 @@
-import { AssetJsonProcessorService, FileProcessorService, ItemJsonProcessorService } from '../lib/file-processor';
+import {
+    AssetJsonProcessorService,
+    FileProcessorService,
+    ItemJsonProcessorService
+} from '../lib/file-processor/index.js';
 
-import { ExportService } from '../lib/export';
-import { FileService } from '../lib/node';
+import { ExportService } from '../lib/export/index.js';
+import { FileService } from '../lib/node/index.js';
 
 const run = async () => {
     const fileService = new FileService();
     const zipService = new FileProcessorService();
 
     const exportService = new ExportService({
-        environmentId: 'environmentId',
+        environmentId: '<id>',
         exportAssets: true,
         isPreview: false,
         isSecure: false

@@ -40,6 +40,10 @@ const argv = yargs(process.argv.slice(2))
     .describe('papi', 'Use if you want to export data using Preview API')
     .alias('ip', 'isPreview')
     .describe('ip', 'Disables / enables use of preview API for export')
+    .alias('ea', 'exportAssets')
+    .describe('ea', 'Disables / enables asset export')
+    .alias('ia', 'importAssets')
+    .describe('ia', 'Disables / enables asset import')
     .alias('is', 'isSecure')
     .describe('is', 'Disables / enables use of Secure API for export')
     .alias('a', 'action')
@@ -127,7 +131,7 @@ const restoreAsync = async (config: ICliFileConfig) => {
     const itemsFileExtension = getExtension(itemsFilename);
 
     let assetsFile: Buffer | undefined = undefined;
-    if (config.assetsFilename) {
+    if (config.assetsFilename && config.importAssets) {
         assetsFile = await fileService.loadFileAsync(config.assetsFilename);
         const assetsFileExtension = getExtension(config.assetsFilename);
 
@@ -211,6 +215,7 @@ const getConfig = async () => {
         exportAssets: getBooleanArgumentvalue(resolvedArgs, 'exportAssets', false),
         isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview', false),
         isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure', false),
+        importAssets: getBooleanArgumentvalue(resolvedArgs, 'importAssets', false),
         format: mappedFormat
     };
 
@@ -218,8 +223,7 @@ const getConfig = async () => {
 };
 
 const getDefaultExportFilename = (type: 'items' | 'assets') => {
-    const date = new Date();
-    return `${type}-export-${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}.zip`;
+    return `${type}-export.zip`;
 };
 
 run()

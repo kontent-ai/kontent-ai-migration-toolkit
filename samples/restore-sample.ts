@@ -1,6 +1,10 @@
-import { AssetJsonProcessorService, FileProcessorService, ItemJsonProcessorService } from '../lib/file-processor';
-import { ImportService } from '../lib/import';
-import { FileService } from '../lib/node';
+import {
+    AssetJsonProcessorService,
+    FileProcessorService,
+    ItemJsonProcessorService
+} from '../lib/file-processor/index.js';
+import { ImportService } from '../lib/import/index.js';
+import { FileService } from '../lib/node/index.js';
 
 const run = async () => {
     const zipService = new FileProcessorService();

@@ -42,10 +42,11 @@ Install package globally:
 | **action**           | Action. Available options: `restore` & `export` **(required)**                                                                                         |
 | **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                           |
 | secureApiKey         | API key for secure Access                                                                                                                              |
-| isSecure             | When set to `true`, Secure API will be used to make data export                                                                                        |
 | previewApiKey        | API key for preview                                                                                                                                    |
-| isPreview            | When set to `true`, Preview API will be used to make data export                                                                                       |
+| isSecure             | When set to `true`, Secure API will be used to make data export. Defaults to `false`                                                                   |
+| isPreview            | When set to `true`, Preview API will be used to make data export. Defaults to `false`                                                                  |
 | exportAssets         | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                             |
+| importAssets         | When set to `true`, assets & binary files will be imported. This requires the asset's zip file (can be created with export action).Defaults to `false` |
 | itemsFilename        | Name of zip used for export / restore items                                                                                                            |
 | assetsFilename       | Name of zip used for export / restore assets                                                                                                           |
 | baseUrl              | Custom base URL for Management API calls.                                                                                                              |
@@ -60,19 +61,19 @@ Install package globally:
 
 Export without assets:
 
-`kdm --action=export --environmentId=xxx --format=csv --itemsFilename=items-export.zip`
+`kdm --action=export --environmentId=xxx --format=csv`
 
 Export with assets:
 
-`kdm --action=export --environmentId=xxx --format=csv --itemsFilename=items-export.zip --assetsFilename=assets-export.zip`
+`kdm --action=export --environmentId=xxx --format=csv --exportAssets=false`
 
 Restore without assets:
 
-`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=items-export.zip`
+`kdm --action=restore --apiKey=xxx --environmentId=xxx`
 
 Restore with assets:
 
-`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=export.zip --assetsFilename=assets-export.zip`
+`kdm --action=restore --apiKey=xxx --environmentId=xxx --importAssets=true`
 
 Restore from json file:
 
@@ -122,9 +123,10 @@ Example:
 
 ```typescript
 const exportService = new ExportService({
-    environmentId: 'x',
-    apiKey: 'x',
+    environmentId: '<id>',
     exportAssets: true,
+    isPreview: false,
+    isSecure: false,
     customItemsExport: async (client) => {
         // return only the items you want to export by applying filters, parameters etc..
         const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();

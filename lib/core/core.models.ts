@@ -11,6 +11,7 @@ export interface ICliFileConfig {
     isPreview: boolean;
     isSecure: boolean;
     skipFailedItems: boolean;
+    importAssets: boolean;
     action: CliAction;
     itemsFilename?: string;
     assetsFilename?: string;
