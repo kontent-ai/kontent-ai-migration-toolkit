@@ -22,6 +22,7 @@ import { logDebug } from './log-helper.js';
 
 export type ExportTransformFunc = (data: {
     element: ContentItemElementsIndexer;
+    item: IContentItem;
     items: IContentItem[];
     types: IContentType[];
 }) => string | string[] | undefined;
@@ -44,7 +45,12 @@ export class TranslationHelper {
         date_time: (data) => data.element.value,
         rich_text: (data) => {
             const mappedElement = data.element as Elements.RichTextElement;
-            return this.processExportRichTextHtmlValue(mappedElement.value, data.items, data.types).processedHtml;
+            return this.processExportRichTextHtmlValue({
+                item: data.item,
+                items: data.items,
+                richTextElement: mappedElement,
+                types: data.types
+            }).processedHtml;
         },
         asset: (data) => {
             const mappedElement = data.element as Elements.AssetsElement;
@@ -234,6 +240,7 @@ export class TranslationHelper {
 
     transformToExportElementValue(
         element: ContentItemElementsIndexer,
+        item: IContentItem,
         items: IContentItem[],
         types: IContentType[]
     ): string | string[] | undefined {
@@ -241,6 +248,7 @@ export class TranslationHelper {
 
         return transformFunc({
             element: element,
+            item: item,
             items: items,
             types: types
         });
@@ -273,13 +281,16 @@ export class TranslationHelper {
         return JSON.parse(value);
     }
 
-    private processExportRichTextHtmlValue(
-        richTextHtml: string | undefined,
-        items: IContentItem[],
-        types: IContentType[]
-    ): {
+    private processExportRichTextHtmlValue(data: {
+        richTextElement: Elements.RichTextElement;
+        item: IContentItem;
+        items: IContentItem[];
+        types: IContentType[];
+    }): {
         processedHtml: string;
     } {
+        const richTextHtml: string = data.richTextElement.value;
+
         if (!richTextHtml) {
             return {
                 processedHtml: ''
@@ -301,12 +312,12 @@ export class TranslationHelper {
                 const id = idMatch[1];
 
                 // find content item with given id and replace it with codename
-                const contentItemWithGivenId: IContentItem | undefined = items.find((m) => m.system.id === id);
+                const contentItemWithGivenId: IContentItem | undefined = data.items.find((m) => m.system.id === id);
 
                 if (!contentItemWithGivenId) {
                     logDebug({
                         type: 'warning',
-                        message: `Could not find content item with id '${id}'. This item was referenced as a link in Rich text element.`
+                        message: `Could not find content item with id '${id}'. This item was referenced as a link in Rich text element '${data.richTextElement.name}' in item '${data.item.system.name}' and language '${data.item.system.language}'.`,
                     });
                 } else {
                     linkTag = linkTag.replace(id, contentItemWithGivenId.system.codename);

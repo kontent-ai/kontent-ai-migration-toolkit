@@ -91,6 +91,7 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
                 if (variantElement) {
                     elements[element.codename] = translationHelper.transformToExportElementValue(
                         variantElement,
+                        item,
                         items,
                         types
                     );

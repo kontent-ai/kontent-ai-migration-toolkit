@@ -135,6 +135,7 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
                 if (variantElement) {
                     csvItem[element.codename] = translationHelper.transformToExportElementValue(
                         variantElement,
+                        item,
                         items,
                         types
                     );
