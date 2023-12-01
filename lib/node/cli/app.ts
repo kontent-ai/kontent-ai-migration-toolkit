@@ -131,13 +131,26 @@ const restoreAsync = async (config: ICliFileConfig) => {
     const itemsFileExtension = getExtension(itemsFilename);
 
     let assetsFile: Buffer | undefined = undefined;
-    if (config.assetsFilename && config.importAssets) {
-        assetsFile = await fileService.loadFileAsync(config.assetsFilename);
-        const assetsFileExtension = getExtension(config.assetsFilename);
+    if (config.importAssets) {
+        const assetsFilename = config.assetsFilename ?? getDefaultExportFilename('assets');
+
+        logDebug({
+            type: 'info',
+            message: `Importing assets from file`,
+            partA: assetsFilename
+        });
+
+        assetsFile = await fileService.loadFileAsync(assetsFilename);
+        const assetsFileExtension = getExtension(assetsFilename);
 
         if (!assetsFileExtension?.endsWith('zip')) {
             throw Error(`Assets required zip folder. Received '${config.assetsFilename}'`);
         }
+    } else {
+        logDebug({
+            type: 'info',
+            message: `Skipping assets import`
+        });
     }
 
     if (itemsFileExtension?.endsWith('zip')) {
