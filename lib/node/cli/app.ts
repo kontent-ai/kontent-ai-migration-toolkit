@@ -11,7 +11,7 @@ import {
     FileProcessorService,
     IItemFormatService,
     ItemJsonProcessorService,
-    ItemJsonSingleProcessorService,
+    ItemJsonJoinedProcessorService,
     IAssetFormatService,
     AssetCsvProcessorService,
     AssetJsonProcessorService
@@ -49,7 +49,7 @@ const argv = yargs(process.argv.slice(2))
     .alias('af', 'assetsFilename')
     .describe('af', 'Name of assets file to export / restore')
     .alias('of', 'format')
-    .describe('of', 'Format of the export. One of: "csv" | "json" | "jsonSingle"')
+    .describe('of', 'Format of the export. One of: "csv" | "json" | "jsonJoined"')
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
     .alias('sfi', 'skipFailedItems')
@@ -182,10 +182,12 @@ const getConfig = async () => {
 
     let mappedFormat: ProcessingFormat = 'csv';
 
-    if (format?.toLowerCase() === 'csv') {
+    if (format?.toLowerCase() === 'csv'.toLowerCase()) {
         mappedFormat = 'csv';
-    } else if (format?.toLowerCase() === 'json') {
+    } else if (format?.toLowerCase() === 'json'.toLowerCase()) {
         mappedFormat = 'json';
+    } else if (format?.toLowerCase() === 'jsonJoined'.toLowerCase()) {
+        mappedFormat = 'jsonJoined';
     } else {
         if (action === 'export') {
             throw Error(`Unsupported export format '${format}'`);
@@ -232,11 +234,11 @@ function getAssetFormatService(format: ProcessingFormat | undefined): IAssetForm
         return new AssetCsvProcessorService();
     }
 
-    if (format === 'json' || format === 'jsonSingle') {
+    if (format === 'json' || format === 'jsonJoined') {
         return new AssetJsonProcessorService();
     }
 
-    throw Error(`Unsupported format '${format}' for exporting assets`);
+    throw Error(`Unsupported format '${format}' for assets export`);
 }
 
 function getItemFormatService(format: ProcessingFormat | undefined): IItemFormatService {
@@ -248,11 +250,11 @@ function getItemFormatService(format: ProcessingFormat | undefined): IItemFormat
         return new ItemJsonProcessorService();
     }
 
-    if (format === 'jsonSingle') {
-        return new ItemJsonSingleProcessorService();
+    if (format === 'jsonJoined') {
+        return new ItemJsonJoinedProcessorService();
     }
 
-    throw Error(`Unsupported format '${format}' for exporting assets`);
+    throw Error(`Unsupported format '${format}' for items export`);
 }
 
 function getOptionalArgumentValue(args: Args, argName: string): string | undefined {

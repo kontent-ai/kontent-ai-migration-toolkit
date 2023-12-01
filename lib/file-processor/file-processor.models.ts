@@ -7,7 +7,7 @@ import { IImportContentType, IParsedAsset, IParsedContentItem } from '../import/
  */
 export type ZipContext = 'node.js' | 'browser';
 
-export type ProcessingFormat = 'csv' | 'json' | 'jsonSingle';
+export type ProcessingFormat = 'csv' | 'json' | 'jsonJoined';
 
 export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 

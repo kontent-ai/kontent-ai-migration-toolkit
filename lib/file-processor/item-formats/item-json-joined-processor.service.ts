@@ -19,7 +19,7 @@ interface IJsonItem {
     };
 }
 
-export class ItemJsonSingleProcessorService extends BaseItemProcessorService {
+export class ItemJsonJoinedProcessorService extends BaseItemProcessorService {
     private readonly jsonProcessorService = new ItemJsonProcessorService();
 
     public readonly name: string = 'json';

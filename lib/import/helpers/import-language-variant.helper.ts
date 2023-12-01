@@ -31,7 +31,7 @@ export class ImportLanguageVariantHelper {
                     index: itemIndex,
                     totalCount: importContentItems.length,
                     itemType: 'languageVariant',
-                    title: `'${importContentItem.system.name}' in language '${importContentItem.system.language}'`
+                    title: `'${importContentItem.system.name}' of type '${importContentItem.system.type}' in language '${importContentItem.system.language}'`
                 });
 
                 // if content item does not have a workflow step it means it is used as a component within Rich text element

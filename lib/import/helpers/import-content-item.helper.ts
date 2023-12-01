@@ -22,7 +22,7 @@ export class ImportContentItemHelper {
                 index: itemIndex,
                 totalCount: parsedContentItems.length,
                 itemType: 'contentItem',
-                title: `'${importContentItem.system.name}'`
+                title: `'${importContentItem.system.name}' of type '${importContentItem.system.type}'`
             });
 
             // if content item does not have a workflow step it means it is used as a component within Rich text element

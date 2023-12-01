@@ -3,7 +3,7 @@
 The purpose of this project is to export & import content data to & from [Kontent.ai](https://kontent.ai) projects.
 
 Data is exported via `Delivery Api` and imported back via `Management Api`. There are 3 default formats for data:
-`json`, `jsonSingle` and `csv`. It is possible to write custom transformer if you need to add some extra processing or
+`json`, `jsonJoined` and `csv`. It is possible to write custom transformer if you need to add some extra processing or
 use different format all together.
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
@@ -40,7 +40,7 @@ Install package globally:
 | **environmentId**    | Id of Kontent.ai project **(required)**                                                                                                                |
 | **managementApiKey** | Management API key **(required for import, optional export)**                                                                                          |
 | **action**           | Action. Available options: `restore` & `export` **(required)**                                                                                         |
-| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonSingle` **(required)**                                                           |
+| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                           |
 | secureApiKey         | API key for secure Access                                                                                                                              |
 | isSecure             | When set to `true`, Secure API will be used to make data export                                                                                        |
 | previewApiKey        | API key for preview                                                                                                                                    |
