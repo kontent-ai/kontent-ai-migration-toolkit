@@ -14,7 +14,14 @@ import {
     IAssetFormatService
 } from './file-processor.models.js';
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IPackageMetadata, defaultRetryStrategy, formatBytes, getExtension, sleepAsync } from '../core/index.js';
+import {
+    IExportTransformConfig,
+    IPackageMetadata,
+    defaultRetryStrategy,
+    formatBytes,
+    getExtension,
+    sleepAsync
+} from '../core/index.js';
 import mime from 'mime';
 import { ItemCsvProcessorService } from './item-formats/item-csv-processor.service.js';
 import { ItemJsonProcessorService } from './item-formats/item-json-processor.service.js';
@@ -130,6 +137,7 @@ export class FileProcessorService {
     async createItemsZipAsync(
         exportData: IExportAllResult,
         config: {
+            transformConfig: IExportTransformConfig;
             itemFormatService: IItemFormatService;
             compressionLevel?: ZipCompressionLevel;
         }
@@ -153,7 +161,8 @@ export class FileProcessorService {
         const transformedLanguageVariantsFileData = await this.transformLanguageVariantsAsync(
             exportData.data.contentTypes,
             exportData.data.contentItems,
-            config.itemFormatService
+            config.itemFormatService,
+            config.transformConfig
         );
 
         for (const fileInfo of transformedLanguageVariantsFileData) {
@@ -319,9 +328,10 @@ export class FileProcessorService {
     private async transformLanguageVariantsAsync(
         types: IContentType[],
         items: IContentItem[],
-        formatService: IItemFormatService
+        formatService: IItemFormatService,
+        config: IExportTransformConfig
     ): Promise<IFileData[]> {
-        return await formatService.transformContentItemsAsync(types, items);
+        return await formatService.transformContentItemsAsync(types, items, config);
     }
 
     private async parseAssetsFromFileAsync(

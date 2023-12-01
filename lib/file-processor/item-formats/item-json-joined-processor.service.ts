@@ -3,6 +3,7 @@ import { IImportContentType, IParsedContentItem } from '../../import/index.js';
 import { IFileData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
 import { ItemJsonProcessorService } from './item-json-processor.service.js';
+import { IExportTransformConfig } from '../../core/index.js';
 
 interface IJsonItem {
     system: {
@@ -23,8 +24,12 @@ export class ItemJsonJoinedProcessorService extends BaseItemProcessorService {
     private readonly jsonProcessorService = new ItemJsonProcessorService();
 
     public readonly name: string = 'json';
-    async transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
-        const multiFileJsonFileData = await this.jsonProcessorService.transformContentItemsAsync(types, items);
+    async transformContentItemsAsync(
+        types: IContentType[],
+        items: IContentItem[],
+        config: IExportTransformConfig
+    ): Promise<IFileData[]> {
+        const multiFileJsonFileData = await this.jsonProcessorService.transformContentItemsAsync(types, items, config);
 
         const allJsonItems: IJsonItem[] = multiFileJsonFileData
             .map((m) => {

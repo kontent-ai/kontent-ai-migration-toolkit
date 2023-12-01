@@ -15,24 +15,17 @@ import {
     SharedContracts
 } from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import/index.js';
-import { ContentElementType, IImportedData } from './core.models.js';
+import {
+    ContentElementType,
+    ExportTransformFunc,
+    IExportTransformConfig,
+    IImportedData,
+    ImportTransformFunc,
+    IRichTextExportConfig
+} from './core.models.js';
 import { extractAssetIdFromUrl } from './global-helper.js';
 import { idTranslateHelper } from './id-translate-helper.js';
 import { logDebug } from './log-helper.js';
-
-export type ExportTransformFunc = (data: {
-    element: ContentItemElementsIndexer;
-    item: IContentItem;
-    items: IContentItem[];
-    types: IContentType[];
-}) => string | string[] | undefined;
-
-export type ImportTransformFunc = (data: {
-    value: string | string[] | undefined;
-    elementCodename: string;
-    importedData: IImportedData;
-    sourceItems: IParsedContentItem[];
-}) => ElementContracts.IContentItemElementContract;
 
 export class TranslationHelper {
     private readonly linkCodenameAttributeName: string = 'data-manager-link-codename';
@@ -49,7 +42,8 @@ export class TranslationHelper {
                 item: data.item,
                 items: data.items,
                 richTextElement: mappedElement,
-                types: data.types
+                types: data.types,
+                config: data.config.richTextConfig
             }).processedHtml;
         },
         asset: (data) => {
@@ -238,20 +232,15 @@ export class TranslationHelper {
         }
     };
 
-    transformToExportElementValue(
-        element: ContentItemElementsIndexer,
-        item: IContentItem,
-        items: IContentItem[],
-        types: IContentType[]
-    ): string | string[] | undefined {
-        const transformFunc = this.exportTransforms[element.type];
-
-        return transformFunc({
-            element: element,
-            item: item,
-            items: items,
-            types: types
-        });
+    transformToExportElementValue(data: {
+        element: ContentItemElementsIndexer;
+        item: IContentItem;
+        items: IContentItem[];
+        types: IContentType[];
+        config: IExportTransformConfig;
+    }): string | string[] | undefined {
+        const transformFunc = this.exportTransforms[data.element.type];
+        return transformFunc(data);
     }
 
     transformToImportValue(
@@ -286,6 +275,7 @@ export class TranslationHelper {
         item: IContentItem;
         items: IContentItem[];
         types: IContentType[];
+        config: IRichTextExportConfig;
     }): {
         processedHtml: string;
     } {
@@ -315,10 +305,25 @@ export class TranslationHelper {
                 const contentItemWithGivenId: IContentItem | undefined = data.items.find((m) => m.system.id === id);
 
                 if (!contentItemWithGivenId) {
-                    logDebug({
-                        type: 'warning',
-                        message: `Could not find content item with id '${id}'. This item was referenced as a link in Rich text element '${data.richTextElement.name}' in item '${data.item.system.name}' and language '${data.item.system.language}'.`,
-                    });
+                    if (data.config.replaceInvalidLinks) {
+                        // remove link tag and replace it with plain text extracted from link
+                        const linkText = this.extractTextFromLinkHtml(linkTag);
+                        linkTag = linkText ?? '';
+
+                        logDebug({
+                            type: 'warning',
+                            message: `Could not find content item with id '${id}' referenced as a link in 
+                            Rich text element '${data.richTextElement.name}' in item '${data.item.system.name}' 
+                            and language '${data.item.system.language}'. Replacing link with plain text.`
+                        });
+                    } else {
+                        logDebug({
+                            type: 'warning',
+                            message: `Could not find content item with id '${id}' referenced as a link 
+                            in Rich text element '${data.richTextElement.name}' in item '${data.item.system.name}' 
+                            and language '${data.item.system.language}'. This may be fixed by enabling 'replaceInvalidLinks' option.`
+                        });
+                    }
                 } else {
                     linkTag = linkTag.replace(id, contentItemWithGivenId.system.codename);
                     linkTag = linkTag.replace('data-item-id', this.linkCodenameAttributeName);
@@ -330,6 +335,10 @@ export class TranslationHelper {
         return {
             processedHtml: processedRichText
         };
+    }
+
+    private extractTextFromLinkHtml(text: string): string | undefined {
+        return text.match(/<a [^>]+>([^<]+)<\/a>/)?.[1];
     }
 
     private processImportRichTextHtmlValue(

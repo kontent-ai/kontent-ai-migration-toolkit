@@ -1,6 +1,13 @@
-import { AssetModels, ContentItemModels, ElementModels, LanguageVariantModels } from '@kontent-ai/management-sdk';
+import {
+    AssetModels,
+    ContentItemModels,
+    ElementContracts,
+    ElementModels,
+    LanguageVariantModels
+} from '@kontent-ai/management-sdk';
 import { ProcessingFormat } from '../file-processor/index.js';
 import { IImportAsset, IParsedContentItem } from '../import/index.js';
+import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 
 export interface ICliFileConfig {
     environmentId: string;
@@ -11,6 +18,7 @@ export interface ICliFileConfig {
     isPreview: boolean;
     isSecure: boolean;
     skipFailedItems: boolean;
+    replaceInvalidLinks: boolean;
     importAssets: boolean;
     action: CliAction;
     itemsFilename?: string;
@@ -82,4 +90,27 @@ export interface IPackageMetadata {
 export interface IPackageDataOverview {
     contentItemsCount: number;
     assetsCount: number;
+}
+
+export type ExportTransformFunc = (data: {
+    element: ContentItemElementsIndexer;
+    item: IContentItem;
+    items: IContentItem[];
+    types: IContentType[];
+    config: IExportTransformConfig;
+}) => string | string[] | undefined;
+
+export type ImportTransformFunc = (data: {
+    value: string | string[] | undefined;
+    elementCodename: string;
+    importedData: IImportedData;
+    sourceItems: IParsedContentItem[];
+}) => ElementContracts.IContentItemElementContract;
+
+export interface IExportTransformConfig {
+    richTextConfig: IRichTextExportConfig;
+}
+
+export interface IRichTextExportConfig {
+    replaceInvalidLinks: boolean;
 }

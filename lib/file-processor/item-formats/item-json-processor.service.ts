@@ -2,7 +2,7 @@ import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IImportContentType, IParsedContentItem, IParsedElement } from '../../import/index.js';
 import { IFileData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
-import { translationHelper } from '../../core/index.js';
+import { IExportTransformConfig, translationHelper } from '../../core/index.js';
 
 interface IJsonItem {
     system: {
@@ -21,13 +21,17 @@ interface IJsonItem {
 
 export class ItemJsonProcessorService extends BaseItemProcessorService {
     public readonly name: string = 'json';
-    async transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
+    async transformContentItemsAsync(
+        types: IContentType[],
+        items: IContentItem[],
+        config: IExportTransformConfig
+    ): Promise<IFileData[]> {
         const fileData: IFileData[] = [];
         for (const contentType of types) {
             const contentItemsOfType = items.filter((m) => m.system.type === contentType.system.codename);
 
             const filename: string = `${contentType.system.codename}.json`;
-            const jsonItems: IJsonItem[] = contentItemsOfType.map((m) => this.mapToJsonItem(m, types, items));
+            const jsonItems: IJsonItem[] = contentItemsOfType.map((m) => this.mapToJsonItem(m, types, items, config));
 
             fileData.push({
                 data: jsonItems.length ? JSON.stringify(jsonItems) : '[]',
@@ -75,7 +79,12 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
         return parsedItems;
     }
 
-    private mapToJsonItem(item: IContentItem, types: IContentType[], items: IContentItem[]): IJsonItem {
+    private mapToJsonItem(
+        item: IContentItem,
+        types: IContentType[],
+        items: IContentItem[],
+        config: IExportTransformConfig
+    ): IJsonItem {
         const elements: { [elementCodename: string]: string | string[] | undefined } = {};
 
         const type = types.find((m) => m.system.codename === item.system.type);
@@ -89,12 +98,13 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
                 const variantElement = item.elements[element.codename];
 
                 if (variantElement) {
-                    elements[element.codename] = translationHelper.transformToExportElementValue(
-                        variantElement,
-                        item,
-                        items,
-                        types
-                    );
+                    elements[element.codename] = translationHelper.transformToExportElementValue({
+                        config: config,
+                        element: variantElement,
+                        item: item,
+                        items: items,
+                        types: types
+                    });
                 }
             }
         }

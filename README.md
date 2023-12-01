@@ -35,23 +35,24 @@ Install package globally:
 
 ### Configuration
 
-| Config               | Value                                                                                                                                                  |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **environmentId**    | Id of Kontent.ai project **(required)**                                                                                                                |
-| **managementApiKey** | Management API key **(required for import, optional export)**                                                                                          |
-| **action**           | Action. Available options: `restore` & `export` **(required)**                                                                                         |
-| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                           |
-| secureApiKey         | API key for secure Access                                                                                                                              |
-| previewApiKey        | API key for preview                                                                                                                                    |
-| isSecure             | When set to `true`, Secure API will be used to make data export. Defaults to `false`                                                                   |
-| isPreview            | When set to `true`, Preview API will be used to make data export. Defaults to `false`                                                                  |
-| exportAssets         | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                             |
-| importAssets         | When set to `true`, assets & binary files will be imported. This requires the asset's zip file (can be created with export action).Defaults to `false` |
-| itemsFilename        | Name of zip used for export / restore items                                                                                                            |
-| assetsFilename       | Name of zip used for export / restore assets                                                                                                           |
-| baseUrl              | Custom base URL for Management API calls.                                                                                                              |
-| exportTypes          | Array of content types codenames of which content items should be exported. By default all items of all types are exported                             |
-| skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `true` |
+| Config               | Value                                                                                                                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **environmentId**    | Id of Kontent.ai project **(required)**                                                                                                                                                                         |
+| **managementApiKey** | Management API key **(required for import, optional export)**                                                                                                                                                   |
+| **action**           | Action. Available options: `restore` & `export` **(required)**                                                                                                                                                  |
+| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                                                                                    |
+| secureApiKey         | API key for secure Access                                                                                                                                                                                       |
+| previewApiKey        | API key for preview                                                                                                                                                                                             |
+| isSecure             | When set to `true`, Secure API will be used to make data export. Defaults to `false`                                                                                                                            |
+| isPreview            | When set to `true`, Preview API will be used to make data export. Defaults to `false`                                                                                                                           |
+| exportAssets         | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                                                                                      |
+| importAssets         | When set to `true`, assets & binary files will be imported. This requires the asset's zip file (can be created with export action). Defaults to `false`                                                         |
+| replaceInvalidLinks  | RTE may contain links to invalid items. You won't be able to re-import such items due to validation error. By setting this to `true` the import tool will automatically remove these links. Defaults to `false` |
+| itemsFilename        | Name of zip used for export / restore items                                                                                                                                                                     |
+| assetsFilename       | Name of zip used for export / restore assets                                                                                                                                                                    |
+| baseUrl              | Custom base URL for Management API calls.                                                                                                                                                                       |
+| exportTypes          | Array of content types codenames of which content items should be exported. By default all items of all types are exported                                                                                      |
+| skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false`                                                         |
 
 ### Execution
 

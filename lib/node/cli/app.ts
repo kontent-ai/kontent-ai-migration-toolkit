@@ -58,6 +58,8 @@ const argv = yargs(process.argv.slice(2))
     .describe('b', 'Custom base URL for Management API calls.')
     .alias('sfi', 'skipFailedItems')
     .describe('sfi', 'Indicates whether import should skip items that fail to import and cotinue with next item')
+    .alias('ril', 'replaceInvalidLinks')
+    .describe('ril', 'Instructs import to replace invalid links')
     .alias('et', 'exportTypes')
     .describe(
         'et',
@@ -85,7 +87,12 @@ const exportAsync = async (config: ICliFileConfig) => {
     const response = await exportService.exportAllAsync();
 
     const itemsZipFileData = await fileProcessorService.createItemsZipAsync(response, {
-        itemFormatService: getItemFormatService(config.format)
+        itemFormatService: getItemFormatService(config.format),
+        transformConfig: {
+            richTextConfig: {
+                replaceInvalidLinks: config.replaceInvalidLinks
+            }
+        }
     });
 
     const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
@@ -222,13 +229,14 @@ const getConfig = async () => {
             getOptionalArgumentValue(resolvedArgs, 'exportTypes')
                 ?.split(',')
                 .map((m) => m.trim()) ?? [],
-        skipFailedItems: getBooleanArgumentvalue(resolvedArgs, 'skipFailedItems', true),
+        skipFailedItems: getBooleanArgumentvalue(resolvedArgs, 'skipFailedItems', false),
         secureApiKey: getOptionalArgumentValue(resolvedArgs, 'secureApiKey'),
         previewApiKey: getOptionalArgumentValue(resolvedArgs, 'previewApiKey'),
         exportAssets: getBooleanArgumentvalue(resolvedArgs, 'exportAssets', false),
         isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview', false),
         isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure', false),
         importAssets: getBooleanArgumentvalue(resolvedArgs, 'importAssets', false),
+        replaceInvalidLinks: getBooleanArgumentvalue(resolvedArgs, 'replaceInvalidLinks', false),
         format: mappedFormat
     };
 

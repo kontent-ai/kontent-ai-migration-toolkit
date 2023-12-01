@@ -5,7 +5,7 @@ import { IImportContentType, IParsedContentItem } from '../../import/index.js';
 import { Readable } from 'stream';
 import { IFileData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
-import { translationHelper } from '../../core/index.js';
+import { IExportTransformConfig, translationHelper } from '../../core/index.js';
 
 interface ICsvItem {
     type: string;
@@ -22,9 +22,13 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
     private readonly csvDelimiter: string = ',';
     public readonly name: string = 'csv';
 
-    async transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]> {
+    async transformContentItemsAsync(
+        types: IContentType[],
+        items: IContentItem[],
+        config: IExportTransformConfig
+    ): Promise<IFileData[]> {
         const fileData: IFileData[] = [];
-        const csvItems: ICsvItem[] = items.map((item) => this.mapToCsvItem(item, types, items));
+        const csvItems: ICsvItem[] = items.map((item) => this.mapToCsvItem(item, types, items, config));
 
         for (const contentType of types) {
             const contentItemsOfType = csvItems.filter((m) => m.type === contentType.system.codename);
@@ -111,7 +115,12 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
         return parsedItems;
     }
 
-    private mapToCsvItem(item: IContentItem, types: IContentType[], items: IContentItem[]): ICsvItem {
+    private mapToCsvItem(
+        item: IContentItem,
+        types: IContentType[],
+        items: IContentItem[],
+        config: IExportTransformConfig
+    ): ICsvItem {
         const csvItem: ICsvItem = {
             type: item.system.type,
             codename: item.system.codename,
@@ -133,12 +142,13 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
                 const variantElement = item.elements[element.codename];
 
                 if (variantElement) {
-                    csvItem[element.codename] = translationHelper.transformToExportElementValue(
-                        variantElement,
-                        item,
-                        items,
-                        types
-                    );
+                    csvItem[element.codename] = translationHelper.transformToExportElementValue({
+                        config: config,
+                        element: variantElement,
+                        item: item,
+                        items: items,
+                        types: types
+                    });
                 }
             }
         }

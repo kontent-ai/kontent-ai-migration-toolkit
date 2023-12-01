@@ -1,6 +1,7 @@
 import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IExportedAsset } from '../export/index.js';
 import { IImportContentType, IParsedAsset, IParsedContentItem } from '../import/index.js';
+import { IExportTransformConfig } from '../core/index.js';
 
 /**
  * Browser is currently not generally upported as we depend on few node.js specific APIs
@@ -14,7 +15,11 @@ export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 export interface IItemFormatService {
     name: string;
 
-    transformContentItemsAsync(types: IContentType[], items: IContentItem[]): Promise<IFileData[]>;
+    transformContentItemsAsync(
+        types: IContentType[],
+        items: IContentItem[],
+        config: IExportTransformConfig
+    ): Promise<IFileData[]>;
     parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]>;
 }
 
