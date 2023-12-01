@@ -61,7 +61,7 @@ export class ImportLanguageVariantHelper {
                     .byItemCodename(upsertedContentItem.codename)
                     .byLanguageCodename(importContentItem.system.language)
                     .withData((builder) => {
-                        const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] | any =
+                        const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] =
                             importContentItem.elements.map((m) =>
                                 this.getElementContract(importContentItems, m, importedData)
                             );

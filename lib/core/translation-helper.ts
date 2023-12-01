@@ -75,7 +75,16 @@ export class TranslationHelper {
             throw Error(`Content type snippet import transform not supported`);
         },
         subpages: (data) => {
-            throw Error(`Guidelines import transform not supported`);
+            return this.elementsBuilder.linkedItemsElement({
+                element: {
+                    codename: data.elementCodename
+                },
+                value: this.parseArrayValue(data.value).map((m) => {
+                    return {
+                        codename: m
+                    };
+                })
+            });
         },
         asset: (data) => {
             const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
