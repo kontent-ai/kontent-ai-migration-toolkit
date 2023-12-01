@@ -87,7 +87,7 @@ const exportAsync = async (config: ICliFileConfig) => {
     const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
     await fileService.writeFileAsync(getZipFilename(itemsFilename), itemsZipFileData);
 
-    if (config.assetsFilename) {
+    if (config.assetsFilename && config.exportAssets) {
         const assetsZipFileData = await fileProcessorService.createAssetsZipAsync(response, {
             assetFormatService: getAssetFormatService(config.format)
         });
