@@ -45,7 +45,7 @@ const run = async () => {
         }
     );
 
-    // restore into target environment
+    // import into target environment
     await importService.importFromSourceAsync(data);
 };
 

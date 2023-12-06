@@ -39,7 +39,7 @@ Install package globally:
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **environmentId**    | Id of Kontent.ai project **(required)**                                                                                                                                                                         |
 | **managementApiKey** | Management API key **(required for import, optional export)**                                                                                                                                                   |
-| **action**           | Action. Available options: `restore` & `export` **(required)**                                                                                                                                                  |
+| **action**           | Action. Available options: `import` & `export` **(required)**                                                                                                                                                  |
 | **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                                                                                    |
 | secureApiKey         | API key for secure Access                                                                                                                                                                                       |
 | previewApiKey        | API key for preview                                                                                                                                                                                             |
@@ -48,8 +48,8 @@ Install package globally:
 | exportAssets         | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                                                                                      |
 | importAssets         | When set to `true`, assets & binary files will be imported. This requires the asset's zip file (can be created with export action). Defaults to `false`                                                         |
 | replaceInvalidLinks  | RTE may contain links to invalid items. You won't be able to re-import such items due to validation error. By setting this to `true` the import tool will automatically remove these links. Defaults to `false` |
-| itemsFilename        | Name of zip used for export / restore items                                                                                                                                                                     |
-| assetsFilename       | Name of zip used for export / restore assets                                                                                                                                                                    |
+| itemsFilename        | Name of zip used for export / import items                                                                                                                                                                     |
+| assetsFilename       | Name of zip used for export / import assets                                                                                                                                                                    |
 | baseUrl              | Custom base URL for Management API calls.                                                                                                                                                                       |
 | exportTypes          | Array of content types codenames of which content items should be exported. By default all items of all types are exported                                                                                      |
 | skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false`                                                         |
@@ -68,21 +68,21 @@ Export with assets:
 
 `kdm --action=export --environmentId=xxx --format=csv --exportAssets=false`
 
-Restore without assets:
+Import without assets:
 
-`kdm --action=restore --apiKey=xxx --environmentId=xxx`
+`kdm --action=import --apiKey=xxx --environmentId=xxx`
 
-Restore with assets:
+Import with assets:
 
-`kdm --action=restore --apiKey=xxx --environmentId=xxx --importAssets=true`
+`kdm --action=import --apiKey=xxx --environmentId=xxx --importAssets=true`
 
-Restore from json file:
+Import from json file:
 
-`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=data.json`
+`kdm --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.json`
 
-Restore from csv file:
+Import from csv file:
 
-`kdm --action=restore --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv`
+`kdm --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv`
 
 To get some help you can use:
 

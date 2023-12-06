@@ -28,7 +28,7 @@ export interface ICliFileConfig {
     exportAssets: boolean;
 }
 
-export type CliAction = 'export' | 'restore';
+export type CliAction = 'export' | 'import';
 export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile' | 'zipFile';
 
 export type ActionType =

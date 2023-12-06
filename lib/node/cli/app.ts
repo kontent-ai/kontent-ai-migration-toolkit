@@ -27,7 +27,7 @@ const argv = yargs(process.argv.slice(2))
         'Creates zip export of Kontent.ai content data'
     )
     .example(
-        'csvm --action=restore --apiKey=xxx --environmentId=xxx --filename=exportFile',
+        'csvm --action=import --apiKey=xxx --environmentId=xxx --filename=exportFile',
         'Read given zip file and recreates data in Kontent.ai environment'
     )
     .alias('e', 'environmentId')
@@ -47,11 +47,11 @@ const argv = yargs(process.argv.slice(2))
     .alias('is', 'isSecure')
     .describe('is', 'Disables / enables use of Secure API for export')
     .alias('a', 'action')
-    .describe('a', 'Action to perform. One of: "export" | "restore"')
+    .describe('a', 'Action to perform. One of: "export" | "import"')
     .alias('if', 'itemsFilename')
-    .describe('if', 'Name of items file to export / restore')
+    .describe('if', 'Name of items file to export / import')
     .alias('af', 'assetsFilename')
-    .describe('af', 'Name of assets file to export / restore')
+    .describe('af', 'Name of assets file to export / import')
     .alias('of', 'format')
     .describe('of', 'Format of the export. One of: "csv" | "json" | "jsonJoined"')
     .alias('b', 'baseUrl')
@@ -108,7 +108,7 @@ const exportAsync = async (config: ICliFileConfig) => {
     logDebug({ type: 'info', message: `Completed` });
 };
 
-const restoreAsync = async (config: ICliFileConfig) => {
+const importAsync = async (config: ICliFileConfig) => {
     const fileProcessorService = new FileProcessorService();
 
     if (!config.managementApiKey) {
@@ -184,8 +184,8 @@ const run = async () => {
 
     if (config.action === 'export') {
         await exportAsync(config);
-    } else if (config.action === 'restore') {
-        await restoreAsync(config);
+    } else if (config.action === 'import') {
+        await importAsync(config);
     } else {
         throw Error(`Invalid action`);
     }
