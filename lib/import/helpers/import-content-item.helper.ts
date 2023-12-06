@@ -2,6 +2,7 @@ import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-
 import { IImportedData, logAction, extractErrorMessage, is404Error } from '../../core/index.js';
 import { logDebug, logProcessingDebug } from '../../core/log-helper.js';
 import { IParsedContentItem } from '../import.models.js';
+import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 
 export class ImportContentItemHelper {
     async importContentItemsAsync(
@@ -15,12 +16,20 @@ export class ImportContentItemHelper {
     ): Promise<ContentItemModels.ContentItem[]> {
         const preparedItems: ContentItemModels.ContentItem[] = [];
         let itemIndex: number = 0;
-        for (const importContentItem of parsedContentItems) {
+
+        const categorizedParsedItems: ICategorizedParsedItems =
+            parsedItemsHelper.categorizeParsedItems(parsedContentItems);
+
+        logAction('skip', 'contentItem', {
+            title: `Skipping '${categorizedParsedItems.componentItems.length}' because they represent component items`
+        });
+
+        for (const importContentItem of categorizedParsedItems.regularItems) {
             itemIndex++;
 
             logProcessingDebug({
                 index: itemIndex,
-                totalCount: parsedContentItems.length,
+                totalCount: categorizedParsedItems.regularItems.length,
                 itemType: 'contentItem',
                 title: `'${importContentItem.system.name}' of type '${importContentItem.system.type}'`
             });

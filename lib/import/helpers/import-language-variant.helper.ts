@@ -10,6 +10,7 @@ import { logDebug, logProcessingDebug } from '../../core/log-helper.js';
 import { IImportedData, extractErrorMessage, is404Error, logAction, translationHelper } from '../../core/index.js';
 import { IParsedContentItem, IParsedElement } from '../import.models.js';
 import { importWorkflowHelper } from './import-workflow.helper.js';
+import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 
 export class ImportLanguageVariantHelper {
     async importLanguageVariantsAsync(
@@ -23,27 +24,27 @@ export class ImportLanguageVariantHelper {
         }
     ): Promise<void> {
         let itemIndex: number = 0;
-        for (const importContentItem of importContentItems) {
+
+        const categorizedParsedItems: ICategorizedParsedItems =
+            parsedItemsHelper.categorizeParsedItems(importContentItems);
+
+        logAction('skip', 'contentItem', {
+            title: `Skipping '${categorizedParsedItems.componentItems.length}' because they represent component items`
+        });
+
+        for (const importContentItem of categorizedParsedItems.regularItems) {
             try {
                 itemIndex++;
 
                 logProcessingDebug({
                     index: itemIndex,
-                    totalCount: importContentItems.length,
+                    totalCount: categorizedParsedItems.regularItems.length,
                     itemType: 'languageVariant',
                     title: `'${importContentItem.system.name}' of type '${importContentItem.system.type}' in language '${importContentItem.system.language}'`
                 });
 
-                // if content item does not have a workflow step it means it is used as a component within Rich text element
-                // such items are procesed within element transform
                 if (!importContentItem.system.workflow_step) {
-                    logAction('skip', 'languageVariant', {
-                        title: `Skipping item beause it's a component`,
-                        language: importContentItem.system.language,
-                        codename: importContentItem.system.codename,
-                        workflowStep: importContentItem.system.workflow_step
-                    });
-                    continue;
+                    throw Error(`Content item '${importContentItem.system.codename}' required workflow to be set`);
                 }
 
                 const upsertedContentItem = preparedContentItems.find(

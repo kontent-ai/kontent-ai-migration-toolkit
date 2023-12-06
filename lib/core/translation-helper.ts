@@ -130,7 +130,7 @@ export class TranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: data.value?.toString() ?? undefined
+                value: data.value?.toString() ?? null
             });
         },
         modular_content: (data) => {
@@ -162,7 +162,7 @@ export class TranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: data.value ? +data.value : undefined
+                value: data.value ? +data.value : null 
             });
         },
         rich_text: (data) => {
@@ -227,7 +227,7 @@ export class TranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: data.value?.toString() ?? undefined
+                value: data.value?.toString() ?? null
             });
         },
         url_slug: (data) => {
@@ -269,7 +269,7 @@ export class TranslationHelper {
         });
     }
 
-    private parseArrayValue(value: string | Array<string> | undefined): string[] {
+    private parseArrayValue(value: string | Array<string> | null | undefined): string[] {
         if (!value) {
             return [];
         }
