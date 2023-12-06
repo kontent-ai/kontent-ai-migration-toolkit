@@ -187,7 +187,7 @@ const run = async () => {
     } else if (config.action === 'import') {
         await importAsync(config);
     } else {
-        throw Error(`Invalid action`);
+        throw Error(`Invalid action '${config.action}'`);
     }
 };
 
