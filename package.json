@@ -1,7 +1,7 @@
 {
     "name": "xeno-test",
     "version": "0.0.16",
-    "description": "This utility enables users to export & import content data from / to Kontent.ai projects",
+    "description": "This program can be used to import content related data into Kontent.ai from various formats. Additionally, it can also be used to export Kontent.ai data using Delivery API.",
     "preferGlobal": true,
     "private": false,
     "bin": {
@@ -9,7 +9,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/Enngage/kontent-csv-manager"
+        "url": "https://github.com/Enngage/kontent-ai-migration-toolkit"
     },
     "engines": {
         "node": ">=16"
@@ -37,15 +37,11 @@
     },
     "keywords": [
         "Kontent.ai",
-        "Kontent.ai import tool",
+        "Kontent.ai import",
+        "Kontent.ai import toolkit",
         "Kontent.ai migration tool",
-        "Kontent.ai data manager",
-        "Kontent.ai CSV export",
-        "Kontent.ai CSV import",
-        "Kontent.ai JSON export",
-        "Kontent.ai JSON import",
-        "Kontent.ai data export",
-        "Kontent.ai data import"
+        "Kontent.ai CSV export & import",
+        "Kontent.ai JSON export & import"
     ],
     "license": "MIT",
     "dependencies": {
@@ -66,8 +62,8 @@
         "@types/json2csv": "5.0.7",
         "@types/jszip": "3.4.1",
         "@types/mime": "3.0.4",
-        "@types/node": "20.10.3",
-        "@types/uuid": "^9.0.7",
+        "@types/node": "20.10.4",
+        "@types/uuid": "9.0.7",
         "@types/yargs": "17.0.32",
         "@typescript-eslint/eslint-plugin": "6.13.2",
         "@typescript-eslint/parser": "6.13.2",
@@ -75,6 +71,6 @@
         "standard-version": "9.5.0",
         "ts-node": "10.9.1",
         "tslib": "2.6.2",
-        "typescript": "5.3.2"
+        "typescript": "5.3.3"
     }
 }
