@@ -28,7 +28,7 @@ export class ImportLanguageVariantHelper {
         const categorizedParsedItems: ICategorizedParsedItems =
             parsedItemsHelper.categorizeParsedItems(importContentItems);
 
-        logAction('skip', 'contentItem', {
+        logAction('skip', 'languageVariant', {
             title: `Skipping '${categorizedParsedItems.componentItems.length}' because they represent component items`
         });
 
