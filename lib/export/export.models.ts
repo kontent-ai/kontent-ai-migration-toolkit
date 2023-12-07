@@ -1,7 +1,16 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { IPackageMetadata } from '../core/index.js';
-import { IContentItem, IContentType, IDeliveryClient, ILanguage } from '@kontent-ai/delivery-sdk';
+import { ContentElementType, IExportTransformConfig } from '../core/index.js';
+import { IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
+
+export interface IExportAdapter {
+    exportAsync(): Promise<IExportAdapterResult>;
+}
+
+export interface IExportAdapterResult {
+    items: IExportContentItem[];
+    assets: IExportAsset[];
+}
 
 export interface IExportFilter {
     /**
@@ -22,23 +31,33 @@ export interface IExportConfig {
     exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;
     customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;
+    transformConfig?: IExportTransformConfig;
 }
 
-export interface IExportData {
-    contentItems: IContentItem[];
-    contentTypes: IContentType[];
-    languages: ILanguage[];
-    assets: IExportedAsset[];
-}
-
-export interface IExportAllResult {
-    metadata: IPackageMetadata;
-    data: IExportData;
-}
-
-export interface IExportedAsset {
+export interface IExportAsset {
     url: string;
     extension: string;
     assetId: string;
     filename: string;
+    binaryData: Buffer | Blob;
+}
+
+export interface IExportElement {
+    value: string | undefined | string[];
+    type: ContentElementType;
+    codename: string;
+}
+
+export interface IExportContentItem {
+    system: {
+        codename: string;
+        id: string;
+        name: string;
+        language: string;
+        type: string;
+        collection: string;
+        last_modified?: string;
+        workflow_step?: string;
+    };
+    elements: IExportElement[];
 }

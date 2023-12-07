@@ -1,2 +1,2 @@
 export * from './export.models.js';
-export * from './export.service.js';
+export * from './adapters/kontent-ai/kontent-ai-export-adapter.class.js';

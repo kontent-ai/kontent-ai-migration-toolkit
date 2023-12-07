@@ -1,11 +1,10 @@
-import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
 import { IImportContentType, IParsedContentItem } from '../../import/index.js';
 import { Readable } from 'stream';
 import { IFileData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
-import { IExportTransformConfig, translationHelper } from '../../core/index.js';
+import { IExportContentItem } from '../../export/index.js';
 
 interface ICsvItem {
     type: string;
@@ -13,28 +12,31 @@ interface ICsvItem {
     name: string;
     language: string;
     collection: string;
-    last_modified: string;
+    last_modified?: string;
     workflow_step?: string;
     [propertyName: string]: string | undefined | string[];
+}
+
+interface ITypeWrapper {
+    typeCodename: string;
+    items: IExportContentItem[];
+    elementCodenames: string[];
 }
 
 export class ItemCsvProcessorService extends BaseItemProcessorService {
     private readonly csvDelimiter: string = ',';
     public readonly name: string = 'csv';
 
-    async transformContentItemsAsync(
-        types: IContentType[],
-        items: IContentItem[],
-        config: IExportTransformConfig
-    ): Promise<IFileData[]> {
+    async transformContentItemsAsync(items: IExportContentItem[]): Promise<IFileData[]> {
         const fileData: IFileData[] = [];
-        const csvItems: ICsvItem[] = items.map((item) => this.mapToCsvItem(item, types, items, config));
 
-        for (const contentType of types) {
-            const contentItemsOfType = csvItems.filter((m) => m.type === contentType.system.codename);
-            const filename: string = `${contentType.system.codename}.csv`;
+        for (const typeWrapper of this.getTypeWrappers(items)) {
+            const contentItemsOfType = items
+                .filter((m) => m.system.type === typeWrapper.typeCodename)
+                .map((item) => this.mapToCsvItem(item, typeWrapper));
+            const filename: string = `${typeWrapper.typeCodename}.csv`;
 
-            const fieldsToStore: FieldInfo<string>[] = this.getFieldsToExport(contentType);
+            const fieldsToStore: FieldInfo<string>[] = this.getFieldsToExport(typeWrapper);
             const languageVariantsStream = new Readable();
             languageVariantsStream.push(JSON.stringify(contentItemsOfType));
             languageVariantsStream.push(null); // required to end the stream
@@ -115,41 +117,43 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
         return parsedItems;
     }
 
-    private mapToCsvItem(
-        item: IContentItem,
-        types: IContentType[],
-        items: IContentItem[],
-        config: IExportTransformConfig
-    ): ICsvItem {
+    private getTypeWrappers(items: IExportContentItem[]): ITypeWrapper[] {
+        const typeWrappers: ITypeWrapper[] = [];
+
+        for (const item of items) {
+            const existingFileData = typeWrappers.find((m) => m.typeCodename === item.system.type);
+
+            if (!existingFileData) {
+                typeWrappers.push({
+                    typeCodename: item.system.type,
+                    items: [item],
+                    // this is with the assumption that all items of same type have the same elements defined
+                    elementCodenames: item.elements.map((m) => m.codename)
+                });
+            } else {
+                existingFileData.items.push(item);
+            }
+        }
+
+        return typeWrappers;
+    }
+
+    private mapToCsvItem(item: IExportContentItem, typeWrapper: ITypeWrapper): ICsvItem {
         const csvItem: ICsvItem = {
             type: item.system.type,
             codename: item.system.codename,
             collection: item.system.collection,
             language: item.system.language,
-            last_modified: item.system.lastModified,
+            last_modified: item.system.last_modified,
             name: item.system.name,
-            workflow_step: item.system.workflowStep ?? undefined
+            workflow_step: item.system.workflow_step
         };
 
-        const type = types.find((m) => m.system.codename === item.system.type);
+        for (const elementCodename of typeWrapper.elementCodenames) {
+            const itemElement = item.elements.find((m) => m.codename === elementCodename);
 
-        if (!type) {
-            throw Error(`Missing content type '${item.system.type}' for item '${item.system.codename}'`);
-        }
-
-        for (const element of type.elements) {
-            if (element.codename) {
-                const variantElement = item.elements[element.codename];
-
-                if (variantElement) {
-                    csvItem[element.codename] = translationHelper.transformToExportElementValue({
-                        config: config,
-                        element: variantElement,
-                        item: item,
-                        items: items,
-                        types: types
-                    });
-                }
+            if (itemElement) {
+                csvItem[elementCodename] = itemElement.value;
             }
         }
 
@@ -163,7 +167,7 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
         });
     }
 
-    private getFieldsToExport(contentType: IContentType): FieldInfo<string>[] {
+    private getFieldsToExport(typeWrapper: ITypeWrapper): FieldInfo<string>[] {
         return [
             ...this.getSystemContentItemFields().map((m) => {
                 const field: FieldInfo<string> = {
@@ -173,21 +177,14 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
 
                 return field;
             }),
-            ...contentType.elements
-                .filter((m) => {
-                    if (m.codename?.length) {
-                        return true;
-                    }
-                    return false;
-                })
-                .map((m) => {
-                    const field: FieldInfo<string> = {
-                        label: m.codename ?? '',
-                        value: m.codename ?? ''
-                    };
+            ...typeWrapper.elementCodenames.map((m) => {
+                const field: FieldInfo<string> = {
+                    label: m,
+                    value: m
+                };
 
-                    return field;
-                })
+                return field;
+            })
         ];
     }
 }

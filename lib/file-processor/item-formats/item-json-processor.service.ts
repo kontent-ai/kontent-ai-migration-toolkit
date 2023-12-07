@@ -1,8 +1,11 @@
-import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IImportContentType, IParsedContentItem, IParsedElement } from '../../import/index.js';
 import { IFileData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
-import { IExportTransformConfig, translationHelper } from '../../core/index.js';
+import { IExportContentItem } from '../../export/index.js';
+
+interface IJsonElements {
+    [elementCodename: string]: string | string[] | undefined;
+}
 
 interface IJsonItem {
     system: {
@@ -11,27 +14,27 @@ interface IJsonItem {
         language: string;
         type: string;
         collection: string;
-        last_modified: string;
+        last_modified?: string;
         workflow_step?: string;
     };
-    elements: {
-        [elementCodename: string]: string | string[] | undefined;
-    };
+    elements: IJsonElements;
+}
+
+interface ITypeWrapper {
+    typeCodename: string;
+    items: IExportContentItem[];
 }
 
 export class ItemJsonProcessorService extends BaseItemProcessorService {
     public readonly name: string = 'json';
-    async transformContentItemsAsync(
-        types: IContentType[],
-        items: IContentItem[],
-        config: IExportTransformConfig
-    ): Promise<IFileData[]> {
-        const fileData: IFileData[] = [];
-        for (const contentType of types) {
-            const contentItemsOfType = items.filter((m) => m.system.type === contentType.system.codename);
 
-            const filename: string = `${contentType.system.codename}.json`;
-            const jsonItems: IJsonItem[] = contentItemsOfType.map((m) => this.mapToJsonItem(m, types, items, config));
+    async transformContentItemsAsync(items: IExportContentItem[]): Promise<IFileData[]> {
+        const fileData: IFileData[] = [];
+        const typeWrappers: ITypeWrapper[] = this.getTypeWrappers(items);
+        for (const typeWrapper of typeWrappers) {
+            const filename: string = `${typeWrapper.typeCodename}.json`;
+            const contentItemsOfType = items.filter((m) => m.system.type === typeWrapper.typeCodename);
+            const jsonItems: IJsonItem[] = contentItemsOfType.map((m) => this.mapToJsonItem(m));
 
             fileData.push({
                 data: jsonItems.length ? JSON.stringify(jsonItems) : '[]',
@@ -79,34 +82,30 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
         return parsedItems;
     }
 
-    private mapToJsonItem(
-        item: IContentItem,
-        types: IContentType[],
-        items: IContentItem[],
-        config: IExportTransformConfig
-    ): IJsonItem {
-        const elements: { [elementCodename: string]: string | string[] | undefined } = {};
+    private getTypeWrappers(items: IExportContentItem[]): ITypeWrapper[] {
+        const typeWrappers: ITypeWrapper[] = [];
 
-        const type = types.find((m) => m.system.codename === item.system.type);
+        for (const item of items) {
+            const existingFileData = typeWrappers.find((m) => m.typeCodename === item.system.type);
 
-        if (!type) {
-            throw Error(`Missing content type '${item.system.type}' for item '${item.system.codename}'`);
+            if (!existingFileData) {
+                typeWrappers.push({
+                    typeCodename: item.system.type,
+                    items: [item]
+                });
+            } else {
+                existingFileData.items.push(item);
+            }
         }
 
-        for (const element of type.elements) {
-            if (element.codename) {
-                const variantElement = item.elements[element.codename];
+        return typeWrappers;
+    }
 
-                if (variantElement) {
-                    elements[element.codename] = translationHelper.transformToExportElementValue({
-                        config: config,
-                        element: variantElement,
-                        item: item,
-                        items: items,
-                        types: types
-                    });
-                }
-            }
+    private mapToJsonItem(item: IExportContentItem): IJsonItem {
+        const jsonElements: IJsonElements = {};
+
+        for (const element of item.elements) {
+            jsonElements[element.codename] = element.value;
         }
 
         const jsonItem: IJsonItem = {
@@ -114,12 +113,12 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
                 codename: item.system.codename,
                 collection: item.system.collection,
                 language: item.system.language,
-                last_modified: item.system.lastModified,
+                last_modified: item.system.last_modified,
                 name: item.system.name,
                 type: item.system.type,
-                workflow_step: item.system.workflowStep ?? undefined
+                workflow_step: item.system.workflow_step
             },
-            elements: elements
+            elements: jsonElements
         };
         return jsonItem;
     }

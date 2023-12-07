@@ -1,9 +1,12 @@
-import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IImportContentType, IParsedContentItem } from '../../import/index.js';
 import { IFileData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
 import { ItemJsonProcessorService } from './item-json-processor.service.js';
-import { IExportTransformConfig } from '../../core/index.js';
+import { IExportContentItem } from '../../export/index.js';
+
+interface IJsonElements {
+    [elementCodename: string]: string | string[] | undefined;
+}
 
 interface IJsonItem {
     system: {
@@ -15,21 +18,15 @@ interface IJsonItem {
         last_modified: string;
         workflow_step?: string;
     };
-    elements: {
-        [elementCodename: string]: string | string[] | undefined;
-    };
+    elements: IJsonElements;
 }
 
 export class ItemJsonJoinedProcessorService extends BaseItemProcessorService {
     private readonly jsonProcessorService = new ItemJsonProcessorService();
 
     public readonly name: string = 'json';
-    async transformContentItemsAsync(
-        types: IContentType[],
-        items: IContentItem[],
-        config: IExportTransformConfig
-    ): Promise<IFileData[]> {
-        const multiFileJsonFileData = await this.jsonProcessorService.transformContentItemsAsync(types, items, config);
+    async transformContentItemsAsync(items: IExportContentItem[]): Promise<IFileData[]> {
+        const multiFileJsonFileData = await this.jsonProcessorService.transformContentItemsAsync(items);
 
         const allJsonItems: IJsonItem[] = multiFileJsonFileData
             .map((m) => {

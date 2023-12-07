@@ -1,9 +1,8 @@
-import { HttpService } from '@kontent-ai/core-sdk';
 import colors from 'colors';
 import JSZip from 'jszip';
 import { Blob } from 'buffer';
 
-import { IExportAllResult } from '../export/index.js';
+import { IExportAdapterResult, IExportContentItem } from '../export/index.js';
 import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset, IImportContentType } from '../import/index.js';
 import {
     IFileData,
@@ -14,30 +13,17 @@ import {
     ZipContext,
     IAssetFormatService
 } from './file-processor.models.js';
-import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import {
-    IExportTransformConfig,
-    IPackageMetadata,
-    defaultRetryStrategy,
-    formatBytes,
-    getExtension,
-    sleepAsync
-} from '../core/index.js';
+import { IExportTransformConfig, IPackageMetadata, formatBytes, getExtension } from '../core/index.js';
 import mime from 'mime';
 import { logDebug, logProcessingDebug } from '../core/log-helper.js';
 
 export class FileProcessorService {
-    private readonly delayBetweenAssetRequestsMs: number;
     private readonly zipContext: ZipContext = 'node.js';
 
     private readonly metadataName: string = '_metadata.json';
     private readonly binaryFilesFolderName: string = 'files';
 
-    private readonly httpService: HttpService = new HttpService();
-
-    constructor(config?: IFileProcessorConfig) {
-        this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 10;
-    }
+    constructor(config?: IFileProcessorConfig) {}
 
     async parseZipAsync(data: {
         items?: {
@@ -151,7 +137,7 @@ export class FileProcessorService {
     }
 
     async createItemsZipAsync(
-        exportData: IExportAllResult,
+        exportData: IExportAdapterResult,
         config: {
             transformConfig: IExportTransformConfig;
             itemFormatService: IItemFormatService;
@@ -163,22 +149,13 @@ export class FileProcessorService {
 
         logDebug({
             type: 'info',
-            message: `Adding metadata to zip`,
-            partA: this.metadataName
-        });
-        zip.file(this.metadataName, JSON.stringify(exportData.metadata));
-
-        logDebug({
-            type: 'info',
-            message: `Transforming '${exportData.data.contentItems.length.toString()}' content items`,
+            message: `Transforming '${exportData.items.length.toString()}' content items`,
             partA: config.itemFormatService?.name
         });
 
         const transformedLanguageVariantsFileData = await this.transformLanguageVariantsAsync(
-            exportData.data.contentTypes,
-            exportData.data.contentItems,
-            config.itemFormatService,
-            config.transformConfig
+            exportData.items,
+            config.itemFormatService
         );
 
         for (const fileInfo of transformedLanguageVariantsFileData) {
@@ -218,7 +195,7 @@ export class FileProcessorService {
     }
 
     async createAssetsZipAsync(
-        exportData: IExportAllResult,
+        exportData: IExportAdapterResult,
         config: {
             assetFormatService: IAssetFormatService;
             compressionLevel?: ZipCompressionLevel;
@@ -233,23 +210,14 @@ export class FileProcessorService {
             throw Error(`Could not create folder '${this.binaryFilesFolderName}'`);
         }
 
-        logDebug({
-            type: 'info',
-            message: `Storing metadata`,
-            partA: this.metadataName
-        });
-        zip.file(this.metadataName, JSON.stringify(exportData.metadata));
-
-        if (exportData.data.assets.length) {
+        if (exportData.assets.length) {
             logDebug({
                 type: 'info',
-                message: `Transforming '${exportData.data.assets.length.toString()}' asssets`,
+                message: `Transforming '${exportData.assets.length.toString()}' asssets`,
                 partA: config.assetFormatService?.name
             });
 
-            const transformedAssetsFileData = await config.assetFormatService.transformAssetsAsync(
-                exportData.data.assets
-            );
+            const transformedAssetsFileData = await config.assetFormatService.transformAssetsAsync(exportData.assets);
 
             for (const fileInfo of transformedAssetsFileData) {
                 logDebug({
@@ -260,37 +228,20 @@ export class FileProcessorService {
                 assetsFolder.file(fileInfo.filename, fileInfo.data);
             }
 
-            logDebug({
-                type: 'info',
-                message: `Preparing to download '${exportData.data.assets.length.toString()}' assets`
-            });
-
             let assetIndex: number = 1;
-            for (const asset of exportData.data.assets) {
+            for (const asset of exportData.assets) {
+                const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
+
                 logProcessingDebug({
                     index: assetIndex,
-                    totalCount: exportData.data.assets.length,
-                    itemType: 'binaryFile',
-                    title: asset.url
+                    totalCount: exportData.assets.length,
+                    itemType: 'zipFile',
+                    title: `'${assetFilename}'`
                 });
 
-                const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
-                const binaryDataResponse = await this.getBinaryDataFromUrlAsync(asset.url);
-
-                logDebug({
-                    type: 'download',
-                    message: `Binary file downloaded`,
-                    partA: asset.url,
-                    partB: formatBytes(binaryDataResponse.contentLength)
-                });
-
-                filesFolder.file(assetFilename, binaryDataResponse.data, {
+                filesFolder.file(assetFilename, asset.binaryData, {
                     binary: true
                 });
-
-                // create artificial delay between request to prevent network errors
-                await sleepAsync(this.delayBetweenAssetRequestsMs);
-
                 assetIndex++;
             }
 
@@ -342,12 +293,10 @@ export class FileProcessorService {
     }
 
     private async transformLanguageVariantsAsync(
-        types: IContentType[],
-        items: IContentItem[],
-        formatService: IItemFormatService,
-        config: IExportTransformConfig
+        items: IExportContentItem[],
+        formatService: IItemFormatService
     ): Promise<IFileData[]> {
-        return await formatService.transformContentItemsAsync(types, items, config);
+        return await formatService.transformContentItemsAsync(items);
     }
 
     private async parseAssetsFromFileAsync(
@@ -511,25 +460,5 @@ export class FileProcessorService {
         const text = await file.async('text');
 
         return JSON.parse(text);
-    }
-
-    private async getBinaryDataFromUrlAsync(url: string): Promise<{ data: any; contentLength: number }> {
-        // temp fix for Kontent.ai Repository not validating url
-        url = url.replace('#', '%23');
-
-        const response = await this.httpService.getAsync(
-            {
-                url
-            },
-            {
-                responseType: 'arraybuffer',
-                retryStrategy: defaultRetryStrategy
-            }
-        );
-
-        const contentLengthHeader = response.headers.find((m) => m.header.toLowerCase() === 'content-length');
-        const contentLength = contentLengthHeader ? +contentLengthHeader.value : 0;
-
-        return { data: response.data, contentLength: contentLength };
     }
 }

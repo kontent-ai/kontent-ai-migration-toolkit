@@ -1,7 +1,7 @@
 import { IContentType, ILanguage, IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
-import { logDebug } from '../../core/log-helper.js';
-import { ActionType, ItemType } from '../../core/index.js';
-import { IExportConfig } from '../export.models.js';
+import { logDebug } from '../../../../core/log-helper.js';
+import { ActionType, ContentElementType, ItemType, translationHelper } from '../../../../core/index.js';
+import { IExportConfig, IExportContentItem, IExportElement } from '../../../export.models.js';
 
 export class ExportContentItemHelper {
     async exportContentItemsAsync(
@@ -9,7 +9,7 @@ export class ExportContentItemHelper {
         config: IExportConfig,
         types: IContentType[],
         languages: ILanguage[]
-    ): Promise<IContentItem[]> {
+    ): Promise<{ exportContentItems: IExportContentItem[]; deliveryContentItems: IContentItem[] }> {
         const typesToExport: IContentType[] = this.getTypesToExport(config, types);
         const contentItems: IContentItem[] = [];
 
@@ -65,7 +65,40 @@ export class ExportContentItemHelper {
             }
         }
 
-        return contentItems;
+        return {
+            deliveryContentItems: contentItems,
+            exportContentItems: contentItems.map((m) => this.maptoExportContentItem(m, contentItems, types, config))
+        };
+    }
+
+    private maptoExportContentItem(
+        item: IContentItem,
+        items: IContentItem[],
+        types: IContentType[],
+        config: IExportConfig
+    ): IExportContentItem {
+        return {
+            system: item.system,
+            elements: Object.entries(item.elements).map(([key, element]) => {
+                const mappedElement: IExportElement = {
+                    codename: key,
+                    value: translationHelper.transformToExportElementValue({
+                        config: config.transformConfig ?? {
+                            richTextConfig: {
+                                replaceInvalidLinks: true
+                            }
+                        },
+                        element: element,
+                        item: item,
+                        items: items,
+                        types: types
+                    }),
+                    type: element.type as ContentElementType
+                };
+
+                return mappedElement;
+            })
+        };
     }
 
     private logItem(

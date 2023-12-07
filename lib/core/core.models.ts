@@ -10,7 +10,8 @@ import { IImportAsset, IParsedContentItem } from '../import/index.js';
 import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 
 export interface ICliFileConfig {
-    environmentId: string;
+    adapter?: ExportAdapter;
+    environmentId?: string;
     previewApiKey?: string;
     secureApiKey?: string;
     managementApiKey?: string;
@@ -28,6 +29,7 @@ export interface ICliFileConfig {
 }
 
 export type CliAction = 'export' | 'import';
+export type ExportAdapter = 'kontentAi';
 export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile' | 'zipFile';
 
 export type ActionType =

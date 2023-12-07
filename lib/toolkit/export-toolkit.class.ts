@@ -1,17 +1,16 @@
-import { ExportService, IExportAllResult, IExportConfig } from '../export/index.js';
+import { IExportAdapter, IExportAdapterResult } from '../export/index.js';
 import { FileProcessorService, IAssetFormatService, IItemFormatService } from '../file-processor/index.js';
 import { FileService } from '../node/index.js';
 
-export interface IExporToolkitConfig extends IExportConfig {}
+export interface IExporToolkitConfig {
+    adapter: IExportAdapter;
+}
 
 export class ExportToolkit {
     private readonly fileProcessorService = new FileProcessorService();
     private readonly fileService = new FileService();
-    private readonly exportService: ExportService;
 
-    constructor(config: IExporToolkitConfig) {
-        this.exportService = new ExportService(config);
-    }
+    constructor(private readonly config: IExporToolkitConfig) {}
 
     async exportAsync(config: {
         items: {
@@ -22,8 +21,8 @@ export class ExportToolkit {
             filename: string;
             formatService: IAssetFormatService;
         };
-    }): Promise<IExportAllResult> {
-        const data = await this.exportService.exportAllAsync();
+    }): Promise<IExportAdapterResult> {
+        const data = await this.config.adapter.exportAsync();
 
         const itemsZipFile = await this.fileProcessorService.createItemsZipAsync(data, {
             itemFormatService: config.items.formatService,
@@ -36,7 +35,7 @@ export class ExportToolkit {
 
         await this.fileService.writeFileAsync(config.items.filename, itemsZipFile);
 
-        if (data.data.assets.length && config.assets) {
+        if (data.assets.length && config.assets) {
             const assetsZipFile = await this.fileProcessorService.createAssetsZipAsync(data, {
                 assetFormatService: config.assets.formatService
             });

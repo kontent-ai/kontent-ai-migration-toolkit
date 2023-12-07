@@ -1,15 +1,10 @@
-import { IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IImportContentType, IImportContentTypeElement, IParsedContentItem } from '../import/index.js';
 import { IItemFormatService, IFileData } from './file-processor.models.js';
-import { IExportTransformConfig } from 'lib/index.js';
+import { IExportContentItem } from '../export/index.js';
 
 export abstract class BaseItemProcessorService implements IItemFormatService {
     abstract name: string;
-    abstract transformContentItemsAsync(
-        types: IContentType[],
-        items: IContentItem[],
-        config: IExportTransformConfig
-    ): Promise<IFileData[]>;
+    abstract transformContentItemsAsync(items: IExportContentItem[]): Promise<IFileData[]>;
     abstract parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]>;
 
     protected getSystemContentItemFields(): string[] {

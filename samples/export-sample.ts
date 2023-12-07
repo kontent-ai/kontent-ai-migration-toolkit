@@ -1,9 +1,10 @@
+import { KontentAiExportAdapter } from 'lib/index.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../lib/file-processor/index.js';
 
 import { ExportToolkit } from '../lib/toolkit/export-toolkit.class.js';
 
 const run = async () => {
-    const exportToolkit = new ExportToolkit({
+    const adapter = new KontentAiExportAdapter({
         environmentId: '<id>',
         exportAssets: true,
         isPreview: false,
@@ -15,6 +16,8 @@ const run = async () => {
             return response.data.items;
         }
     });
+
+    const exportToolkit = new ExportToolkit({ adapter });
 
     await exportToolkit.exportAsync({
         items: {

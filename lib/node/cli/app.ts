@@ -2,7 +2,7 @@
 import { readFileSync } from 'fs';
 import yargs from 'yargs';
 
-import { ICliFileConfig, CliAction, getExtension, extractErrorMessage } from '../../core/index.js';
+import { ICliFileConfig, CliAction, getExtension, extractErrorMessage, ExportAdapter } from '../../core/index.js';
 import {
     ItemCsvProcessorService,
     ProcessingFormat,
@@ -15,6 +15,7 @@ import {
 } from '../../file-processor/index.js';
 import { logDebug } from '../../core/log-helper.js';
 import { ExportToolkit, ImportToolkit } from '../../toolkit/index.js';
+import { IExportAdapter, KontentAiExportAdapter } from '../../export/index.js';
 
 type Args = { [key: string]: string | unknown };
 
@@ -27,6 +28,10 @@ const argv = yargs(process.argv.slice(2))
         'csvm --action=import --apiKey=xxx --environmentId=xxx --filename=exportFile',
         'Read given zip file and recreates data in Kontent.ai environment'
     )
+    .alias('a', 'action')
+    .describe('a', 'Type of action to execute')
+    .alias('ad', 'adapter')
+    .describe('ad', 'Adapter used to export data')
     .alias('e', 'environmentId')
     .describe('e', 'environmentId')
     .alias('mapi', 'apiKey')
@@ -64,17 +69,33 @@ const argv = yargs(process.argv.slice(2))
     .alias('h', 'help').argv;
 
 const exportAsync = async (config: ICliFileConfig) => {
-    const exportToolkit = new ExportToolkit({
-        environmentId: config.environmentId,
-        managementApiKey: config.managementApiKey,
-        previewApiKey: config.previewApiKey,
-        secureApiKey: config.secureApiKey,
-        isPreview: config.isPreview,
-        isSecure: config.isSecure,
-        baseUrl: config.baseUrl,
-        exportTypes: config.exportTypes,
-        exportAssets: config.exportAssets
-    });
+    if (!config.adapter) {
+        throw Error(`Missing 'adapter' config`);
+    }
+
+    let adapter: IExportAdapter | undefined;
+
+    if (config.adapter === 'kontentAi') {
+        if (!config.environmentId) {
+            throw Error(`Invalid environment id`);
+        }
+
+        adapter = new KontentAiExportAdapter({
+            environmentId: config.environmentId,
+            managementApiKey: config.managementApiKey,
+            previewApiKey: config.previewApiKey,
+            secureApiKey: config.secureApiKey,
+            isPreview: config.isPreview,
+            isSecure: config.isSecure,
+            baseUrl: config.baseUrl,
+            exportTypes: config.exportTypes,
+            exportAssets: config.exportAssets
+        });
+    } else {
+        throw Error(`Missing adapter '${config.adapter}'`);
+    }
+
+    const exportToolkit = new ExportToolkit({ adapter });
 
     const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
     const assetsFilename = config.assetsFilename ?? getDefaultExportFilename('assets');
@@ -98,6 +119,9 @@ const exportAsync = async (config: ICliFileConfig) => {
 const importAsync = async (config: ICliFileConfig) => {
     if (!config.managementApiKey) {
         throw Error(`Missing 'managementApiKey' configuration option`);
+    }
+    if (!config.environmentId) {
+        throw Error(`Missing 'environmentId' configuration option`);
     }
 
     const itemsFilename: string | undefined = config.itemsFilename;
@@ -169,8 +193,10 @@ const getConfig = async () => {
 
     const action: CliAction = getRequiredArgumentValue(resolvedArgs, 'action') as CliAction;
     const format: string | undefined = getOptionalArgumentValue(resolvedArgs, 'format');
+    const adapter: string | undefined = getOptionalArgumentValue(resolvedArgs, 'adapter');
 
     let mappedFormat: ProcessingFormat = 'csv';
+    let mappedAdapter: ExportAdapter = 'kontentAi';
 
     if (format?.toLowerCase() === 'csv'.toLowerCase()) {
         mappedFormat = 'csv';
@@ -181,6 +207,14 @@ const getConfig = async () => {
     } else {
         if (action === 'export') {
             throw Error(`Unsupported export format '${format}'`);
+        }
+    }
+
+    if (adapter?.toLowerCase() === 'kontentAi'.toLowerCase()) {
+        mappedAdapter = 'kontentAi';
+    } else {
+        if (action === 'export') {
+            throw Error(`Unsupported adapter '${adapter}'`);
         }
     }
 
@@ -202,6 +236,7 @@ const getConfig = async () => {
         isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview', false),
         isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure', false),
         replaceInvalidLinks: getBooleanArgumentvalue(resolvedArgs, 'replaceInvalidLinks', false),
+        adapter: mappedAdapter,
         format: mappedFormat
     };
 

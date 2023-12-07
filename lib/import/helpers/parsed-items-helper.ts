@@ -1,4 +1,4 @@
-import { IParsedContentItem } from 'lib/index.js';
+import { IParsedContentItem } from "../import.models.js";
 
 export interface ICategorizedParsedItems {
     componentItems: IParsedContentItem[];

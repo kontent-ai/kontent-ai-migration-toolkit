@@ -3,14 +3,14 @@ import { AsyncParser, FieldInfo } from 'json2csv';
 import { IParsedAsset } from '../../import/index.js';
 import { Readable } from 'stream';
 import { IFileData } from '../file-processor.models.js';
-import { IExportedAsset } from '../../export/index.js';
+import { IExportAsset } from '../../export/index.js';
 import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
 
 export class AssetCsvProcessorService extends BaseAssetProcessorService {
     private readonly csvDelimiter: string = ',';
     public readonly name: string = 'csv';
 
-    async transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]> {
+    async transformAssetsAsync(assets: IExportAsset[]): Promise<IFileData[]> {
         const asssetFiels: FieldInfo<string>[] = this.getAssetFields();
         const stream = new Readable();
         stream.push(JSON.stringify(assets));

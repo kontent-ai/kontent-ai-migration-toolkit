@@ -32,6 +32,9 @@ export class TranslationHelper {
     private readonly dataNewWindowAttributeName: string = 'data-new-window';
     private readonly elementsBuilder = new LanguageVariantElementsBuilder();
 
+    /**
+     * Elements transform used by Kontent.ai export adapter
+     */
     private readonly exportTransforms: Readonly<Record<ElementType, ExportTransformFunc>> = {
         text: (data) => data.element.value,
         number: (data) => data.element.value,
@@ -67,6 +70,9 @@ export class TranslationHelper {
         unknown: (data) => data.element.value
     };
 
+    /**
+     * General import transforms used to prepare parsed element values for Management API
+     */
     private readonly importTransforms: Readonly<Record<ContentElementType, ImportTransformFunc>> = {
         guidelines: (data) => {
             throw Error(`Guidelines import transform not supported`);
@@ -162,7 +168,7 @@ export class TranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: data.value ? +data.value : null 
+                value: data.value ? +data.value : null
             });
         },
         rich_text: (data) => {

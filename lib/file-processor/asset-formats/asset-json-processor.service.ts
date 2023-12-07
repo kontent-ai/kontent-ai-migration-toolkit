@@ -1,4 +1,4 @@
-import { IExportedAsset } from '../../export/index.js';
+import { IExportAsset } from '../../export/index.js';
 import { IParsedAsset } from '../../import/index.js';
 import { IFileData } from '../file-processor.models.js';
 import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
@@ -6,7 +6,7 @@ import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
 export class AssetJsonProcessorService extends BaseAssetProcessorService {
     public readonly name: string = 'json';
 
-    async transformAssetsAsync(assets: IExportedAsset[]): Promise<IFileData[]> {
+    async transformAssetsAsync(assets: IExportAsset[]): Promise<IFileData[]> {
         return [
             {
                 filename: 'assets.json',
