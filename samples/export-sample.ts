@@ -7,7 +7,13 @@ const run = async () => {
         environmentId: '<id>',
         exportAssets: true,
         isPreview: false,
-        isSecure: false
+        isSecure: false,
+        // optional filter to customize what items are exported
+        customItemsExport: async (client) => {
+            // return only the items you want to export by applying filters, parameters etc..
+            const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();
+            return response.data.items;
+        }
     });
 
     await exportToolkit.exportAsync({

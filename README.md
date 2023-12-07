@@ -148,7 +148,7 @@ const importToolkit = new ImportToolkit({
 await importToolkit.importFromFileAsync();
 ```
 
-## Customizing exported items
+## Exporting via code
 
 You may customize what items get exported by using the `customItemsExport` option when exporting in code. This option
 allows you to export exactly the items you need, however be aware that the exported items may reference other items that
@@ -157,15 +157,28 @@ you might not export and subsequent re-import may fail because of the fact that 
 Example:
 
 ```typescript
-const exportService = new ExportService({
+const exportToolkit = new ExportToolkit({
     environmentId: '<id>',
     exportAssets: true,
     isPreview: false,
     isSecure: false,
+    // optional filter to customize what items are exported
     customItemsExport: async (client) => {
         // return only the items you want to export by applying filters, parameters etc..
         const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();
         return response.data.items;
+    }
+});
+
+await exportToolkit.exportAsync({
+    items: {
+        filename: 'items-export.zip',
+        formatService: new ItemJsonProcessorService() // or different one, see readme.md
+    },
+    // assets are optional
+    assets: {
+        filename: 'assets-export.zip',
+        formatService: new AssetJsonProcessorService() // or different one, see readme.md
     }
 });
 ```
