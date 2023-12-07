@@ -6,6 +6,13 @@ and re-import it to the same or different project)
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
 
+### Important Disclaimer
+
+> We do not recommend importing data into your production environment directly (= without proper testing), unless you
+> are absolutely sure you know what you are doing. Instead, we recommend that you create a new environment based on your
+> production and test the import first. If the import meets your expectations, you may swap environments or run it again
+> on the production.
+
 ## How it works
 
 > When importing it is essential that `Content types`, `Taxonomies` and `Workflows` matches the input data. Any
@@ -32,9 +39,7 @@ Install package globally:
 
 ## Use via CLI
 
-### Configuration
-
-#### Export Configuration
+### Export Configuration
 
 | Config              | Value                                                                                                                                                                                                                 |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -52,7 +57,7 @@ Install package globally:
 | assetsFilename      | Name of the assets file that will be created in folder where script is run. Only zip is supported.                                                                                                                    |
 | baseUrl             | Custom base URL for Kontent.ai API calls                                                                                                                                                                              |
 
-#### Import Configuration
+### Import Configuration
 
 | Config               | Value                                                                                                                                                   |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -65,14 +70,7 @@ Install package globally:
 | baseUrl              | Custom base URL for Kontent.ai API calls                                                                                                                |
 | skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
 
-### Execution
-
-> We do not recommend importing data into your production environment directly (= without proper testing), unless you
-> are absolutely sure you know what you are doing. Instead, we recommend that you create a new environment based on your
-> production and test the import first. If the import meets your expectations, you may swap environments or run it again
-> on the production.
-
-#### Import CLI samples
+### Import CLI samples
 
 Import from zip:
 
@@ -90,7 +88,7 @@ Import from csv file:
 
 `kdm --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv --format=csv`
 
-#### Export CLI samples
+### Export CLI samples
 
 Export from Kontent.ai environment as json without assets:
 
@@ -104,7 +102,7 @@ Export from Kontent.ai environment as single json file with assets:
 
 `kdm --action=export --adapter=kontentAi --environmentId=xxx --format=jsonJoined --exportAssets=true`
 
-#### CLI help
+### CLI help
 
 To see available commands use:
 
