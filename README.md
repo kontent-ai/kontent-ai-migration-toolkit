@@ -10,7 +10,7 @@ This library can only be used in `node.js`. Use in Browsers is not supported.
 
 > We do not recommend importing data into your production environment directly (= without proper testing), unless you
 > are absolutely sure you know what you are doing. Instead, we recommend that you create a new environment based on your
-> production and test the import first. If the import meets your expectations, you may swap environments or run it again
+> production and test the import there first. If the import meets your expectations, you may swap environments or run it again
 > on the production.
 
 ## How it works
