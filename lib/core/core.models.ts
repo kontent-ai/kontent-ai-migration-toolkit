@@ -14,12 +14,11 @@ export interface ICliFileConfig {
     previewApiKey?: string;
     secureApiKey?: string;
     managementApiKey?: string;
-    format?: ProcessingFormat;
+    format: ProcessingFormat;
     isPreview: boolean;
     isSecure: boolean;
     skipFailedItems: boolean;
     replaceInvalidLinks: boolean;
-    importAssets: boolean;
     action: CliAction;
     itemsFilename?: string;
     assetsFilename?: string;
@@ -70,7 +69,6 @@ export interface IImportedData {
         original: IParsedContentItem;
         imported: ContentItemModels.ContentItem;
     }[];
-
     languageVariants: {
         original: any;
         imported: LanguageVariantModels.ContentItemLanguageVariant;

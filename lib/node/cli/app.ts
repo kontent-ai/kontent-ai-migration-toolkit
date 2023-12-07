@@ -3,12 +3,9 @@ import { readFileSync } from 'fs';
 import yargs from 'yargs';
 
 import { ICliFileConfig, CliAction, getExtension, extractErrorMessage } from '../../core/index.js';
-import { ExportService } from '../../export/index.js';
-import { ImportService } from '../../import/index.js';
 import {
     ItemCsvProcessorService,
     ProcessingFormat,
-    FileProcessorService,
     IItemFormatService,
     ItemJsonProcessorService,
     ItemJsonJoinedProcessorService,
@@ -16,8 +13,8 @@ import {
     AssetCsvProcessorService,
     AssetJsonProcessorService
 } from '../../file-processor/index.js';
-import { FileService } from '../file/file.service.js';
 import { logDebug } from '../../core/log-helper.js';
+import { ExportToolkit, ImportToolkit } from '../../toolkit/index.js';
 
 type Args = { [key: string]: string | unknown };
 
@@ -42,8 +39,6 @@ const argv = yargs(process.argv.slice(2))
     .describe('ip', 'Disables / enables use of preview API for export')
     .alias('ea', 'exportAssets')
     .describe('ea', 'Disables / enables asset export')
-    .alias('ia', 'importAssets')
-    .describe('ia', 'Disables / enables asset import')
     .alias('is', 'isSecure')
     .describe('is', 'Disables / enables use of Secure API for export')
     .alias('a', 'action')
@@ -69,7 +64,7 @@ const argv = yargs(process.argv.slice(2))
     .alias('h', 'help').argv;
 
 const exportAsync = async (config: ICliFileConfig) => {
-    const exportService = new ExportService({
+    const exportToolkit = new ExportToolkit({
         environmentId: config.environmentId,
         managementApiKey: config.managementApiKey,
         previewApiKey: config.previewApiKey,
@@ -81,42 +76,34 @@ const exportAsync = async (config: ICliFileConfig) => {
         exportAssets: config.exportAssets
     });
 
-    const fileService = new FileService();
-    const fileProcessorService = new FileProcessorService();
-
-    const response = await exportService.exportAllAsync();
-
-    const itemsZipFileData = await fileProcessorService.createItemsZipAsync(response, {
-        itemFormatService: getItemFormatService(config.format),
-        transformConfig: {
-            richTextConfig: {
-                replaceInvalidLinks: config.replaceInvalidLinks
-            }
-        }
-    });
-
     const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
-    await fileService.writeFileAsync(getZipFilename(itemsFilename), itemsZipFileData);
+    const assetsFilename = config.assetsFilename ?? getDefaultExportFilename('assets');
 
-    if (config.assetsFilename && config.exportAssets) {
-        const assetsZipFileData = await fileProcessorService.createAssetsZipAsync(response, {
-            assetFormatService: getAssetFormatService(config.format)
-        });
-        await fileService.writeFileAsync(getZipFilename(config.assetsFilename), assetsZipFileData);
-    }
+    await exportToolkit.exportAsync({
+        items: {
+            filename: itemsFilename,
+            formatService: getItemFormatService(config.format)
+        },
+        assets: assetsFilename
+            ? {
+                  filename: assetsFilename,
+                  formatService: getAssetFormatService(config.format)
+              }
+            : undefined
+    });
 
     logDebug({ type: 'info', message: `Completed` });
 };
 
 const importAsync = async (config: ICliFileConfig) => {
-    const fileProcessorService = new FileProcessorService();
-
     if (!config.managementApiKey) {
         throw Error(`Missing 'managementApiKey' configuration option`);
     }
 
-    const fileService = new FileService();
-    const importService = new ImportService({
+    const itemsFilename: string | undefined = config.itemsFilename;
+    const assetsFilename: string | undefined = config.assetsFilename;
+
+    const importToolkit = new ImportToolkit({
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
         environmentId: config.environmentId,
@@ -128,50 +115,29 @@ const importAsync = async (config: ICliFileConfig) => {
             asset: (asset) => {
                 return true;
             }
-        }
+        },
+        items: itemsFilename
+            ? {
+                  filename: itemsFilename,
+                  formatService: getItemFormatService(config.format)
+              }
+            : undefined,
+        assets: assetsFilename
+            ? {
+                  filename: assetsFilename,
+                  formatService: getAssetFormatService(config.format)
+              }
+            : undefined
     });
 
-    const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
+    const itemsFileExtension = getExtension(itemsFilename ?? '')?.toLowerCase();
 
-    const contentTypes = await importService.getImportContentTypesAsync();
-    const itemsFile = await fileService.loadFileAsync(itemsFilename);
-    const itemsFileExtension = getExtension(itemsFilename);
-
-    let assetsFile: Buffer | undefined = undefined;
-    if (config.importAssets) {
-        const assetsFilename = config.assetsFilename ?? getDefaultExportFilename('assets');
-
-        logDebug({
-            type: 'info',
-            message: `Importing assets from file`,
-            partA: assetsFilename
-        });
-
-        assetsFile = await fileService.loadFileAsync(assetsFilename);
-        const assetsFileExtension = getExtension(assetsFilename);
-
-        if (!assetsFileExtension?.endsWith('zip')) {
-            throw Error(`Assets required zip folder. Received '${config.assetsFilename}'`);
-        }
-    } else {
-        logDebug({
-            type: 'info',
-            message: `Skipping assets import`
-        });
-    }
-
-    if (itemsFileExtension?.endsWith('zip')) {
-        const data = await fileProcessorService.extractZipAsync(itemsFile, assetsFile, contentTypes, {
-            assetFormatService: getAssetFormatService(config.format),
-            itemFormatService: getItemFormatService(config.format)
-        });
-        await importService.importFromSourceAsync(data);
-    } else if (itemsFileExtension?.endsWith('csv')) {
-        const data = await fileProcessorService.extractCsvFileAsync(itemsFile, contentTypes);
-        await importService.importFromSourceAsync(data);
-    } else if (itemsFileExtension?.endsWith('json')) {
-        const data = await fileProcessorService.extractJsonFileAsync(itemsFile, contentTypes);
-        await importService.importFromSourceAsync(data);
+    if (itemsFileExtension?.endsWith('zip'.toLowerCase())) {
+        await importToolkit.importFromZipAsync();
+    } else if (itemsFileExtension?.endsWith('csv'.toLowerCase())) {
+        await importToolkit.importFromFileAsync();
+    } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
+        await importToolkit.importFromFileAsync();
     } else {
         throw Error(`Unsupported file type '${itemsFileExtension}'`);
     }
@@ -235,7 +201,6 @@ const getConfig = async () => {
         exportAssets: getBooleanArgumentvalue(resolvedArgs, 'exportAssets', false),
         isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview', false),
         isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure', false),
-        importAssets: getBooleanArgumentvalue(resolvedArgs, 'importAssets', false),
         replaceInvalidLinks: getBooleanArgumentvalue(resolvedArgs, 'replaceInvalidLinks', false),
         format: mappedFormat
     };
@@ -304,11 +269,4 @@ function getBooleanArgumentvalue(args: Args, argName: string, defaultValue: bool
     }
 
     return value.toLowerCase() === 'true'.toLowerCase();
-}
-
-function getZipFilename(filename: string): string {
-    if (filename.toLowerCase()?.endsWith('.zip')) {
-        return filename;
-    }
-    return `${filename}.zip`;
 }

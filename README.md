@@ -25,8 +25,8 @@ the source data.
 ### How are assets imported?
 
 If asset exists in target project, the asset upload will be skipped and not uploaded at all. If asset doesn't exist, the
-asset from the zip folder will be uploaded. The Migration Toolkit will also set `external_id` of newly uploaded assets to equal their
-original id. There are some limitations to importing assets, see *Limitations* sections for more info.
+asset from the zip folder will be uploaded. The Migration Toolkit will also set `external_id` of newly uploaded assets
+to equal their original id. There are some limitations to importing assets, see _Limitations_ sections for more info.
 
 ## Installation
 
@@ -38,24 +38,23 @@ Install package globally:
 
 ### Configuration
 
-| Config               | Value                                                                                                                                                                                                           |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **environmentId**    | Id of Kontent.ai project **(required)**                                                                                                                                                                         |
-| **managementApiKey** | Management API key **(required for import, optional export)**                                                                                                                                                   |
-| **action**           | Action. Available options: `import` & `export` **(required)**                                                                                                                                                   |
-| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                                                                                    |
-| secureApiKey         | API key for secure Access                                                                                                                                                                                       |
-| previewApiKey        | API key for preview                                                                                                                                                                                             |
-| isSecure             | When set to `true`, Secure API will be used to make data export. Defaults to `false`                                                                                                                            |
-| isPreview            | When set to `true`, Preview API will be used to make data export. Defaults to `false`                                                                                                                           |
-| exportAssets         | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                                                                                      |
-| importAssets         | When set to `true`, assets & binary files will be imported. This requires the asset's zip file (can be created with export action). Defaults to `false`                                                         |
+| Config               | Value                                                                                                                                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **environmentId**    | Id of Kontent.ai project **(required)**                                                                                                                                                                               |
+| **managementApiKey** | Management API key **(required for import, optional export)**                                                                                                                                                         |
+| **action**           | Action. Available options: `import` & `export` **(required)**                                                                                                                                                         |
+| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                                                                                          |
+| secureApiKey         | API key for secure Access                                                                                                                                                                                             |
+| previewApiKey        | API key for preview                                                                                                                                                                                                   |
+| isSecure             | When set to `true`, Secure API will be used to make data export. Defaults to `false`                                                                                                                                  |
+| isPreview            | When set to `true`, Preview API will be used to make data export. Defaults to `false`                                                                                                                                 |
+| exportAssets         | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                                                                                            |
 | replaceInvalidLinks  | RTE may contain links to invalid items. You won't be able to re-import such items due to validation error. By setting this to `true` the Migration Toolkit will automatically remove these links. Defaults to `false` |
-| itemsFilename        | Name of zip used for export / import items                                                                                                                                                                      |
-| assetsFilename       | Name of zip used for export / import assets                                                                                                                                                                     |
-| baseUrl              | Custom base URL for Management API calls.                                                                                                                                                                       |
-| exportTypes          | Array of content types codenames of which content items should be exported. By default all items of all types are exported                                                                                      |
-| skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false`                                                         |
+| itemsFilename        | Name of _file_ (zip, json, csv...) used for export / import items                                                                                                                                                     |
+| assetsFilename       | Name of _zip file_ used for export / import assets. Assets are always imported & exported via `.zip` file                                                                                                             |
+| baseUrl              | Custom base URL for Management API calls.                                                                                                                                                                             |
+| exportTypes          | Array of content types codenames of which content items should be exported. By default all items of all types are exported                                                                                            |
+| skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false`                                                               |
 
 ### Execution
 
@@ -63,21 +62,29 @@ Install package globally:
 > a new environment based on your production and test the import first. If the import completes successfully, you may
 > swap environments or run it again on the production.
 
-Export without assets:
+#### Export CLI samples
+
+Export as json without assets:
+
+`kdm --action=export --environmentId=xxx --format=json`
+
+Export as csv without assets:
 
 `kdm --action=export --environmentId=xxx --format=csv`
 
-Export with assets:
+Export as single json file with assets:
 
-`kdm --action=export --environmentId=xxx --format=csv --exportAssets=false`
+`kdm --action=export --environmentId=xxx --format=jsonJoined --exportAssets=true`
 
-Import without assets:
+#### Import CLI samples
 
-`kdm --action=import --apiKey=xxx --environmentId=xxx`
+Import from zip:
 
-Import with assets:
+`kdm --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip`
 
-`kdm --action=import --apiKey=xxx --environmentId=xxx --importAssets=true`
+Import from zip with assets:
+
+`kdm --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --assetsFilename=assets.zip`
 
 Import from json file:
 
@@ -116,6 +123,30 @@ To execute your action run:
 
 See https://github.com/Enngage/kontent-ai-migration-toolkit/tree/main/samples for examples of how to run this library in
 code rather then via command line.
+
+## Importing via code
+
+Example below shows the most basic example of importing `content items` from a single `json` file
+
+```typescript
+const importToolkit = new ImportToolkit({
+    environmentId: '<id>',
+    managementApiKey: '<mapiKey>',
+    skipFailedItems: false,
+    // be careful when filtering data to import because you might break data consistency.
+    // for example, it might not be possible to import language variant without first importing content item and so on.
+    canImport: {
+        asset: (item) => true, // all assets will be imported
+        contentItem: (item) => true // all content items will be imported,
+    },
+    items: {
+        filename: 'items.json',
+        formatService: new ItemJsonProcessorService()
+    }
+});
+
+await importToolkit.importFromFileAsync();
+```
 
 ## Customizing exported items
 

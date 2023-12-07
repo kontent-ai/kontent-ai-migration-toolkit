@@ -1,4 +1,5 @@
 import { HttpService } from '@kontent-ai/core-sdk';
+import colors from 'colors';
 import JSZip from 'jszip';
 import { Blob } from 'buffer';
 
@@ -23,8 +24,6 @@ import {
     sleepAsync
 } from '../core/index.js';
 import mime from 'mime';
-import { ItemCsvProcessorService } from './item-formats/item-csv-processor.service.js';
-import { ItemJsonProcessorService } from './item-formats/item-json-processor.service.js';
 import { logDebug, logProcessingDebug } from '../core/log-helper.js';
 
 export class FileProcessorService {
@@ -35,37 +34,43 @@ export class FileProcessorService {
     private readonly binaryFilesFolderName: string = 'files';
 
     private readonly httpService: HttpService = new HttpService();
-    private readonly itemCsvProcessorService: ItemCsvProcessorService = new ItemCsvProcessorService();
-    private readonly itemJsonProcessorService: ItemJsonProcessorService = new ItemJsonProcessorService();
 
     constructor(config?: IFileProcessorConfig) {
         this.delayBetweenAssetRequestsMs = config?.delayBetweenAssetDownloadRequestsMs ?? 10;
     }
 
-    async extractZipAsync(
-        itemsFile: Buffer,
-        assetsFile: Buffer | undefined,
-        types: IImportContentType[],
-        config: { itemFormatService: IItemFormatService; assetFormatService: IAssetFormatService }
-    ): Promise<IImportSource> {
-        logDebug({
-            type: 'info',
-            message: 'Loading items zip file'
-        });
-        const itemsZipFile = await JSZip.loadAsync(itemsFile, {});
-        logDebug({
-            type: 'info',
-            message: 'Parsing items zip data'
-        });
-
+    async parseZipAsync(data: {
+        items?: {
+            file: Buffer;
+            formatService: IItemFormatService;
+        };
+        assets?: {
+            file: Buffer;
+            formatService: IAssetFormatService;
+        };
+        types: IImportContentType[];
+    }): Promise<IImportSource> {
+        let itemsZipFile: JSZip | undefined = undefined;
         let assetsZipFile: JSZip | undefined = undefined;
-        if (assetsFile) {
+
+        if (data.items) {
+            logDebug({
+                type: 'info',
+                message: 'Loading items zip file'
+            });
+            itemsZipFile = await JSZip.loadAsync(data.items.file, {});
+            logDebug({
+                type: 'info',
+                message: 'Parsing items zip data'
+            });
+        }
+
+        if (data.assets) {
             logDebug({
                 type: 'info',
                 message: 'Loading assets zip file'
             });
-            assetsZipFile = await JSZip.loadAsync(assetsFile, {});
-
+            assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
             logDebug({
                 type: 'info',
                 message: 'Parsing assets zip data'
@@ -74,12 +79,16 @@ export class FileProcessorService {
 
         const result: IImportSource = {
             importData: {
-                items: await this.parseContentItemsFromZipAsync(itemsZipFile, types, config.itemFormatService),
-                assets: assetsZipFile
-                    ? await this.parseAssetsFromFileAsync(assetsZipFile, config.assetFormatService)
-                    : []
+                items:
+                    itemsZipFile && data.items
+                        ? await this.parseContentItemsFromZipAsync(itemsZipFile, data.types, data.items.formatService)
+                        : [],
+                assets:
+                    assetsZipFile && data.assets
+                        ? await this.parseAssetsFromFileAsync(assetsZipFile, data.assets?.formatService)
+                        : []
             },
-            metadata: await this.parseMetadataFromZipAsync(itemsZipFile, this.metadataName)
+            metadata: itemsZipFile ? await this.parseMetadataFromZipAsync(itemsZipFile, this.metadataName) : undefined
         };
 
         logDebug({
@@ -90,45 +99,52 @@ export class FileProcessorService {
         return result;
     }
 
-    async extractCsvFileAsync(file: Buffer, types: IImportContentType[]): Promise<IImportSource> {
-        logDebug({
-            type: 'info',
-            message: 'Reading CSV file'
-        });
+    async parseFileAsync(data: {
+        items?: {
+            file: Buffer;
+            formatService: IItemFormatService;
+        };
+        assets?: {
+            file: Buffer;
+            formatService: IAssetFormatService;
+        };
+        types: IImportContentType[];
+    }): Promise<IImportSource> {
+        let parsedItems: IParsedContentItem[] = [];
+        let parsedAssets: IImportAsset[] = [];
+
+        if (data.items) {
+            logDebug({
+                type: 'info',
+                message: `Parsing items file with '${colors.yellow(data.items.formatService.name)}' `
+            });
+
+            parsedItems = await data.items.formatService.parseContentItemsAsync(data.items.file.toString(), data.types);
+        }
+
+        if (data.assets) {
+            logDebug({
+                type: 'info',
+                message: `Parsing assets file with '${colors.yellow(data.assets.formatService.name)}' `
+            });
+
+            const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
+            parsedAssets = await this.parseAssetsFromFileAsync(assetsZipFile, data.assets.formatService);
+        }
 
         const result: IImportSource = {
             importData: {
-                items: await this.itemCsvProcessorService.parseContentItemsAsync(file.toString(), types),
-                assets: []
+                items: parsedItems,
+                assets: parsedAssets
             },
             metadata: undefined
         };
 
         logDebug({
             type: 'info',
-            message: 'Reading CSV file completed'
-        });
-
-        return result;
-    }
-
-    async extractJsonFileAsync(file: Buffer, types: IImportContentType[]): Promise<IImportSource> {
-        logDebug({
-            type: 'info',
-            message: 'Reading JSON file'
-        });
-
-        const result: IImportSource = {
-            importData: {
-                items: await this.itemJsonProcessorService.parseContentItemsAsync(file.toString(), types),
-                assets: []
-            },
-            metadata: undefined
-        };
-
-        logDebug({
-            type: 'info',
-            message: 'Reading JSON file completed'
+            message: `Parsing completed. Parsed '${colors.yellow(
+                result.importData.items.length.toString()
+            )}' items and '${colors.yellow(result.importData.assets.length.toString())}' assets`
         });
 
         return result;
