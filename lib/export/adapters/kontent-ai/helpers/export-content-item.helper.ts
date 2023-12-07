@@ -78,7 +78,16 @@ export class ExportContentItemHelper {
         config: IExportConfig
     ): IExportContentItem {
         return {
-            system: item.system,
+            system: {
+                codename: item.system.codename,
+                name: item.system.name,
+                type: item.system.type,
+                language: item.system.language,
+                collection: item.system.collection,
+                id: item.system.id,
+                last_modified: item.system.lastModified,
+                workflow_step: item.system.workflowStep ?? undefined
+            },
             elements: Object.entries(item.elements).map(([key, element]) => {
                 const mappedElement: IExportElement = {
                     codename: key,
