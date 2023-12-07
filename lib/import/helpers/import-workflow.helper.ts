@@ -1,7 +1,6 @@
 import { ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import.models.js';
 import { defaultWorkflowCodename, logAction } from '../../core/index.js';
-import { logDebug } from '../../core/log-helper.js';
 
 export class ImportWorkflowHelper {
     getWorkflowForGivenStepById(workflowId: string, workflows: WorkflowModels.Workflow[]): WorkflowModels.Workflow {
@@ -33,11 +32,9 @@ export class ImportWorkflowHelper {
     ): Promise<void> {
         // check if workflow step exists in target project
         if (!this.doesWorkflowStepExist(workflowStepCodename, workflows)) {
-            logDebug({
-                type: 'warning',
-                message: `Could not change workflow step for item '${importContentItem.system.codename}' (${importContentItem.system.name}) because step '${workflowStepCodename}' does not exist in target project. Skipping workflow change.`
-            });
-            return;
+            throw Error(
+                `Could not change workflow step for item '${importContentItem.system.codename}' (${importContentItem.system.name}) because step with codename '${workflowStepCodename}' does not exist in target project.`
+            );
         }
 
         if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
