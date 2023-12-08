@@ -350,6 +350,10 @@ export class ElementTranslationHelper {
                     linkTag = linkTag.replace('data-item-id', this.linkCodenameAttributeName);
                 }
             }
+
+            // replace multiple spaces
+            linkTag = this.replaceMultipleSpacesWithSingleOne(linkTag);
+
             return linkTag;
         });
 
@@ -409,6 +413,10 @@ export class ElementTranslationHelper {
                     }
                 }
             }
+
+            // replace multiple spaces
+            objectTag = this.replaceMultipleSpacesWithSingleOne(objectTag);
+
             return objectTag;
         });
 
@@ -423,8 +431,12 @@ export class ElementTranslationHelper {
         const csvmLinkCodenameRegex = new RegExp(`${csvmLinkCodenameStart}(.+?)${csvmLinkCodenameEnd}`);
 
         const relStart: string = 'rel="';
-        const relEnd: string = '"';
+        const relEnd: string = '\\"';
         const relRegex = new RegExp(`${relStart}(.+?)${relEnd}`, 'g');
+
+        const hrefStart: string = 'href="';
+        const hrefEnd: string = '\\"';
+        const hrefRegex = new RegExp(`${hrefStart}(.+?)${hrefEnd}`, 'g');
 
         processedRichText = processedRichText.replaceAll(linkRegex, (linkTag) => {
             const codenameMatch = linkTag.match(csvmLinkCodenameRegex);
@@ -457,9 +469,20 @@ export class ElementTranslationHelper {
             }
 
             // remove rel attribute
-            linkTag = linkTag.replaceAll(relRegex, (relTag) => {
+            linkTag = linkTag.replaceAll(relRegex, (relAttr) => {
                 return '';
             });
+
+            // remove href if data-email-address is used
+            const dataEmailAddress = 'data-email-address=';
+            if (linkTag.includes(dataEmailAddress)) {
+                linkTag = linkTag.replaceAll(hrefRegex, (hrefAttr) => {
+                    return '';
+                });
+            }
+
+            // replace multiple spaces
+            linkTag = this.replaceMultipleSpacesWithSingleOne(linkTag);
 
             return linkTag;
         });
@@ -504,6 +527,10 @@ export class ElementTranslationHelper {
         }
 
         return uuidCandidate;
+    }
+
+    private replaceMultipleSpacesWithSingleOne(text: string): string {
+        return text.replace(/\s+/g, ' ');
     }
 }
 
