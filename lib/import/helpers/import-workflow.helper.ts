@@ -215,8 +215,6 @@ export class ImportWorkflowHelper {
             if (step) {
                 return true;
             }
-
-            return false;
         }
 
         return false;
