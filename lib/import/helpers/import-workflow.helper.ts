@@ -1,6 +1,6 @@
 import { ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import.models.js';
-import { logAction, logErrorAndExit } from '../../core/index.js';
+import { logItemAction, logErrorAndExit } from '../../core/index.js';
 
 export class ImportWorkflowHelper {
     private readonly defaultWorkflowCodename: string = 'Default';
@@ -47,14 +47,14 @@ export class ImportWorkflowHelper {
                 .withoutData()
                 .toPromise();
 
-            logAction('publish', 'languageVariant', {
+            logItemAction('publish', 'languageVariant', {
                 title: `${importContentItem.system.name}`,
                 language: importContentItem.system.language,
                 codename: importContentItem.system.codename,
                 workflowStep: importContentItem.system.workflow_step
             });
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
-            logAction('skip', 'languageVariant', {
+            logItemAction('skip', 'languageVariant', {
                 title: `Skipping scheduled workflow step for item '${importContentItem.system.name}'`,
                 language: importContentItem.system.language,
                 codename: importContentItem.system.codename,
@@ -77,7 +77,7 @@ export class ImportWorkflowHelper {
                 })
                 .toPromise();
 
-            logAction('archive', 'languageVariant', {
+            logItemAction('archive', 'languageVariant', {
                 title: `${importContentItem.system.name}`,
                 language: importContentItem.system.language,
                 codename: importContentItem.system.codename,
@@ -103,7 +103,7 @@ export class ImportWorkflowHelper {
                     })
                     .toPromise();
 
-                logAction('changeWorkflowStep', 'languageVariant', {
+                logItemAction('changeWorkflowStep', 'languageVariant', {
                     title: `${importContentItem.system.name}`,
                     language: importContentItem.system.language,
                     codename: importContentItem.system.codename,

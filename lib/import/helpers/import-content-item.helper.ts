@@ -3,7 +3,7 @@ import {
     IImportedData,
     extractErrorMessage,
     is404Error,
-    logAction,
+    logItemAction,
     logDebug,
     logErrorAndExit,
     logProcessingDebug
@@ -28,7 +28,7 @@ export class ImportContentItemHelper {
             data.parsedContentItems
         );
 
-        logAction('skip', 'contentItem', {
+        logItemAction('skip', 'contentItem', {
             title: `Skipping '${categorizedParsedItems.componentItems.length}' because they represent component items`
         });
 
@@ -105,12 +105,12 @@ export class ImportContentItemHelper {
                     .toPromise()
                     .then((m) => m.data);
 
-                logAction('upsert', 'contentItem', {
+                logItemAction('upsert', 'contentItem', {
                     title: `Upserting item '${upsertedContentItem.name}'`,
                     codename: data.importContentItem.system.codename
                 });
             } else {
-                logAction('skip', 'contentItem', {
+                logItemAction('skip', 'contentItem', {
                     title: `Item '${data.importContentItem.system.name}' already exists`,
                     codename: data.importContentItem.system.codename
                 });
@@ -148,7 +148,7 @@ export class ImportContentItemHelper {
                 .toPromise()
                 .then((m) => m.data);
 
-            logAction('fetch', 'contentItem', {
+            logItemAction('fetch', 'contentItem', {
                 title: `Loading item '${contentItem.name}'`,
                 codename: contentItem.codename
             });
@@ -184,7 +184,7 @@ export class ImportContentItemHelper {
                     imported: contentItem
                 });
 
-                logAction('create', 'contentItem', {
+                logItemAction('create', 'contentItem', {
                     title: `Creating item '${contentItem.name}'`,
                     codename: contentItem.codename
                 });

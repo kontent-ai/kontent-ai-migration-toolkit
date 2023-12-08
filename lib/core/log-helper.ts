@@ -54,7 +54,7 @@ export function logDebug(data: {
     );
 }
 
-export function logAction(
+export function logItemAction(
     actionType: ActionType,
     itemType: ItemType,
     data: {

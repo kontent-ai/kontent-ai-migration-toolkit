@@ -10,7 +10,7 @@ import {
     IImportedData,
     extractErrorMessage,
     is404Error,
-    logAction,
+    logItemAction,
     logDebug,
     logErrorAndExit,
     logProcessingDebug
@@ -35,7 +35,7 @@ export class ImportLanguageVariantHelper {
             data.importContentItems
         );
 
-        logAction('skip', 'languageVariant', {
+        logItemAction('skip', 'languageVariant', {
             title: `Skipping '${categorizedParsedItems.componentItems.length}' because they represent component items`
         });
 
@@ -120,7 +120,7 @@ export class ImportLanguageVariantHelper {
             imported: upsertedLanguageVariant
         });
 
-        logAction('upsert', 'languageVariant', {
+        logItemAction('upsert', 'languageVariant', {
             title: `${data.preparedContentItem.name}`,
             language: data.importContentItem.system.language,
             codename: data.importContentItem.system.codename,
@@ -153,7 +153,7 @@ export class ImportLanguageVariantHelper {
                 .toPromise()
                 .then((m) => m.data);
 
-            logAction('fetch', 'languageVariant', {
+            logItemAction('fetch', 'languageVariant', {
                 title: `${data.importContentItem.system.name}`,
                 language: data.importContentItem.system.language,
                 codename: data.importContentItem.system.codename,
@@ -182,7 +182,7 @@ export class ImportLanguageVariantHelper {
                     .byLanguageCodename(data.importContentItem.system.language)
                     .toPromise();
 
-                logAction('createNewVersion', 'languageVariant', {
+                logItemAction('createNewVersion', 'languageVariant', {
                     title: `${data.importContentItem.system.name}`,
                     language: data.importContentItem.system.language,
                     codename: data.importContentItem.system.codename,
@@ -204,7 +204,7 @@ export class ImportLanguageVariantHelper {
                         .byWorkflowStepCodename(newWorkflowStep.codename)
                         .toPromise();
 
-                    logAction('unArchive', 'languageVariant', {
+                    logItemAction('unArchive', 'languageVariant', {
                         title: `${data.importContentItem.system.name}`,
                         language: data.importContentItem.system.language,
                         codename: data.importContentItem.system.codename,

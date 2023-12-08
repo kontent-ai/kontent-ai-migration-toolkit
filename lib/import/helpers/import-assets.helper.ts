@@ -1,5 +1,5 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportedData, is404Error, logAction, logProcessingDebug } from '../../core/index.js';
+import { IImportedData, is404Error, logItemAction, logProcessingDebug } from '../../core/index.js';
 import { IImportAsset } from '../import.models.js';
 
 export class ImportAssetsHelper {
@@ -61,7 +61,7 @@ export class ImportAssetsHelper {
                     })
                     .toPromise();
 
-                logAction('upload', 'binaryFile', {
+                logItemAction('upload', 'binaryFile', {
                     title: asset.filename
                 });
 
@@ -84,7 +84,7 @@ export class ImportAssetsHelper {
                     original: asset
                 });
 
-                logAction('create', 'asset', {
+                logItemAction('create', 'asset', {
                     title: asset.filename
                 });
             } else {
@@ -92,7 +92,7 @@ export class ImportAssetsHelper {
                     imported: existingAsset,
                     original: asset
                 });
-                logAction('skip', 'asset', {
+                logItemAction('skip', 'asset', {
                     title: asset.filename
                 });
             }
