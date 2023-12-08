@@ -74,39 +74,39 @@ Install package globally:
 
 Import from zip:
 
-`kdm --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json`
+`kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json`
 
 Import from zip with assets:
 
-`kdm --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json --assetsFilename=assets.zip`
+`kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json --assetsFilename=assets.zip`
 
 Import from json file:
 
-`kdm --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.json --format=json`
+`kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.json --format=json`
 
 Import from csv file:
 
-`kdm --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv --format=csv`
+`kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv --format=csv`
 
 ### Export CLI samples
 
 Export from Kontent.ai environment as json without assets:
 
-`kdm --action=export --adapter=kontentAi --environmentId=xxx --format=json`
+`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json`
 
 Export from Kontent.ai environment as csv without assets:
 
-`kdm --action=export --adapter=kontentAi --environmentId=xxx --format=csv`
+`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=csv`
 
 Export from Kontent.ai environment as single json file with assets:
 
-`kdm --action=export --adapter=kontentAi --environmentId=xxx --format=jsonJoined --exportAssets=true`
+`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=jsonJoined --exportAssets=true`
 
 ### CLI help
 
 To see available commands use:
 
-`kdm --help`
+`kontent-ai-migration-toolkit --help`
 
 ### Use with config file
 
@@ -128,7 +128,7 @@ Create a `json` configuration file in the folder where you are attempting to run
 
 To execute your action run:
 
-`kdm --config=export-config.json`
+`kontent-ai-migration-toolkit --config=export-config.json`
 
 ## Use in code
 

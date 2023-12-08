@@ -5,7 +5,7 @@
     "preferGlobal": true,
     "private": false,
     "bin": {
-        "kdm": "./dist/es2022/node/cli/app.js"
+        "kontent-ai-migration-toolkit": "./dist/es2022/node/cli/app.js"
     },
     "repository": {
         "type": "git",
