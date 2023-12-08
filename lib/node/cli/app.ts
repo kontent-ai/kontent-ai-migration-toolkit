@@ -95,12 +95,11 @@ const exportAsync = async (config: ICliFileConfig) => {
         throw Error(`Missing adapter '${config.adapter}'`);
     }
 
-    const exportToolkit = new ExportToolkit({ adapter });
-
     const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
     const assetsFilename = config.assetsFilename ?? getDefaultExportFilename('assets');
 
-    await exportToolkit.exportAsync({
+    const exportToolkit = new ExportToolkit({
+        adapter,
         items: {
             filename: itemsFilename,
             formatService: getItemFormatService(config.format)
@@ -112,6 +111,8 @@ const exportAsync = async (config: ICliFileConfig) => {
               }
             : undefined
     });
+
+    await exportToolkit.exportAsync();
 
     logDebug({ type: 'info', message: `Completed` });
 };

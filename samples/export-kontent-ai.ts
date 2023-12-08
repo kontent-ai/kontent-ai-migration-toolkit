@@ -17,9 +17,8 @@ const run = async () => {
         }
     });
 
-    const exportToolkit = new ExportToolkit({ adapter });
-
-    await exportToolkit.exportAsync({
+    const exportToolkit = new ExportToolkit({
+        adapter,
         items: {
             filename: 'items-export.zip',
             formatService: new ItemJsonProcessorService() // or different one, see readme.md
@@ -30,6 +29,8 @@ const run = async () => {
             formatService: new AssetJsonProcessorService() // or different one, see readme.md
         }
     });
+
+    await exportToolkit.exportAsync();
 };
 
 run();
