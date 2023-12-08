@@ -10,26 +10,8 @@ This library can only be used in `node.js`. Use in Browsers is not supported.
 
 > We do not recommend importing data into your production environment directly (= without proper testing), unless you
 > are absolutely sure you know what you are doing. Instead, we recommend that you create a new environment based on your
-> production and test the import there first. If the import meets your expectations, you may swap environments or run it again
-> on the production.
-
-## How it works
-
-> When importing it is essential that `Content types`, `Taxonomies` and `Workflows` matches the input data. Any
-> inconsistency in data such as referencing inexistent taxonomy term, incorrect element type and other problems will
-> cause import to fail.
-
-### How are content items imported?
-
-The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
-project (based on item `codename`) the item will be updated. The workflow or published state will be set according to
-the source data.
-
-### How are assets imported?
-
-If asset exists in target project, the asset upload will be skipped and not uploaded at all. If asset doesn't exist, the
-asset from the zip folder will be uploaded. The Migration Toolkit will also set `external_id` of newly uploaded assets
-to equal their original id. There are some limitations to importing assets, see _Limitations_ sections for more info.
+> production and test the import there first. If the import meets your expectations, you may swap environments or run it
+> again on the production.
 
 ## Installation
 
@@ -37,27 +19,25 @@ Install package globally:
 
 `npm i xeno-test -g`
 
-## Use via CLI
+# Import
 
-### Export Configuration
+> When importing it is essential that `Content types`, `Taxonomies` and `Workflows` matches the input data. Any
+> inconsistency in data such as referencing inexistent taxonomy term, incorrect element type and other problems will
+> cause import to fail.
 
-| Config              | Value                                                                                                                                                                                                                 |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **action**          | Action. Available options: `import` & `export` **(required)**                                                                                                                                                         |
-| **environmentId**   | Id of Kontent.ai project **(required)**                                                                                                                                                                               |
-| **adapter**         | Adapter used to export data into known format that can be used for importing data. Available options: `kontentAi` **(required for export)**                                                                           |
-| **format**          | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required for export & import)**                                                                                                      |
-| secureApiKey        | API key for secure Access. `isSecure` also needs to be enabled                                                                                                                                                        |
-| previewApiKey       | API key for preview. `isPreview` also needs to be enabled                                                                                                                                                             |
-| isSecure            | When set to `true`, Secure API will be used to make data export. Defaults to `false`                                                                                                                                  |
-| isPreview           | When set to `true`, Preview API will be used to make data export. Defaults to `false`                                                                                                                                 |
-| exportAssets        | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                                                                                            |
-| replaceInvalidLinks | RTE may contain links to invalid items. You won't be able to re-import such items due to validation error. By setting this to `true` the Migration Toolkit will automatically remove these links. Defaults to `false` |
-| itemsFilename       | Name of the items file that will be created in folder where script is run                                                                                                                                             |
-| assetsFilename      | Name of the assets file that will be created in folder where script is run. Only zip is supported.                                                                                                                    |
-| baseUrl             | Custom base URL for Kontent.ai API calls                                                                                                                                                                              |
+## How are content items imported?
 
-### Import Configuration
+The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
+project (based on item `codename`) the item will be updated. The workflow or published state will be set according to
+the source data.
+
+## How are assets imported?
+
+If asset exists in target project, the asset upload will be skipped and not uploaded at all. If asset doesn't exist, the
+asset from the zip folder will be uploaded. The Migration Toolkit will also set `external_id` of newly uploaded assets
+to equal their original id. There are some limitations to importing assets, see _Limitations_ sections for more info.
+
+## Import Configuration
 
 | Config               | Value                                                                                                                                                   |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -70,7 +50,7 @@ Install package globally:
 | baseUrl              | Custom base URL for Kontent.ai API calls                                                                                                                |
 | skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
 
-### Import CLI samples
+## Import CLI samples
 
 Import from zip:
 
@@ -87,53 +67,6 @@ Import from json file:
 Import from csv file:
 
 `kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv --format=csv`
-
-### Export CLI samples
-
-Export from Kontent.ai environment as json without assets:
-
-`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json`
-
-Export from Kontent.ai environment as csv without assets:
-
-`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=csv`
-
-Export from Kontent.ai environment as single json file with assets:
-
-`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=jsonJoined --exportAssets=true`
-
-### CLI help
-
-To see available commands use:
-
-`kontent-ai-migration-toolkit --help`
-
-### Use with config file
-
-Create a `json` configuration file in the folder where you are attempting to run script. (e.g. `export-config.json`)
-
-```json
-{
-    "environmentId": "x",
-    "secureApiKey": "y",
-    "adapter": "kontentAi",
-    "isSecure": true,
-    "isPreview": false,
-    "exportAssets": true,
-    "action": "export",
-    "baseUrl": null,
-    "format": "json"
-}
-```
-
-To execute your action run:
-
-`kontent-ai-migration-toolkit --config=export-config.json`
-
-## Use in code
-
-See https://github.com/Enngage/kontent-ai-migration-toolkit/tree/main/samples for examples of how to run this library in
-code rather then via command line.
 
 ## Importing in code
 
@@ -158,6 +91,40 @@ const importToolkit = new ImportToolkit({
 
 await importToolkit.importFromFileAsync();
 ```
+
+# Export
+
+## Export Configuration
+
+| Config              | Value                                                                                                                                                                                                                 |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **action**          | Action. Available options: `import` & `export` **(required)**                                                                                                                                                         |
+| **environmentId**   | Id of Kontent.ai project **(required)**                                                                                                                                                                               |
+| **adapter**         | Adapter used to export data into known format that can be used for importing data. Available options: `kontentAi` **(required for export)**                                                                           |
+| **format**          | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required for export & import)**                                                                                                      |
+| secureApiKey        | API key for secure Access. `isSecure` also needs to be enabled                                                                                                                                                        |
+| previewApiKey       | API key for preview. `isPreview` also needs to be enabled                                                                                                                                                             |
+| isSecure            | When set to `true`, Secure API will be used to make data export. Defaults to `false`                                                                                                                                  |
+| isPreview           | When set to `true`, Preview API will be used to make data export. Defaults to `false`                                                                                                                                 |
+| exportAssets        | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                                                                                            |
+| replaceInvalidLinks | RTE may contain links to invalid items. You won't be able to re-import such items due to validation error. By setting this to `true` the Migration Toolkit will automatically remove these links. Defaults to `false` |
+| itemsFilename       | Name of the items file that will be created in folder where script is run                                                                                                                                             |
+| assetsFilename      | Name of the assets file that will be created in folder where script is run. Only zip is supported.                                                                                                                    |
+| baseUrl             | Custom base URL for Kontent.ai API calls                                                                                                                                                                              |
+
+## Export CLI samples
+
+Export from Kontent.ai environment as json without assets:
+
+`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json`
+
+Export from Kontent.ai environment as csv without assets:
+
+`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=csv`
+
+Export from Kontent.ai environment as single json file with assets:
+
+`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=jsonJoined --exportAssets=true`
 
 ## Exporting in code
 
@@ -196,6 +163,39 @@ await exportToolkit.exportAsync({
 });
 ```
 
+## CLI help
+
+To see available commands use:
+
+`kontent-ai-migration-toolkit --help`
+
+## Use with config file
+
+Create a `json` configuration file in the folder where you are attempting to run script. (e.g. `export-config.json`)
+
+```json
+{
+    "environmentId": "x",
+    "secureApiKey": "y",
+    "adapter": "kontentAi",
+    "isSecure": true,
+    "isPreview": false,
+    "exportAssets": true,
+    "action": "export",
+    "baseUrl": null,
+    "format": "json"
+}
+```
+
+To execute your action run:
+
+`kontent-ai-migration-toolkit --config=export-config.json`
+
+## Use in code
+
+See https://github.com/Enngage/kontent-ai-migration-toolkit/tree/main/samples for examples of how to run this library in
+code rather then via command line.
+
 ## Output / Input formats
 
 This library provides `csv`, `json`, `jsoinJoined` formats out of the box. However, you can create your own format by
@@ -210,7 +210,7 @@ Following is a list of `built-in` format services:
 | `json`       | `ItemJsonProcessorService `       | https://github.com/Enngage/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-processor.service.ts        |
 | `jsonJoined` | `ItemJsonJoinedProcessorService ` | https://github.com/Enngage/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-joined-processor.service.ts |
 
-### Limitations
+## Limitations
 
 Export is made with `Delivery API` for speed and efficiency, but this brings some limitations:
 
@@ -221,9 +221,9 @@ Export is made with `Delivery API` for speed and efficiency, but this brings som
 -   Language variants in `Scheduled` workflow step are not migrated to this workflow step because the API is missing the
     information about scheduled time so there is no way to specify scheduled publish time
 
-### FAQ
+## FAQ
 
-#### I'm getting `Header overflow` exception
+### I'm getting `Header overflow` exception
 
 The Node.js limits the maximum header size of HTTP requests. In some cases it may be required for you to increase this
 limitation to be able to successfully fetch data from Kontent.ai. You can do so by using the `max-http-header-size`
