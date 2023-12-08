@@ -6,32 +6,40 @@ import {
     ElementContracts,
     LanguageVariantElements
 } from '@kontent-ai/management-sdk';
-import { logDebug, logProcessingDebug } from '../../core/log-helper.js';
-import { IImportedData, extractErrorMessage, is404Error, logAction, translationHelper } from '../../core/index.js';
+import {
+    IImportedData,
+    extractErrorMessage,
+    is404Error,
+    logAction,
+    logDebug,
+    logErrorAndExit,
+    logProcessingDebug
+} from '../../core/index.js';
 import { IParsedContentItem, IParsedElement } from '../import.models.js';
 import { importWorkflowHelper } from './import-workflow.helper.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
+import { translationHelper } from '../../translation/index.js';
 
 export class ImportLanguageVariantHelper {
-    async importLanguageVariantsAsync(
-        managementClient: ManagementClient,
-        importContentItems: IParsedContentItem[],
-        workflows: WorkflowModels.Workflow[],
-        preparedContentItems: ContentItemModels.ContentItem[],
-        importedData: IImportedData,
+    async importLanguageVariantsAsync(data: {
+        managementClient: ManagementClient;
+        importContentItems: IParsedContentItem[];
+        workflows: WorkflowModels.Workflow[];
+        preparedContentItems: ContentItemModels.ContentItem[];
+        importedData: IImportedData;
         config: {
             skipFailedItems: boolean;
-        }
-    ): Promise<void> {
-        let itemIndex: number = 0;
-
-        const categorizedParsedItems: ICategorizedParsedItems =
-            parsedItemsHelper.categorizeParsedItems(importContentItems);
+        };
+    }): Promise<void> {
+        const categorizedParsedItems: ICategorizedParsedItems = parsedItemsHelper.categorizeParsedItems(
+            data.importContentItems
+        );
 
         logAction('skip', 'languageVariant', {
             title: `Skipping '${categorizedParsedItems.componentItems.length}' because they represent component items`
         });
 
+        let itemIndex: number = 0;
         for (const importContentItem of categorizedParsedItems.regularItems) {
             try {
                 itemIndex++;
@@ -43,60 +51,26 @@ export class ImportLanguageVariantHelper {
                     title: `'${importContentItem.system.name}' of type '${importContentItem.system.type}' in language '${importContentItem.system.language}'`
                 });
 
-                if (!importContentItem.system.workflow_step) {
-                    throw Error(`Content item '${importContentItem.system.codename}' required workflow to be set`);
-                }
-
-                const upsertedContentItem = preparedContentItems.find(
+                const preparedContentItem = data.preparedContentItems.find(
                     (m) => m.codename === importContentItem.system.codename
                 );
 
-                if (!upsertedContentItem) {
-                    throw Error(`Invalid content item for codename '${importContentItem.system.codename}'`);
+                if (!preparedContentItem) {
+                    logErrorAndExit({
+                        message: `Invalid content item for codename '${importContentItem.system.codename}'`
+                    });
                 }
 
-                await this.prepareLanguageVariantForImportAsync(managementClient, importContentItem, workflows);
-
-                const upsertedLanguageVariant = await managementClient
-                    .upsertLanguageVariant()
-                    .byItemCodename(upsertedContentItem.codename)
-                    .byLanguageCodename(importContentItem.system.language)
-                    .withData((builder) => {
-                        const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] =
-                            importContentItem.elements.map((m) =>
-                                this.getElementContract(importContentItems, m, importedData)
-                            );
-
-                        return {
-                            elements: mappedElements
-                        };
-                    })
-                    .toPromise()
-                    .then((m) => m.data);
-
-                importedData.languageVariants.push({
-                    original: importContentItem,
-                    imported: upsertedLanguageVariant
+                await this.importLanguageVariantAsync({
+                    importContentItem,
+                    preparedContentItem,
+                    managementClient: data.managementClient,
+                    importContentItems: data.importContentItems,
+                    workflows: data.workflows,
+                    importedData: data.importedData
                 });
-
-                logAction('upsert', 'languageVariant', {
-                    title: `${upsertedContentItem.name}`,
-                    language: importContentItem.system.language,
-                    codename: importContentItem.system.codename,
-                    workflowStep: importContentItem.system.workflow_step
-                });
-
-                // set workflow of language variant
-                if (importContentItem.system.workflow_step) {
-                    await importWorkflowHelper.setWorkflowOfLanguageVariantAsync(
-                        managementClient,
-                        importContentItem.system.workflow_step,
-                        importContentItem,
-                        workflows
-                    );
-                }
             } catch (error) {
-                if (config.skipFailedItems) {
+                if (data.config.skipFailedItems) {
                     logDebug({
                         type: 'error',
                         message: `Failed to import language variant '${importContentItem.system.name}' in language '${importContentItem.system.language}'`,
@@ -110,32 +84,86 @@ export class ImportLanguageVariantHelper {
         }
     }
 
-    private async prepareLanguageVariantForImportAsync(
-        managementClient: ManagementClient,
-        importContentItem: IParsedContentItem,
-        workflows: WorkflowModels.Workflow[]
-    ): Promise<void> {
+    private async importLanguageVariantAsync(data: {
+        importContentItem: IParsedContentItem;
+        preparedContentItem: ContentItemModels.ContentItem;
+        managementClient: ManagementClient;
+        importContentItems: IParsedContentItem[];
+        workflows: WorkflowModels.Workflow[];
+        importedData: IImportedData;
+    }): Promise<void> {
+        await this.prepareLanguageVariantForImportAsync({
+            importContentItem: data.importContentItem,
+            managementClient: data.managementClient,
+            workflows: data.workflows
+        });
+
+        const upsertedLanguageVariant = await data.managementClient
+            .upsertLanguageVariant()
+            .byItemCodename(data.preparedContentItem.codename)
+            .byLanguageCodename(data.importContentItem.system.language)
+            .withData((builder) => {
+                const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] =
+                    data.importContentItem.elements.map((m) =>
+                        this.getElementContract(data.importContentItems, m, data.importedData)
+                    );
+
+                return {
+                    elements: mappedElements
+                };
+            })
+            .toPromise()
+            .then((m) => m.data);
+
+        data.importedData.languageVariants.push({
+            original: data.importContentItem,
+            imported: upsertedLanguageVariant
+        });
+
+        logAction('upsert', 'languageVariant', {
+            title: `${data.preparedContentItem.name}`,
+            language: data.importContentItem.system.language,
+            codename: data.importContentItem.system.codename,
+            workflowStep: data.importContentItem.system.workflow_step
+        });
+
+        // set workflow of language variant
+        if (data.importContentItem.system.workflow_step) {
+            await importWorkflowHelper.setWorkflowOfLanguageVariantAsync(
+                data.managementClient,
+                data.importContentItem.system.workflow_step,
+                data.importContentItem,
+                data.workflows
+            );
+        }
+    }
+
+    private async prepareLanguageVariantForImportAsync(data: {
+        managementClient: ManagementClient;
+        importContentItem: IParsedContentItem;
+        workflows: WorkflowModels.Workflow[];
+    }): Promise<void> {
         let languageVariantOfContentItem: undefined | LanguageVariantModels.ContentItemLanguageVariant;
 
         try {
-            languageVariantOfContentItem = await managementClient
+            languageVariantOfContentItem = await data.managementClient
                 .viewLanguageVariant()
-                .byItemCodename(importContentItem.system.codename)
-                .byLanguageCodename(importContentItem.system.language)
+                .byItemCodename(data.importContentItem.system.codename)
+                .byLanguageCodename(data.importContentItem.system.language)
                 .toPromise()
                 .then((m) => m.data);
 
             logAction('fetch', 'languageVariant', {
-                title: `${importContentItem.system.name}`,
-                language: importContentItem.system.language,
-                codename: importContentItem.system.codename,
-                workflowStep: importContentItem.system.workflow_step
+                title: `${data.importContentItem.system.name}`,
+                language: data.importContentItem.system.language,
+                codename: data.importContentItem.system.codename,
+                workflowStep: data.importContentItem.system.workflow_step
             });
 
             if (!languageVariantOfContentItem) {
-                throw Error(
-                    `Invalid langauge variant for item '${importContentItem.system.codename}' of type '${importContentItem.system.type}' and language '${importContentItem.system.language}'`
-                );
+                logErrorAndExit({
+                    message: `Invalid langauge variant for item '${data.importContentItem.system.codename}' of type '${data.importContentItem.system.type}' and language '${data.importContentItem.system.language}'`
+                });
             }
         } catch (error) {
             if (!is404Error(error)) {
@@ -146,41 +174,41 @@ export class ImportLanguageVariantHelper {
         if (languageVariantOfContentItem) {
             // language variant exists
             // check if variant is published or archived
-            if (this.isLanguageVariantPublished(languageVariantOfContentItem, workflows)) {
+            if (this.isLanguageVariantPublished(languageVariantOfContentItem, data.workflows)) {
                 // create new version
-                await managementClient
+                await data.managementClient
                     .createNewVersionOfLanguageVariant()
-                    .byItemCodename(importContentItem.system.codename)
-                    .byLanguageCodename(importContentItem.system.language)
+                    .byItemCodename(data.importContentItem.system.codename)
+                    .byLanguageCodename(data.importContentItem.system.language)
                     .toPromise();
 
                 logAction('createNewVersion', 'languageVariant', {
-                    title: `${importContentItem.system.name}`,
-                    language: importContentItem.system.language,
-                    codename: importContentItem.system.codename,
-                    workflowStep: importContentItem.system.workflow_step
+                    title: `${data.importContentItem.system.name}`,
+                    language: data.importContentItem.system.language,
+                    codename: data.importContentItem.system.codename,
+                    workflowStep: data.importContentItem.system.workflow_step
                 });
-            } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, workflows)) {
+            } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, data.workflows)) {
                 // change workflow step to draft
                 if (languageVariantOfContentItem.workflow.stepIdentifier.id) {
                     const workflow = importWorkflowHelper.getWorkflowForGivenStepById(
                         languageVariantOfContentItem.workflow.stepIdentifier.id,
-                        workflows
+                        data.workflows
                     );
                     const newWorkflowStep = workflow.steps[0];
 
-                    await managementClient
+                    await data.managementClient
                         .changeWorkflowStepOfLanguageVariant()
-                        .byItemCodename(importContentItem.system.codename)
-                        .byLanguageCodename(importContentItem.system.language)
+                        .byItemCodename(data.importContentItem.system.codename)
+                        .byLanguageCodename(data.importContentItem.system.language)
                         .byWorkflowStepCodename(newWorkflowStep.codename)
                         .toPromise();
 
                     logAction('unArchive', 'languageVariant', {
-                        title: `${importContentItem.system.name}`,
-                        language: importContentItem.system.language,
-                        codename: importContentItem.system.codename,
-                        workflowStep: importContentItem.system.workflow_step
+                        title: `${data.importContentItem.system.name}`,
+                        language: data.importContentItem.system.language,
+                        codename: data.importContentItem.system.codename,
+                        workflowStep: data.importContentItem.system.workflow_step
                     });
                 }
             }
@@ -227,7 +255,9 @@ export class ImportLanguageVariantHelper {
         );
 
         if (!importContract) {
-            throw Error(`Missing import contract for element `);
+            logErrorAndExit({
+                message: `Missing import contract for element '${element.codename}' `
+            });
         }
 
         return importContract;

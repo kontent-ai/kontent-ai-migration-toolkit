@@ -13,9 +13,16 @@ import {
     ZipContext,
     IAssetFormatService
 } from './file-processor.models.js';
-import { IExportTransformConfig, IPackageMetadata, formatBytes, getExtension } from '../core/index.js';
+import {
+    IExportTransformConfig,
+    IPackageMetadata,
+    formatBytes,
+    getExtension,
+    logDebug,
+    logErrorAndExit,
+    logProcessingDebug
+} from '../core/index.js';
 import mime from 'mime';
-import { logDebug, logProcessingDebug } from '../core/log-helper.js';
 
 export class FileProcessorService {
     private readonly zipContext: ZipContext = 'node.js';
@@ -207,7 +214,9 @@ export class FileProcessorService {
         const filesFolder = zip.folder(this.binaryFilesFolderName);
 
         if (!filesFolder) {
-            throw Error(`Could not create folder '${this.binaryFilesFolderName}'`);
+            logErrorAndExit({
+                message: `Could not create folder '${this.binaryFilesFolderName}'`
+            });
         }
 
         if (exportData.assets.length) {
@@ -289,7 +298,9 @@ export class FileProcessorService {
             return zipData.byteLength;
         }
 
-        throw Error(`Unrecognized zip data type '${typeof zipData}'`);
+        logErrorAndExit({
+            message: `Unrecognized zip data type '${typeof zipData}'`
+        });
     }
 
     private async transformLanguageVariantsAsync(
@@ -332,7 +343,9 @@ export class FileProcessorService {
             const binaryFile = binaryFiles.find((m) => m.assetId === parsedAsset.assetId);
 
             if (!binaryFile) {
-                throw Error(`Could not find binary data for asset with id '${parsedAsset.assetId}'`);
+                logErrorAndExit({
+                    message: `Could not find binary data for asset with id '${parsedAsset.assetId}'`
+                });
             }
 
             importAssets.push({
@@ -417,7 +430,9 @@ export class FileProcessorService {
             return 'nodebuffer';
         }
 
-        throw Error(`Unsupported context '${context}'`);
+        logErrorAndExit({
+            message: `Unsupported context '${context}'`
+        });
     }
 
     private async parseContentItemsFromZipAsync(

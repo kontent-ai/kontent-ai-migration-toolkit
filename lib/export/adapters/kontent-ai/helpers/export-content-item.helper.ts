@@ -1,7 +1,7 @@
 import { IContentType, ILanguage, IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
-import { logDebug } from '../../../../core/log-helper.js';
-import { ActionType, ContentElementType, ItemType, translationHelper } from '../../../../core/index.js';
+import { ActionType, ContentElementType, ItemType, logDebug } from '../../../../core/index.js';
 import { IExportConfig, IExportContentItem, IExportElement } from '../../../export.models.js';
+import { translationHelper } from '../../../../translation/index.js';
 
 export class ExportContentItemHelper {
     async exportContentItemsAsync(

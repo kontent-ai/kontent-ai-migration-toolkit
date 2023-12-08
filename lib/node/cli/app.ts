@@ -2,7 +2,15 @@
 import { readFileSync } from 'fs';
 import yargs from 'yargs';
 
-import { ICliFileConfig, CliAction, getExtension, extractErrorMessage, ExportAdapter } from '../../core/index.js';
+import {
+    ICliFileConfig,
+    CliAction,
+    getExtension,
+    ExportAdapter,
+    logDebug,
+    handleError,
+    logErrorAndExit
+} from '../../core/index.js';
 import {
     ItemCsvProcessorService,
     ProcessingFormat,
@@ -13,7 +21,6 @@ import {
     AssetCsvProcessorService,
     AssetJsonProcessorService
 } from '../../file-processor/index.js';
-import { logDebug } from '../../core/log-helper.js';
 import { ExportToolkit, ImportToolkit } from '../../toolkit/index.js';
 import { IExportAdapter, KontentAiExportAdapter } from '../../export/index.js';
 
@@ -70,14 +77,18 @@ const argv = yargs(process.argv.slice(2))
 
 const exportAsync = async (config: ICliFileConfig) => {
     if (!config.adapter) {
-        throw Error(`Missing 'adapter' config`);
+        logErrorAndExit({
+            message: `Missing 'adapter' config`
+        });
     }
 
     let adapter: IExportAdapter | undefined;
 
     if (config.adapter === 'kontentAi') {
         if (!config.environmentId) {
-            throw Error(`Invalid environment id`);
+            logErrorAndExit({
+                message: `Invalid 'environmentId'`
+            });
         }
 
         adapter = new KontentAiExportAdapter({
@@ -92,7 +103,9 @@ const exportAsync = async (config: ICliFileConfig) => {
             exportAssets: config.exportAssets
         });
     } else {
-        throw Error(`Missing adapter '${config.adapter}'`);
+        logErrorAndExit({
+            message: `Missing adapter '${config.adapter}'`
+        });
     }
 
     const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
@@ -119,10 +132,14 @@ const exportAsync = async (config: ICliFileConfig) => {
 
 const importAsync = async (config: ICliFileConfig) => {
     if (!config.managementApiKey) {
-        throw Error(`Missing 'managementApiKey' configuration option`);
+        logErrorAndExit({
+            message: `Missing 'managementApiKey' configuration option`
+        });
     }
     if (!config.environmentId) {
-        throw Error(`Missing 'environmentId' configuration option`);
+        logErrorAndExit({
+            message: `Missing 'environmentId' configuration option`
+        });
     }
 
     const itemsFilename: string | undefined = config.itemsFilename;
@@ -164,7 +181,9 @@ const importAsync = async (config: ICliFileConfig) => {
     } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
         await importToolkit.importFromFileAsync();
     } else {
-        throw Error(`Unsupported file type '${itemsFileExtension}'`);
+        logErrorAndExit({
+            message: `Unsupported file type '${itemsFileExtension}'`
+        });
     }
 
     logDebug({ type: 'info', message: `Completed` });
@@ -178,7 +197,9 @@ const run = async () => {
     } else if (config.action === 'import') {
         await importAsync(config);
     } else {
-        throw Error(`Invalid action '${config.action}'`);
+        logErrorAndExit({
+            message: `Invalid action '${config.action}'`
+        });
     }
 };
 
@@ -207,7 +228,9 @@ const getConfig = async () => {
         mappedFormat = 'jsonJoined';
     } else {
         if (action === 'export') {
-            throw Error(`Unsupported export format '${format}'`);
+            logErrorAndExit({
+                message: `Unsupported export format '${format}'`
+            });
         }
     }
 
@@ -215,7 +238,9 @@ const getConfig = async () => {
         mappedAdapter = 'kontentAi';
     } else {
         if (action === 'export') {
-            throw Error(`Unsupported adapter '${adapter}'`);
+            logErrorAndExit({
+                message: `Unsupported adapter '${adapter}'`
+            });
         }
     }
 
@@ -251,8 +276,7 @@ const getDefaultExportFilename = (type: 'items' | 'assets') => {
 run()
     .then((m) => {})
     .catch((err) => {
-        console.error(err);
-        logDebug({ type: 'error', message: extractErrorMessage(err) });
+        handleError(err);
     });
 
 function getAssetFormatService(format: ProcessingFormat | undefined): IAssetFormatService {
@@ -264,7 +288,9 @@ function getAssetFormatService(format: ProcessingFormat | undefined): IAssetForm
         return new AssetJsonProcessorService();
     }
 
-    throw Error(`Unsupported format '${format}' for assets export`);
+    logErrorAndExit({
+        message: `Unsupported format '${format}' for assets export`
+    });
 }
 
 function getItemFormatService(format: ProcessingFormat | undefined): IItemFormatService {
@@ -280,7 +306,9 @@ function getItemFormatService(format: ProcessingFormat | undefined): IItemFormat
         return new ItemJsonJoinedProcessorService();
     }
 
-    throw Error(`Unsupported format '${format}' for items export`);
+    logErrorAndExit({
+        message: `Unsupported format '${format}' for items export`
+    });
 }
 
 function getOptionalArgumentValue(args: Args, argName: string): string | undefined {
@@ -291,7 +319,9 @@ function getRequiredArgumentValue(args: Args, argName: string): string {
     const value = getOptionalArgumentValue(args, argName);
 
     if (!value) {
-        throw Error(`Missing '${argName}' argument value`);
+        logErrorAndExit({
+            message: `Missing '${argName}' argument value`
+        });
     }
 
     return value;

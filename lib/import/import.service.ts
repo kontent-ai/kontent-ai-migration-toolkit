@@ -5,16 +5,16 @@ import {
     ContentTypeModels,
     ContentTypeSnippetModels,
     ManagementClient,
-    SharedModels,
     WorkflowModels
 } from '@kontent-ai/management-sdk';
 
 import {
     IImportedData,
-    handleError,
     defaultRetryStrategy,
     printProjectAndEnvironmentInfoToConsoleAsync,
-    defaultHttpService
+    defaultHttpService,
+    logDebug,
+    logErrorAndExit
 } from '../core/index.js';
 import {
     IImportConfig,
@@ -23,7 +23,6 @@ import {
     IImportContentType,
     IImportContentTypeElement
 } from './import.models.js';
-import { logDebug } from '../core/log-helper.js';
 import { importAssetsHelper } from './helpers/import-assets.helper.js';
 import { importContentItemHelper } from './helpers/import-content-item.helper.js';
 import { importLanguageVariantHelper } from './helpers/import-language-variant.helper.js';
@@ -72,10 +71,6 @@ export class ImportService {
         ];
     }
 
-    async importFromSourceAsync(sourceData: IImportSource): Promise<IImportedData> {
-        return await this.importAsync(sourceData);
-    }
-
     async importAsync(sourceData: IImportSource): Promise<IImportedData> {
         const importedData: IImportedData = {
             assets: [],
@@ -88,46 +83,43 @@ export class ImportService {
         const dataToImport = this.getDataToImport(sourceData);
 
         // import order matters
-        try {
-            //  Assets
-            if (dataToImport.importData.assets.length) {
-                logDebug({
-                    type: 'info',
-                    message: `Importing assets`
-                });
-                await importAssetsHelper.importAssetsAsync(
-                    this.managementClient,
-                    dataToImport.importData.assets,
-                    importedData
-                );
-            } else {
-                logDebug({
-                    type: 'info',
-                    message: `There are no assets to import`
-                });
-            }
-
-            // Content items
-            if (dataToImport.importData.items.length) {
-                logDebug({
-                    type: 'info',
-                    message: `Importing content items`
-                });
-                await this.importParsedContentItemsAsync(dataToImport.importData.items, importedData);
-            } else {
-                logDebug({
-                    type: 'info',
-                    message: `There are no content items to import`
-                });
-            }
-
+        // #1 Assets
+        if (dataToImport.importData.assets.length) {
             logDebug({
                 type: 'info',
-                message: `Finished import`
+                message: `Importing assets`
             });
-        } catch (error) {
-            this.handleImportError(error);
+            await importAssetsHelper.importAssetsAsync({
+                managementClient: this.managementClient,
+                assets: dataToImport.importData.assets,
+                importedData: importedData
+            });
+        } else {
+            logDebug({
+                type: 'info',
+                message: `There are no assets to import`
+            });
         }
+
+        // #2 Content items
+        if (dataToImport.importData.items.length) {
+            logDebug({
+                type: 'info',
+                message: `Importing content items`
+            });
+            await this.importParsedContentItemsAsync(dataToImport.importData.items, importedData);
+        } else {
+            logDebug({
+                type: 'info',
+                message: `There are no content items to import`
+            });
+        }
+
+        logDebug({
+            type: 'info',
+            message: `Finished import`
+        });
+
         return importedData;
     }
 
@@ -155,9 +147,9 @@ export class ImportService {
                 );
 
                 if (!contentTypeSnippet) {
-                    throw Error(
-                        `Could not find content type snippet for element. This snippet is referenced in type '${contentType.codename}'`
-                    );
+                    logErrorAndExit({
+                        message: `Could not find content type snippet for element. This snippet is referenced in type '${contentType.codename}'`
+                    });
                 }
 
                 for (const snippetElement of contentTypeSnippet.elements) {
@@ -240,27 +232,27 @@ export class ImportService {
 
         // first prepare content items
         const preparedContentItems: ContentItemModels.ContentItem[] =
-            await importContentItemHelper.importContentItemsAsync(
-                this.managementClient,
-                parsedContentItems,
-                collections,
-                importedData,
-                {
+            await importContentItemHelper.importContentItemsAsync({
+                managementClient: this.managementClient,
+                collections: collections,
+                importedData: importedData,
+                parsedContentItems: parsedContentItems,
+                config: {
                     skipFailedItems: this.config.skipFailedItems
                 }
-            );
+            });
 
         // then process language variants
-        await importLanguageVariantHelper.importLanguageVariantsAsync(
-            this.managementClient,
-            parsedContentItems,
-            workflows,
-            preparedContentItems,
-            importedData,
-            {
+        await importLanguageVariantHelper.importLanguageVariantsAsync({
+            managementClient: this.managementClient,
+            importContentItems: parsedContentItems,
+            importedData: importedData,
+            preparedContentItems: preparedContentItems,
+            workflows: workflows,
+            config: {
                 skipFailedItems: this.config.skipFailedItems
             }
-        );
+        });
     }
 
     private async getWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
@@ -275,9 +267,5 @@ export class ImportService {
             .listCollections()
             .toPromise()
             .then((m) => m.data.collections);
-    }
-
-    private handleImportError(error: any | SharedModels.ContentManagementBaseKontentError): void {
-        handleError(error);
     }
 }

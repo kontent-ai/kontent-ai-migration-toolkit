@@ -1,9 +1,9 @@
 import { IContentType, IDeliveryClient, ILanguage, createDeliveryClient } from '@kontent-ai/delivery-sdk';
-import { logDebug } from '../../../core/log-helper.js';
 import { IExportAdapter, IExportAdapterResult, IExportAsset, IExportConfig } from '../../export.models.js';
 import { exportContentItemHelper } from './helpers/export-content-item.helper.js';
 import { defaultHttpService, defaultRetryStrategy } from '../../../core/global-helper.js';
 import { exportAssetsHelper } from './helpers/export-assets-item.helper.js';
+import { logDebug } from '../../../core/index.js';
 
 export class KontentAiExportAdapter implements IExportAdapter {
     constructor(private config: IExportConfig) {}

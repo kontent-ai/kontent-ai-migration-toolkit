@@ -1,8 +1,10 @@
 import { ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import.models.js';
-import { defaultWorkflowCodename, logAction } from '../../core/index.js';
+import { logAction, logErrorAndExit } from '../../core/index.js';
 
 export class ImportWorkflowHelper {
+    private readonly defaultWorkflowCodename: string = 'Default';
+
     getWorkflowForGivenStepById(workflowId: string, workflows: WorkflowModels.Workflow[]): WorkflowModels.Workflow {
         return this.getWorkflowForGivenStep(workflows, (workflow) => {
             if (workflow.archivedStep.id === workflowId) {
@@ -32,9 +34,9 @@ export class ImportWorkflowHelper {
     ): Promise<void> {
         // check if workflow step exists in target project
         if (!this.doesWorkflowStepExist(workflowStepCodename, workflows)) {
-            throw Error(
-                `Could not change workflow step for item '${importContentItem.system.codename}' (${importContentItem.system.name}) because step with codename '${workflowStepCodename}' does not exist in target project.`
-            );
+            logErrorAndExit({
+                message: `Could not change workflow step for item '${importContentItem.system.codename}' (${importContentItem.system.name}) because step with codename '${workflowStepCodename}' does not exist in target project.`
+            });
         }
 
         if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
@@ -161,11 +163,13 @@ export class ImportWorkflowHelper {
         }
 
         const defaultWorkflow = workflows.find(
-            (m) => m.codename.toLowerCase() === defaultWorkflowCodename.toLowerCase()
+            (m) => m.codename.toLowerCase() === this.defaultWorkflowCodename.toLowerCase()
         );
 
         if (!defaultWorkflow) {
-            throw Error(`Missing default workflow`);
+            logErrorAndExit({
+                message: `Missing default workflow`
+            });
         }
 
         return defaultWorkflow;

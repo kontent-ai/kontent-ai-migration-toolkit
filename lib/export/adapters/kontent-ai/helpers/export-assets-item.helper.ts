@@ -5,10 +5,11 @@ import {
     getExtension,
     extractFilenameFromUrl,
     defaultRetryStrategy,
-    formatBytes
+    formatBytes,
+    logDebug,
+    logProcessingDebug
 } from '../../../../core/index.js';
 import { IExportAsset } from '../../../export.models.js';
-import { logDebug, logProcessingDebug } from '../../../../core/log-helper.js';
 
 type ExportAssetWithoutBinaryData = Omit<IExportAsset, 'binaryData'>;
 

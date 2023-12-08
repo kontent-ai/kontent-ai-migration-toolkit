@@ -1,8 +1,7 @@
 import { IManagementClient, EnvironmentModels, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
-import { logDebug } from './log-helper.js';
-import { ActionType, ItemType } from './core.models.js';
+import { logDebug, logErrorAndExit } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
 
 const rateExceededErrorCode: number = 10000;
@@ -56,26 +55,6 @@ export async function printProjectAndEnvironmentInfoToConsoleAsync(
     return environmentInformation.project;
 }
 
-export function logAction(
-    actionType: ActionType,
-    itemType: ItemType,
-    data: {
-        language?: string;
-        workflowStep?: string;
-        title: string;
-        codename?: string;
-    }
-): void {
-    logDebug({
-        type: actionType,
-        message: data.title,
-        partA: itemType,
-        partB: data.codename,
-        partC: data.language,
-        partD: data.workflowStep
-    });
-}
-
 export function extractErrorMessage(error: any): string {
     if (error instanceof SharedModels.ContentManagementBaseKontentError) {
         let message: string = `${error.message}`;
@@ -105,14 +84,20 @@ export function is404Error(error: any): boolean {
 
 export function handleError(error: any | SharedModels.ContentManagementBaseKontentError): void {
     if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-        throw {
-            Message: `Failed to import data with error: ${error.message}`,
-            ErrorCode: error.errorCode,
-            RequestId: error.requestId,
-            ValidationErrors: `${error.validationErrors.map((m) => m.message).join(', ')}`
-        };
+        logErrorAndExit({
+            message: `${error.message}. Error code '${error.errorCode}'. Request Id '${error.requestId}'.${
+                error.validationErrors.length ? ` ${error.validationErrors.map((m) => m.message).join(', ')}` : ''
+            }`
+        });
     }
 
+    if (error instanceof Error) {
+        logErrorAndExit({
+            message: error.message
+        });
+    }
+
+    // unhandled error
     throw error;
 }
 
@@ -121,7 +106,9 @@ export function extractAssetIdFromUrl(assetUrl: string): string {
     const splitPaths = url.pathname.split('/');
 
     if (splitPaths.length < 3) {
-        throw Error(`Invalid asset url '${assetUrl}' because asset id could not be determined`);
+        logErrorAndExit({
+            message: `Invalid asset url '${assetUrl}' because asset id could not be determined`
+        });
     }
 
     return splitPaths[2];

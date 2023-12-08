@@ -1,24 +1,32 @@
 import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportedData, logAction, extractErrorMessage, is404Error } from '../../core/index.js';
-import { logDebug, logProcessingDebug } from '../../core/log-helper.js';
+import {
+    IImportedData,
+    extractErrorMessage,
+    is404Error,
+    logAction,
+    logDebug,
+    logErrorAndExit,
+    logProcessingDebug
+} from '../../core/index.js';
 import { IParsedContentItem } from '../import.models.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 
 export class ImportContentItemHelper {
-    async importContentItemsAsync(
-        managementClient: ManagementClient,
-        parsedContentItems: IParsedContentItem[],
-        collections: CollectionModels.Collection[],
-        importedData: IImportedData,
+    async importContentItemsAsync(data: {
+        managementClient: ManagementClient;
+        parsedContentItems: IParsedContentItem[];
+        collections: CollectionModels.Collection[];
+        importedData: IImportedData;
         config: {
             skipFailedItems: boolean;
-        }
-    ): Promise<ContentItemModels.ContentItem[]> {
+        };
+    }): Promise<ContentItemModels.ContentItem[]> {
         const preparedItems: ContentItemModels.ContentItem[] = [];
         let itemIndex: number = 0;
 
-        const categorizedParsedItems: ICategorizedParsedItems =
-            parsedItemsHelper.categorizeParsedItems(parsedContentItems);
+        const categorizedParsedItems: ICategorizedParsedItems = parsedItemsHelper.categorizeParsedItems(
+            data.parsedContentItems
+        );
 
         logAction('skip', 'contentItem', {
             title: `Skipping '${categorizedParsedItems.componentItems.length}' because they represent component items`
@@ -34,58 +42,18 @@ export class ImportContentItemHelper {
                 title: `'${importContentItem.system.name}' of type '${importContentItem.system.type}'`
             });
 
-            // if content item does not have a workflow step it means it is used as a component within Rich text element
-            // such items are procesed within element transform
-            if (!importContentItem.system.workflow_step) {
-                logAction('skip', 'contentItem', {
-                    title: `Skipping item beause it's a component`,
-                    codename: importContentItem.system.codename
-                });
-                continue;
-            }
+            await this.importContentItemAsync({
+                managementClient: data.managementClient,
+                collections: data.collections,
+                importContentItem: importContentItem,
+                importedData: data.importedData,
+                parsedContentItems: data.parsedContentItems,
+                preparedItems: preparedItems
+            });
 
             try {
-                const preparedContentItemResult = await this.prepareContentItemAsync(
-                    managementClient,
-                    importContentItem,
-                    importedData
-                );
-                preparedItems.push(preparedContentItemResult.contentItem);
-
-                // check if name should be updated, no other changes are supported
-                if (preparedContentItemResult.status === 'itemAlreadyExists') {
-                    if (
-                        this.shouldUpdateContentItem(
-                            importContentItem,
-                            preparedContentItemResult.contentItem,
-                            collections
-                        )
-                    ) {
-                        const upsertedContentItem = await managementClient
-                            .upsertContentItem()
-                            .byItemCodename(importContentItem.system.codename)
-                            .withData({
-                                name: importContentItem.system.name,
-                                collection: {
-                                    codename: importContentItem.system.collection
-                                }
-                            })
-                            .toPromise()
-                            .then((m) => m.data);
-
-                        logAction('upsert', 'contentItem', {
-                            title: `Upserting item '${upsertedContentItem.name}'`,
-                            codename: importContentItem.system.codename
-                        });
-                    } else {
-                        logAction('skip', 'contentItem', {
-                            title: `Item '${importContentItem.system.name}' already exists`,
-                            codename: importContentItem.system.codename
-                        });
-                    }
-                }
             } catch (error) {
-                if (config.skipFailedItems) {
+                if (data.config.skipFailedItems) {
                     logDebug({
                         type: 'error',
                         message: `Failed to import content item`,
@@ -101,6 +69,55 @@ export class ImportContentItemHelper {
         return preparedItems;
     }
 
+    private async importContentItemAsync(data: {
+        importContentItem: IParsedContentItem;
+        managementClient: ManagementClient;
+        parsedContentItems: IParsedContentItem[];
+        collections: CollectionModels.Collection[];
+        importedData: IImportedData;
+        preparedItems: ContentItemModels.ContentItem[];
+    }): Promise<void> {
+        const preparedContentItemResult = await this.prepareContentItemAsync(
+            data.managementClient,
+            data.importContentItem,
+            data.importedData
+        );
+        data.preparedItems.push(preparedContentItemResult.contentItem);
+
+        // check if name should be updated, no other changes are supported
+        if (preparedContentItemResult.status === 'itemAlreadyExists') {
+            if (
+                this.shouldUpdateContentItem(
+                    data.importContentItem,
+                    preparedContentItemResult.contentItem,
+                    data.collections
+                )
+            ) {
+                const upsertedContentItem = await data.managementClient
+                    .upsertContentItem()
+                    .byItemCodename(data.importContentItem.system.codename)
+                    .withData({
+                        name: data.importContentItem.system.name,
+                        collection: {
+                            codename: data.importContentItem.system.collection
+                        }
+                    })
+                    .toPromise()
+                    .then((m) => m.data);
+
+                logAction('upsert', 'contentItem', {
+                    title: `Upserting item '${upsertedContentItem.name}'`,
+                    codename: data.importContentItem.system.codename
+                });
+            } else {
+                logAction('skip', 'contentItem', {
+                    title: `Item '${data.importContentItem.system.name}' already exists`,
+                    codename: data.importContentItem.system.codename
+                });
+            }
+        }
+    }
+
     private shouldUpdateContentItem(
         parsedContentItem: IParsedContentItem,
         contentItem: ContentItemModels.ContentItem,
@@ -109,7 +126,9 @@ export class ImportContentItemHelper {
         const collection = collections.find((m) => m.codename === parsedContentItem.system.collection);
 
         if (!collection) {
-            throw Error(`Invalid collection '${parsedContentItem.system.collection}'`);
+            logErrorAndExit({
+                message: `Invalid collection '${parsedContentItem.system.collection}'`
+            });
         }
         return (
             parsedContentItem.system.name !== contentItem.name ||

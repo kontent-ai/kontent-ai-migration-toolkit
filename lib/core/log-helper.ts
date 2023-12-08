@@ -4,6 +4,14 @@ import { ActionType, ItemType } from './core.models.js';
 
 export type DebugType = 'error' | 'warning' | 'info' | ActionType;
 
+export function logErrorAndExit(data: { message: string }): never {
+    logDebug({
+        type: 'error',
+        message: data.message
+    });
+    process.exit(1);
+}
+
 export function logProcessingDebug(data: {
     index: number;
     totalCount: number;
@@ -43,4 +51,24 @@ export function logDebug(data: {
             data.performance ? `[${colors.bgYellow(colors.black(data.performance))}]` : ''
         }: ${data.message}`
     );
+}
+
+export function logAction(
+    actionType: ActionType,
+    itemType: ItemType,
+    data: {
+        language?: string;
+        workflowStep?: string;
+        title: string;
+        codename?: string;
+    }
+): void {
+    logDebug({
+        type: actionType,
+        message: data.title,
+        partA: itemType,
+        partB: data.codename,
+        partC: data.language,
+        partD: data.workflowStep
+    });
 }

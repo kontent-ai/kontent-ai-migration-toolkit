@@ -22,12 +22,12 @@ import {
     IImportedData,
     ImportTransformFunc,
     IRichTextExportConfig
-} from './core.models.js';
-import { extractAssetIdFromUrl } from './global-helper.js';
+} from '../core/core.models.js';
+import { extractAssetIdFromUrl } from '../core/global-helper.js';
 import { idTranslateHelper } from './id-translate-helper.js';
-import { logDebug } from './log-helper.js';
+import { logDebug, logErrorAndExit } from '../core/index.js';
 
-export class TranslationHelper {
+export class ElementTranslationHelper {
     private readonly linkCodenameAttributeName: string = 'data-manager-link-codename';
     private readonly dataNewWindowAttributeName: string = 'data-new-window';
     private readonly elementsBuilder = new LanguageVariantElementsBuilder();
@@ -75,10 +75,14 @@ export class TranslationHelper {
      */
     private readonly importTransforms: Readonly<Record<ContentElementType, ImportTransformFunc>> = {
         guidelines: (data) => {
-            throw Error(`Guidelines import transform not supported`);
+            logErrorAndExit({
+                message: `Guidelines import transform not supported`
+            });
         },
         snippet: (data) => {
-            throw Error(`Content type snippet import transform not supported`);
+            logErrorAndExit({
+                message: `Content type snippet import transform not supported`
+            });
         },
         subpages: (data) => {
             return this.elementsBuilder.linkedItemsElement({
@@ -179,7 +183,9 @@ export class TranslationHelper {
                 const componentItem = data.sourceItems.find((m) => m.system.codename === componentCodename);
 
                 if (!componentItem) {
-                    throw Error(`Could not find component item with codename '${componentCodename}'`);
+                    logErrorAndExit({
+                        message: `Could not find component item with codename '${componentCodename}'`
+                    });
                 }
 
                 componentItems.push(componentItem);
@@ -501,4 +507,4 @@ export class TranslationHelper {
     }
 }
 
-export const translationHelper = new TranslationHelper();
+export const translationHelper = new ElementTranslationHelper();

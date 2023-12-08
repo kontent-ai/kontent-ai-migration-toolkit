@@ -43,7 +43,7 @@ export class ImportToolkit {
         });
 
         // import into target environment
-        await importService.importFromSourceAsync(data);
+        await importService.importAsync(data);
     }
 
     async importFromZipAsync(): Promise<void> {
@@ -70,6 +70,6 @@ export class ImportToolkit {
         });
 
         // import into target environment
-        await importService.importFromSourceAsync(data);
+        await importService.importAsync(data);
     }
 }
