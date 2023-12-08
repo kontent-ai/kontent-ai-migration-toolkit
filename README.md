@@ -191,7 +191,7 @@ To execute your action run:
 
 `kontent-ai-migration-toolkit --config=export-config.json`
 
-## Use in code
+## Code samples for import & export
 
 See https://github.com/Enngage/kontent-ai-migration-toolkit/tree/main/samples for examples of how to run this library in
 code rather then via command line.
