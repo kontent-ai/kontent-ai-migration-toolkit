@@ -1,8 +1,8 @@
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
-import { IImportContentType, IParsedContentItem } from '../../import/index.js';
+import { IParsedContentItem } from '../../import/index.js';
 import { Readable } from 'stream';
-import { IFileData } from '../file-processor.models.js';
+import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
 import { IExportContentItem } from '../../export/index.js';
 
@@ -27,11 +27,9 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
     private readonly csvDelimiter: string = ',';
     public readonly name: string = 'csv';
 
-    async transformContentItemsAsync(items: IExportContentItem[]): Promise<IFileData[]> {
-        const fileData: IFileData[] = [];
-
-        for (const typeWrapper of this.getTypeWrappers(items)) {
-            const contentItemsOfType = items
+    async transformContentItemsAsync(data: ItemsTransformData): Promise<FileBinaryData> {
+        for (const typeWrapper of this.getTypeWrappers(data.items)) {
+            const contentItemsOfType = data.items
                 .filter((m) => m.system.type === typeWrapper.typeCodename)
                 .map((item) => this.mapToCsvItem(item, typeWrapper));
             const filename: string = `${typeWrapper.typeCodename}.csv`;
@@ -45,73 +43,73 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
                 fields: fieldsToStore
             }).fromInput(languageVariantsStream);
 
-            const data = (await parsingProcessor.promise()) ?? '';
+            const csvContent = (await parsingProcessor.promise()) ?? '';
 
-            fileData.push({
-                data: data,
-                filename: filename,
-                itemsCount: contentItemsOfType.length
-            });
+            data.zip.addFile(filename, csvContent);
         }
 
-        return fileData;
+        return await data.zip.generateZipAsync();
     }
 
-    async parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]> {
+    async parseContentItemsAsync(data: ItemsParseData): Promise<IParsedContentItem[]> {
+        const zipFiles = await data.zip.getAllFilesAsync<string>('string');
         const parsedItems: IParsedContentItem[] = [];
-        let index = 0;
-        const parser = parse(text, {
-            cast: true,
-            delimiter: this.csvDelimiter
-        });
 
-        let parsedColumns: string[] = [];
-        const systemFields = super.getSystemContentItemFields();
+        for (const file of zipFiles) {
+            let index = 0;
+            const parser = parse(file.data, {
+                cast: true,
+                delimiter: this.csvDelimiter
+            });
 
-        for await (const record of parser) {
-            if (index === 0) {
-                // process header row
-                parsedColumns = record;
-            } else {
-                // process data row
-                const contentItem: IParsedContentItem = {
-                    system: {
-                        type: '',
-                        codename: '',
-                        collection: '',
-                        language: '',
-                        last_modified: '',
-                        name: '',
-                        workflow_step: ''
-                    },
-                    elements: []
-                };
+            let parsedColumns: string[] = [];
+            const systemFields = super.getSystemContentItemFields();
 
-                let fieldIndex: number = 0;
-                const contentItemTypeCodename: string = record[0]; // type is set in first index
-                for (const columnName of parsedColumns) {
-                    const columnValue = record[fieldIndex];
+            for await (const record of parser) {
+                if (index === 0) {
+                    // process header row
+                    parsedColumns = record;
+                } else {
+                    // process data row
+                    const contentItem: IParsedContentItem = {
+                        system: {
+                            type: '',
+                            codename: '',
+                            collection: '',
+                            language: '',
+                            last_modified: '',
+                            name: '',
+                            workflow_step: ''
+                        },
+                        elements: []
+                    };
 
-                    if (systemFields.find((m) => m.toLowerCase() === columnName.toLowerCase())) {
-                        // column is system field
-                        (contentItem.system as any)[columnName] = columnValue;
-                    } else {
-                        // column is element field
-                        const element = super.getElement(types, contentItemTypeCodename, columnName);
+                    let fieldIndex: number = 0;
+                    const contentItemTypeCodename: string = record[0]; // type is set in first index
+                    for (const columnName of parsedColumns) {
+                        const columnValue = record[fieldIndex];
 
-                        contentItem.elements.push({
-                            codename: element.codename,
-                            value: columnValue,
-                            type: element.type
-                        });
+                        if (systemFields.find((m) => m.toLowerCase() === columnName.toLowerCase())) {
+                            // column is system field
+                            (contentItem.system as any)[columnName] = columnValue;
+                        } else {
+                            // column is element field
+                            const element = super.getElement(data.types, contentItemTypeCodename, columnName);
+
+                            contentItem.elements.push({
+                                codename: element.codename,
+                                value: columnValue,
+                                type: element.type
+                            });
+                        }
+
+                        fieldIndex++;
                     }
 
-                    fieldIndex++;
+                    parsedItems.push(contentItem);
                 }
-
-                parsedItems.push(contentItem);
+                index++;
             }
-            index++;
         }
 
         return parsedItems;

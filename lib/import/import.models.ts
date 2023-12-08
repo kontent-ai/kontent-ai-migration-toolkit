@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { ContentElementType, IPackageMetadata } from '../core/index.js';
+import { ContentElementType } from '../core/index.js';
 
 export interface IImportConfig {
     managementApiKey: string;
@@ -37,7 +37,6 @@ export interface IImportSource {
         items: IParsedContentItem[];
         assets: IParsedAsset[];
     };
-    metadata?: IPackageMetadata;
 }
 
 export interface IFlattenedFolder {

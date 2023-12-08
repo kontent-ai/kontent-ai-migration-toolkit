@@ -1,12 +1,12 @@
 import { IParsedAsset, IParsedAssetRecord } from '../../import/index.js';
-import { AssetParseData, AssetTransformData, BinaryData } from '../file-processor.models.js';
+import { AssetsParseData, AssetsTransformData, FileBinaryData } from '../file-processor.models.js';
 import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
 
 export class AssetJsonProcessorService extends BaseAssetProcessorService {
     public readonly name: string = 'json';
     private readonly assetsFilename: string = 'assets.json';
 
-    async transformAssetsAsync(data: AssetTransformData): Promise<BinaryData> {
+    async transformAssetsAsync(data: AssetsTransformData): Promise<FileBinaryData> {
         const assetRecords: IParsedAssetRecord[] = [];
 
         for (const exportAsset of data.assets) {
@@ -27,7 +27,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
 
         return await data.zip.generateZipAsync();
     }
-    async parseAssetsAsync(data: AssetParseData): Promise<IParsedAsset[]> {
+    async parseAssetsAsync(data: AssetsParseData): Promise<IParsedAsset[]> {
         const text = await data.zip.getFileContentAsync(this.assetsFilename);
 
         if (!text) {

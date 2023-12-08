@@ -175,8 +175,7 @@ export class ImportService {
             importData: {
                 assets: [],
                 items: []
-            },
-            metadata: source.metadata
+            }
         };
 
         let removedAssets: number = 0;

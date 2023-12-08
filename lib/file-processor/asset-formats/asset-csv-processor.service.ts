@@ -2,7 +2,7 @@ import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
 import { IParsedAsset } from '../../import/index.js';
 import { Readable } from 'stream';
-import { AssetParseData, AssetTransformData, BinaryData } from '../file-processor.models.js';
+import { AssetsParseData, AssetsTransformData, FileBinaryData } from '../file-processor.models.js';
 import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
 
 export class AssetCsvProcessorService extends BaseAssetProcessorService {
@@ -10,7 +10,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
     private readonly assetsFilename: string = 'assets.csv';
     public readonly name: string = 'csv';
 
-    async transformAssetsAsync(data: AssetTransformData): Promise<BinaryData> {
+    async transformAssetsAsync(data: AssetsTransformData): Promise<FileBinaryData> {
         const asssetFiels: FieldInfo<string>[] = this.getAssetFields();
         const stream = new Readable();
         stream.push(JSON.stringify(data.assets));
@@ -34,7 +34,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
         return data.zip.generateZipAsync();
     }
 
-    async parseAssetsAsync(data: AssetParseData): Promise<IParsedAsset[]> {
+    async parseAssetsAsync(data: AssetsParseData): Promise<IParsedAsset[]> {
         const text = await data.zip.getFileContentAsync(this.assetsFilename);
 
         if (!text) {

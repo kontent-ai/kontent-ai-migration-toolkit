@@ -1,31 +1,56 @@
 import JSZip from 'jszip';
 import { formatBytes, logDebug, logErrorAndExit } from '../core/index.js';
-import { BinaryData, ZipContext } from './file-processor.models.js';
+import { FileBinaryData, ZipCompressionLevel, ZipContext } from './file-processor.models.js';
 
-export class ZipService {
+interface IFileResult<T> {
+    data: T;
+    filename: string;
+}
+
+export class ZipPackage {
     private readonly context: ZipContext = 'node.js';
-    private readonly compressionLevel: number = 9;
+    private readonly compressionLevel: ZipCompressionLevel = 9;
 
-    constructor(private readonly zip: JSZip) {}
+    constructor(private readonly jsZip: JSZip) {}
 
     addFile(filePath: string, data: any): void {
-        this.zip.file(filePath, data);
+        this.jsZip.file(filePath, data);
     }
 
     addFolder(name: string): void {
-        this.zip.folder(name);
+        this.jsZip.folder(name);
+    }
+
+    async getAllFilesAsync<TReturnType>(type: JSZip.OutputType): Promise<IFileResult<TReturnType>[]> {
+        const files: IFileResult<TReturnType>[] = [];
+
+        for (const file of Object.values(this.jsZip.files)) {
+            if (!file?.name) {
+                continue;
+            }
+            if (file?.name?.endsWith('/')) {
+                continue;
+            }
+
+            files.push({
+                filename: file.name,
+                data: await file.async<any>(type)
+            });
+        }
+
+        return files;
     }
 
     async getFileContentAsync(filePath: string): Promise<string | undefined> {
-        return await this.zip.file(filePath)?.async('string');
+        return await this.jsZip.file(filePath)?.async('string');
     }
 
-    async getBinaryDataAsync(filePath: string): Promise<BinaryData | undefined> {
-        const binaryData = await this.zip.file(filePath)?.async(this.getZipOutputType(this.context));
+    async getBinaryDataAsync(filePath: string): Promise<FileBinaryData | undefined> {
+        const binaryData = await this.jsZip.file(filePath)?.async(this.getZipOutputType(this.context));
         return binaryData;
     }
 
-    async generateZipAsync(): Promise<BinaryData> {
+    async generateZipAsync(): Promise<FileBinaryData> {
         const zipOutputType = this.getZipOutputType(this.context);
 
         logDebug({
@@ -33,7 +58,7 @@ export class ZipService {
             message: `Creating zip file using '${zipOutputType}' with compression level '${this.compressionLevel.toString()}'`
         });
 
-        const result = await this.zip.generateAsync({
+        const result = await this.jsZip.generateAsync({
             type: zipOutputType,
             compression: 'DEFLATE',
             compressionOptions: {
