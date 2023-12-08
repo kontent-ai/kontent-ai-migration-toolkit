@@ -42,16 +42,15 @@ export class ImportContentItemHelper {
                 title: `'${importContentItem.system.name}' of type '${importContentItem.system.type}'`
             });
 
-            await this.importContentItemAsync({
-                managementClient: data.managementClient,
-                collections: data.collections,
-                importContentItem: importContentItem,
-                importedData: data.importedData,
-                parsedContentItems: data.parsedContentItems,
-                preparedItems: preparedItems
-            });
-
             try {
+                await this.importContentItemAsync({
+                    managementClient: data.managementClient,
+                    collections: data.collections,
+                    importContentItem: importContentItem,
+                    importedData: data.importedData,
+                    parsedContentItems: data.parsedContentItems,
+                    preparedItems: preparedItems
+                });
             } catch (error) {
                 if (data.config.skipFailedItems) {
                     logDebug({
