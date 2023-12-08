@@ -1,34 +1,24 @@
 import colors from 'colors';
 import JSZip from 'jszip';
-import { Blob } from 'buffer';
 
 import { IExportAdapterResult, IExportContentItem } from '../export/index.js';
-import { IImportAsset, IParsedContentItem, IImportSource, IParsedAsset, IImportContentType } from '../import/index.js';
+import { IParsedContentItem, IImportSource, IImportContentType, IParsedAsset } from '../import/index.js';
 import {
     IFileData,
     IFileProcessorConfig,
     IItemFormatService,
-    IExtractedBinaryFileData,
     ZipCompressionLevel,
     ZipContext,
-    IAssetFormatService
+    IAssetFormatService,
+    BinaryData
 } from './file-processor.models.js';
-import {
-    IExportTransformConfig,
-    IPackageMetadata,
-    formatBytes,
-    getExtension,
-    logDebug,
-    logErrorAndExit,
-    logProcessingDebug
-} from '../core/index.js';
-import mime from 'mime';
+import { IExportTransformConfig, IPackageMetadata, logDebug, logErrorAndExit } from '../core/index.js';
+import { ZipService } from './zip-service.js';
 
 export class FileProcessorService {
     private readonly zipContext: ZipContext = 'node.js';
 
     private readonly metadataName: string = '_metadata.json';
-    private readonly binaryFilesFolderName: string = 'files';
 
     constructor(config?: IFileProcessorConfig) {}
 
@@ -104,7 +94,7 @@ export class FileProcessorService {
         types: IImportContentType[];
     }): Promise<IImportSource> {
         let parsedItems: IParsedContentItem[] = [];
-        let parsedAssets: IImportAsset[] = [];
+        let parsedAssets: IParsedAsset[] = [];
 
         if (data.items) {
             logDebug({
@@ -150,7 +140,7 @@ export class FileProcessorService {
             itemFormatService: IItemFormatService;
             compressionLevel?: ZipCompressionLevel;
         }
-    ): Promise<any> {
+    ): Promise<BinaryData> {
         const zip = new JSZip();
         const contentItemsFolder = zip;
 
@@ -194,8 +184,7 @@ export class FileProcessorService {
 
         logDebug({
             type: 'info',
-            message: `Zip successfully generated`,
-            partA: formatBytes(this.getZipSizeInBytes(zipData))
+            message: `Zip successfully generated`
         });
 
         return zipData;
@@ -207,100 +196,19 @@ export class FileProcessorService {
             assetFormatService: IAssetFormatService;
             compressionLevel?: ZipCompressionLevel;
         }
-    ): Promise<any> {
-        const zip = new JSZip();
-
-        const assetsFolder = zip;
-        const filesFolder = zip.folder(this.binaryFilesFolderName);
-
-        if (!filesFolder) {
-            logErrorAndExit({
-                message: `Could not create folder '${this.binaryFilesFolderName}'`
-            });
-        }
-
-        if (exportData.assets.length) {
-            logDebug({
-                type: 'info',
-                message: `Transforming '${exportData.assets.length.toString()}' asssets`,
-                partA: config.assetFormatService?.name
-            });
-
-            const transformedAssetsFileData = await config.assetFormatService.transformAssetsAsync(exportData.assets);
-
-            for (const fileInfo of transformedAssetsFileData) {
-                logDebug({
-                    type: 'info',
-                    message: `Adding '${fileInfo.itemsCount}' items to file within zip`,
-                    partA: fileInfo.filename
-                });
-                assetsFolder.file(fileInfo.filename, fileInfo.data);
-            }
-
-            let assetIndex: number = 1;
-            for (const asset of exportData.assets) {
-                const assetFilename = `${asset.assetId}.${asset.extension}`; // use id as filename to prevent filename conflicts
-
-                logProcessingDebug({
-                    index: assetIndex,
-                    totalCount: exportData.assets.length,
-                    itemType: 'zipFile',
-                    title: `'${assetFilename}'`
-                });
-
-                filesFolder.file(assetFilename, asset.binaryData, {
-                    binary: true
-                });
-                assetIndex++;
-            }
-
-            logDebug({
-                type: 'info',
-                message: `All assets added to zip`
-            });
-        } else {
-            logDebug({
-                type: 'info',
-                message: `There are no assets`
-            });
-        }
-
-        const zipOutputType = this.getZipOutputType(this.zipContext);
-        const compressionLevel: number = config.compressionLevel ?? 9;
-
+    ): Promise<BinaryData> {
         logDebug({
             type: 'info',
-            message: `Creating zip file using '${zipOutputType}' with compression level '${compressionLevel.toString()}'`
+            message: `Creating assets zip`,
+            partA: config.assetFormatService?.name
         });
 
-        const zipData = await zip.generateAsync({
-            type: zipOutputType,
-            compression: 'DEFLATE',
-            compressionOptions: {
-                level: compressionLevel
-            },
-            streamFiles: true
+        const zip = await config.assetFormatService.transformAssetsAsync({
+            assets: exportData.assets,
+            zip: new ZipService(new JSZip())
         });
 
-        logDebug({
-            type: 'info',
-            message: `Zip successfully generated`,
-            partA: formatBytes(this.getZipSizeInBytes(zipData))
-        });
-
-        return zipData;
-    }
-
-    private getZipSizeInBytes(zipData: any): number {
-        if (zipData instanceof Blob) {
-            return zipData.size;
-        } else if (zipData instanceof Buffer) {
-            return zipData.byteLength;
-        }
-
-        logErrorAndExit({
-            message: `Unrecognized zip data type '${typeof zipData}'`
-        });
+        return zip;
     }
 
     private async transformLanguageVariantsAsync(
@@ -313,112 +221,10 @@ export class FileProcessorService {
     private async parseAssetsFromFileAsync(
         zip: JSZip,
         assetFormatService: IAssetFormatService
-    ): Promise<IImportAsset[]> {
-        const importAssets: IImportAsset[] = [];
-        const parsedAssets: IParsedAsset[] = [];
-
-        const files = zip.files;
-
-        const binaryFiles: IExtractedBinaryFileData[] = await this.extractBinaryFilesAsync(zip);
-
-        for (const [, file] of Object.entries(files)) {
-            if (file?.name?.endsWith('/')) {
-                continue;
-            }
-
-            if (file?.name?.toLowerCase() === this.metadataName.toLowerCase()) {
-                continue;
-            }
-
-            if (file?.name?.startsWith(this.binaryFilesFolderName)) {
-                continue;
-            }
-
-            const text = await file.async('string');
-
-            parsedAssets.push(...(await assetFormatService.parseAssetsAsync(text)));
-        }
-
-        for (const parsedAsset of parsedAssets) {
-            const binaryFile = binaryFiles.find((m) => m.assetId === parsedAsset.assetId);
-
-            if (!binaryFile) {
-                logErrorAndExit({
-                    message: `Could not find binary data for asset with id '${parsedAsset.assetId}'`
-                });
-            }
-
-            importAssets.push({
-                assetId: parsedAsset.assetId,
-                extension: binaryFile.extension,
-                filename: parsedAsset.filename,
-                mimeType: binaryFile.mimeType,
-                binaryData: binaryFile.binaryData
-            });
-        }
-
-        return importAssets;
-    }
-
-    private async extractBinaryFilesAsync(zip: JSZip): Promise<IExtractedBinaryFileData[]> {
-        const extractedFiles: IExtractedBinaryFileData[] = [];
-
-        let assetIndex: number = 0;
-        const files = Object.entries(zip.files);
-        for (const [, file] of files) {
-            assetIndex++;
-
-            logProcessingDebug({
-                index: assetIndex,
-                totalCount: files.length,
-                itemType: 'zipFile',
-                title: file.name
-            });
-
-            if (!file?.name?.startsWith(`${this.binaryFilesFolderName}/`)) {
-                // iterate through assets only
-                continue;
-            }
-
-            if (file?.name?.endsWith('/')) {
-                continue;
-            }
-
-            const binaryData = await file.async(this.getZipOutputType(this.zipContext));
-
-            logDebug({
-                type: 'extractBinaryData',
-                message: file.name,
-                partA: formatBytes(this.getZipSizeInBytes(binaryData))
-            });
-
-            const assetId = this.getAssetIdFromFilename(file.name);
-            const extension = getExtension(file.name) ?? '';
-            const filename = file.name;
-            const mimeType = mime.getType(file.name) ?? '';
-
-            extractedFiles.push({
-                assetId: assetId,
-                binaryData: binaryData,
-                filename: filename,
-                mimeType: mimeType,
-                extension: extension
-            });
-        }
-
-        logDebug({
-            type: 'info',
-            message: `All binary files (${extractedFiles.length}) were extracted`
+    ): Promise<IParsedAsset[]> {
+        return assetFormatService.parseAssetsAsync({
+            zip: new ZipService(zip)
         });
-
-        return extractedFiles;
-    }
-
-    private getAssetIdFromFilename(filename: string): string {
-        const split = filename.split('/');
-        const filenameWithExtension = split[1];
-
-        return filenameWithExtension.split('.')[0];
     }
 
     private getZipOutputType(context: ZipContext): 'nodebuffer' | 'blob' {

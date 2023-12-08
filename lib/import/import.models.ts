@@ -10,7 +10,7 @@ export interface IImportConfig {
     environmentId: string;
     canImport?: {
         contentItem?: (item: IParsedContentItem) => boolean | Promise<boolean>;
-        asset?: (item: IImportAsset) => boolean | Promise<boolean>;
+        asset?: (item: IParsedAsset) => boolean | Promise<boolean>;
     };
 }
 
@@ -21,25 +21,21 @@ export interface IImportAllResult {
     };
 }
 
-export interface IImportAsset {
-    binaryData: Buffer | Blob;
-    assetId: string;
-    filename: string;
-    mimeType: string | undefined;
-    extension: string | undefined;
-}
-
-export interface IParsedAsset {
+export interface IParsedAssetRecord {
     assetId: string;
     filename: string;
     extension: string;
     url: string;
 }
 
+export interface IParsedAsset extends IParsedAssetRecord {
+    binaryData: Buffer | Blob | undefined;
+}
+
 export interface IImportSource {
     importData: {
         items: IParsedContentItem[];
-        assets: IImportAsset[];
+        assets: IParsedAsset[];
     };
     metadata?: IPackageMetadata;
 }

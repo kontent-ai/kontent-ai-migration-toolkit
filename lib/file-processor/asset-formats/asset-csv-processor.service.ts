@@ -2,36 +2,45 @@ import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
 import { IParsedAsset } from '../../import/index.js';
 import { Readable } from 'stream';
-import { IFileData } from '../file-processor.models.js';
-import { IExportAsset } from '../../export/index.js';
+import { AssetParseData, AssetTransformData, BinaryData } from '../file-processor.models.js';
 import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
 
 export class AssetCsvProcessorService extends BaseAssetProcessorService {
     private readonly csvDelimiter: string = ',';
+    private readonly assetsFilename: string = 'assets.csv';
     public readonly name: string = 'csv';
 
-    async transformAssetsAsync(assets: IExportAsset[]): Promise<IFileData[]> {
+    async transformAssetsAsync(data: AssetTransformData): Promise<BinaryData> {
         const asssetFiels: FieldInfo<string>[] = this.getAssetFields();
         const stream = new Readable();
-        stream.push(JSON.stringify(assets));
+        stream.push(JSON.stringify(data.assets));
         stream.push(null); // required to end the stream
 
         const parsingProcessor = this.geCsvParser({
             fields: asssetFiels
         }).fromInput(stream);
 
-        const data = (await parsingProcessor.promise()) ?? '';
+        const csvContent = (await parsingProcessor.promise()) ?? '';
 
-        return [
-            {
-                filename: 'assets.csv',
-                data: data,
-                itemsCount: assets.length
-            }
-        ];
+        data.zip.addFile(this.assetsFilename, csvContent);
+
+        for (const exportAsset of data.assets) {
+            await data.zip.addFile(
+                this.getAssetZipFilename(exportAsset.assetId, exportAsset.extension),
+                exportAsset.binaryData
+            );
+        }
+
+        return data.zip.generateZipAsync();
     }
 
-    async parseAssetsAsync(text: string): Promise<IParsedAsset[]> {
+    async parseAssetsAsync(data: AssetParseData): Promise<IParsedAsset[]> {
+        const text = await data.zip.getFileContentAsync(this.assetsFilename);
+
+        if (!text) {
+            return [];
+        }
+
         const parsedAssets: IParsedAsset[] = [];
         let index = 0;
         const parser = parse(text, {
@@ -51,7 +60,8 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
                     assetId: '',
                     extension: '',
                     filename: '',
-                    url: ''
+                    url: '',
+                    binaryData: undefined
                 };
 
                 let fieldIndex: number = 0;
@@ -61,12 +71,21 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
                     fieldIndex++;
                 }
 
+                // add binary data to record
+                parsedAsset.binaryData = await data.zip.getBinaryDataAsync(
+                    this.getAssetZipFilename(parsedAsset.assetId, parsedAsset.extension)
+                );
+
                 parsedAssets.push(parsedAsset);
             }
             index++;
         }
 
         return parsedAssets;
+    }
+
+    private getAssetZipFilename(assetId: string, extension: string): string {
+        return `${assetId}.${extension}`; // use id as filename to prevent filename conflicts
     }
 
     private geCsvParser(config: { fields: string[] | FieldInfo<string>[] }): AsyncParser<string> {

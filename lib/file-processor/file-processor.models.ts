@@ -1,10 +1,13 @@
 import { IExportContentItem, IExportAsset } from '../export/index.js';
 import { IImportContentType, IParsedAsset, IParsedContentItem } from '../import/index.js';
+import { ZipService } from './zip-service.js';
 
 /**
  * Browser is currently not generally upported as we depend on few node.js specific APIs
  */
 export type ZipContext = 'node.js' | 'browser';
+
+export type BinaryData = Blob | Buffer;
 
 export type ProcessingFormat = 'csv' | 'json' | 'jsonJoined';
 
@@ -17,11 +20,20 @@ export interface IItemFormatService {
     parseContentItemsAsync(text: string, types: IImportContentType[]): Promise<IParsedContentItem[]>;
 }
 
+export type AssetTransformData = {
+    readonly zip: ZipService;
+    readonly assets: IExportAsset[];
+};
+
+export type AssetParseData = {
+    readonly zip: ZipService;
+};
+
 export interface IAssetFormatService {
     name: string;
 
-    transformAssetsAsync(assets: IExportAsset[]): Promise<IFileData[]>;
-    parseAssetsAsync(text: string): Promise<IParsedAsset[]>;
+    transformAssetsAsync(data: AssetTransformData): Promise<BinaryData>;
+    parseAssetsAsync(data: AssetParseData): Promise<IParsedAsset[]>;
 }
 
 export interface IExtractedBinaryFileData {
@@ -32,8 +44,7 @@ export interface IExtractedBinaryFileData {
     binaryData: Buffer | Blob;
 }
 
-export interface IFileProcessorConfig {
-}
+export interface IFileProcessorConfig {}
 
 export interface IFileData {
     filename: string;

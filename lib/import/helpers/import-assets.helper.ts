@@ -1,11 +1,12 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
 import { IImportedData, is404Error, logItemAction, logProcessingDebug } from '../../core/index.js';
-import { IImportAsset } from '../import.models.js';
+import { IParsedAsset } from '../import.models.js';
+import mime from 'mime';
 
 export class ImportAssetsHelper {
     async importAssetsAsync(data: {
         managementClient: ManagementClient;
-        assets: IImportAsset[];
+        assets: IParsedAsset[];
         importedData: IImportedData;
     }): Promise<void> {
         let assetIndex: number = 1;
@@ -56,7 +57,7 @@ export class ImportAssetsHelper {
                     .uploadBinaryFile()
                     .withData({
                         binaryData: asset.binaryData,
-                        contentType: asset.mimeType ?? '',
+                        contentType: mime.getType(asset.filename) ?? '',
                         filename: asset.filename
                     })
                     .toPromise();

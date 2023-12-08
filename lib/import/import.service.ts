@@ -187,6 +187,7 @@ export class ImportService {
                 const canImport = this.config.canImport.asset(asset);
                 if (canImport) {
                     dataToImport.importData.assets.push(asset);
+                } else {
                     removedAssets++;
                 }
             }
@@ -199,6 +200,7 @@ export class ImportService {
                 const canImport = this.config.canImport.contentItem(item);
                 if (canImport) {
                     dataToImport.importData.items.push(item);
+                } else {
                     removedContentItems++;
                 }
             }

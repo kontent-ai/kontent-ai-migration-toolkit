@@ -6,7 +6,7 @@ import {
     LanguageVariantModels
 } from '@kontent-ai/management-sdk';
 import { ProcessingFormat } from '../file-processor/index.js';
-import { IImportAsset, IParsedContentItem } from '../import/index.js';
+import { IParsedAsset, IParsedContentItem } from '../import/index.js';
 import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 
 export interface ICliFileConfig {
@@ -64,7 +64,7 @@ export interface IProcessedItem {
 
 export interface IImportedData {
     assets: {
-        original: IImportAsset;
+        original: IParsedAsset;
         imported: AssetModels.Asset;
     }[];
     contentItems: {
@@ -72,7 +72,7 @@ export interface IImportedData {
         imported: ContentItemModels.ContentItem;
     }[];
     languageVariants: {
-        original: any;
+        original: IParsedContentItem;
         imported: LanguageVariantModels.ContentItemLanguageVariant;
     }[];
 }

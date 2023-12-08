@@ -1,11 +1,10 @@
-import { IExportAsset } from '../export/index.js';
 import { IParsedAsset } from '../import/index.js';
-import { IFileData, IAssetFormatService } from './file-processor.models.js';
+import { IAssetFormatService, AssetTransformData, BinaryData, AssetParseData } from './file-processor.models.js';
 
 export abstract class BaseAssetProcessorService implements IAssetFormatService {
     abstract name: string;
-    abstract transformAssetsAsync(assets: IExportAsset[]): Promise<IFileData[]>;
-    abstract parseAssetsAsync(text: string): Promise<IParsedAsset[]>;
+    abstract transformAssetsAsync(data: AssetTransformData): Promise<BinaryData>;
+    abstract parseAssetsAsync(data: AssetParseData): Promise<IParsedAsset[]>;
 
     protected getSystemAssetFields(): string[] {
         return ['assetId', 'filename', 'extension', 'url'];

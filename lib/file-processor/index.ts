@@ -5,3 +5,4 @@ export * from './item-formats/item-json-processor.service.js';
 export * from './file-processor.models.js';
 export * from './asset-formats/asset-csv-processor.service.js';
 export * from './asset-formats/asset-json-processor.service.js';
+export * from './zip-service.js';
