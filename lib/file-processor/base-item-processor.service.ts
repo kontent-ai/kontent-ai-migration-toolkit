@@ -29,9 +29,9 @@ export abstract class BaseItemProcessorService implements IItemFormatService {
 
         if (!element) {
             logErrorAndExit({
-                message: `Could not find element with codename '${colors.red(elementCodename)}' for type '${colors.red(
-                    type.contentTypeCodename
-                )}'`
+                message: `Could not find element with codename '${colors.red(
+                    elementCodename
+                )}' for type '${colors.yellow(type.contentTypeCodename)}'`
             });
         }
 
