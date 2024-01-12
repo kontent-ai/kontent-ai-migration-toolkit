@@ -1,12 +1,17 @@
 import { IContentType, IDeliveryClient, ILanguage, createDeliveryClient } from '@kontent-ai/delivery-sdk';
-import { IExportAdapter, IExportAdapterResult, IExportAsset, IExportConfig } from '../../export.models.js';
+import {
+    IExportAdapter,
+    IExportAdapterResult,
+    IExportAsset,
+    IKontentAiExportAdapterConfig
+} from '../../export.models.js';
 import { exportContentItemHelper } from './helpers/export-content-item.helper.js';
 import { defaultHttpService, defaultRetryStrategy } from '../../../core/global-helper.js';
 import { exportAssetsHelper } from './helpers/export-assets-item.helper.js';
 import { logDebug } from '../../../core/index.js';
 
 export class KontentAiExportAdapter implements IExportAdapter {
-    constructor(private config: IExportConfig) {}
+    constructor(private config: IKontentAiExportAdapterConfig) {}
 
     async exportAsync(): Promise<IExportAdapterResult> {
         logDebug({ type: 'info', message: 'Environment id', partA: this.config.environmentId });
@@ -15,14 +20,14 @@ export class KontentAiExportAdapter implements IExportAdapter {
 
         const deliveryClient = this.getDeliveryClient();
 
-        const types = await this.getContentTypesAsync(deliveryClient);
-        const languages = await this.getLanguagesAsync(deliveryClient);
+        const allTypes = await this.getAllContentTypesAsync(deliveryClient);
+        const allLanguages = await this.getAllLanguagesAsync(deliveryClient);
 
         const contentItemsResult = await exportContentItemHelper.exportContentItemsAsync(
             deliveryClient,
             this.config,
-            types,
-            languages
+            allTypes,
+            allLanguages
         );
 
         const assets: IExportAsset[] = [];
@@ -30,7 +35,7 @@ export class KontentAiExportAdapter implements IExportAdapter {
         if (this.config.exportAssets) {
             logDebug({ type: 'info', message: `Extracting assets referenced by content items` });
             assets.push(
-                ...(await exportAssetsHelper.extractAssetsAsync(contentItemsResult.deliveryContentItems, types))
+                ...(await exportAssetsHelper.extractAssetsAsync(contentItemsResult.deliveryContentItems, allTypes))
             );
         } else {
             logDebug({ type: 'info', message: `Assets export is disabled` });
@@ -42,12 +47,12 @@ export class KontentAiExportAdapter implements IExportAdapter {
         };
     }
 
-    private async getLanguagesAsync(deliveryClient: IDeliveryClient): Promise<ILanguage[]> {
+    private async getAllLanguagesAsync(deliveryClient: IDeliveryClient): Promise<ILanguage[]> {
         const response = await deliveryClient.languages().toAllPromise();
         return response.data.items;
     }
 
-    private async getContentTypesAsync(deliveryClient: IDeliveryClient): Promise<IContentType[]> {
+    private async getAllContentTypesAsync(deliveryClient: IDeliveryClient): Promise<IContentType[]> {
         const response = await deliveryClient.types().toAllPromise();
         return response.data.items;
     }

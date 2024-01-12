@@ -1,16 +1,18 @@
 import { IContentType, ILanguage, IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
 import { ActionType, ContentElementType, ItemType, logDebug } from '../../../../core/index.js';
-import { IExportConfig, IExportContentItem, IExportElement } from '../../../export.models.js';
+import { IKontentAiExportAdapterConfig, IExportContentItem, IExportElement } from '../../../export.models.js';
 import { translationHelper } from '../../../../translation/index.js';
+import colors from 'colors';
 
 export class ExportContentItemHelper {
     async exportContentItemsAsync(
         deliveryClient: IDeliveryClient,
-        config: IExportConfig,
+        config: IKontentAiExportAdapterConfig,
         types: IContentType[],
         languages: ILanguage[]
     ): Promise<{ exportContentItems: IExportContentItem[]; deliveryContentItems: IContentItem[] }> {
         const typesToExport: IContentType[] = this.getTypesToExport(config, types);
+        const languagesToExport: ILanguage[] = this.getLanguagesToExport(config, languages);
         const contentItems: IContentItem[] = [];
 
         if (config.customItemsExport) {
@@ -30,12 +32,13 @@ export class ExportContentItemHelper {
         } else {
             logDebug({
                 type: 'info',
-                message: `Exporting content items of types`,
-                partA: typesToExport.map((m) => m.system.codename).join(', ')
+                message: `Exporting content items of '${colors.yellow(
+                    languagesToExport.length.toString()
+                )}' content types & '${colors.yellow(languagesToExport.length.toString())}' languages`
             });
 
             for (const type of typesToExport) {
-                for (const language of languages) {
+                for (const language of languagesToExport) {
                     await deliveryClient
                         .itemsFeed()
                         .type(type.system.codename)
@@ -75,7 +78,7 @@ export class ExportContentItemHelper {
         item: IContentItem,
         items: IContentItem[],
         types: IContentType[],
-        config: IExportConfig
+        config: IKontentAiExportAdapterConfig
     ): IExportContentItem {
         return {
             system: {
@@ -126,7 +129,7 @@ export class ExportContentItemHelper {
         });
     }
 
-    private getTypesToExport(config: IExportConfig, types: IContentType[]): IContentType[] {
+    private getTypesToExport(config: IKontentAiExportAdapterConfig, types: IContentType[]): IContentType[] {
         const filteredTypes: IContentType[] = [];
 
         if (!config?.exportTypes?.length) {
@@ -136,12 +139,28 @@ export class ExportContentItemHelper {
 
         for (const type of types) {
             if (config.exportTypes.find((m) => m.toLowerCase() === type.system.codename.toLowerCase())) {
-                // content type can be exported
                 filteredTypes.push(type);
             }
         }
 
         return filteredTypes;
+    }
+
+    private getLanguagesToExport(config: IKontentAiExportAdapterConfig, languages: ILanguage[]): ILanguage[] {
+        const filteredLanguages: ILanguage[] = [];
+
+        if (!config?.exportLanguages?.length) {
+            // export all languages
+            return languages;
+        }
+
+        for (const language of languages) {
+            if (config.exportLanguages.find((m) => m.toLowerCase() === language.system.codename.toLowerCase())) {
+                filteredLanguages.push(language);
+            }
+        }
+
+        return filteredLanguages;
     }
 }
 

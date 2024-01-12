@@ -70,7 +70,12 @@ const argv = yargs(process.argv.slice(2))
     .alias('et', 'exportTypes')
     .describe(
         'et',
-        'Can be used to export only selected content types. Expects CSV of type codenames. If not provided, all content items of all types are exported'
+        'CSV of content type codenames of which content items will be exported. If not provided, all content items of all types are exported'
+    )
+    .alias('el', 'exportLanguages')
+    .describe(
+        'el',
+        'CSV of language codenames of which content items will be exported. If not provided, all content items of all types are exported'
     )
     .help('h')
     .alias('h', 'help').argv;
@@ -100,6 +105,7 @@ const exportAsync = async (config: ICliFileConfig) => {
             isSecure: config.isSecure,
             baseUrl: config.baseUrl,
             exportTypes: config.exportTypes,
+            exportLanguages: config.exportLanguages,
             exportAssets: config.exportAssets
         });
     } else {

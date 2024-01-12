@@ -19,7 +19,7 @@ export interface IExportFilter {
     types?: string[];
 }
 
-export interface IExportConfig {
+export interface IKontentAiExportAdapterConfig {
     environmentId: string;
     managementApiKey?: string;
     secureApiKey?: string;
@@ -28,6 +28,7 @@ export interface IExportConfig {
     isSecure: boolean;
     baseUrl?: string;
     exportTypes?: string[];
+    exportLanguages?: string[];
     exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;
     customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;

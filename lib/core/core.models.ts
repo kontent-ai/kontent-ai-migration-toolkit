@@ -25,6 +25,7 @@ export interface ICliFileConfig {
     assetsFilename?: string;
     baseUrl?: string;
     exportTypes?: string[];
+    exportLanguages?: string[];
     exportAssets: boolean;
 }
 
