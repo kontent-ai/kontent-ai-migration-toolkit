@@ -19,6 +19,7 @@ import { IParsedContentItem, IParsedElement } from '../import.models.js';
 import { importWorkflowHelper } from './import-workflow.helper.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 import { translationHelper } from '../../translation/index.js';
+import colors from 'colors';
 
 export class ImportLanguageVariantHelper {
     async importLanguageVariantsAsync(data: {
@@ -36,7 +37,9 @@ export class ImportLanguageVariantHelper {
         );
 
         logItemAction('skip', 'languageVariant', {
-            title: `Skipping '${categorizedParsedItems.componentItems.length}' because they represent component items`
+            title: `Skipping '${colors.yellow(
+                categorizedParsedItems.componentItems.length.toString()
+            )}' because they represent component items`
         });
 
         let itemIndex: number = 0;
@@ -48,7 +51,8 @@ export class ImportLanguageVariantHelper {
                     index: itemIndex,
                     totalCount: categorizedParsedItems.regularItems.length,
                     itemType: 'languageVariant',
-                    title: `'${importContentItem.system.name}' of type '${importContentItem.system.type}' in language '${importContentItem.system.language}'`
+                    title: `${importContentItem.system.name}`,
+                    partA: importContentItem.system.language
                 });
 
                 const preparedContentItem = data.preparedContentItems.find(
@@ -57,7 +61,7 @@ export class ImportLanguageVariantHelper {
 
                 if (!preparedContentItem) {
                     logErrorAndExit({
-                        message: `Invalid content item for codename '${importContentItem.system.codename}'`
+                        message: `Invalid content item for codename '${colors.red(importContentItem.system.codename)}'`
                     });
                 }
 
@@ -73,7 +77,9 @@ export class ImportLanguageVariantHelper {
                 if (data.config.skipFailedItems) {
                     logDebug({
                         type: 'error',
-                        message: `Failed to import language variant '${importContentItem.system.name}' in language '${importContentItem.system.language}'`,
+                        message: `Failed to import language variant '${colors.red(
+                            importContentItem.system.name
+                        )}' in language '${colors.red(importContentItem.system.language)}'`,
                         partA: importContentItem.system.codename,
                         partB: extractErrorMessage(error)
                     });
@@ -162,7 +168,11 @@ export class ImportLanguageVariantHelper {
 
             if (!languageVariantOfContentItem) {
                 logErrorAndExit({
-                    message: `Invalid langauge variant for item '${data.importContentItem.system.codename}' of type '${data.importContentItem.system.type}' and language '${data.importContentItem.system.language}'`
+                    message: `Invalid langauge variant for item '${colors.red(
+                        data.importContentItem.system.codename
+                    )}' of type '${colors.yellow(data.importContentItem.system.type)}' and language '${colors.yellow(
+                        data.importContentItem.system.language
+                    )}'`
                 });
             }
         } catch (error) {
@@ -256,7 +266,7 @@ export class ImportLanguageVariantHelper {
 
         if (!importContract) {
             logErrorAndExit({
-                message: `Missing import contract for element '${element.codename}' `
+                message: `Missing import contract for element '${colors.red(element.codename)}' `
             });
         }
 

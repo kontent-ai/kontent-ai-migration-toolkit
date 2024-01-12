@@ -10,6 +10,7 @@ import {
 } from '../../core/index.js';
 import { IParsedContentItem } from '../import.models.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
+import colors from 'colors';
 
 export class ImportContentItemHelper {
     async importContentItemsAsync(data: {
@@ -29,7 +30,9 @@ export class ImportContentItemHelper {
         );
 
         logItemAction('skip', 'contentItem', {
-            title: `Skipping '${categorizedParsedItems.componentItems.length}' because they represent component items`
+            title: `Skipping '${colors.yellow(
+                categorizedParsedItems.componentItems.length.toString()
+            )}' because they represent component items`
         });
 
         for (const importContentItem of categorizedParsedItems.regularItems) {
@@ -39,7 +42,8 @@ export class ImportContentItemHelper {
                 index: itemIndex,
                 totalCount: categorizedParsedItems.regularItems.length,
                 itemType: 'contentItem',
-                title: `'${importContentItem.system.name}' of type '${importContentItem.system.type}'`
+                title: `${importContentItem.system.name}`,
+                partA: importContentItem.system.type
             });
 
             try {
@@ -105,12 +109,12 @@ export class ImportContentItemHelper {
                     .then((m) => m.data);
 
                 logItemAction('upsert', 'contentItem', {
-                    title: `Upserting item '${upsertedContentItem.name}'`,
+                    title: `${upsertedContentItem.name}`,
                     codename: data.importContentItem.system.codename
                 });
             } else {
                 logItemAction('skip', 'contentItem', {
-                    title: `Item '${data.importContentItem.system.name}' already exists`,
+                    title: `${data.importContentItem.system.name}`,
                     codename: data.importContentItem.system.codename
                 });
             }
@@ -148,7 +152,7 @@ export class ImportContentItemHelper {
                 .then((m) => m.data);
 
             logItemAction('fetch', 'contentItem', {
-                title: `Loading item '${contentItem.name}'`,
+                title: `${contentItem.name}`,
                 codename: contentItem.codename
             });
 
@@ -184,7 +188,7 @@ export class ImportContentItemHelper {
                 });
 
                 logItemAction('create', 'contentItem', {
-                    title: `Creating item '${contentItem.name}'`,
+                    title: `${contentItem.name}`,
                     codename: contentItem.codename
                 });
 

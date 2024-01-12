@@ -22,6 +22,8 @@ export class ImportToolkit {
     async importFromFileAsync(): Promise<void> {
         const importService = new ImportService(this.config);
 
+        await importService.printInfoAsync();
+
         // prepare content types
         const contentTypes = await importService.getImportContentTypesAsync();
 
@@ -48,6 +50,8 @@ export class ImportToolkit {
 
     async importFromZipAsync(): Promise<void> {
         const importService = new ImportService(this.config);
+
+        await importService.printInfoAsync();
 
         // prepare content types
         const contentTypes = await importService.getImportContentTypesAsync();

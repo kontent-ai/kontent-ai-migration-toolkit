@@ -40,17 +40,17 @@ export class FileProcessorService {
             });
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
 
+            logDebug({
+                type: 'info',
+                message: 'Parsing items zip data'
+            });
+
             result.importData.items.push(
                 ...(await data.items.formatService.parseContentItemsAsync({
                     zip: new ZipPackage(itemsZipFile),
                     types: data.types
                 }))
             );
-
-            logDebug({
-                type: 'info',
-                message: 'Parsing items zip data'
-            });
         }
 
         if (data.assets) {
@@ -60,21 +60,23 @@ export class FileProcessorService {
             });
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
 
+            logDebug({
+                type: 'info',
+                message: 'Parsing assets zip data'
+            });
+
             result.importData.assets.push(
                 ...(await data.assets.formatService.parseAssetsAsync({
                     zip: new ZipPackage(assetsZipFile)
                 }))
             );
-
-            logDebug({
-                type: 'info',
-                message: 'Parsing assets zip data'
-            });
         }
 
         logDebug({
             type: 'info',
-            message: 'Parsing completed'
+            message: `Parsing completed. Parsed '${colors.yellow(
+                result.importData.items.length.toString()
+            )}' items and '${colors.yellow(result.importData.assets.length.toString())}' assets`
         });
 
         return result;

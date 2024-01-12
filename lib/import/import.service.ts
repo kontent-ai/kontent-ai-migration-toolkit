@@ -8,14 +8,7 @@ import {
     WorkflowModels
 } from '@kontent-ai/management-sdk';
 
-import {
-    IImportedData,
-    defaultRetryStrategy,
-    printProjectAndEnvironmentInfoToConsoleAsync,
-    defaultHttpService,
-    logDebug,
-    logErrorAndExit
-} from '../core/index.js';
+import { IImportedData, defaultRetryStrategy, defaultHttpService, logDebug, logErrorAndExit } from '../core/index.js';
 import {
     IImportConfig,
     IParsedContentItem,
@@ -26,6 +19,7 @@ import {
 import { importAssetsHelper } from './helpers/import-assets.helper.js';
 import { importContentItemHelper } from './helpers/import-content-item.helper.js';
 import { importLanguageVariantHelper } from './helpers/import-language-variant.helper.js';
+import colors from 'colors';
 
 export class ImportService {
     private readonly managementClient: ManagementClient;
@@ -40,23 +34,29 @@ export class ImportService {
         });
     }
 
-    async getImportContentTypesAsync(): Promise<IImportContentType[]> {
+    async printInfoAsync(): Promise<void> {
+        const environmentInformation = (await this.managementClient.environmentInformation().toPromise()).data;
+
         logDebug({
             type: 'info',
-            message: `Fetching content types from environment`
+            message: `Importing into '${colors.yellow(
+                environmentInformation.project.environment
+            )}' environment of project '${colors.yellow(environmentInformation.project.name)}'`
         });
+    }
 
+    async getImportContentTypesAsync(): Promise<IImportContentType[]> {
         const contentTypes = (await this.managementClient.listContentTypes().toAllPromise()).data.items;
         const contentTypeSnippets = (await this.managementClient.listContentTypeSnippets().toAllPromise()).data.items;
 
         logDebug({
             type: 'info',
-            message: `Fetched '${contentTypes.length}' content types`
+            message: `Fetched '${colors.yellow(contentTypes.length.toString())}' content types`
         });
 
         logDebug({
             type: 'info',
-            message: `Fetched '${contentTypeSnippets.length}' content type snippets`
+            message: `Fetched '${colors.yellow(contentTypeSnippets.length.toString())}' content type snippets`
         });
 
         return [
@@ -77,7 +77,6 @@ export class ImportService {
             contentItems: [],
             languageVariants: []
         };
-        await printProjectAndEnvironmentInfoToConsoleAsync(this.managementClient);
 
         // this is an optional step where users can exclude certain objects from being imported
         const dataToImport = this.getDataToImport(sourceData);
@@ -148,7 +147,9 @@ export class ImportService {
 
                 if (!contentTypeSnippet) {
                     logErrorAndExit({
-                        message: `Could not find content type snippet for element. This snippet is referenced in type '${contentType.codename}'`
+                        message: `Could not find content type snippet for element. This snippet is referenced in type '${colors.red(
+                            contentType.codename
+                        )}'`
                     });
                 }
 
@@ -210,14 +211,14 @@ export class ImportService {
         if (removedAssets > 0) {
             logDebug({
                 type: 'info',
-                message: `Removed '${removedAssets.toString()}' assets from import`
+                message: `Removed '${colors.yellow(removedAssets.toString())}' assets from import`
             });
         }
 
         if (removedContentItems) {
             logDebug({
                 type: 'info',
-                message: `Removed '${removedContentItems.toString()}' content items from import`
+                message: `Removed '${colors.yellow(removedContentItems.toString())}' content items from import`
             });
         }
 

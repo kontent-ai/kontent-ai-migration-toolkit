@@ -1,7 +1,7 @@
-import { IManagementClient, EnvironmentModels, SharedModels } from '@kontent-ai/management-sdk';
+import { SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
-import { logDebug, logErrorAndExit } from './log-helper.js';
+import { logErrorAndExit } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
 
 const rateExceededErrorCode: number = 10000;
@@ -34,25 +34,6 @@ export const defaultRetryStrategy: IRetryStrategyOptions = {
 
 export function getExtension(url: string): string | undefined {
     return url.split('.').pop();
-}
-
-export async function printProjectAndEnvironmentInfoToConsoleAsync(
-    client: IManagementClient<any>
-): Promise<EnvironmentModels.EnvironmentInformationModel> {
-    const environmentInformation = (await client.environmentInformation().toPromise()).data;
-
-    logDebug({
-        type: 'info',
-        message: 'Project information',
-        partA: environmentInformation.project.name
-    });
-    logDebug({
-        type: 'info',
-        message: 'Environment information',
-        partA: environmentInformation.project.environment
-    });
-
-    return environmentInformation.project;
 }
 
 export function extractErrorMessage(error: any): string {

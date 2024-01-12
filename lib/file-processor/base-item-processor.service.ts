@@ -1,6 +1,7 @@
 import { IImportContentType, IImportContentTypeElement, IParsedContentItem } from '../import/index.js';
 import { IItemFormatService, ItemsTransformData, ItemsParseData, FileBinaryData } from './file-processor.models.js';
 import { logErrorAndExit } from '../core/index.js';
+import colors from 'colors';
 
 export abstract class BaseItemProcessorService implements IItemFormatService {
     abstract name: string;
@@ -20,7 +21,7 @@ export abstract class BaseItemProcessorService implements IItemFormatService {
 
         if (!type) {
             logErrorAndExit({
-                message: `Could not find content type '${contentItemType}'`
+                message: `Could not find content type '${colors.red(contentItemType)}'`
             });
         }
 
@@ -28,7 +29,9 @@ export abstract class BaseItemProcessorService implements IItemFormatService {
 
         if (!element) {
             logErrorAndExit({
-                message: `Could not find element with codename '${elementCodename}' for type '${type.contentTypeCodename}'`
+                message: `Could not find element with codename '${colors.red(elementCodename)}' for type '${colors.red(
+                    type.contentTypeCodename
+                )}'`
             });
         }
 

@@ -26,6 +26,7 @@ import {
 import { extractAssetIdFromUrl } from '../core/global-helper.js';
 import { idTranslateHelper } from './id-translate-helper.js';
 import { logDebug, logErrorAndExit } from '../core/index.js';
+import colors from 'colors';
 
 export class ElementTranslationHelper {
     private readonly linkCodenameAttributeName: string = 'data-manager-link-codename';
@@ -184,7 +185,7 @@ export class ElementTranslationHelper {
 
                 if (!componentItem) {
                     logErrorAndExit({
-                        message: `Could not find component item with codename '${componentCodename}'`
+                        message: `Could not find component item with codename '${colors.red(componentCodename)}'`
                     });
                 }
 
@@ -333,16 +334,24 @@ export class ElementTranslationHelper {
 
                         logDebug({
                             type: 'warning',
-                            message: `Could not find content item with id '${id}' referenced as a link in 
-                            Rich text element '${data.richTextElement.name}' in item '${data.item.system.name}' 
-                            and language '${data.item.system.language}'. Replacing link with plain text.`
+                            message: `Could not find content item with id '${colors.red(
+                                id
+                            )}' referenced as a link in Rich text element '${colors.yellow(
+                                data.richTextElement.name
+                            )}' in item '${colors.yellow(data.item.system.name)}' and language '${colors.yellow(
+                                data.item.system.language
+                            )}'. Replacing link with plain text.`
                         });
                     } else {
                         logDebug({
                             type: 'warning',
-                            message: `Could not find content item with id '${id}' referenced as a link 
-                            in Rich text element '${data.richTextElement.name}' in item '${data.item.system.name}' 
-                            and language '${data.item.system.language}'. This may be fixed by enabling 'replaceInvalidLinks' option.`
+                            message: `Could not find content item with id '${colors.red(
+                                id
+                            )}' referenced as a link in Rich text element '${colors.yellow(
+                                data.richTextElement.name
+                            )}' in item '${colors.yellow(data.item.system.name)}' and language '${colors.yellow(
+                                data.item.system.language
+                            )}'. This may be fixed by enabling 'replaceInvalidLinks' option.`
                         });
                     }
                 } else {
@@ -450,7 +459,9 @@ export class ElementTranslationHelper {
                 if (!contentItemWithGivenCodename) {
                     logDebug({
                         type: 'warning',
-                        message: `Could not find content item with codename '${codename}'. This item was referenced as a link in Rich text element.`
+                        message: `Could not find content item with codename '${colors.red(
+                            codename
+                        )}'. This item was referenced as a link in Rich text element.`
                     });
                 } else {
                     linkTag = linkTag.replace(codename, contentItemWithGivenCodename.id);

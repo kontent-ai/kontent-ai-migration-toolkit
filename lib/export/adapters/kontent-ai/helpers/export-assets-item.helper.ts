@@ -10,6 +10,7 @@ import {
     logProcessingDebug
 } from '../../../../core/index.js';
 import { IExportAsset } from '../../../export.models.js';
+import colors from 'colors';
 
 type ExportAssetWithoutBinaryData = Omit<IExportAsset, 'binaryData'>;
 
@@ -77,7 +78,7 @@ export class ExportAssetsHelper {
 
         logDebug({
             type: 'info',
-            message: `Preparing to download '${uniqueAssets.length.toString()}' assets`
+            message: `Preparing to download '${colors.yellow(uniqueAssets.length.toString())}' assets`
         });
 
         let assetIndex: number = 0;

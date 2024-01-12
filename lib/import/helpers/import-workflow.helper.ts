@@ -1,6 +1,7 @@
 import { ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import.models.js';
 import { logItemAction, logErrorAndExit } from '../../core/index.js';
+import colors from 'colors';
 
 export class ImportWorkflowHelper {
     private readonly defaultWorkflowCodename: string = 'Default';
@@ -35,7 +36,7 @@ export class ImportWorkflowHelper {
         // check if workflow step exists in target project
         if (!this.doesWorkflowStepExist(workflowStepCodename, workflows)) {
             logErrorAndExit({
-                message: `Could not change workflow step for item '${importContentItem.system.codename}' (${importContentItem.system.name}) because step with codename '${workflowStepCodename}' does not exist in target project.`
+                message: `Could not change workflow step for item '${colors.yellow(importContentItem.system.codename)}' because step with codename '${colors.red(workflowStepCodename)}' does not exist`
             });
         }
 
@@ -55,7 +56,7 @@ export class ImportWorkflowHelper {
             });
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
             logItemAction('skip', 'languageVariant', {
-                title: `Skipping scheduled workflow step for item '${importContentItem.system.name}'`,
+                title: `Skipping scheduled workflow step for item '${colors.yellow(importContentItem.system.name)}'`,
                 language: importContentItem.system.language,
                 codename: importContentItem.system.codename,
                 workflowStep: importContentItem.system.workflow_step
