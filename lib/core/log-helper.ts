@@ -18,11 +18,12 @@ export function logProcessingDebug(data: {
     totalCount: number;
     itemType: ItemType;
     title: string;
+    partA?: string;
 }): void {
     console.log(
-        `[${colors.bgYellow(colors.black(`${data.index}/${data.totalCount}`))}][${colors.yellow(
-            data.itemType
-        )}]: Starts processing ${data.title}`
+        `[${colors.green(`${data.index}/${data.totalCount}`)}][${colors.yellow(data.itemType)}]${
+            data.partA ? `[${colors.cyan(data.partA)}]` : ''
+        }: ${data.title}`
     );
 }
 

@@ -15,8 +15,11 @@ export class KontentAiExportAdapter implements IExportAdapter {
 
     async exportAsync(): Promise<IExportAdapterResult> {
         logDebug({ type: 'info', message: 'Environment id', partA: this.config.environmentId });
-        logDebug({ type: 'info', message: 'Using Secure API', partA: this.config.isSecure ? 'true' : 'false' });
-        logDebug({ type: 'info', message: 'Using Preview API', partA: this.config.isPreview ? 'true' : 'false' });
+        logDebug({ type: 'info', message: this.config.isSecure ? `Using Secure API` : `Not using Secure API` });
+        logDebug({
+            type: 'info',
+            message: this.config.isPreview ? `Using Preview API` : `Using Delivery (Public) API`
+        });
 
         const deliveryClient = this.getDeliveryClient();
 

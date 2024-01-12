@@ -1,5 +1,5 @@
 import { IContentType, ILanguage, IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
-import { ActionType, ContentElementType, ItemType, logDebug } from '../../../../core/index.js';
+import { ContentElementType, ItemType, logDebug, logProcessingDebug } from '../../../../core/index.js';
 import { IKontentAiExportAdapterConfig, IExportContentItem, IExportElement } from '../../../export.models.js';
 import { translationHelper } from '../../../../translation/index.js';
 import colors from 'colors';
@@ -24,8 +24,10 @@ export class ExportContentItemHelper {
             const customItems = await config.customItemsExport(deliveryClient);
 
             for (const contentItem of customItems) {
-                this.logItem(`${contentItem.system.name} | ${contentItem.system.type}`, 'contentItem', 'fetch', {
-                    language: contentItem.system.language
+                logDebug({
+                    type: 'fetch',
+                    message: `${contentItem.system.name} | ${contentItem.system.type}`,
+                    partA: contentItem.system.language
                 });
                 contentItems.push(contentItem);
             }
@@ -34,7 +36,25 @@ export class ExportContentItemHelper {
                 type: 'info',
                 message: `Exporting content items of '${colors.yellow(
                     languagesToExport.length.toString()
-                )}' content types & '${colors.yellow(languagesToExport.length.toString())}' languages`
+                )}' content types and '${colors.yellow(languagesToExport.length.toString())}' languages`
+            });
+
+            logDebug({
+                type: 'info',
+                message: `Calculating total items to export`
+            });
+
+            const totalItemsToExport: number = await this.getTotalNumberOfItemsToExportAsync({
+                typesToExport: typesToExport,
+                deliveryClient: deliveryClient,
+                languagesToExport: languagesToExport
+            });
+            let exportedItemsCount: number = 0;
+            let extractedComponentsCount: number = 0;
+
+            logDebug({
+                type: 'info',
+                message: `Found '${colors.yellow(totalItemsToExport.toString())}' items in total to export`
             });
 
             for (const type of typesToExport) {
@@ -47,31 +67,63 @@ export class ExportContentItemHelper {
                             responseFetched: (response) => {
                                 // add items to result
                                 for (const contentItem of response.data.items) {
-                                    this.logItem(`${contentItem.system.name}`, 'contentItem', 'fetch', {
-                                        language: contentItem.system.language
+                                    this.logItem({
+                                        index: exportedItemsCount + 1,
+                                        totalCount: totalItemsToExport,
+                                        title: contentItem.system.name,
+                                        language: contentItem.system.language,
+                                        itemType: 'contentItem'
                                     });
                                     contentItems.push(contentItem);
+                                    exportedItemsCount++;
                                 }
 
                                 // add components to result
                                 for (const [codename, contentItem] of Object.entries(response.data.linkedItems)) {
                                     if (!contentItems.find((m) => m.system.codename === codename)) {
-                                        this.logItem(`${contentItem.system.name}`, 'component', 'fetch', {
-                                            language: contentItem.system.language
-                                        });
                                         contentItems.push(contentItem);
+                                        extractedComponentsCount++;
                                     }
                                 }
                             }
                         });
                 }
             }
+
+            logDebug({
+                type: 'info',
+                message: `Adding '${colors.yellow(extractedComponentsCount.toString())}' components to export result`
+            });
         }
 
         return {
             deliveryContentItems: contentItems,
             exportContentItems: contentItems.map((m) => this.maptoExportContentItem(m, contentItems, types, config))
         };
+    }
+
+    private async getTotalNumberOfItemsToExportAsync(data: {
+        deliveryClient: IDeliveryClient;
+        languagesToExport: ILanguage[];
+        typesToExport: IContentType[];
+    }): Promise<number> {
+        let totalItemsCount: number = 0;
+
+        for (const type of data.typesToExport) {
+            for (const language of data.languagesToExport) {
+                const response = await data.deliveryClient
+                    .items()
+                    .type(type.system.codename)
+                    .equalsFilter('system.language', language.system.codename)
+                    .limitParameter(1)
+                    .depthParameter(0)
+                    .includeTotalCountParameter()
+                    .toPromise();
+                totalItemsCount += response.data.pagination.totalCount ?? 0;
+            }
+        }
+
+        return totalItemsCount;
     }
 
     private maptoExportContentItem(
@@ -113,19 +165,19 @@ export class ExportContentItemHelper {
         };
     }
 
-    private logItem(
-        title: string,
-        itemType: ItemType,
-        actionType: ActionType,
-        data: {
-            language?: string;
-        }
-    ): void {
-        logDebug({
-            type: actionType,
-            message: title,
-            partA: itemType,
-            partB: data.language
+    private logItem(data: {
+        title: string;
+        index: number;
+        totalCount: number;
+        itemType: ItemType;
+        language?: string;
+    }): void {
+        logProcessingDebug({
+            itemType: data.itemType,
+            title: `${data.title}`,
+            index: data.index,
+            totalCount: data.totalCount,
+            partA: data.language
         });
     }
 

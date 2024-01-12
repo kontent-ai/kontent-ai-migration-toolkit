@@ -83,18 +83,14 @@ export class ExportAssetsHelper {
         let assetIndex: number = 0;
         for (const uniqueAsset of uniqueAssets) {
             assetIndex++;
+
+            const binaryDataResponse = await this.getBinaryDataFromUrlAsync(uniqueAsset.url);
+
             logProcessingDebug({
                 index: assetIndex,
                 totalCount: uniqueAssets.length,
                 itemType: 'binaryFile',
-                title: uniqueAsset.url
-            });
-
-            const binaryDataResponse = await this.getBinaryDataFromUrlAsync(uniqueAsset.url);
-
-            logDebug({
-                type: 'download',
-                message: `Binary file downloaded`,
+                title: uniqueAsset.url,
                 partA: formatBytes(binaryDataResponse.contentLength)
             });
 
