@@ -105,7 +105,12 @@ export class ImportContentItemHelper {
                     data.collections
                 )
             ) {
-                const upsertedContentItem = await data.managementClient
+                logItemAction(this.logLevel, 'upsert', 'contentItem', {
+                    title: `${data.importContentItem.system.name}`,
+                    codename: data.importContentItem.system.codename
+                });
+
+                await data.managementClient
                     .upsertContentItem()
                     .byItemCodename(data.importContentItem.system.codename)
                     .withData({
@@ -116,11 +121,6 @@ export class ImportContentItemHelper {
                     })
                     .toPromise()
                     .then((m) => m.data);
-
-                logItemAction(this.logLevel, 'upsert', 'contentItem', {
-                    title: `${upsertedContentItem.name}`,
-                    codename: data.importContentItem.system.codename
-                });
             } else {
                 logItemAction(this.logLevel, 'skip', 'contentItem', {
                     title: `${data.importContentItem.system.name}`,

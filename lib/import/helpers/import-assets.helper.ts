@@ -63,6 +63,10 @@ export class ImportAssetsHelper {
 
                 if (!existingAsset) {
                     // only import asset if it didn't exist
+
+                    logItemAction(this.logLevel, 'upload', 'binaryFile', {
+                        title: asset.filename
+                    });
                     const uploadedBinaryFile = await data.managementClient
                         .uploadBinaryFile()
                         .withData({
@@ -72,10 +76,9 @@ export class ImportAssetsHelper {
                         })
                         .toPromise();
 
-                    logItemAction(this.logLevel, 'upload', 'binaryFile', {
+                    logItemAction(this.logLevel, 'create', 'asset', {
                         title: asset.filename
                     });
-
                     const createdAsset = await data.managementClient
                         .addAsset()
                         .withData((builder) => {
@@ -93,10 +96,6 @@ export class ImportAssetsHelper {
                     data.importedData.assets.push({
                         imported: createdAsset,
                         original: asset
-                    });
-
-                    logItemAction(this.logLevel, 'create', 'asset', {
-                        title: asset.filename
                     });
                 } else {
                     data.importedData.assets.push({
