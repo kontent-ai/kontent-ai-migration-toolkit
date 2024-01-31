@@ -13,7 +13,7 @@ import {
     logItemAction,
     logDebug,
     logErrorAndExit,
-    logProcessingDebug
+    processInChunksAsync
 } from '../../core/index.js';
 import { IParsedContentItem, IParsedElement } from '../import.models.js';
 import { importWorkflowHelper } from './import-workflow.helper.js';
@@ -22,6 +22,8 @@ import { translationHelper } from '../../translation/index.js';
 import colors from 'colors';
 
 export class ImportLanguageVariantHelper {
+    private readonly importContentItemChunkSize: number = 5;
+
     async importLanguageVariantsAsync(data: {
         managementClient: ManagementClient;
         importContentItems: IParsedContentItem[];
@@ -39,55 +41,57 @@ export class ImportLanguageVariantHelper {
         logItemAction('skip', 'languageVariant', {
             title: `Skipping '${colors.yellow(
                 categorizedParsedItems.componentItems.length.toString()
-            )}' because they represent component items`
+            )}' because they represent components`
         });
 
-        let itemIndex: number = 0;
-        for (const importContentItem of categorizedParsedItems.regularItems) {
-            try {
-                itemIndex++;
-
-                logProcessingDebug({
-                    index: itemIndex,
-                    totalCount: categorizedParsedItems.regularItems.length,
+        await processInChunksAsync<IParsedContentItem, void>({
+            chunkSize: this.importContentItemChunkSize,
+            items: categorizedParsedItems.regularItems,
+            itemInfo: (input, output) => {
+                return {
                     itemType: 'languageVariant',
-                    title: `${importContentItem.system.name}`,
-                    partA: importContentItem.system.language
-                });
+                    title: input.system.name,
+                    partA: input.system.language
+                };
+            },
+            processFunc: async (importContentItem) => {
+                try {
+                    const preparedContentItem = data.preparedContentItems.find(
+                        (m) => m.codename === importContentItem.system.codename
+                    );
 
-                const preparedContentItem = data.preparedContentItems.find(
-                    (m) => m.codename === importContentItem.system.codename
-                );
+                    if (!preparedContentItem) {
+                        logErrorAndExit({
+                            message: `Invalid content item for codename '${colors.red(
+                                importContentItem.system.codename
+                            )}'`
+                        });
+                    }
 
-                if (!preparedContentItem) {
-                    logErrorAndExit({
-                        message: `Invalid content item for codename '${colors.red(importContentItem.system.codename)}'`
+                    await this.importLanguageVariantAsync({
+                        importContentItem,
+                        preparedContentItem,
+                        managementClient: data.managementClient,
+                        importContentItems: data.importContentItems,
+                        workflows: data.workflows,
+                        importedData: data.importedData
                     });
-                }
-
-                await this.importLanguageVariantAsync({
-                    importContentItem,
-                    preparedContentItem,
-                    managementClient: data.managementClient,
-                    importContentItems: data.importContentItems,
-                    workflows: data.workflows,
-                    importedData: data.importedData
-                });
-            } catch (error) {
-                if (data.config.skipFailedItems) {
-                    logDebug({
-                        type: 'error',
-                        message: `Failed to import language variant '${colors.red(
-                            importContentItem.system.name
-                        )}' in language '${colors.red(importContentItem.system.language)}'`,
-                        partA: importContentItem.system.codename,
-                        partB: extractErrorMessage(error)
-                    });
-                } else {
-                    throw error;
+                } catch (error) {
+                    if (data.config.skipFailedItems) {
+                        logDebug({
+                            type: 'error',
+                            message: `Failed to import language variant '${colors.red(
+                                importContentItem.system.name
+                            )}' in language '${colors.red(importContentItem.system.language)}'`,
+                            partA: importContentItem.system.codename,
+                            partB: extractErrorMessage(error)
+                        });
+                    } else {
+                        throw error;
+                    }
                 }
             }
-        }
+        });
     }
 
     private async importLanguageVariantAsync(data: {
