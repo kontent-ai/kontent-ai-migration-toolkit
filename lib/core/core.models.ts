@@ -56,6 +56,12 @@ export type ActionType =
     | 'extractBinaryData'
     | 'update';
 
+export interface IErrorData {
+    message: string;
+    requestData?: string;
+    requestUrl?: string;
+}
+
 export type ContentElementType = ElementModels.ElementType;
 
 export interface IProcessedItem {

@@ -8,7 +8,7 @@ export function getImportAssetsHelper(config: { logLevel: LogLevel }): ImportAss
 }
 
 export class ImportAssetsHelper {
-    private readonly importAssetsChunkSize: number = 5;
+    private readonly importAssetsChunkSize: number = 3;
 
     constructor(private readonly logLevel: LogLevel) {}
 

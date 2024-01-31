@@ -1,9 +1,9 @@
 import { SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
-import { logErrorAndExit, logProcessingDebug } from './log-helper.js';
+import { logDebug, logErrorAndExit, logProcessingDebug } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
-import { IChunk, IProcessInChunksItemInfo } from './core.models.js';
+import { IChunk, IErrorData, IProcessInChunksItemInfo } from './core.models.js';
 
 const rateExceededErrorCode: number = 10000;
 
@@ -37,21 +37,29 @@ export function getExtension(url: string): string | undefined {
     return url.split('.').pop();
 }
 
-export function extractErrorMessage(error: any): string {
+export function extractErrorData(error: any): IErrorData {
+    let message: string = `Unknown error`;
+    let requestUrl: string | undefined = undefined;
+    let requestData: string | undefined = undefined;
+
     if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-        let message: string = `${error.message}`;
+        message = `${error.message}`;
+        requestUrl = error.originalError?.response?.config.url;
+        requestData = error.originalError?.response?.config.data;
 
         for (const validationError of error.validationErrors) {
             message += ` ${validationError.message}`;
         }
-        return message;
     }
     if (error instanceof Error) {
-        return error.message;
+        message = error.message;
     }
 
-    console.error(error);
-    return `Unknown error`;
+    return {
+        message: message,
+        requestData: requestData,
+        requestUrl: requestUrl
+    };
 }
 
 export function is404Error(error: any): boolean {
@@ -66,10 +74,26 @@ export function is404Error(error: any): boolean {
 }
 
 export function handleError(error: any): void {
-    const errorMessage = extractErrorMessage(error);
+    const errorData = extractErrorData(error);
+
+    if (errorData.requestUrl) {
+        logDebug({
+            type: 'errorData',
+            message: errorData.requestUrl,
+            partA: 'Request Url'
+        });
+    }
+
+    if (errorData.requestData) {
+        logDebug({
+            type: 'errorData',
+            message: errorData.requestData,
+            partA: 'Request Data'
+        });
+    }
 
     logErrorAndExit({
-        message: errorMessage
+        message: errorData.message
     });
 }
 

@@ -2,7 +2,7 @@ import colors from 'colors';
 
 import { ActionType, ItemType, LogLevel } from './core.models.js';
 
-export type DebugType = 'error' | 'warning' | 'info' | ActionType;
+export type DebugType = 'error' | 'warning' | 'info' | 'errorData' | ActionType;
 
 export function logErrorAndExit(data: { message: string }): never {
     logDebug({
@@ -37,7 +37,7 @@ export function logDebug(data: {
 }): void {
     let typeColor: colors.Color = colors.green;
 
-    if (data.type === 'error') {
+    if (data.type === 'error' || data.type === 'errorData') {
         typeColor = colors.red;
     } else if (data.type === 'info') {
         typeColor = colors.cyan;

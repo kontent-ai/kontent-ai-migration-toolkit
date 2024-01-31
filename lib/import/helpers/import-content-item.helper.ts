@@ -1,7 +1,7 @@
 import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 import {
     IImportedData,
-    extractErrorMessage,
+    extractErrorData,
     is404Error,
     logItemAction,
     logDebug,
@@ -69,7 +69,7 @@ export class ImportContentItemHelper {
                             type: 'error',
                             message: `Failed to import content item`,
                             partA: importContentItem.system.codename,
-                            partB: extractErrorMessage(error)
+                            partB: extractErrorData(error).message
                         });
                     } else {
                         throw error;

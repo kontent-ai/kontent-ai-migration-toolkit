@@ -8,7 +8,7 @@ import {
 } from '@kontent-ai/management-sdk';
 import {
     IImportedData,
-    extractErrorMessage,
+    extractErrorData,
     is404Error,
     logItemAction,
     logDebug,
@@ -94,7 +94,7 @@ export class ImportLanguageVariantHelper {
                                 importContentItem.system.name
                             )}' in language '${colors.red(importContentItem.system.language)}'`,
                             partA: importContentItem.system.codename,
-                            partB: extractErrorMessage(error)
+                            partB: extractErrorData(error).message,
                         });
                     } else {
                         throw error;
