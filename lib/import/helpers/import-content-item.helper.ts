@@ -6,13 +6,15 @@ import {
     logItemAction,
     logDebug,
     logErrorAndExit,
-    logProcessingDebug
+    processInChunksAsync
 } from '../../core/index.js';
 import { IParsedContentItem } from '../import.models.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 import colors from 'colors';
 
 export class ImportContentItemHelper {
+    private readonly importContentItemChunkSize: number = 5;
+
     async importContentItemsAsync(data: {
         managementClient: ManagementClient;
         parsedContentItems: IParsedContentItem[];
@@ -23,7 +25,6 @@ export class ImportContentItemHelper {
         };
     }): Promise<ContentItemModels.ContentItem[]> {
         const preparedItems: ContentItemModels.ContentItem[] = [];
-        let itemIndex: number = 0;
 
         const categorizedParsedItems: ICategorizedParsedItems = parsedItemsHelper.categorizeParsedItems(
             data.parsedContentItems
@@ -35,39 +36,40 @@ export class ImportContentItemHelper {
             )}' because they represent component items`
         });
 
-        for (const importContentItem of categorizedParsedItems.regularItems) {
-            itemIndex++;
-
-            logProcessingDebug({
-                index: itemIndex,
-                totalCount: categorizedParsedItems.regularItems.length,
-                itemType: 'contentItem',
-                title: `${importContentItem.system.name}`,
-                partA: importContentItem.system.type
-            });
-
-            try {
-                await this.importContentItemAsync({
-                    managementClient: data.managementClient,
-                    collections: data.collections,
-                    importContentItem: importContentItem,
-                    importedData: data.importedData,
-                    parsedContentItems: data.parsedContentItems,
-                    preparedItems: preparedItems
-                });
-            } catch (error) {
-                if (data.config.skipFailedItems) {
-                    logDebug({
-                        type: 'error',
-                        message: `Failed to import content item`,
-                        partA: importContentItem.system.codename,
-                        partB: extractErrorMessage(error)
+        await processInChunksAsync<IParsedContentItem, void>({
+            chunkSize: this.importContentItemChunkSize,
+            items: categorizedParsedItems.regularItems,
+            itemInfo: (input, output) => {
+                return {
+                    itemType: 'contentItem',
+                    title: input.system.name,
+                    partA: input.system.type
+                };
+            },
+            processFunc: async (importContentItem) => {
+                try {
+                    await this.importContentItemAsync({
+                        managementClient: data.managementClient,
+                        collections: data.collections,
+                        importContentItem: importContentItem,
+                        importedData: data.importedData,
+                        parsedContentItems: data.parsedContentItems,
+                        preparedItems: preparedItems
                     });
-                } else {
-                    throw error;
+                } catch (error) {
+                    if (data.config.skipFailedItems) {
+                        logDebug({
+                            type: 'error',
+                            message: `Failed to import content item`,
+                            partA: importContentItem.system.codename,
+                            partB: extractErrorMessage(error)
+                        });
+                    } else {
+                        throw error;
+                    }
                 }
             }
-        }
+        });
 
         return preparedItems;
     }
