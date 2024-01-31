@@ -1,10 +1,16 @@
 import { ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import.models.js';
-import { logItemAction, logErrorAndExit } from '../../core/index.js';
+import { logItemAction, logErrorAndExit, LogLevel } from '../../core/index.js';
 import colors from 'colors';
+
+export function getImportWorkflowHelper(config: { logLevel: LogLevel }): ImportWorkflowHelper {
+    return new ImportWorkflowHelper(config.logLevel);
+}
 
 export class ImportWorkflowHelper {
     private readonly defaultWorkflowCodename: string = 'Default';
+
+    constructor(private readonly logLevel: LogLevel) {}
 
     getWorkflowForGivenStepById(workflowId: string, workflows: WorkflowModels.Workflow[]): WorkflowModels.Workflow {
         return this.getWorkflowForGivenStep(workflows, (workflow) => {
@@ -36,7 +42,9 @@ export class ImportWorkflowHelper {
         // check if workflow step exists in target project
         if (!this.doesWorkflowStepExist(workflowStepCodename, workflows)) {
             logErrorAndExit({
-                message: `Could not change workflow step for item '${colors.yellow(importContentItem.system.codename)}' because step with codename '${colors.red(workflowStepCodename)}' does not exist`
+                message: `Could not change workflow step for item '${colors.yellow(
+                    importContentItem.system.codename
+                )}' because step with codename '${colors.red(workflowStepCodename)}' does not exist`
             });
         }
 
@@ -48,14 +56,14 @@ export class ImportWorkflowHelper {
                 .withoutData()
                 .toPromise();
 
-            logItemAction('publish', 'languageVariant', {
+            logItemAction(this.logLevel, 'publish', 'languageVariant', {
                 title: `${importContentItem.system.name}`,
                 language: importContentItem.system.language,
                 codename: importContentItem.system.codename,
                 workflowStep: importContentItem.system.workflow_step
             });
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
-            logItemAction('skip', 'languageVariant', {
+            logItemAction(this.logLevel, 'skip', 'languageVariant', {
                 title: `Skipping scheduled workflow step for item '${colors.yellow(importContentItem.system.name)}'`,
                 language: importContentItem.system.language,
                 codename: importContentItem.system.codename,
@@ -78,7 +86,7 @@ export class ImportWorkflowHelper {
                 })
                 .toPromise();
 
-            logItemAction('archive', 'languageVariant', {
+            logItemAction(this.logLevel, 'archive', 'languageVariant', {
                 title: `${importContentItem.system.name}`,
                 language: importContentItem.system.language,
                 codename: importContentItem.system.codename,
@@ -104,7 +112,7 @@ export class ImportWorkflowHelper {
                     })
                     .toPromise();
 
-                logItemAction('changeWorkflowStep', 'languageVariant', {
+                logItemAction(this.logLevel, 'changeWorkflowStep', 'languageVariant', {
                     title: `${importContentItem.system.name}`,
                     language: importContentItem.system.language,
                     codename: importContentItem.system.codename,
@@ -221,5 +229,3 @@ export class ImportWorkflowHelper {
         return false;
     }
 }
-
-export const importWorkflowHelper = new ImportWorkflowHelper();

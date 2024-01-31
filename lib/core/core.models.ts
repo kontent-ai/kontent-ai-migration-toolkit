@@ -27,8 +27,10 @@ export interface ICliFileConfig {
     exportTypes?: string[];
     exportLanguages?: string[];
     exportAssets: boolean;
+    logLevel: LogLevel;
 }
 
+export type LogLevel = 'verbose' | 'default';
 export type CliAction = 'export' | 'import';
 export type ExportAdapter = 'kontentAi';
 export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile' | 'zipFile' | 'count';

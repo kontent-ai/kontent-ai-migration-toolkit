@@ -1,6 +1,6 @@
 import colors from 'colors';
 
-import { ActionType, ItemType } from './core.models.js';
+import { ActionType, ItemType, LogLevel } from './core.models.js';
 
 export type DebugType = 'error' | 'warning' | 'info' | ActionType;
 
@@ -55,6 +55,7 @@ export function logDebug(data: {
 }
 
 export function logItemAction(
+    logLevel: LogLevel,
     actionType: ActionType,
     itemType: ItemType,
     data: {
@@ -64,12 +65,14 @@ export function logItemAction(
         codename?: string;
     }
 ): void {
-    logDebug({
-        type: actionType,
-        message: data.title,
-        partA: itemType,
-        partB: data.codename,
-        partC: data.language,
-        partD: data.workflowStep
-    });
+    if (logLevel === 'verbose') {
+        logDebug({
+            type: actionType,
+            message: data.title,
+            partA: itemType,
+            partB: data.codename,
+            partC: data.language,
+            partD: data.workflowStep
+        });
+    }
 }

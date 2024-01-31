@@ -1,10 +1,16 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportedData, is404Error, logItemAction, processInChunksAsync } from '../../core/index.js';
+import { IImportedData, LogLevel, is404Error, logItemAction, processInChunksAsync } from '../../core/index.js';
 import { IParsedAsset } from '../import.models.js';
 import mime from 'mime';
 
+export function getImportAssetsHelper(config: { logLevel: LogLevel }): ImportAssetsHelper {
+    return new ImportAssetsHelper(config.logLevel);
+}
+
 export class ImportAssetsHelper {
     private readonly importAssetsChunkSize: number = 5;
+
+    constructor(private readonly logLevel: LogLevel) {}
 
     async importAssetsAsync(data: {
         managementClient: ManagementClient;
@@ -66,7 +72,7 @@ export class ImportAssetsHelper {
                         })
                         .toPromise();
 
-                    logItemAction('upload', 'binaryFile', {
+                    logItemAction(this.logLevel, 'upload', 'binaryFile', {
                         title: asset.filename
                     });
 
@@ -89,7 +95,7 @@ export class ImportAssetsHelper {
                         original: asset
                     });
 
-                    logItemAction('create', 'asset', {
+                    logItemAction(this.logLevel, 'create', 'asset', {
                         title: asset.filename
                     });
                 } else {
@@ -97,7 +103,7 @@ export class ImportAssetsHelper {
                         imported: existingAsset,
                         original: asset
                     });
-                    logItemAction('skip', 'asset', {
+                    logItemAction(this.logLevel, 'skip', 'asset', {
                         title: asset.filename
                     });
                 }
@@ -105,5 +111,3 @@ export class ImportAssetsHelper {
         });
     }
 }
-
-export const importAssetsHelper = new ImportAssetsHelper();

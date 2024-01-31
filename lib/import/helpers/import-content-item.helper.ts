@@ -6,23 +6,30 @@ import {
     logItemAction,
     logDebug,
     logErrorAndExit,
-    processInChunksAsync
+    processInChunksAsync,
+    LogLevel
 } from '../../core/index.js';
 import { IParsedContentItem } from '../import.models.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 import colors from 'colors';
 
+export function getImportContentItemHelper(config: {
+    logLevel: LogLevel;
+    skipFailedItems: boolean;
+}): ImportContentItemHelper {
+    return new ImportContentItemHelper(config.logLevel, config.skipFailedItems);
+}
+
 export class ImportContentItemHelper {
-    private readonly importContentItemChunkSize: number = 5;
+    private readonly importContentItemChunkSize: number = 3;
+
+    constructor(private readonly logLevel: LogLevel, private readonly skipFailedItems: boolean) {}
 
     async importContentItemsAsync(data: {
         managementClient: ManagementClient;
         parsedContentItems: IParsedContentItem[];
         collections: CollectionModels.Collection[];
         importedData: IImportedData;
-        config: {
-            skipFailedItems: boolean;
-        };
     }): Promise<ContentItemModels.ContentItem[]> {
         const preparedItems: ContentItemModels.ContentItem[] = [];
 
@@ -30,7 +37,7 @@ export class ImportContentItemHelper {
             data.parsedContentItems
         );
 
-        logItemAction('skip', 'contentItem', {
+        logItemAction(this.logLevel, 'skip', 'contentItem', {
             title: `Skipping '${colors.yellow(
                 categorizedParsedItems.componentItems.length.toString()
             )}' because they represent component items`
@@ -57,7 +64,7 @@ export class ImportContentItemHelper {
                         preparedItems: preparedItems
                     });
                 } catch (error) {
-                    if (data.config.skipFailedItems) {
+                    if (this.skipFailedItems) {
                         logDebug({
                             type: 'error',
                             message: `Failed to import content item`,
@@ -110,12 +117,12 @@ export class ImportContentItemHelper {
                     .toPromise()
                     .then((m) => m.data);
 
-                logItemAction('upsert', 'contentItem', {
+                logItemAction(this.logLevel, 'upsert', 'contentItem', {
                     title: `${upsertedContentItem.name}`,
                     codename: data.importContentItem.system.codename
                 });
             } else {
-                logItemAction('skip', 'contentItem', {
+                logItemAction(this.logLevel, 'skip', 'contentItem', {
                     title: `${data.importContentItem.system.name}`,
                     codename: data.importContentItem.system.codename
                 });
@@ -153,7 +160,7 @@ export class ImportContentItemHelper {
                 .toPromise()
                 .then((m) => m.data);
 
-            logItemAction('fetch', 'contentItem', {
+            logItemAction(this.logLevel, 'fetch', 'contentItem', {
                 title: `${contentItem.name}`,
                 codename: contentItem.codename
             });
@@ -189,7 +196,7 @@ export class ImportContentItemHelper {
                     imported: contentItem
                 });
 
-                logItemAction('create', 'contentItem', {
+                logItemAction(this.logLevel, 'create', 'contentItem', {
                     title: `${contentItem.name}`,
                     codename: contentItem.codename
                 });
@@ -204,5 +211,3 @@ export class ImportContentItemHelper {
         }
     }
 }
-
-export const importContentItemHelper = new ImportContentItemHelper();

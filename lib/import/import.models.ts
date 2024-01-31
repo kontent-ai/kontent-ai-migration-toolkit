@@ -1,8 +1,9 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { ContentElementType } from '../core/index.js';
+import { ContentElementType, LogLevel } from '../core/index.js';
 
 export interface IImportConfig {
+    logLevel?: LogLevel;
     managementApiKey: string;
     skipFailedItems: boolean;
     retryStrategy?: IRetryStrategyOptions;

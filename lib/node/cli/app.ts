@@ -152,6 +152,7 @@ const importAsync = async (config: ICliFileConfig) => {
     const assetsFilename: string | undefined = config.assetsFilename;
 
     const importToolkit = new ImportToolkit({
+        logLevel: config.logLevel,
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
         environmentId: config.environmentId,
@@ -269,7 +270,9 @@ const getConfig = async () => {
         isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure', false),
         replaceInvalidLinks: getBooleanArgumentvalue(resolvedArgs, 'replaceInvalidLinks', false),
         adapter: mappedAdapter,
-        format: mappedFormat
+        format: mappedFormat,
+        logLevel:
+            getOptionalArgumentValue(resolvedArgs, 'logLevel')?.toLowerCase() === 'verbose' ? 'verbose' : 'default'
     };
 
     return config;

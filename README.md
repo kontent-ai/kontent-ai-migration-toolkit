@@ -185,7 +185,8 @@ Create a `json` configuration file in the folder where you are attempting to run
     "exportAssets": true,
     "action": "export",
     "baseUrl": null,
-    "format": "json"
+    "format": "json",
+    "logLevel": "verbose" // or 'default'
 }
 ```
 

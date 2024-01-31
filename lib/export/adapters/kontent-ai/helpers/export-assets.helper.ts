@@ -84,7 +84,7 @@ export class ExportAssetsHelper {
             itemInfo: (input, output) => {
                 return {
                     title: input.url,
-                    itemType: 'binaryFile'
+                    itemType: 'asset'
                 };
             },
             items: uniqueAssets,

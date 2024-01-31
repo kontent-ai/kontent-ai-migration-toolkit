@@ -16,13 +16,19 @@ import {
     IImportContentType,
     IImportContentTypeElement
 } from './import.models.js';
-import { importAssetsHelper } from './helpers/import-assets.helper.js';
-import { importContentItemHelper } from './helpers/import-content-item.helper.js';
-import { importLanguageVariantHelper } from './helpers/import-language-variant.helper.js';
+import { ImportAssetsHelper, getImportAssetsHelper } from './helpers/import-assets.helper.js';
+import { ImportContentItemHelper, getImportContentItemHelper } from './helpers/import-content-item.helper.js';
+import {
+    ImportLanguageVariantHelper,
+    getImportLanguageVariantstemHelper
+} from './helpers/import-language-variant.helper.js';
 import colors from 'colors';
 
 export class ImportService {
     private readonly managementClient: ManagementClient;
+    private readonly importAssetsHelper: ImportAssetsHelper;
+    private readonly importContentItemHelper: ImportContentItemHelper;
+    private readonly importLanguageVariantHelper: ImportLanguageVariantHelper;
 
     constructor(private config: IImportConfig) {
         this.managementClient = new ManagementClient({
@@ -31,6 +37,16 @@ export class ImportService {
             environmentId: config.environmentId,
             httpService: defaultHttpService,
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
+        });
+
+        this.importAssetsHelper = getImportAssetsHelper({ logLevel: config.logLevel ?? 'default' });
+        this.importContentItemHelper = getImportContentItemHelper({
+            logLevel: config.logLevel ?? 'default',
+            skipFailedItems: config.skipFailedItems
+        });
+        this.importLanguageVariantHelper = getImportLanguageVariantstemHelper({
+            logLevel: config.logLevel ?? 'default',
+            skipFailedItems: config.skipFailedItems
         });
     }
 
@@ -88,7 +104,7 @@ export class ImportService {
                 type: 'info',
                 message: `Importing assets`
             });
-            await importAssetsHelper.importAssetsAsync({
+            await this.importAssetsHelper.importAssetsAsync({
                 managementClient: this.managementClient,
                 assets: dataToImport.importData.assets,
                 importedData: importedData
@@ -234,26 +250,20 @@ export class ImportService {
 
         // first prepare content items
         const preparedContentItems: ContentItemModels.ContentItem[] =
-            await importContentItemHelper.importContentItemsAsync({
+            await this.importContentItemHelper.importContentItemsAsync({
                 managementClient: this.managementClient,
                 collections: collections,
                 importedData: importedData,
-                parsedContentItems: parsedContentItems,
-                config: {
-                    skipFailedItems: this.config.skipFailedItems
-                }
+                parsedContentItems: parsedContentItems
             });
 
         // then process language variants
-        await importLanguageVariantHelper.importLanguageVariantsAsync({
+        await this.importLanguageVariantHelper.importLanguageVariantsAsync({
             managementClient: this.managementClient,
             importContentItems: parsedContentItems,
             importedData: importedData,
             preparedContentItems: preparedContentItems,
-            workflows: workflows,
-            config: {
-                skipFailedItems: this.config.skipFailedItems
-            }
+            workflows: workflows
         });
     }
 
