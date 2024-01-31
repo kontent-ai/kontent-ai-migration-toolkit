@@ -282,11 +282,9 @@ const getDefaultExportFilename = (type: 'items' | 'assets') => {
     return `${type}-export.zip`;
 };
 
-run()
-    .then((m) => {})
-    .catch((err) => {
-        handleError(err);
-    });
+run().catch((err) => {
+    handleError(err);
+});
 
 function getAssetFormatService(format: ProcessingFormat | undefined): IAssetFormatService {
     if (format === 'csv') {

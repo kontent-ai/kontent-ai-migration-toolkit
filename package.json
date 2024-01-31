@@ -30,8 +30,8 @@
         "build:es2022": "tsc --p tsconfig.es2022.json",
         "build": "npm run clean && npm run build:es2022",
         "test:all": "npm run build",
-        "test:export": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --max-http-header-size=80000000 --config=export-config-movie.json ",
-        "test:import": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --config=import-config-movie.json",
+        "test:export": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --max-http-header-size=80000000 --config=export-config.json ",
+        "test:import": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --config=import-config.json",
         "lint": "npx eslint lib",
         "clean": "node clean.js"
     },

@@ -50,6 +50,7 @@ export function extractErrorMessage(error: any): string {
         return error.message;
     }
 
+    console.error(error);
     return `Unknown error`;
 }
 
@@ -64,23 +65,12 @@ export function is404Error(error: any): boolean {
     return false;
 }
 
-export function handleError(error: any | SharedModels.ContentManagementBaseKontentError): void {
-    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-        logErrorAndExit({
-            message: `${error.message}. Error code '${error.errorCode}'. Request Id '${error.requestId}'.${
-                error.validationErrors.length ? ` ${error.validationErrors.map((m) => m.message).join(', ')}` : ''
-            }`
-        });
-    }
+export function handleError(error: any): void {
+    const errorMessage = extractErrorMessage(error);
 
-    if (error instanceof Error) {
-        logErrorAndExit({
-            message: error.message
-        });
-    }
-
-    // unhandled error
-    throw error;
+    logErrorAndExit({
+        message: errorMessage
+    });
 }
 
 export function extractAssetIdFromUrl(assetUrl: string): string {
