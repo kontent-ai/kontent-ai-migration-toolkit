@@ -8,7 +8,7 @@ import {
 import colors from 'colors';
 import { exportContentItemHelper } from './helpers/export-content-item.helper.js';
 import { defaultHttpService, defaultRetryStrategy } from '../../../core/global-helper.js';
-import { exportAssetsHelper } from './helpers/export-assets-item.helper.js';
+import { exportAssetsHelper } from './helpers/export-assets.helper.js';
 import { logDebug } from '../../../core/index.js';
 
 export class KontentAiExportAdapter implements IExportAdapter {

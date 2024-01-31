@@ -78,13 +78,6 @@ export class ExportContentItemHelper {
 
             await processInChunksAsync<ITypeLanguageMap, void>({
                 chunkSize: this.exportContentItemsChunkSize,
-                itemInfo: (type) => {
-                    return {
-                        itemType: 'contentItem',
-                        title: type.type.system.name,
-                        partA: type.language.system.name
-                    };
-                },
                 items: typeLanguageMaps,
                 processFunc: async (typeLanguageMap) => {
                     await deliveryClient

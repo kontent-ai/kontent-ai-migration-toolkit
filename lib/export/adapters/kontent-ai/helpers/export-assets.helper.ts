@@ -81,9 +81,9 @@ export class ExportAssetsHelper {
 
         const exportedAssets: IExportAsset[] = await processInChunksAsync<ExportAssetWithoutBinaryData, IExportAsset>({
             chunkSize: this.downloadAssetBinaryDataChunkSize,
-            itemInfo: (item) => {
+            itemInfo: (input, output) => {
                 return {
-                    title: item.url,
+                    title: input.url,
                     itemType: 'binaryFile'
                 };
             },
