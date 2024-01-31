@@ -5,7 +5,8 @@ import {
     ContentTypeModels,
     ContentTypeSnippetModels,
     ManagementClient,
-    WorkflowModels
+    WorkflowModels,
+    createManagementClient
 } from '@kontent-ai/management-sdk';
 
 import { IImportedData, defaultRetryStrategy, defaultHttpService, logDebug, logErrorAndExit } from '../core/index.js';
@@ -31,7 +32,7 @@ export class ImportService {
     private readonly importLanguageVariantHelper: ImportLanguageVariantHelper;
 
     constructor(private config: IImportConfig) {
-        this.managementClient = new ManagementClient({
+        this.managementClient = createManagementClient({
             apiKey: config.managementApiKey,
             baseUrl: config.baseUrl,
             environmentId: config.environmentId,
