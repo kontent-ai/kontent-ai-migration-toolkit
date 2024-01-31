@@ -41,7 +41,7 @@ export function logDebug(data: {
     if (data.type === 'error') {
         typeColor = colors.red;
     } else if (data.type === 'info') {
-        typeColor = colors.blue;
+        typeColor = colors.cyan;
     } else if (data.type === 'warning') {
         typeColor = colors.red;
     }

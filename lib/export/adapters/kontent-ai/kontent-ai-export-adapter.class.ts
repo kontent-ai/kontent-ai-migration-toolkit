@@ -5,6 +5,7 @@ import {
     IExportAsset,
     IKontentAiExportAdapterConfig
 } from '../../export.models.js';
+import colors from 'colors';
 import { exportContentItemHelper } from './helpers/export-content-item.helper.js';
 import { defaultHttpService, defaultRetryStrategy } from '../../../core/global-helper.js';
 import { exportAssetsHelper } from './helpers/export-assets-item.helper.js';
@@ -14,11 +15,14 @@ export class KontentAiExportAdapter implements IExportAdapter {
     constructor(private config: IKontentAiExportAdapterConfig) {}
 
     async exportAsync(): Promise<IExportAdapterResult> {
-        logDebug({ type: 'info', message: 'Environment id', partA: this.config.environmentId });
+        logDebug({
+            type: 'info',
+            message: `Preparing export from environment ${colors.yellow(this.config.environmentId)}`
+        });
         logDebug({ type: 'info', message: this.config.isSecure ? `Using Secure API` : `Not using Secure API` });
         logDebug({
             type: 'info',
-            message: this.config.isPreview ? `Using Preview API` : `Using Delivery (Public) API`
+            message: this.config.isPreview ? `Using Preview API` : `Using Delivery API`
         });
 
         const deliveryClient = this.getDeliveryClient();
