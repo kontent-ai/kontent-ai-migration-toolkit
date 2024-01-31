@@ -57,7 +57,7 @@ export class ImportLanguageVariantHelper {
         await processInChunksAsync<IParsedContentItem, void>({
             chunkSize: this.importContentItemChunkSize,
             items: categorizedParsedItems.regularItems,
-            itemInfo: (input, output) => {
+            itemInfo: (input) => {
                 return {
                     itemType: 'languageVariant',
                     title: input.system.name,
@@ -94,7 +94,7 @@ export class ImportLanguageVariantHelper {
                                 importContentItem.system.name
                             )}' in language '${colors.red(importContentItem.system.language)}'`,
                             partA: importContentItem.system.codename,
-                            partB: extractErrorData(error).message,
+                            partB: extractErrorData(error).message
                         });
                     } else {
                         throw error;
@@ -153,7 +153,8 @@ export class ImportLanguageVariantHelper {
                 data.managementClient,
                 data.importContentItem.system.workflow_step,
                 data.importContentItem,
-                data.workflows
+                data.workflows,
+                upsertedLanguageVariant
             );
         }
     }

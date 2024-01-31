@@ -46,7 +46,7 @@ export class ImportContentItemHelper {
         await processInChunksAsync<IParsedContentItem, void>({
             chunkSize: this.importContentItemChunkSize,
             items: categorizedParsedItems.regularItems,
-            itemInfo: (input, output) => {
+            itemInfo: (input) => {
                 return {
                     itemType: 'contentItem',
                     title: input.system.name,

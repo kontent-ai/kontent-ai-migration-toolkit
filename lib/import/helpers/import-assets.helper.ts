@@ -20,7 +20,7 @@ export class ImportAssetsHelper {
         await processInChunksAsync<IParsedAsset, void>({
             chunkSize: this.importAssetsChunkSize,
             items: data.assets,
-            itemInfo: (input, output) => {
+            itemInfo: (input) => {
                 return {
                     itemType: 'asset',
                     title: input.filename,

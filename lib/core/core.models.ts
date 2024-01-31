@@ -38,6 +38,7 @@ export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset'
 export type ActionType =
     | 'skip'
     | 'save'
+    | 'unpublish'
     | 'readFs'
     | 'writeFs'
     | 'download'

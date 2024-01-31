@@ -1,6 +1,6 @@
-import { ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
+import { LanguageVariantModels, ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
 import { IParsedContentItem } from '../import.models.js';
-import { logItemAction, logErrorAndExit, LogLevel } from '../../core/index.js';
+import { logItemAction, logErrorAndExit, LogLevel, logDebug } from '../../core/index.js';
 import colors from 'colors';
 
 export function getImportWorkflowHelper(config: { logLevel: LogLevel }): ImportWorkflowHelper {
@@ -37,7 +37,8 @@ export class ImportWorkflowHelper {
         managementClient: ManagementClient,
         workflowStepCodename: string,
         importContentItem: IParsedContentItem,
-        workflows: WorkflowModels.Workflow[]
+        workflows: WorkflowModels.Workflow[],
+        languageVariant: LanguageVariantModels.ContentItemLanguageVariant
     ): Promise<void> {
         // check if workflow step exists in target project
         if (!this.doesWorkflowStepExist(workflowStepCodename, workflows)) {
@@ -72,13 +73,41 @@ export class ImportWorkflowHelper {
         } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
             const workflow = this.getWorkflowForGivenStepByCodename(workflowStepCodename, workflows);
 
+            // unpublish the language variant first if published
+            // there is no way to determine if language variant is published via MAPI
+            // so we have to always try unpublishing first and catching possible errors
+            try {
+                logItemAction(this.logLevel, 'unpublish', 'languageVariant', {
+                    title: `${importContentItem.system.name}`,
+                    language: importContentItem.system.language,
+                    codename: importContentItem.system.codename,
+                    workflowStep: importContentItem.system.workflow_step
+                });
+                await managementClient
+                    .unpublishLanguageVariant()
+                    .byItemCodename(importContentItem.system.codename)
+                    .byLanguageCodename(importContentItem.system.language)
+                    .withoutData()
+                    .toPromise();
+            } catch (error) {
+                if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+                    if (this.logLevel === 'verbose') {
+                        logDebug({
+                            type: 'info',
+                            message: `Unpublish failed, but this may be expected behavior as we cannot determine the published state of language variant. Error received: ${error.message}`
+                        });
+                    }
+                } else {
+                    throw error;
+                }
+            }
+
             logItemAction(this.logLevel, 'archive', 'languageVariant', {
                 title: `${importContentItem.system.name}`,
                 language: importContentItem.system.language,
                 codename: importContentItem.system.codename,
                 workflowStep: importContentItem.system.workflow_step
             });
-
             await managementClient
                 .changeWorkflowOfLanguageVariant()
                 .byItemCodename(importContentItem.system.codename)
