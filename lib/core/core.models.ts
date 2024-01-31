@@ -31,7 +31,7 @@ export interface ICliFileConfig {
 
 export type CliAction = 'export' | 'import';
 export type ExportAdapter = 'kontentAi';
-export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile' | 'zipFile';
+export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile' | 'zipFile' | 'count';
 
 export type ActionType =
     | 'skip'

@@ -1,10 +1,24 @@
 import { IContentType, ILanguage, IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
-import { ContentElementType, ItemType, logDebug, logProcessingDebug } from '../../../../core/index.js';
+import {
+    ContentElementType,
+    ItemType,
+    logDebug,
+    logProcessingDebug,
+    processInChunksAsync
+} from '../../../../core/index.js';
 import { IKontentAiExportAdapterConfig, IExportContentItem, IExportElement } from '../../../export.models.js';
 import { translationHelper } from '../../../../translation/index.js';
 import colors from 'colors';
 
+interface ITypeLanguageMap {
+    language: ILanguage;
+    type: IContentType;
+}
+
 export class ExportContentItemHelper {
+    private readonly fetchCountForTypesChunkSize: number = 100;
+    private readonly exportContentItemsChunkSize: number = 100;
+
     async exportContentItemsAsync(
         deliveryClient: IDeliveryClient,
         config: IKontentAiExportAdapterConfig,
@@ -57,12 +71,26 @@ export class ExportContentItemHelper {
                 message: `Found '${colors.yellow(totalItemsToExport.toString())}' items in total to export`
             });
 
-            for (const type of typesToExport) {
-                for (const language of languagesToExport) {
+            const typeLanguageMaps = this.getTypeLanguageMaps({
+                languagesToExport: languagesToExport,
+                typesToExport: typesToExport
+            });
+
+            await processInChunksAsync<ITypeLanguageMap, void>({
+                chunkSize: this.exportContentItemsChunkSize,
+                itemInfo: (type) => {
+                    return {
+                        itemType: 'contentItem',
+                        title: type.type.system.name,
+                        partA: type.language.system.name
+                    };
+                },
+                items: typeLanguageMaps,
+                processFunc: async (typeLanguageMap) => {
                     await deliveryClient
                         .itemsFeed()
-                        .type(type.system.codename)
-                        .equalsFilter('system.language', language.system.codename)
+                        .type(typeLanguageMap.type.system.codename)
+                        .equalsFilter('system.language', typeLanguageMap.language.system.codename)
                         .toAllPromise({
                             responseFetched: (response) => {
                                 // add items to result
@@ -88,7 +116,7 @@ export class ExportContentItemHelper {
                             }
                         });
                 }
-            }
+            });
 
             logDebug({
                 type: 'info',
@@ -109,19 +137,30 @@ export class ExportContentItemHelper {
     }): Promise<number> {
         let totalItemsCount: number = 0;
 
-        for (const type of data.typesToExport) {
-            for (const language of data.languagesToExport) {
-                const response = await data.deliveryClient
-                    .items()
-                    .type(type.system.codename)
-                    .equalsFilter('system.language', language.system.codename)
-                    .limitParameter(1)
-                    .depthParameter(0)
-                    .includeTotalCountParameter()
-                    .toPromise();
-                totalItemsCount += response.data.pagination.totalCount ?? 0;
+        await processInChunksAsync<IContentType, void>({
+            chunkSize: this.fetchCountForTypesChunkSize,
+            itemInfo: (type) => {
+                return {
+                    itemType: 'count',
+                    title: type.system.name,
+                    partA: type.system.codename
+                };
+            },
+            items: data.typesToExport,
+            processFunc: async (type) => {
+                for (const language of data.languagesToExport) {
+                    const response = await data.deliveryClient
+                        .items()
+                        .type(type.system.codename)
+                        .equalsFilter('system.language', language.system.codename)
+                        .limitParameter(1)
+                        .depthParameter(0)
+                        .includeTotalCountParameter()
+                        .toPromise();
+                    totalItemsCount += response.data.pagination.totalCount ?? 0;
+                }
             }
-        }
+        });
 
         return totalItemsCount;
     }
@@ -213,6 +252,24 @@ export class ExportContentItemHelper {
         }
 
         return filteredLanguages;
+    }
+
+    private getTypeLanguageMaps(data: {
+        typesToExport: IContentType[];
+        languagesToExport: ILanguage[];
+    }): ITypeLanguageMap[] {
+        const maps: ITypeLanguageMap[] = [];
+
+        for (const type of data.typesToExport) {
+            for (const language of data.languagesToExport) {
+                maps.push({
+                    type: type,
+                    language: language
+                });
+            }
+        }
+
+        return maps;
     }
 }
 
