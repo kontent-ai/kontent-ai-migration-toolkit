@@ -7,8 +7,7 @@ export type DebugType = 'error' | 'warning' | 'info' | ActionType;
 export function logErrorAndExit(data: { message: string }): never {
     logDebug({
         type: 'error',
-        message: data.message,
-        partA: 'Stopping process'
+        message: data.message
     });
     process.exit(1);
 }

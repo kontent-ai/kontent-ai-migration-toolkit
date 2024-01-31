@@ -5,9 +5,8 @@ import {
     getExtension,
     extractFilenameFromUrl,
     defaultRetryStrategy,
-    formatBytes,
     logDebug,
-    logProcessingDebug
+    processInChunksAsync
 } from '../../../../core/index.js';
 import { IExportAsset } from '../../../export.models.js';
 import colors from 'colors';
@@ -15,6 +14,7 @@ import colors from 'colors';
 type ExportAssetWithoutBinaryData = Omit<IExportAsset, 'binaryData'>;
 
 export class ExportAssetsHelper {
+    private readonly downloadAssetBinaryDataChunkSize: number = 10;
     private readonly httpService: HttpService = new HttpService();
 
     async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IExportAsset[]> {
@@ -74,32 +74,29 @@ export class ExportAssetsHelper {
             ...new Map(extractedAssets.map((item) => [item.url, item])).values()
         ];
 
-        const exportedAssets: IExportAsset[] = [];
-
         logDebug({
             type: 'info',
             message: `Preparing to download '${colors.yellow(uniqueAssets.length.toString())}' assets`
         });
 
-        let assetIndex: number = 0;
-        for (const uniqueAsset of uniqueAssets) {
-            assetIndex++;
+        const exportedAssets: IExportAsset[] = await processInChunksAsync<ExportAssetWithoutBinaryData, IExportAsset>({
+            chunkSize: this.downloadAssetBinaryDataChunkSize,
+            itemInfo: (item) => {
+                return {
+                    title: item.url,
+                    itemType: 'binaryFile'
+                };
+            },
+            items: uniqueAssets,
+            processFunc: async (item) => {
+                const exportAsset: IExportAsset = {
+                    ...item,
+                    binaryData: (await this.getBinaryDataFromUrlAsync(item.url)).data
+                };
 
-            const binaryDataResponse = await this.getBinaryDataFromUrlAsync(uniqueAsset.url);
-
-            logProcessingDebug({
-                index: assetIndex,
-                totalCount: uniqueAssets.length,
-                itemType: 'binaryFile',
-                title: uniqueAsset.url,
-                partA: formatBytes(binaryDataResponse.contentLength)
-            });
-
-            exportedAssets.push({
-                ...uniqueAsset,
-                binaryData: (await this.getBinaryDataFromUrlAsync(uniqueAsset.url)).data
-            });
-        }
+                return exportAsset;
+            }
+        });
 
         return exportedAssets;
     }

@@ -115,3 +115,14 @@ export interface IExportTransformConfig {
 export interface IRichTextExportConfig {
     replaceInvalidLinks: boolean;
 }
+
+export interface IChunk<T> {
+    items: T[];
+    index: number;
+}
+
+export interface IProcessInChunksItemInfo {
+    title: string;
+    itemType: ItemType;
+    partA?: string;
+}

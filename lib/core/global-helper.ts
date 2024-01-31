@@ -1,8 +1,9 @@
 import { SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
-import { logErrorAndExit } from './log-helper.js';
+import { logErrorAndExit, logProcessingDebug } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
+import { IChunk, IProcessInChunksItemInfo } from './core.models.js';
 
 const rateExceededErrorCode: number = 10000;
 
@@ -99,4 +100,55 @@ export function extractFilenameFromUrl(assetUrl: string): string {
     const url = new URL(assetUrl);
     const splitPaths = url.pathname.split('/');
     return splitPaths[splitPaths.length - 1];
+}
+
+export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
+    items: TInputItem[];
+    chunkSize: number;
+    itemInfo: (item: TInputItem) => IProcessInChunksItemInfo;
+    processFunc: (item: TInputItem) => Promise<TOutputItem>;
+}): Promise<TOutputItem[]> {
+    const chunks = splitArrayIntoChunks<TInputItem>(data.items, data.chunkSize);
+    const outputItems: TOutputItem[] = [];
+    let processingIndex: number = 0;
+
+    for (const chunk of chunks) {
+        await Promise.all(
+            chunk.items.map((item) => {
+                processingIndex++;
+                const itemInfo = data.itemInfo(item);
+
+                logProcessingDebug({
+                    index: processingIndex,
+                    totalCount: data.items.length,
+                    itemType: itemInfo.itemType,
+                    title: itemInfo.title,
+                    partA: itemInfo.partA
+                });
+                return data.processFunc(item).then((output) => {
+                    outputItems.push(output);
+                });
+            })
+        );
+    }
+
+    return outputItems;
+}
+
+function splitArrayIntoChunks<T>(items: T[], chunkSize: number): IChunk<T>[] {
+    if (!items.length) {
+        return [];
+    }
+
+    const chunks: IChunk<T>[] = [];
+
+    for (let i = 0; i < items.length; i += chunkSize) {
+        const chunk = items.slice(i, i + chunkSize);
+        chunks.push({
+            index: i,
+            items: chunk
+        });
+    }
+
+    return chunks;
 }
