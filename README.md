@@ -42,6 +42,8 @@ kontent-ai-migration-toolkit --help
 The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
 project (based on item's `codename`) the item will be updated. The workflow of imported language variant will be set according to `workflowStep` field.
 
+You can run `kontent-ai-migration-toolkit` multiple times without being worried that certain content item will be created multiple times.
+
 ## How are assets imported?
 
 If asset exists in target project, the asset upload will be skipped and not uploaded at all. If asset doesn't exist, the
