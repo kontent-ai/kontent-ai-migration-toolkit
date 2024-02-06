@@ -119,7 +119,7 @@ This tools uses simplified models to make migration simpler and more developer f
 migrating from external systems because data structure is almost certainly very different to models used within
 Kontent.ai APIs. These migration models act as an abstraction on the API layer.
 
-**Overview of migration models**
+### Model definitions
 
 > Models are defined at https://github.com/Enngage/kontent-ai-migration-toolkit/blob/main/lib/core/migration-models.ts
 
@@ -166,6 +166,39 @@ export interface IMigrationAsset {
     url: string;
 }
 ```
+
+### Model examples
+
+A single record of `IMigrationItem` type in `json` format may look like this:
+
+```json
+{
+    "system": {
+        "codename": "_the_dark_knight_rises",
+        "collection": "default",
+        "language": "en",
+        "last_modified": "2018-10-02T10:09:45.0612851Z",
+        "name": " The Dark Knight Rises",
+        "type": "movie",
+        "workflow_step": "published"
+    },
+    "elements": {
+        "title": "The Dark Knight Rises",
+        "plot": "<p>Eight years after the Joker's reign of anarchy, the Dark Knight, with the help of the enigmatic Selina, is forced from his imposed exile to save Gotham City, now on the edge of total annihilation, from the brutal guerrilla terrorist Bane.</p>",
+        "released": "2012-07-20T00:00:00Z",
+        "length": 164,
+        "poster": [
+            "https://assets-eu-01.kc-usercontent.com:443/cdbf5823-cbec-010d-f4c3-0411eee31c0e/787c8c83-16b4-40b4-878e-b90b6d42a4ef/the_dark_knight_rises.jpg"
+        ],
+        "category": ["sci_fi", "action"],
+        "stars": ["christian_bale", "anne_hathaway", "tom_hardy"],
+        "seoname": "the-dark-knight-rises",
+        "releasecategory": []
+    }
+}
+```
+
+> You may find sample export (`.zip`) with both items & assets at https://github.com/Enngage/kontent-ai-migration-toolkit/tree/main/samples/export-data
 
 # Export
 
