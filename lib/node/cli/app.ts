@@ -257,7 +257,7 @@ const getConfig = async () => {
         }
     }
 
-    if (fetchMode?.toLowerCase() === <ContentItemsFetchMode>'listAll') {
+    if (fetchMode?.toLowerCase() === <ContentItemsFetchMode>'listAll'.toLowerCase()) {
         mappedFetchMode = 'listAll';
     } else {
         mappedFetchMode = 'oneByOne';
