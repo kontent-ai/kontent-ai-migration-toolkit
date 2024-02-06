@@ -4,7 +4,8 @@ The purpose of this project is to import content data to [Kontent.ai](https://ko
 and export adapters. We provide `Kontent.ai` export adapter by default (meaning you can export data from Kontent.ai
 and re-import it to the same or different project). 
 
-The idea behind this tool is that to migrate data into `Kontent.ai` you prepare your content into a specified format (json, csv..) and run it through this tool to import it. This tool takes care of preparing content items, language variants, moving items to proper workflow step, uploading assets, retry policy and some basic validation as well. 
+> [!TIP]
+> The idea behind this tool is that to migrate data into `Kontent.ai` you prepare your content into a specified format (json, csv..) and run it through this tool to import it. This tool takes care of preparing content items, language variants, moving items to proper workflow step, uploading assets, retry policy and some basic validation as well. 
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
 
