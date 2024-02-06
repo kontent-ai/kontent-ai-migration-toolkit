@@ -4,7 +4,7 @@ The purpose of this project is to import content data to [Kontent.ai](https://ko
 and export adapters. We provide `Kontent.ai` export adapter by default (meaning you can export data from Kontent.ai and
 re-import it to the same or different project).
 
-> [!TIP] The idea behind this tool is to help migration of data into `Kontent.ai` from a simple object structure (json,
+[!TIP] The idea behind this tool is to help migration of data into `Kontent.ai` from a simple object structure (json,
 > csv..). Developers should export data from their system into this format and use this tool to import it. This tool
 > takes care of preparing content items, language variants, moving items through workflow, publishing, archiving,
 > uploading assets, retry policy and some basic validation and more.
@@ -13,8 +13,8 @@ This library can only be used in `node.js`. Use in Browsers is not supported.
 
 # Getting started
 
-We recommend running data-ops with `npx`. Use `--help` anytime to get information about available commands and
-their options.
+We recommend running data-ops with `npx`. Use `--help` anytime to get information about available commands and their
+options.
 
 ```bash
 npx xeno-test --help
@@ -33,11 +33,11 @@ kontent-ai-migration-toolkit --help
 
 # Import
 
-> [!CAUTION] > **Read before running import script**.
-> We do not recommended importing into a production environment directly without proper testing. Instead you should first create a testing environment and run the script there to make sure everything works as you
-> intended to.
+[!CAUTION] > **Read before running import script**. We do not recommended importing into a production environment
+> directly without proper testing. Instead you should first create a testing environment and run the script there to
+> make sure everything works as you intended to.
 
-> [!NOTE]  
+[!NOTE]  
 > When importing it is essential that `Content types`, `Taxonomies` and `Workflows` matches the input data. Any
 > inconsistency in data such as referencing inexistent taxonomy term, incorrect element type and other problems will
 > cause import to fail.
@@ -114,9 +114,12 @@ await importToolkit.importFromFileAsync();
 
 # Migration models
 
-This tools uses simplified models to make migration simpler and more developer friendly. This is useful especially when migrating from external systems because data structure is almost certainly very different to models used within Kontent.ai APIs. These migration models act as an abstraction on the API layer.
+This tools uses simplified models to make migration simpler and more developer friendly. This is useful especially when
+migrating from external systems because data structure is almost certainly very different to models used within
+Kontent.ai APIs. These migration models act as an abstraction on the API layer.
 
 **Overview of migration models**
+
 > Models are defined at https://github.com/Enngage/kontent-ai-migration-toolkit/blob/main/lib/core/migration-models.ts
 
 ```typescript
@@ -162,7 +165,6 @@ export interface IMigrationAsset {
     url: string;
 }
 ```
-
 
 # Export
 
