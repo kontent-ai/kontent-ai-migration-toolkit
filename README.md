@@ -1,35 +1,45 @@
 # Kontent.ai Migration Toolkit
 
 The purpose of this project is to import content data to [Kontent.ai](https://kontent.ai) projects using various formats
-and export adapters. Currently we support only `Kontent.ai` export adapter (meaning you can export data from Kontent.ai
-and re-import it to the same or different project)
+and export adapters. We provide `Kontent.ai` export adapter by default (meaning you can export data from Kontent.ai
+and re-import it to the same or different project). 
+
+The idea behind this tool is that to migrate data into `Kontent.ai` you prepare your content into a specified format (json, csv..) and run it through this tool to import it. This tool takes care of preparing content items, language variants, moving items to proper workflow step, uploading assets, retry policy and some basic validation as well. 
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
 
-### Important Disclaimer
+# Getting started
 
-> We do not recommend importing data into your production environment directly (= without proper testing), unless you
-> are absolutely sure you know what you are doing. Instead, we recommend that you create a new environment based on your
-> production and test the import there first. If the import meets your expectations, you may swap environments or run it
-> again on the production.
+We recommend running data-ops with `npx`.
+Use `-h` or `--help` anytime to get information about available commands and their options.
+```bash
+npx xeno-test --help
+# or
+yarn dlx xeno-test --help
 
-## Installation
+# help for a specific command
+npx xeno-test <command> --help
 
-Install package globally:
+# you can also install the package globally, or locally
+npm i xeno-test -g
 
-`npm i xeno-test -g`
+# with the package installed, you can call the tool as follows
+kontent-ai-migration-toolkit --help
+```
 
 # Import
+
+> [!CAUTION]
+> **We do not recommended importing into a production environment directly without proper testing**. Instead you should first create a testing environment and run the script there to make sure everything works as you intended to.
 
 > When importing it is essential that `Content types`, `Taxonomies` and `Workflows` matches the input data. Any
 > inconsistency in data such as referencing inexistent taxonomy term, incorrect element type and other problems will
 > cause import to fail.
 
-## How are content items imported?
+## How are content items & language variants imported?
 
 The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
-project (based on item `codename`) the item will be updated. The workflow or published state will be set according to
-the source data.
+project (based on item's `codename`) the item will be updated. The workflow of imported language variant will be set according to `workflowStep` field.
 
 ## How are assets imported?
 
