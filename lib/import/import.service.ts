@@ -125,7 +125,7 @@ export class ImportService {
                 type: 'info',
                 message: `Importing content items`
             });
-            await this.importParsedContentItemsAsync(dataToImport.importData.items, importedData);
+            await this.importmigrationContentItemAsync(dataToImport.importData.items, importedData);
         } else {
             logDebug({
                 type: 'info',
@@ -244,8 +244,8 @@ export class ImportService {
         return dataToImport;
     }
 
-    private async importParsedContentItemsAsync(
-        parsedContentItems: IMigrationItem[],
+    private async importmigrationContentItemAsync(
+        migrationContentItem: IMigrationItem[],
         importedData: IImportedData
     ): Promise<void> {
         const workflows = await this.getWorkflowsAsync();
@@ -257,13 +257,13 @@ export class ImportService {
                 managementClient: this.managementClient,
                 collections: collections,
                 importedData: importedData,
-                parsedContentItems: parsedContentItems
+                migrationContentItems: migrationContentItem
             });
 
         // then process language variants
         await this.importLanguageVariantHelper.importLanguageVariantsAsync({
             managementClient: this.managementClient,
-            importContentItems: parsedContentItems,
+            importContentItems: migrationContentItem,
             importedData: importedData,
             preparedContentItems: preparedContentItems,
             workflows: workflows

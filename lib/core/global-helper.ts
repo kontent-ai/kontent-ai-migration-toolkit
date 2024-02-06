@@ -50,8 +50,7 @@ export function extractErrorData(error: any): IErrorData {
         for (const validationError of error.validationErrors) {
             message += ` ${validationError.message}`;
         }
-    }
-    if (error instanceof Error) {
+    } else if (error instanceof Error) {
         message = error.message;
     }
 

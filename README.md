@@ -49,7 +49,7 @@ The Migration Toolkit creates content items that are not present in target proje
 project (based on item's `codename`) the item will be updated. The workflow of imported language variant will be set
 according to `workflowStep` field.
 
-You can run `kontent-ai-migration-toolkit` multiple times without being worried that certain content item will be
+You can run `kontent-ai-migration-toolkit` many times over without being worried that identical content item will be
 created multiple times.
 
 ## How are assets imported?
@@ -177,7 +177,6 @@ A single record of `IMigrationItem` type in `json` format may look like this:
         "codename": "_the_dark_knight_rises",
         "collection": "default",
         "language": "en",
-        "last_modified": "2018-10-02T10:09:45.0612851Z",
         "name": " The Dark Knight Rises",
         "type": "movie",
         "workflow_step": "published"
