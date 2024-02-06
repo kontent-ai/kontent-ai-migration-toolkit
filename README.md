@@ -4,7 +4,7 @@ The purpose of this project is to import content data to [Kontent.ai](https://ko
 and export adapters. We provide `Kontent.ai` export adapter by default (meaning you can export data from Kontent.ai and
 re-import it to the same or different project).
 
-[!TIP] The idea behind this tool is to help migration of data into `Kontent.ai` from a simple object structure (json,
+> [!TIP] The idea behind this tool is to help migration of data into `Kontent.ai` from a simple object structure (json,
 > csv..). Developers should export data from their system into this format and use this tool to import it. This tool
 > takes care of preparing content items, language variants, moving items through workflow, publishing, archiving,
 > uploading assets, retry policy and some basic validation and more.
@@ -33,11 +33,11 @@ kontent-ai-migration-toolkit --help
 
 # Import
 
-[!CAUTION] > **Read before running import script**. We do not recommended importing into a production environment
+> [!CAUTION] **Read before running import script**. We do not recommended importing into a production environment
 > directly without proper testing. Instead you should first create a testing environment and run the script there to
 > make sure everything works as you intended to.
 
-[!NOTE]  
+> [!NOTE]  
 > When importing it is essential that `Content types`, `Taxonomies` and `Workflows` matches the input data. Any
 > inconsistency in data such as referencing inexistent taxonomy term, incorrect element type and other problems will
 > cause import to fail.
