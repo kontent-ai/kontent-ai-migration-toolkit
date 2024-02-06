@@ -1,4 +1,4 @@
-import { LanguageVariantModels, ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
+import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
 import { logItemAction, logErrorAndExit, LogLevel, logDebug, IMigrationItem } from '../../core/index.js';
 import colors from 'colors';
 
@@ -7,40 +7,34 @@ export function getImportWorkflowHelper(config: { logLevel: LogLevel }): ImportW
 }
 
 export class ImportWorkflowHelper {
-    private readonly defaultWorkflowCodename: string = 'Default';
-
     constructor(private readonly logLevel: LogLevel) {}
 
-    getWorkflowForGivenStepById(workflowId: string, workflows: WorkflowModels.Workflow[]): WorkflowModels.Workflow {
-        return this.getWorkflowForGivenStep(workflows, (workflow) => {
-            if (workflow.archivedStep.id === workflowId) {
-                return true;
-            }
-            if (workflow.publishedStep.id === workflowId) {
-                return true;
-            }
-            if (workflow.scheduledStep.id === workflowId) {
-                return true;
-            }
-            const step = workflow.steps.find((m) => m.id === workflowId);
+    getWorkflowByCodename(workflowCodename: string, workflows: WorkflowModels.Workflow[]): WorkflowModels.Workflow {
+        const workflow = workflows.find((m) => m.codename?.toLowerCase() === workflowCodename.toLowerCase());
 
-            if (step) {
-                return true;
-            }
+        if (!workflow) {
+            const errorMessages: string[] = [
+                `Workflow with codename '${workflowCodename}' does not exist in target project`,
+                `Available workflows are: ${workflows.map((m) => m.codename).join(', ')}`
+            ];
 
-            return false;
-        });
+            throw Error(errorMessages.join('. '));
+        }
+
+        return workflow;
     }
 
     async setWorkflowOfLanguageVariantAsync(
         managementClient: ManagementClient,
+        workflowCodename: string,
         workflowStepCodename: string,
         importContentItem: IMigrationItem,
-        workflows: WorkflowModels.Workflow[],
-        languageVariant: LanguageVariantModels.ContentItemLanguageVariant
+        workflows: WorkflowModels.Workflow[]
     ): Promise<void> {
+        const workflow = this.getWorkflowByCodename(workflowCodename, workflows);
+
         // check if workflow step exists in target project
-        if (!this.doesWorkflowStepExist(workflowStepCodename, workflows)) {
+        if (!this.doesWorkflowStepExist(workflowCodename, workflowStepCodename, workflows)) {
             logErrorAndExit({
                 message: `Could not change workflow step for item '${colors.yellow(
                     importContentItem.system.codename
@@ -70,8 +64,6 @@ export class ImportWorkflowHelper {
                 workflowStep: importContentItem.system.workflow_step
             });
         } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
-            const workflow = this.getWorkflowForGivenStepByCodename(workflowStepCodename, workflows);
-
             // unpublish the language variant first if published
             // there is no way to determine if language variant is published via MAPI
             // so we have to always try unpublishing first and catching possible errors
@@ -121,8 +113,6 @@ export class ImportWorkflowHelper {
                 })
                 .toPromise();
         } else {
-            const workflow = this.getWorkflowForGivenStepByCodename(workflowStepCodename, workflows);
-
             if (workflow.codename === workflowStepCodename) {
                 // item is already in the target workflow step
             } else {
@@ -189,69 +179,26 @@ export class ImportWorkflowHelper {
         return false;
     }
 
-    private getWorkflowForGivenStep(
-        workflows: WorkflowModels.Workflow[],
-        workflowMatcher: (workflow: WorkflowModels.Workflow) => boolean
-    ): WorkflowModels.Workflow {
-        const matchedWorkflow = workflows.find((workflow) => workflowMatcher(workflow));
-
-        if (matchedWorkflow) {
-            return matchedWorkflow;
-        }
-
-        const defaultWorkflow = workflows.find(
-            (m) => m.codename.toLowerCase() === this.defaultWorkflowCodename.toLowerCase()
-        );
-
-        if (!defaultWorkflow) {
-            logErrorAndExit({
-                message: `Missing default workflow`
-            });
-        }
-
-        return defaultWorkflow;
-    }
-
-    private getWorkflowForGivenStepByCodename(
+    private doesWorkflowStepExist(
+        workflowCodename: string,
         stepCodename: string,
         workflows: WorkflowModels.Workflow[]
-    ): WorkflowModels.Workflow {
-        return this.getWorkflowForGivenStep(workflows, (workflow) => {
-            if (workflow.archivedStep.codename === stepCodename) {
-                return true;
-            }
-            if (workflow.publishedStep.codename === stepCodename) {
-                return true;
-            }
-            if (workflow.scheduledStep.codename === stepCodename) {
-                return true;
-            }
-            const step = workflow.steps.find((m) => m.codename === stepCodename);
+    ): boolean {
+        const workflow = this.getWorkflowByCodename(workflowCodename, workflows);
 
-            if (step) {
-                return true;
-            }
+        if (workflow.archivedStep.codename === stepCodename) {
+            return true;
+        }
+        if (workflow.publishedStep.codename === stepCodename) {
+            return true;
+        }
+        if (workflow.scheduledStep.codename === stepCodename) {
+            return true;
+        }
+        const step = workflow.steps.find((m) => m.codename === stepCodename);
 
-            return false;
-        });
-    }
-
-    private doesWorkflowStepExist(stepCodename: string, workflows: WorkflowModels.Workflow[]): boolean {
-        for (const workflow of workflows) {
-            if (workflow.archivedStep.codename === stepCodename) {
-                return true;
-            }
-            if (workflow.publishedStep.codename === stepCodename) {
-                return true;
-            }
-            if (workflow.scheduledStep.codename === stepCodename) {
-                return true;
-            }
-            const step = workflow.steps.find((m) => m.codename === stepCodename);
-
-            if (step) {
-                return true;
-            }
+        if (step) {
+            return true;
         }
 
         return false;

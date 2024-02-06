@@ -12,8 +12,8 @@ export interface IJsonItem {
         language: string;
         type: string;
         collection: string;
-        last_modified?: string;
         workflow_step?: string;
+        workflow?: string;
     };
     elements: IJsonElements;
 }
@@ -35,10 +35,10 @@ export function mapToJsonItem(item: IMigrationItem): IJsonItem {
             codename: item.system.codename,
             collection: item.system.collection,
             language: item.system.language,
-            last_modified: item.system.last_modified,
             name: item.system.name,
             type: item.system.type,
-            workflow_step: item.system.workflow_step
+            workflow_step: item.system.workflow_step,
+            workflow: item.system.workflow
         },
         elements: jsonElements
     };
@@ -66,10 +66,10 @@ export function parseJsonItem(
             codename: item.system.codename,
             collection: item.system.collection,
             language: item.system.language,
-            last_modified: item.system.last_modified,
             name: item.system.name,
             type: item.system.type,
-            workflow_step: item.system.workflow_step
+            workflow_step: item.system.workflow_step,
+            workflow: item.system.workflow
         },
         elements: elements
     };

@@ -173,8 +173,8 @@ export class ExportContentItemHelper {
                 type: item.system.type,
                 language: item.system.language,
                 collection: item.system.collection,
-                last_modified: item.system.lastModified,
-                workflow_step: item.system.workflowStep ?? undefined
+                workflow_step: item.system.workflowStep ?? undefined,
+                workflow: item.system.workflow ?? undefined
             },
             elements: Object.entries(item.elements).map(([key, element]) => {
                 const mappedElement: IMigrationElement = {

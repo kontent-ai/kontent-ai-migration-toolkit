@@ -20,8 +20,8 @@ export function logProcessingDebug(data: {
     partA?: string;
 }): void {
     console.log(
-        `[${colors.green(`${data.index}/${data.totalCount}`)}][${colors.yellow(data.itemType)}]${
-            data.partA ? `[${colors.cyan(data.partA)}]` : ''
+        `[${colors.cyan(`${data.index}/${data.totalCount}`)}][${colors.yellow(data.itemType)}]${
+            data.partA ? `[${colors.green(data.partA)}]` : ''
         }: ${data.title}`
     );
 }
@@ -48,7 +48,7 @@ export function logDebug(data: {
     console.log(
         `[${typeColor(data.type)}]${data.partA ? `[${colors.yellow(data.partA)}]` : ''}${
             data.partB ? `[${colors.cyan(data.partB)}]` : ''
-        }${data.partC ? `[${colors.red(data.partC)}]` : ''}${data.partD ? `[${colors.magenta(data.partD)}]` : ''}${
+        }${data.partC ? `[${colors.red(data.partC)}]` : ''}${data.partD ? `[${colors.yellow(data.partD)}]` : ''}${
             data.performance ? `[${colors.bgYellow(colors.black(data.performance))}]` : ''
         }: ${data.message}`
     );
@@ -61,6 +61,7 @@ export function logItemAction(
     data: {
         language?: string;
         workflowStep?: string;
+        workflow?: string;
         title: string;
         codename?: string;
     }
@@ -72,7 +73,7 @@ export function logItemAction(
             partA: itemType,
             partB: data.codename,
             partC: data.language,
-            partD: data.workflowStep
+            partD: data.workflow && data.workflowStep ? `${data.workflow}>${data.workflowStep}` : undefined
         });
     }
 }

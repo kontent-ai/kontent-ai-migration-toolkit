@@ -149,13 +149,13 @@ export class ImportLanguageVariantHelper {
         });
 
         // set workflow of language variant
-        if (data.importContentItem.system.workflow_step) {
+        if (data.importContentItem.system.workflow_step && data.importContentItem.system.workflow) {
             await this.importWorkflowHelper.setWorkflowOfLanguageVariantAsync(
                 data.managementClient,
+                data.importContentItem.system.workflow,
                 data.importContentItem.system.workflow_step,
                 data.importContentItem,
-                data.workflows,
-                upsertedLanguageVariant
+                data.workflows
             );
         }
     }
@@ -166,6 +166,14 @@ export class ImportLanguageVariantHelper {
         workflows: WorkflowModels.Workflow[];
     }): Promise<void> {
         let languageVariantOfContentItem: undefined | LanguageVariantModels.ContentItemLanguageVariant;
+        const workflowCodename = data.importContentItem.system.workflow;
+
+        if (!workflowCodename) {
+            throw Error(
+                `Item with codename '${data.importContentItem.system.codename}' does not have workflow property assigned`
+            );
+        }
+        const workflow = this.importWorkflowHelper.getWorkflowByCodename(workflowCodename, data.workflows);
 
         try {
             logItemAction(this.logLevel, 'fetch', 'languageVariant', {
@@ -216,25 +224,21 @@ export class ImportLanguageVariantHelper {
                     .toPromise();
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, data.workflows)) {
                 // change workflow step to draft
-                if (languageVariantOfContentItem.workflow.stepIdentifier.id) {
-                    const workflow = this.importWorkflowHelper.getWorkflowForGivenStepById(
-                        languageVariantOfContentItem.workflow.stepIdentifier.id,
-                        data.workflows
-                    );
-                    const newWorkflowStep = workflow.steps[0];
+                logItemAction(this.logLevel, 'unArchive', 'languageVariant', {
+                    title: `${data.importContentItem.system.name}`,
+                    language: data.importContentItem.system.language,
+                    codename: data.importContentItem.system.codename,
+                    workflowStep: data.importContentItem.system.workflow_step
+                });
 
-                    logItemAction(this.logLevel, 'unArchive', 'languageVariant', {
-                        title: `${data.importContentItem.system.name}`,
-                        language: data.importContentItem.system.language,
-                        codename: data.importContentItem.system.codename,
-                        workflowStep: data.importContentItem.system.workflow_step
-                    });
+                const firstWorkflowStep = workflow.steps?.[0];
 
+                if (firstWorkflowStep) {
                     await data.managementClient
                         .changeWorkflowStepOfLanguageVariant()
                         .byItemCodename(data.importContentItem.system.codename)
                         .byLanguageCodename(data.importContentItem.system.language)
-                        .byWorkflowStepCodename(newWorkflowStep.codename)
+                        .byWorkflowStepCodename(firstWorkflowStep.codename)
                         .toPromise();
                 }
             }

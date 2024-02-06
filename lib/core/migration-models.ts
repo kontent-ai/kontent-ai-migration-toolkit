@@ -26,7 +26,7 @@ export interface IMigrationItem {
         language: string;
         type: string;
         collection: string;
-        last_modified?: string;
+        workflow?: string;
         workflow_step?: string;
     };
     elements: IMigrationElement[];

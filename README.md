@@ -152,8 +152,8 @@ export interface IMigrationItem {
         language: string;
         type: string;
         collection: string;
-        last_modified?: string;
         workflow_step?: string;
+        workflow?: string;
     };
     elements: IMigrationElement[];
 }
@@ -179,7 +179,8 @@ A single record of `IMigrationItem` type in `json` format may look like this:
         "language": "en",
         "name": " The Dark Knight Rises",
         "type": "movie",
-        "workflow_step": "published"
+        "workflow_step": "published",
+        "workflow": "default"
     },
     "elements": {
         "title": "The Dark Knight Rises",

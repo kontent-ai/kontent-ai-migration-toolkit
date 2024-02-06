@@ -11,8 +11,8 @@ interface ICsvItem {
     name: string;
     language: string;
     collection: string;
-    last_modified?: string;
     workflow_step?: string;
+    workflow?: string;
     [propertyName: string]: string | undefined | string[];
 }
 
@@ -76,9 +76,9 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
                             codename: '',
                             collection: '',
                             language: '',
-                            last_modified: '',
                             name: '',
-                            workflow_step: ''
+                            workflow_step: '',
+                            workflow: ''
                         },
                         elements: []
                     };
@@ -141,9 +141,9 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
             codename: item.system.codename,
             collection: item.system.collection,
             language: item.system.language,
-            last_modified: item.system.last_modified,
             name: item.system.name,
-            workflow_step: item.system.workflow_step
+            workflow_step: item.system.workflow_step,
+            workflow: item.system.workflow
         };
 
         for (const elementCodename of typeWrapper.elementCodenames) {
