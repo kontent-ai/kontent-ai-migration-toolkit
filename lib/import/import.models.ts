@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { ContentElementType, LogLevel } from '../core/index.js';
+import { ContentElementType, ContentItemsFetchMode, LogLevel } from '../core/index.js';
 
 export interface IImportConfig {
     logLevel?: LogLevel;
@@ -9,6 +9,7 @@ export interface IImportConfig {
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;
     environmentId: string;
+    contentItemsFetchMode?: ContentItemsFetchMode;
     canImport?: {
         contentItem?: (item: IParsedContentItem) => boolean | Promise<boolean>;
         asset?: (item: IParsedAsset) => boolean | Promise<boolean>;

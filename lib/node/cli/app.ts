@@ -9,7 +9,8 @@ import {
     ExportAdapter,
     logDebug,
     handleError,
-    logErrorAndExit
+    logErrorAndExit,
+    ContentItemsFetchMode
 } from '../../core/index.js';
 import {
     ItemCsvProcessorService,
@@ -41,6 +42,8 @@ const argv = yargs(process.argv.slice(2))
     .describe('ad', 'Adapter used to export data')
     .alias('e', 'environmentId')
     .describe('e', 'environmentId')
+    .alias('fm', 'fetchMode')
+    .describe('fm', 'Fetch mode. One of: "oneByOne" | "listAll')
     .alias('mapi', 'apiKey')
     .describe('mapi', 'Management API Key')
     .alias('sapi', 'secureApiKey')
@@ -155,6 +158,7 @@ const importAsync = async (config: ICliFileConfig) => {
         logLevel: config.logLevel,
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
+        contentItemsFetchMode: config.contentItemsFetchMode,
         environmentId: config.environmentId,
         managementApiKey: config.managementApiKey,
         canImport: {
@@ -223,15 +227,17 @@ const getConfig = async () => {
     const action: CliAction = getRequiredArgumentValue(resolvedArgs, 'action') as CliAction;
     const format: string | undefined = getOptionalArgumentValue(resolvedArgs, 'format');
     const adapter: string | undefined = getOptionalArgumentValue(resolvedArgs, 'adapter');
+    const fetchMode: string | undefined = getOptionalArgumentValue(resolvedArgs, 'fetchMode');
 
     let mappedFormat: ProcessingFormat = 'csv';
     let mappedAdapter: ExportAdapter = 'kontentAi';
+    let mappedFetchMode: ContentItemsFetchMode = 'oneByOne';
 
-    if (format?.toLowerCase() === 'csv'.toLowerCase()) {
+    if (format?.toLowerCase() === <ProcessingFormat>'csv'.toLowerCase()) {
         mappedFormat = 'csv';
-    } else if (format?.toLowerCase() === 'json'.toLowerCase()) {
+    } else if (format?.toLowerCase() === <ProcessingFormat>'json'.toLowerCase()) {
         mappedFormat = 'json';
-    } else if (format?.toLowerCase() === 'jsonJoined'.toLowerCase()) {
+    } else if (format?.toLowerCase() === <ProcessingFormat>'jsonJoined'.toLowerCase()) {
         mappedFormat = 'jsonJoined';
     } else {
         if (action === 'export') {
@@ -241,7 +247,7 @@ const getConfig = async () => {
         }
     }
 
-    if (adapter?.toLowerCase() === 'kontentAi'.toLowerCase()) {
+    if (adapter?.toLowerCase() === <ExportAdapter>'kontentAi'.toLowerCase()) {
         mappedAdapter = 'kontentAi';
     } else {
         if (action === 'export') {
@@ -249,6 +255,12 @@ const getConfig = async () => {
                 message: `Unsupported adapter '${adapter}'`
             });
         }
+    }
+
+    if (fetchMode?.toLowerCase() === <ContentItemsFetchMode>'listAll') {
+        mappedFetchMode = 'listAll';
+    } else {
+        mappedFetchMode = 'oneByOne';
     }
 
     const config: ICliFileConfig = {
@@ -271,6 +283,7 @@ const getConfig = async () => {
         replaceInvalidLinks: getBooleanArgumentvalue(resolvedArgs, 'replaceInvalidLinks', false),
         adapter: mappedAdapter,
         format: mappedFormat,
+        contentItemsFetchMode: mappedFetchMode,
         logLevel:
             getOptionalArgumentValue(resolvedArgs, 'logLevel')?.toLowerCase() === 'verbose' ? 'verbose' : 'default'
     };

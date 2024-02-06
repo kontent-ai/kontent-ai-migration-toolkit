@@ -43,7 +43,8 @@ export class ImportService {
         this.importAssetsHelper = getImportAssetsHelper({ logLevel: config.logLevel ?? 'default' });
         this.importContentItemHelper = getImportContentItemHelper({
             logLevel: config.logLevel ?? 'default',
-            skipFailedItems: config.skipFailedItems
+            skipFailedItems: config.skipFailedItems,
+            fetchMode: config?.contentItemsFetchMode ?? 'oneByOne'
         });
         this.importLanguageVariantHelper = getImportLanguageVariantstemHelper({
             logLevel: config.logLevel ?? 'default',

@@ -19,6 +19,7 @@ export interface ICliFileConfig {
     isPreview: boolean;
     isSecure: boolean;
     skipFailedItems: boolean;
+    contentItemsFetchMode?: ContentItemsFetchMode;
     replaceInvalidLinks: boolean;
     action: CliAction;
     itemsFilename?: string;
@@ -33,7 +34,16 @@ export interface ICliFileConfig {
 export type LogLevel = 'verbose' | 'default';
 export type CliAction = 'export' | 'import';
 export type ExportAdapter = 'kontentAi';
-export type ItemType = 'component' | 'contentItem' | 'languageVariant' | 'asset' | 'binaryFile' | 'zipFile' | 'count';
+export type ItemType =
+    | 'component'
+    | 'contentItem'
+    | 'listContentItems'
+    | 'languageVariant'
+    | 'asset'
+    | 'binaryFile'
+    | 'zipFile'
+    | 'count';
+export type ContentItemsFetchMode = 'oneByOne' | 'listAll';
 
 export type ActionType =
     | 'skip'

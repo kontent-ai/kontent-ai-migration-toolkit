@@ -32,6 +32,7 @@
         "test:all": "npm run build",
         "test:export": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --max-http-header-size=80000000 --config=export-config.json ",
         "test:import": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --config=import-config.json",
+        "test:help": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --help",
         "lint": "npx eslint lib",
         "clean": "node clean.js"
     },
