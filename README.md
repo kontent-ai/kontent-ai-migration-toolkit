@@ -32,6 +32,7 @@ kontent-ai-migration-toolkit --help
 > [!CAUTION]
 > **We do not recommended importing into a production environment directly without proper testing**. Instead you should first create a testing environment and run the script there to make sure everything works as you intended to.
 
+> [!NOTE]  
 > When importing it is essential that `Content types`, `Taxonomies` and `Workflows` matches the input data. Any
 > inconsistency in data such as referencing inexistent taxonomy term, incorrect element type and other problems will
 > cause import to fail.
