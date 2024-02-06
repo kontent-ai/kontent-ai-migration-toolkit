@@ -1,5 +1,5 @@
-import { ImportToolkit } from '../lib/toolkit/import-toolkit.class.js';
-import { ItemCsvProcessorService } from '../lib/file-processor/index.js';
+import { ImportToolkit } from '../../lib/toolkit/import-toolkit.class.js';
+import { ItemJsonProcessorService } from '../../lib/file-processor/index.js';
 
 const run = async () => {
     const importToolkit = new ImportToolkit({
@@ -13,8 +13,8 @@ const run = async () => {
             contentItem: (item) => true // all content items will be imported,
         },
         items: {
-            filename: 'items-export.csv',
-            formatService: new ItemCsvProcessorService()
+            filename: 'items-export.json',
+            formatService: new ItemJsonProcessorService()
         }
     });
 

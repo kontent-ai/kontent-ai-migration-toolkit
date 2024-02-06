@@ -1,0 +1,12 @@
+{
+    "environmentId": "cdbf5823-cbec-010d-f4c3-0411eee31c0e",
+    "isSecure": false,
+    "adapter": "kontentAi",
+    "itemsFilename": "items-export.zip",
+    "assetsFilename": "assets-export.zip",
+    "isPreview": false,
+    "exportAssets": true,
+    "action": "export",
+    "baseUrl": null,
+    "format": "json"
+}

@@ -9,7 +9,7 @@ export class FileService {
 
         logDebug({
             type: 'readFs',
-            message: `Reading FS`,
+            message: `Reading file system`,
             partA: filePath
         });
 
@@ -23,7 +23,7 @@ export class FileService {
 
         logDebug({
             type: 'writeFs',
-            message: `Storing on FS`,
+            message: `Storing on file system`,
             partA: filePath
         });
         await promises.writeFile(filePath, content);

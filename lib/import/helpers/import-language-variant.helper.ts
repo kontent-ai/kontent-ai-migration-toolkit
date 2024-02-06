@@ -14,9 +14,10 @@ import {
     logDebug,
     logErrorAndExit,
     processInChunksAsync,
-    LogLevel
+    LogLevel,
+    IMigrationItem,
+    IMigrationElement
 } from '../../core/index.js';
-import { IParsedContentItem, IParsedElement } from '../import.models.js';
 import { ImportWorkflowHelper, getImportWorkflowHelper } from './import-workflow.helper.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 import { translationHelper } from '../../translation/index.js';
@@ -39,7 +40,7 @@ export class ImportLanguageVariantHelper {
 
     async importLanguageVariantsAsync(data: {
         managementClient: ManagementClient;
-        importContentItems: IParsedContentItem[];
+        importContentItems: IMigrationItem[];
         workflows: WorkflowModels.Workflow[];
         preparedContentItems: ContentItemModels.ContentItem[];
         importedData: IImportedData;
@@ -54,7 +55,7 @@ export class ImportLanguageVariantHelper {
             )}' because they represent components`
         });
 
-        await processInChunksAsync<IParsedContentItem, void>({
+        await processInChunksAsync<IMigrationItem, void>({
             chunkSize: this.importContentItemChunkSize,
             items: categorizedParsedItems.regularItems,
             itemInfo: (input) => {
@@ -105,10 +106,10 @@ export class ImportLanguageVariantHelper {
     }
 
     private async importLanguageVariantAsync(data: {
-        importContentItem: IParsedContentItem;
+        importContentItem: IMigrationItem;
         preparedContentItem: ContentItemModels.ContentItem;
         managementClient: ManagementClient;
-        importContentItems: IParsedContentItem[];
+        importContentItems: IMigrationItem[];
         workflows: WorkflowModels.Workflow[];
         importedData: IImportedData;
     }): Promise<void> {
@@ -161,7 +162,7 @@ export class ImportLanguageVariantHelper {
 
     private async prepareLanguageVariantForImportAsync(data: {
         managementClient: ManagementClient;
-        importContentItem: IParsedContentItem;
+        importContentItem: IMigrationItem;
         workflows: WorkflowModels.Workflow[];
     }): Promise<void> {
         let languageVariantOfContentItem: undefined | LanguageVariantModels.ContentItemLanguageVariant;
@@ -267,8 +268,8 @@ export class ImportLanguageVariantHelper {
     }
 
     private getElementContract(
-        sourceItems: IParsedContentItem[],
-        element: IParsedElement,
+        sourceItems: IMigrationItem[],
+        element: IMigrationElement,
         importedData: IImportedData
     ): ElementContracts.IContentItemElementContract {
         const importContract = translationHelper.transformToImportValue(

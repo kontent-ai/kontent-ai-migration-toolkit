@@ -1,10 +1,10 @@
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
-import { IParsedContentItem } from '../../import/index.js';
 import { Readable } from 'stream';
 import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
 import { IExportContentItem } from '../../export/index.js';
+import { IMigrationItem } from '../../core/index.js';
 
 interface ICsvItem {
     type: string;
@@ -51,9 +51,9 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
         return await data.zip.generateZipAsync();
     }
 
-    async parseContentItemsAsync(data: ItemsParseData): Promise<IParsedContentItem[]> {
+    async parseContentItemsAsync(data: ItemsParseData): Promise<IMigrationItem[]> {
         const zipFiles = await data.zip.getAllFilesAsync<string>('string');
-        const parsedItems: IParsedContentItem[] = [];
+        const parsedItems: IMigrationItem[] = [];
 
         for (const file of zipFiles) {
             let index = 0;
@@ -71,7 +71,7 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
                     parsedColumns = record;
                 } else {
                     // process data row
-                    const contentItem: IParsedContentItem = {
+                    const contentItem: IMigrationItem = {
                         system: {
                             type: '',
                             codename: '',

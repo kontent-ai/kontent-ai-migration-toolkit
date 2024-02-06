@@ -1,12 +1,12 @@
-import { IParsedContentItem } from '../import.models.js';
+import { IMigrationItem } from '../../core/index.js';
 
 export interface ICategorizedParsedItems {
-    componentItems: IParsedContentItem[];
-    regularItems: IParsedContentItem[];
+    componentItems: IMigrationItem[];
+    regularItems: IMigrationItem[];
 }
 
 export class ParsedItemsHelper {
-    categorizeParsedItems(items: IParsedContentItem[]): ICategorizedParsedItems {
+    categorizeParsedItems(items: IMigrationItem[]): ICategorizedParsedItems {
         return {
             // if content item does not have a workflow step it means it is used as a component within Rich text element
             // such items are procesed within element transform

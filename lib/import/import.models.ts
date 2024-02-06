@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { ContentElementType, ContentItemsFetchMode, LogLevel } from '../core/index.js';
+import { MigrationElementType, ContentItemsFetchMode, IMigrationItem, LogLevel, IMigrationAsset } from '../core/index.js';
 
 export interface IImportConfig {
     logLevel?: LogLevel;
@@ -11,8 +11,8 @@ export interface IImportConfig {
     environmentId: string;
     contentItemsFetchMode?: ContentItemsFetchMode;
     canImport?: {
-        contentItem?: (item: IParsedContentItem) => boolean | Promise<boolean>;
-        asset?: (item: IParsedAsset) => boolean | Promise<boolean>;
+        contentItem?: (item: IMigrationItem) => boolean | Promise<boolean>;
+        asset?: (item: IMigrationAsset) => boolean | Promise<boolean>;
     };
 }
 
@@ -23,21 +23,10 @@ export interface IImportAllResult {
     };
 }
 
-export interface IParsedAssetRecord {
-    assetId: string;
-    filename: string;
-    extension: string;
-    url: string;
-}
-
-export interface IParsedAsset extends IParsedAssetRecord {
-    binaryData: Buffer | Blob | undefined;
-}
-
 export interface IImportSource {
     importData: {
-        items: IParsedContentItem[];
-        assets: IParsedAsset[];
+        items: IMigrationItem[];
+        assets: IMigrationAsset[];
     };
 }
 
@@ -47,28 +36,9 @@ export interface IFlattenedFolder {
     id: string;
 }
 
-export interface IParsedElement {
-    value: string | undefined | string[];
-    type: ContentElementType;
-    codename: string;
-}
-
-export interface IParsedContentItem {
-    system: {
-        codename: string;
-        name: string;
-        language: string;
-        type: string;
-        collection: string;
-        last_modified?: string;
-        workflow_step?: string;
-    };
-    elements: IParsedElement[];
-}
-
 export interface IImportContentTypeElement {
     codename: string;
-    type: ContentElementType;
+    type: MigrationElementType;
 }
 
 export interface IImportContentType {

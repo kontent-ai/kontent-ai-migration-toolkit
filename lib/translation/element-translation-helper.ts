@@ -14,9 +14,7 @@ import {
     LanguageVariantElementsBuilder,
     SharedContracts
 } from '@kontent-ai/management-sdk';
-import { IParsedContentItem } from '../import/index.js';
 import {
-    ContentElementType,
     ExportTransformFunc,
     IExportTransformConfig,
     IImportedData,
@@ -25,7 +23,7 @@ import {
 } from '../core/core.models.js';
 import { extractAssetIdFromUrl } from '../core/global-helper.js';
 import { idTranslateHelper } from './id-translate-helper.js';
-import { logDebug, logErrorAndExit } from '../core/index.js';
+import { IMigrationItem, logDebug, logErrorAndExit, MigrationElementType } from '../core/index.js';
 import colors from 'colors';
 
 export class ElementTranslationHelper {
@@ -74,7 +72,7 @@ export class ElementTranslationHelper {
     /**
      * General import transforms used to prepare parsed element values for Management API
      */
-    private readonly importTransforms: Readonly<Record<ContentElementType, ImportTransformFunc>> = {
+    private readonly importTransforms: Readonly<Record<MigrationElementType, ImportTransformFunc>> = {
         guidelines: (data) => {
             logErrorAndExit({
                 message: `Guidelines import transform not supported`
@@ -178,7 +176,7 @@ export class ElementTranslationHelper {
         },
         rich_text: (data) => {
             const processedRte = this.processImportRichTextHtmlValue(data.value?.toString() ?? '', data.importedData);
-            const componentItems: IParsedContentItem[] = [];
+            const componentItems: IMigrationItem[] = [];
 
             for (const componentCodename of processedRte.componentCodenames) {
                 const componentItem = data.sourceItems.find((m) => m.system.codename === componentCodename);
@@ -268,9 +266,9 @@ export class ElementTranslationHelper {
     transformToImportValue(
         value: string | string[] | undefined,
         elementCodename: string,
-        type: ContentElementType,
+        type: MigrationElementType,
         importedData: IImportedData,
-        sourceItems: IParsedContentItem[]
+        sourceItems: IMigrationItem[]
     ): ElementContracts.IContentItemElementContract | undefined {
         const transformFunc = this.importTransforms[type];
 

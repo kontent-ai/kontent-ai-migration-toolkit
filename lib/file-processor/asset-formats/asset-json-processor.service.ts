@@ -1,4 +1,4 @@
-import { IParsedAsset, IParsedAssetRecord } from '../../import/index.js';
+import { IMigrationAsset, IMigrationAssetRecord } from '../../core/index.js';
 import { AssetsParseData, AssetsTransformData, FileBinaryData } from '../file-processor.models.js';
 import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
 
@@ -7,7 +7,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
     private readonly assetsFilename: string = 'assets.json';
 
     async transformAssetsAsync(data: AssetsTransformData): Promise<FileBinaryData> {
-        const assetRecords: IParsedAssetRecord[] = [];
+        const assetRecords: IMigrationAssetRecord[] = [];
 
         for (const exportAsset of data.assets) {
             assetRecords.push({
@@ -27,15 +27,15 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
 
         return await data.zip.generateZipAsync();
     }
-    async parseAssetsAsync(data: AssetsParseData): Promise<IParsedAsset[]> {
+    async parseAssetsAsync(data: AssetsParseData): Promise<IMigrationAsset[]> {
         const text = await data.zip.getFileContentAsync(this.assetsFilename);
 
         if (!text) {
             return [];
         }
 
-        const assetRecords: IParsedAssetRecord[] = JSON.parse(text);
-        const parsedAssets: IParsedAsset[] = [];
+        const assetRecords: IMigrationAssetRecord[] = JSON.parse(text);
+        const parsedAssets: IMigrationAsset[] = [];
 
         for (const assetRecord of assetRecords) {
             parsedAssets.push({

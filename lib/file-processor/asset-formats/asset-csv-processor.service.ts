@@ -1,9 +1,9 @@
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
-import { IParsedAsset } from '../../import/index.js';
 import { Readable } from 'stream';
 import { AssetsParseData, AssetsTransformData, FileBinaryData } from '../file-processor.models.js';
 import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
+import { IMigrationAsset } from '../../core/index.js';
 
 export class AssetCsvProcessorService extends BaseAssetProcessorService {
     private readonly csvDelimiter: string = ',';
@@ -34,14 +34,14 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
         return data.zip.generateZipAsync();
     }
 
-    async parseAssetsAsync(data: AssetsParseData): Promise<IParsedAsset[]> {
+    async parseAssetsAsync(data: AssetsParseData): Promise<IMigrationAsset[]> {
         const text = await data.zip.getFileContentAsync(this.assetsFilename);
 
         if (!text) {
             return [];
         }
 
-        const parsedAssets: IParsedAsset[] = [];
+        const parsedAssets: IMigrationAsset[] = [];
         let index = 0;
         const parser = parse(text, {
             cast: true,
@@ -56,7 +56,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
                 parsedColumns = record;
             } else {
                 // process data row
-                const parsedAsset: IParsedAsset = {
+                const parsedAsset: IMigrationAsset = {
                     assetId: '',
                     extension: '',
                     filename: '',

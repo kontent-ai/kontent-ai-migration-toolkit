@@ -1,6 +1,5 @@
 import { LanguageVariantModels, ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { IParsedContentItem } from '../import.models.js';
-import { logItemAction, logErrorAndExit, LogLevel, logDebug } from '../../core/index.js';
+import { logItemAction, logErrorAndExit, LogLevel, logDebug, IMigrationItem } from '../../core/index.js';
 import colors from 'colors';
 
 export function getImportWorkflowHelper(config: { logLevel: LogLevel }): ImportWorkflowHelper {
@@ -36,7 +35,7 @@ export class ImportWorkflowHelper {
     async setWorkflowOfLanguageVariantAsync(
         managementClient: ManagementClient,
         workflowStepCodename: string,
-        importContentItem: IParsedContentItem,
+        importContentItem: IMigrationItem,
         workflows: WorkflowModels.Workflow[],
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant
     ): Promise<void> {

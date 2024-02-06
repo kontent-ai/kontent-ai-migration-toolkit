@@ -1,6 +1,6 @@
 import { IContentType, ILanguage, IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
 import {
-    ContentElementType,
+    MigrationElementType,
     ItemType,
     logDebug,
     logProcessingDebug,
@@ -189,7 +189,7 @@ export class ExportContentItemHelper {
                         items: items,
                         types: types
                     }),
-                    type: element.type as ContentElementType
+                    type: element.type as MigrationElementType
                 };
 
                 return mappedElement;

@@ -1,18 +1,21 @@
 # Kontent.ai Migration Toolkit
 
 The purpose of this project is to import content data to [Kontent.ai](https://kontent.ai) projects using various formats
-and export adapters. We provide `Kontent.ai` export adapter by default (meaning you can export data from Kontent.ai
-and re-import it to the same or different project). 
+and export adapters. We provide `Kontent.ai` export adapter by default (meaning you can export data from Kontent.ai and
+re-import it to the same or different project).
 
-> [!TIP]
-> The idea behind this tool is that to migrate data into `Kontent.ai` you prepare your content into a specified format (json, csv..) and run it through this tool to import it. This tool takes care of preparing content items, language variants, moving items to proper workflow step, uploading assets, retry policy and some basic validation as well. 
+> [!TIP] The idea behind this tool is to help migration of data into `Kontent.ai` from a simple object structure (json,
+> csv..). Developers should export data from their system into this format and use this tool to import it. This tool
+> takes care of preparing content items, language variants, moving items through workflow, publishing, archiving,
+> uploading assets, retry policy and some basic validation and more.
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
 
 # Getting started
 
-We recommend running data-ops with `npx`.
-Use `-h` or `--help` anytime to get information about available commands and their options.
+We recommend running data-ops with `npx`. Use `--help` anytime to get information about available commands and
+their options.
+
 ```bash
 npx xeno-test --help
 # or
@@ -30,8 +33,9 @@ kontent-ai-migration-toolkit --help
 
 # Import
 
-> [!CAUTION]
-> **We do not recommended importing into a production environment directly without proper testing**. Instead you should first create a testing environment and run the script there to make sure everything works as you intended to.
+> [!CAUTION] > **Read before running import script**.
+> We do not recommended importing into a production environment directly without proper testing. Instead you should first create a testing environment and run the script there to make sure everything works as you
+> intended to.
 
 > [!NOTE]  
 > When importing it is essential that `Content types`, `Taxonomies` and `Workflows` matches the input data. Any
@@ -41,9 +45,11 @@ kontent-ai-migration-toolkit --help
 ## How are content items & language variants imported?
 
 The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
-project (based on item's `codename`) the item will be updated. The workflow of imported language variant will be set according to `workflowStep` field.
+project (based on item's `codename`) the item will be updated. The workflow of imported language variant will be set
+according to `workflowStep` field.
 
-You can run `kontent-ai-migration-toolkit` multiple times without being worried that certain content item will be created multiple times.
+You can run `kontent-ai-migration-toolkit` multiple times without being worried that certain content item will be
+created multiple times.
 
 ## How are assets imported?
 
@@ -105,6 +111,18 @@ const importToolkit = new ImportToolkit({
 
 await importToolkit.importFromFileAsync();
 ```
+
+# Migration models
+
+This tools uses simplified models to make migration simpler and more developer friendly. This is useful especially when migrating from external systems because data structure is almost certainly very different to models used within Kontent.ai APIs. These migration models act as an abstraction on the API layer.
+
+**Content item model**
+
+```typescript
+
+
+```
+
 
 # Export
 

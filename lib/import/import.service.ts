@@ -9,14 +9,15 @@ import {
     createManagementClient
 } from '@kontent-ai/management-sdk';
 
-import { IImportedData, defaultRetryStrategy, defaultHttpService, logDebug, logErrorAndExit } from '../core/index.js';
 import {
-    IImportConfig,
-    IParsedContentItem,
-    IImportSource,
-    IImportContentType,
-    IImportContentTypeElement
-} from './import.models.js';
+    IImportedData,
+    defaultRetryStrategy,
+    defaultHttpService,
+    logDebug,
+    logErrorAndExit,
+    IMigrationItem
+} from '../core/index.js';
+import { IImportConfig, IImportSource, IImportContentType, IImportContentTypeElement } from './import.models.js';
 import { ImportAssetsHelper, getImportAssetsHelper } from './helpers/import-assets.helper.js';
 import { ImportContentItemHelper, getImportContentItemHelper } from './helpers/import-content-item.helper.js';
 import {
@@ -244,7 +245,7 @@ export class ImportService {
     }
 
     private async importParsedContentItemsAsync(
-        parsedContentItems: IParsedContentItem[],
+        parsedContentItems: IMigrationItem[],
         importedData: IImportedData
     ): Promise<void> {
         const workflows = await this.getWorkflowsAsync();

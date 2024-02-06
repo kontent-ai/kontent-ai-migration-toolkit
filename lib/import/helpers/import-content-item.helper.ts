@@ -8,9 +8,9 @@ import {
     logErrorAndExit,
     processInChunksAsync,
     LogLevel,
-    ContentItemsFetchMode
+    ContentItemsFetchMode,
+    IMigrationItem
 } from '../../core/index.js';
-import { IParsedContentItem } from '../import.models.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 import colors from 'colors';
 
@@ -33,7 +33,7 @@ export class ImportContentItemHelper {
 
     async importContentItemsAsync(data: {
         managementClient: ManagementClient;
-        parsedContentItems: IParsedContentItem[];
+        parsedContentItems: IMigrationItem[];
         collections: CollectionModels.Collection[];
         importedData: IImportedData;
     }): Promise<ContentItemModels.ContentItem[]> {
@@ -100,7 +100,7 @@ export class ImportContentItemHelper {
     }): Promise<ContentItemModels.ContentItem[]> {
         const contentItems: ContentItemModels.ContentItem[] = [];
 
-        await processInChunksAsync<IParsedContentItem, void>({
+        await processInChunksAsync<IMigrationItem, void>({
             chunkSize: this.importContentItemChunkSize,
             items: data.categorizedParsedItems.regularItems,
             itemInfo: (input) => {
@@ -152,9 +152,9 @@ export class ImportContentItemHelper {
     }
 
     private async importContentItemAsync(data: {
-        importContentItem: IParsedContentItem;
+        importContentItem: IMigrationItem;
         managementClient: ManagementClient;
-        parsedContentItems: IParsedContentItem[];
+        parsedContentItems: IMigrationItem[];
         collections: CollectionModels.Collection[];
         importedData: IImportedData;
         fetchedContentItems: ContentItemModels.ContentItem[];
@@ -202,7 +202,7 @@ export class ImportContentItemHelper {
     }
 
     private shouldUpdateContentItem(
-        parsedContentItem: IParsedContentItem,
+        parsedContentItem: IMigrationItem,
         contentItem: ContentItemModels.ContentItem,
         collections: CollectionModels.Collection[]
     ): boolean {
@@ -221,7 +221,7 @@ export class ImportContentItemHelper {
 
     private async prepareContentItemAsync(
         managementClient: ManagementClient,
-        parsedContentItem: IParsedContentItem,
+        parsedContentItem: IMigrationItem,
         fetchedContentItems: ContentItemModels.ContentItem[]
     ): Promise<{ contentItem: ContentItemModels.ContentItem; status: 'created' | 'itemAlreadyExists' }> {
         const contentItem = fetchedContentItems.find((m) => m.codename === parsedContentItem.system.codename);

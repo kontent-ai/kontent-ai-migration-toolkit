@@ -129,6 +129,8 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     for (const chunk of chunks) {
         await Promise.all(
             chunk.items.map((item) => {
+                processingIndex++;
+
                 if (data.itemInfo) {
                     const itemInfo = data.itemInfo(item);
                     logProcessingDebug({
@@ -140,8 +142,6 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
                     });
                 }
                 return data.processFunc(item).then((output) => {
-                    processingIndex++;
-
                     outputItems.push(output);
                 });
             })

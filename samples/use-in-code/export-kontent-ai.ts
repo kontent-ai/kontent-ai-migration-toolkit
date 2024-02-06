@@ -1,7 +1,7 @@
 import { KontentAiExportAdapter } from 'lib/index.js';
-import { AssetJsonProcessorService, ItemJsonProcessorService } from '../lib/file-processor/index.js';
+import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../lib/file-processor/index.js';
 
-import { ExportToolkit } from '../lib/toolkit/export-toolkit.class.js';
+import { ExportToolkit } from '../../lib/toolkit/export-toolkit.class.js';
 
 const run = async () => {
     const adapter = new KontentAiExportAdapter({

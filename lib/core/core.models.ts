@@ -1,13 +1,7 @@
-import {
-    AssetModels,
-    ContentItemModels,
-    ElementContracts,
-    ElementModels,
-    LanguageVariantModels
-} from '@kontent-ai/management-sdk';
+import { AssetModels, ContentItemModels, ElementContracts, LanguageVariantModels } from '@kontent-ai/management-sdk';
 import { ProcessingFormat } from '../file-processor/index.js';
-import { IParsedAsset, IParsedContentItem } from '../import/index.js';
 import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
+import { IMigrationItem, IMigrationAsset } from './migration-models.js';
 
 export interface ICliFileConfig {
     adapter?: ExportAdapter;
@@ -73,8 +67,6 @@ export interface IErrorData {
     requestUrl?: string;
 }
 
-export type ContentElementType = ElementModels.ElementType;
-
 export interface IProcessedItem {
     title: string;
     actionType: ActionType;
@@ -84,15 +76,15 @@ export interface IProcessedItem {
 
 export interface IImportedData {
     assets: {
-        original: IParsedAsset;
+        original: IMigrationAsset;
         imported: AssetModels.Asset;
     }[];
     contentItems: {
-        original: IParsedContentItem;
+        original: IMigrationItem;
         imported: ContentItemModels.ContentItem;
     }[];
     languageVariants: {
-        original: IParsedContentItem;
+        original: IMigrationItem;
         imported: LanguageVariantModels.ContentItemLanguageVariant;
     }[];
 }
@@ -124,7 +116,7 @@ export type ImportTransformFunc = (data: {
     value: string | string[] | undefined;
     elementCodename: string;
     importedData: IImportedData;
-    sourceItems: IParsedContentItem[];
+    sourceItems: IMigrationItem[];
 }) => ElementContracts.IContentItemElementContract;
 
 export interface IExportTransformConfig {

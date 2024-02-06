@@ -1,6 +1,12 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportedData, LogLevel, is404Error, logItemAction, processInChunksAsync } from '../../core/index.js';
-import { IParsedAsset } from '../import.models.js';
+import {
+    IImportedData,
+    IMigrationAsset,
+    LogLevel,
+    is404Error,
+    logItemAction,
+    processInChunksAsync
+} from '../../core/index.js';
 import mime from 'mime';
 
 export function getImportAssetsHelper(config: { logLevel: LogLevel }): ImportAssetsHelper {
@@ -14,10 +20,10 @@ export class ImportAssetsHelper {
 
     async importAssetsAsync(data: {
         managementClient: ManagementClient;
-        assets: IParsedAsset[];
+        assets: IMigrationAsset[];
         importedData: IImportedData;
     }): Promise<void> {
-        await processInChunksAsync<IParsedAsset, void>({
+        await processInChunksAsync<IMigrationAsset, void>({
             chunkSize: this.importAssetsChunkSize,
             items: data.assets,
             itemInfo: (input) => {

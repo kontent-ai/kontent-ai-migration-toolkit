@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { ContentElementType, IExportTransformConfig } from '../core/index.js';
+import { MigrationElementType, IExportTransformConfig } from '../core/index.js';
 import { IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
 
 export interface IExportAdapter {
@@ -45,7 +45,7 @@ export interface IExportAsset {
 
 export interface IExportElement {
     value: string | undefined | string[];
-    type: ContentElementType;
+    type: MigrationElementType;
     codename: string;
 }
 

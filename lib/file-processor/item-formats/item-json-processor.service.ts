@@ -1,8 +1,8 @@
-import { IParsedContentItem } from '../../import/index.js';
 import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
 import { IExportContentItem } from '../../export/index.js';
 import { IJsonItem, ITypeWrapper, mapToJsonItem, parseJsonItem } from './helpers/json-item.helper.js';
+import { IMigrationItem } from '../../core/index.js';
 
 export class ItemJsonProcessorService extends BaseItemProcessorService {
     public readonly name: string = 'json';
@@ -20,9 +20,9 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
         return await data.zip.generateZipAsync();
     }
 
-    async parseContentItemsAsync(data: ItemsParseData): Promise<IParsedContentItem[]> {
+    async parseContentItemsAsync(data: ItemsParseData): Promise<IMigrationItem[]> {
         const zipFiles = await data.zip.getAllFilesAsync<string>('string');
-        const parsedItems: IParsedContentItem[] = [];
+        const parsedItems: IMigrationItem[] = [];
 
         for (const zipFile of zipFiles) {
             const jsonItems: IJsonItem[] = JSON.parse(zipFile.data) as IJsonItem[];

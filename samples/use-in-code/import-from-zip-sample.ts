@@ -1,5 +1,5 @@
-import { ImportToolkit } from '../lib/toolkit/import-toolkit.class.js';
-import { AssetJsonProcessorService, ItemJsonProcessorService } from '../lib/file-processor/index.js';
+import { ImportToolkit } from '../../lib/toolkit/import-toolkit.class.js';
+import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../lib/file-processor/index.js';
 
 const run = async () => {
     const importToolkit = new ImportToolkit({

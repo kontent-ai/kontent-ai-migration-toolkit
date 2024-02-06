@@ -1,5 +1,6 @@
+import { IMigrationAsset, IMigrationItem } from '../core/index.js';
 import { IExportContentItem, IExportAsset } from '../export/index.js';
-import { IImportContentType, IParsedAsset, IParsedContentItem } from '../import/index.js';
+import { IImportContentType } from '../import/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
 /**
@@ -26,7 +27,7 @@ export type ItemsParseData = {
 export interface IItemFormatService {
     name: string;
     transformContentItemsAsync(data: ItemsTransformData): Promise<FileBinaryData>;
-    parseContentItemsAsync(data: ItemsParseData): Promise<IParsedContentItem[]>;
+    parseContentItemsAsync(data: ItemsParseData): Promise<IMigrationItem[]>;
 }
 
 export type AssetsTransformData = {
@@ -41,7 +42,7 @@ export type AssetsParseData = {
 export interface IAssetFormatService {
     name: string;
     transformAssetsAsync(data: AssetsTransformData): Promise<FileBinaryData>;
-    parseAssetsAsync(data: AssetsParseData): Promise<IParsedAsset[]>;
+    parseAssetsAsync(data: AssetsParseData): Promise<IMigrationAsset[]>;
 }
 
 export interface IExtractedBinaryFileData {
@@ -51,4 +52,3 @@ export interface IExtractedBinaryFileData {
     mimeType: string;
     binaryData: Buffer | Blob;
 }
-
