@@ -6,18 +6,18 @@ import {
     extractFilenameFromUrl,
     defaultRetryStrategy,
     logDebug,
-    processInChunksAsync
+    processInChunksAsync,
+    IMigrationAsset
 } from '../../../../core/index.js';
-import { IExportAsset } from '../../../export.models.js';
 import colors from 'colors';
 
-type ExportAssetWithoutBinaryData = Omit<IExportAsset, 'binaryData'>;
+type ExportAssetWithoutBinaryData = Omit<IMigrationAsset, 'binaryData'>;
 
 export class ExportAssetsHelper {
     private readonly downloadAssetBinaryDataChunkSize: number = 10;
     private readonly httpService: HttpService = new HttpService();
 
-    async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IExportAsset[]> {
+    async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IMigrationAsset[]> {
         const extractedAssets: ExportAssetWithoutBinaryData[] = [];
 
         for (const type of types) {
@@ -79,7 +79,10 @@ export class ExportAssetsHelper {
             message: `Preparing to download '${colors.yellow(uniqueAssets.length.toString())}' assets`
         });
 
-        const exportedAssets: IExportAsset[] = await processInChunksAsync<ExportAssetWithoutBinaryData, IExportAsset>({
+        const exportedAssets: IMigrationAsset[] = await processInChunksAsync<
+            ExportAssetWithoutBinaryData,
+            IMigrationAsset
+        >({
             chunkSize: this.downloadAssetBinaryDataChunkSize,
             itemInfo: (input) => {
                 return {
@@ -89,7 +92,7 @@ export class ExportAssetsHelper {
             },
             items: uniqueAssets,
             processFunc: async (item) => {
-                const exportAsset: IExportAsset = {
+                const exportAsset: IMigrationAsset = {
                     ...item,
                     binaryData: (await this.getBinaryDataFromUrlAsync(item.url)).data
                 };

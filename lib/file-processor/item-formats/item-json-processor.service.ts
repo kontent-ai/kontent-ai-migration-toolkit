@@ -1,6 +1,5 @@
 import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
-import { IExportContentItem } from '../../export/index.js';
 import { IJsonItem, ITypeWrapper, mapToJsonItem, parseJsonItem } from './helpers/json-item.helper.js';
 import { IMigrationItem } from '../../core/index.js';
 
@@ -39,7 +38,7 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
         return parsedItems;
     }
 
-    private getTypeWrappers(items: IExportContentItem[]): ITypeWrapper[] {
+    private getTypeWrappers(items: IMigrationItem[]): ITypeWrapper[] {
         const typeWrappers: ITypeWrapper[] = [];
 
         for (const item of items) {

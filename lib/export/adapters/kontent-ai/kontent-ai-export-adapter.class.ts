@@ -1,15 +1,10 @@
 import { IContentType, IDeliveryClient, ILanguage, createDeliveryClient } from '@kontent-ai/delivery-sdk';
-import {
-    IExportAdapter,
-    IExportAdapterResult,
-    IExportAsset,
-    IKontentAiExportAdapterConfig
-} from '../../export.models.js';
+import { IExportAdapter, IExportAdapterResult, IKontentAiExportAdapterConfig } from '../../export.models.js';
 import colors from 'colors';
 import { exportContentItemHelper } from './helpers/export-content-item.helper.js';
 import { defaultHttpService, defaultRetryStrategy } from '../../../core/global-helper.js';
 import { exportAssetsHelper } from './helpers/export-assets.helper.js';
-import { logDebug } from '../../../core/index.js';
+import { IMigrationAsset, logDebug } from '../../../core/index.js';
 
 export class KontentAiExportAdapter implements IExportAdapter {
     constructor(private config: IKontentAiExportAdapterConfig) {}
@@ -37,7 +32,7 @@ export class KontentAiExportAdapter implements IExportAdapter {
             allLanguages
         );
 
-        const assets: IExportAsset[] = [];
+        const assets: IMigrationAsset[] = [];
 
         if (this.config.exportAssets) {
             logDebug({ type: 'info', message: `Extracting assets referenced by content items` });

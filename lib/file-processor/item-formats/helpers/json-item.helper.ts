@@ -1,5 +1,4 @@
 import { IImportContentTypeElement } from '../../../import/index.js';
-import { IExportContentItem } from '../../../export/index.js';
 import { IMigrationElement, IMigrationItem } from '../../../core/index.js';
 
 export interface IJsonElements {
@@ -21,10 +20,10 @@ export interface IJsonItem {
 
 export interface ITypeWrapper {
     typeCodename: string;
-    items: IExportContentItem[];
+    items: IMigrationItem[];
 }
 
-export function mapToJsonItem(item: IExportContentItem): IJsonItem {
+export function mapToJsonItem(item: IMigrationItem): IJsonItem {
     const jsonElements: IJsonElements = {};
 
     for (const element of item.elements) {

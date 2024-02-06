@@ -3,7 +3,6 @@ import { AsyncParser, FieldInfo } from 'json2csv';
 import { Readable } from 'stream';
 import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../file-processor.models.js';
 import { BaseItemProcessorService } from '../base-item-processor.service.js';
-import { IExportContentItem } from '../../export/index.js';
 import { IMigrationItem } from '../../core/index.js';
 
 interface ICsvItem {
@@ -19,7 +18,7 @@ interface ICsvItem {
 
 interface ITypeWrapper {
     typeCodename: string;
-    items: IExportContentItem[];
+    items: IMigrationItem[];
     elementCodenames: string[];
 }
 
@@ -115,7 +114,7 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
         return parsedItems;
     }
 
-    private getTypeWrappers(items: IExportContentItem[]): ITypeWrapper[] {
+    private getTypeWrappers(items: IMigrationItem[]): ITypeWrapper[] {
         const typeWrappers: ITypeWrapper[] = [];
 
         for (const item of items) {
@@ -136,7 +135,7 @@ export class ItemCsvProcessorService extends BaseItemProcessorService {
         return typeWrappers;
     }
 
-    private mapToCsvItem(item: IExportContentItem, typeWrapper: ITypeWrapper): ICsvItem {
+    private mapToCsvItem(item: IMigrationItem, typeWrapper: ITypeWrapper): ICsvItem {
         const csvItem: ICsvItem = {
             type: item.system.type,
             codename: item.system.codename,

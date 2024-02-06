@@ -4,9 +4,11 @@ import {
     ItemType,
     logDebug,
     logProcessingDebug,
-    processInChunksAsync
+    processInChunksAsync,
+    IMigrationItem,
+    IMigrationElement
 } from '../../../../core/index.js';
-import { IKontentAiExportAdapterConfig, IExportContentItem, IExportElement } from '../../../export.models.js';
+import { IKontentAiExportAdapterConfig } from '../../../export.models.js';
 import { translationHelper } from '../../../../translation/index.js';
 import colors from 'colors';
 
@@ -24,7 +26,7 @@ export class ExportContentItemHelper {
         config: IKontentAiExportAdapterConfig,
         types: IContentType[],
         languages: ILanguage[]
-    ): Promise<{ exportContentItems: IExportContentItem[]; deliveryContentItems: IContentItem[] }> {
+    ): Promise<{ exportContentItems: IMigrationItem[]; deliveryContentItems: IContentItem[] }> {
         const typesToExport: IContentType[] = this.getTypesToExport(config, types);
         const languagesToExport: ILanguage[] = this.getLanguagesToExport(config, languages);
         const contentItems: IContentItem[] = [];
@@ -163,20 +165,19 @@ export class ExportContentItemHelper {
         items: IContentItem[],
         types: IContentType[],
         config: IKontentAiExportAdapterConfig
-    ): IExportContentItem {
-        return {
+    ): IMigrationItem {
+        const migrationItem: IMigrationItem = {
             system: {
                 codename: item.system.codename,
                 name: item.system.name,
                 type: item.system.type,
                 language: item.system.language,
                 collection: item.system.collection,
-                id: item.system.id,
                 last_modified: item.system.lastModified,
                 workflow_step: item.system.workflowStep ?? undefined
             },
             elements: Object.entries(item.elements).map(([key, element]) => {
-                const mappedElement: IExportElement = {
+                const mappedElement: IMigrationElement = {
                     codename: key,
                     value: translationHelper.transformToExportElementValue({
                         config: config.transformConfig ?? {
@@ -195,6 +196,8 @@ export class ExportContentItemHelper {
                 return mappedElement;
             })
         };
+
+        return migrationItem;
     }
 
     private logItem(data: {

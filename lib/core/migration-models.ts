@@ -1,6 +1,17 @@
-import { ElementModels } from '@kontent-ai/management-sdk';
-
-export type MigrationElementType = ElementModels.ElementType;
+export type MigrationElementType =
+    | 'text'
+    | 'rich_text'
+    | 'number'
+    | 'multiple_choice'
+    | 'date_time'
+    | 'asset'
+    | 'modular_content'
+    | 'taxonomy'
+    | 'url_slug'
+    | 'guidelines'
+    | 'snippet'
+    | 'custom'
+    | 'subpages';
 
 export interface IMigrationElement {
     value: string | undefined | string[];
@@ -21,13 +32,10 @@ export interface IMigrationItem {
     elements: IMigrationElement[];
 }
 
-export interface IMigrationAssetRecord {
+export interface IMigrationAsset {
+    binaryData: Buffer | Blob | undefined;
     assetId: string;
     filename: string;
     extension: string;
     url: string;
-}
-
-export interface IMigrationAsset extends IMigrationAssetRecord {
-    binaryData: Buffer | Blob | undefined;
 }

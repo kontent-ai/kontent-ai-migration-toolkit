@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { MigrationElementType, IExportTransformConfig } from '../core/index.js';
+import { IExportTransformConfig, IMigrationItem, IMigrationAsset } from '../core/index.js';
 import { IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
 
 export interface IExportAdapter {
@@ -8,8 +8,8 @@ export interface IExportAdapter {
 }
 
 export interface IExportAdapterResult {
-    items: IExportContentItem[];
-    assets: IExportAsset[];
+    items: IMigrationItem[];
+    assets: IMigrationAsset[];
 }
 
 export interface IExportFilter {
@@ -33,32 +33,4 @@ export interface IKontentAiExportAdapterConfig {
     retryStrategy?: IRetryStrategyOptions;
     customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;
     transformConfig?: IExportTransformConfig;
-}
-
-export interface IExportAsset {
-    url: string;
-    extension: string;
-    assetId: string;
-    filename: string;
-    binaryData: Buffer | Blob;
-}
-
-export interface IExportElement {
-    value: string | undefined | string[];
-    type: MigrationElementType;
-    codename: string;
-}
-
-export interface IExportContentItem {
-    system: {
-        codename: string;
-        id: string;
-        name: string;
-        language: string;
-        type: string;
-        collection: string;
-        last_modified?: string;
-        workflow_step?: string;
-    };
-    elements: IExportElement[];
 }

@@ -1,5 +1,4 @@
 import { IMigrationAsset, IMigrationItem } from '../core/index.js';
-import { IExportContentItem, IExportAsset } from '../export/index.js';
 import { IImportContentType } from '../import/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
@@ -16,7 +15,7 @@ export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export type ItemsTransformData = {
     readonly zip: ZipPackage;
-    readonly items: IExportContentItem[];
+    readonly items: IMigrationItem[];
 };
 
 export type ItemsParseData = {
@@ -32,7 +31,7 @@ export interface IItemFormatService {
 
 export type AssetsTransformData = {
     readonly zip: ZipPackage;
-    readonly assets: IExportAsset[];
+    readonly assets: IMigrationAsset[];
 };
 
 export type AssetsParseData = {

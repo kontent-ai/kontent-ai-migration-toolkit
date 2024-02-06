@@ -1,13 +1,15 @@
-import { IMigrationAsset, IMigrationAssetRecord } from '../../core/index.js';
+import { IMigrationAsset } from '../../core/index.js';
 import { AssetsParseData, AssetsTransformData, FileBinaryData } from '../file-processor.models.js';
 import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
+
+type AssetRecord = Omit<IMigrationAsset, 'binaryData'>;
 
 export class AssetJsonProcessorService extends BaseAssetProcessorService {
     public readonly name: string = 'json';
     private readonly assetsFilename: string = 'assets.json';
 
     async transformAssetsAsync(data: AssetsTransformData): Promise<FileBinaryData> {
-        const assetRecords: IMigrationAssetRecord[] = [];
+        const assetRecords: AssetRecord[] = [];
 
         for (const exportAsset of data.assets) {
             assetRecords.push({
@@ -34,7 +36,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
             return [];
         }
 
-        const assetRecords: IMigrationAssetRecord[] = JSON.parse(text);
+        const assetRecords: AssetRecord[] = JSON.parse(text);
         const parsedAssets: IMigrationAsset[] = [];
 
         for (const assetRecord of assetRecords) {
