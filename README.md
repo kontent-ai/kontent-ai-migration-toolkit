@@ -36,9 +36,9 @@ kontent-ai-migration-toolkit --help
 > should first create a testing environment and run the script there to make sure everything works as you intended to.
 
 > [!NOTE]  
-> When importing it is essential that `Content types`, `Taxonomies` and `Workflows` matches the input data. Any
-> inconsistency in data such as referencing inexistent taxonomy term, incorrect element type and other problems will
-> cause import to fail.
+> When importing it is essential that used `Content types`, `Taxonomies` and `Workflows` are consistent with the ones
+> defined in target environment. Any inconsistency in data such as referencing inexistent taxonomy term, incorrect
+> element type and other problems will cause import to fail.
 
 ## How are content items & language variants imported?
 
@@ -195,7 +195,8 @@ A single record of `IMigrationItem` type in `json` format may look like this:
 }
 ```
 
-> You may find sample export (`.zip`) with both items & assets at https://github.com/Enngage/kontent-ai-migration-toolkit/tree/main/samples/export-data
+> You may find sample export (`.zip`) with both items & assets at
+> https://github.com/Enngage/kontent-ai-migration-toolkit/tree/main/samples/export-data
 
 # Export
 
