@@ -22,9 +22,6 @@ npx xeno-test --help
 # or
 yarn dlx xeno-test --help
 
-# help for a specific command
-npx xeno-test <command> --help
-
 # you can also install the package globally, or locally
 npm i xeno-test -g
 

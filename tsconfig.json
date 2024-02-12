@@ -1,42 +1,32 @@
 {
     "compileOnSave": true,
     "compilerOptions": {
-      "baseUrl": ".",
-      "outDir": "dist",
-      "sourceMap": true,
-      "declaration": true,
-      "moduleResolution": "Node16",
-      "module": "Node16",
-      "emitDecoratorMetadata": true,
-      "experimentalDecorators": true,
-      "allowSyntheticDefaultImports": true,
-      "target": "es2022",
-      "strict": true,
-      "strictNullChecks": true,
-      "strictPropertyInitialization": true,
-      "resolveJsonModule": true,
-      "noImplicitReturns": true,
-      "allowUnreachableCode": false,
-      "skipLibCheck": true,
-      "alwaysStrict": true,
-      "forceConsistentCasingInFileNames": true,
-      "noUnusedParameters": false,
-      "noUnusedLocals": true,
-      "strictFunctionTypes": true,
-      "noImplicitAny": true,
-      "typeRoots": [
-        "./node_modules/@types"
-      ],
-      "lib": [
-        "DOM",
-        "esnext"
-      ]
+        "baseUrl": ".",
+        "outDir": "dist",
+        "sourceMap": true,
+        "declaration": true,
+        "moduleResolution": "NodeNext",
+        "module": "NodeNext",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "es2022",
+        "strict": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "resolveJsonModule": true,
+        "noImplicitReturns": true,
+        "allowUnreachableCode": false,
+        "skipLibCheck": true,
+        "alwaysStrict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noUnusedParameters": false,
+        "noUnusedLocals": true,
+        "strictFunctionTypes": true,
+        "noImplicitAny": true,
+        "typeRoots": ["./node_modules/@types"],
+        "lib": ["esnext"]
     },
-    "include": [
-      "lib/**/*",
-      "test/**/*", "samples",
-    ],
-    "exclude": [
-      "node_modules"
-    ]
-  }
+    "include": ["lib/**/*", "test/**/*", "samples"],
+    "exclude": ["node_modules"]
+}

@@ -295,10 +295,6 @@ const getDefaultExportFilename = (type: 'items' | 'assets') => {
     return `${type}-export.zip`;
 };
 
-run().catch((err) => {
-    handleError(err);
-});
-
 function getAssetFormatService(format: ProcessingFormat | undefined): IAssetFormatService {
     if (format === 'csv') {
         return new AssetCsvProcessorService();
@@ -356,3 +352,7 @@ function getBooleanArgumentvalue(args: Args, argName: string, defaultValue: bool
 
     return value.toLowerCase() === 'true'.toLowerCase();
 }
+
+run().catch((err) => {
+    handleError(err);
+});
