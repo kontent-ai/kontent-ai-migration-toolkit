@@ -18,12 +18,10 @@ We recommend running data-ops with `npx`. Use `--help` anytime to get informatio
 options.
 
 ```bash
-npx xeno-test --help
-# or
-yarn dlx xeno-test --help
+npx kontent-ai-migration-toolkit --help
 
 # you can also install the package globally, or locally
-npm i xeno-test -g
+npm i kontent-ai-migration-toolkit -g
 
 # with the package installed, you can call the tool as follows
 kontent-ai-migration-toolkit --help
@@ -118,7 +116,7 @@ Kontent.ai APIs. These migration models act as an abstraction on the API layer.
 
 ### Model definitions
 
-> Models are defined at https://github.com/Enngage/kontent-ai-migration-toolkit/blob/main/lib/core/migration-models.ts
+> Models are defined at https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/core/migration-models.ts
 
 ```typescript
 export type MigrationElementType =
@@ -196,7 +194,7 @@ A single record of `IMigrationItem` type in `json` format may look like this:
 ```
 
 > You may find sample export (`.zip`) with both items & assets at
-> https://github.com/Enngage/kontent-ai-migration-toolkit/tree/main/samples/export-data
+> https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/tree/main/samples/export-data
 
 # Export
 
@@ -302,7 +300,7 @@ To execute your action run:
 
 ## Code samples for import & export
 
-See https://github.com/Enngage/kontent-ai-migration-toolkit/tree/main/samples for examples of how to run this library in
+See https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/tree/main/samples for examples of how to run this library in
 code rather then via command line.
 
 ## Output / Input formats
@@ -315,9 +313,9 @@ Following is a list of `built-in` format services:
 
 | Type         | Service                           | Link                                                                                                                                    |
 | ------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `csv`        | `ItemCsvProcessorService `        | https://github.com/Enngage/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts         |
-| `json`       | `ItemJsonProcessorService `       | https://github.com/Enngage/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-processor.service.ts        |
-| `jsonJoined` | `ItemJsonJoinedProcessorService ` | https://github.com/Enngage/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-joined-processor.service.ts |
+| `csv`        | `ItemCsvProcessorService `        | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts         |
+| `json`       | `ItemJsonProcessorService `       | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-processor.service.ts        |
+| `jsonJoined` | `ItemJsonJoinedProcessorService ` | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-joined-processor.service.ts |
 
 ## Limitations
 
@@ -341,5 +339,5 @@ option (https://nodejs.org/api/cli.html#--max-http-header-sizesize)
 Example script call:
 
 ```
-node --max-http-header-size 150000 %USERPROFILE%\AppData\Roaming\npm\node_modules\xeno-test\dist\cjs\lib\node\cli\app --action=export --apiKey=<key> --environmentId=<environmentId>
+node --max-http-header-size 150000 %USERPROFILE%\AppData\Roaming\npm\node_modules\kontent-ai-migration-toolkit\dist\cjs\lib\node\cli\app --action=export --apiKey=<key> --environmentId=<environmentId>
 ```

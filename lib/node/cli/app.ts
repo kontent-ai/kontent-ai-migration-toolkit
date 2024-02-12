@@ -29,11 +29,11 @@ type Args = { [key: string]: string | unknown };
 
 const argv = yargs(process.argv.slice(2))
     .example(
-        'csvm --action=export --format=csv|json --apiKey=xxx --environmentId=xxx',
+        'kontent-ai-migration-toolkit --action=export --format=csv|json --apiKey=xxx --environmentId=xxx',
         'Creates zip export of Kontent.ai content data'
     )
     .example(
-        'csvm --action=import --apiKey=xxx --environmentId=xxx --filename=exportFile',
+        'kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --filename=exportFile',
         'Read given zip file and recreates data in Kontent.ai environment'
     )
     .alias('a', 'action')
