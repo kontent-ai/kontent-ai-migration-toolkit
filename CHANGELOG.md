@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.19](https://github.com/Enngage/kontent-ai-migration-toolkit/compare/v0.0.15...v0.0.19) (2024-02-12)
+
 ### [0.0.15](https://github.com/Enngage/kontent-csv-manager/compare/v0.0.14...v0.0.15) (2023-08-08)
 
 ### [0.0.14](https://github.com/Enngage/kontent-csv-manager/compare/v0.0.13...v0.0.14) (2023-08-08)
