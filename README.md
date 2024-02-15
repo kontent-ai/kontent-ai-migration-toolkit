@@ -59,7 +59,7 @@ to equal their original id. There are some limitations to importing assets, see 
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **action**           | Action. Available options: `import` & `export` **(required)**                                                                                           |
 | **environmentId**    | Id of Kontent.ai project **(required)**                                                                                                                 |
-| **managementApiKey** | Management API key **(required)**                                                                                                                       |
+| **apiKey** | Management API key **(required)**                                                                                                                       |
 | **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                            |
 | itemsFilename        | Name of the items file that will be used to parse items                                                                                                 |
 | assetsFilename       | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
