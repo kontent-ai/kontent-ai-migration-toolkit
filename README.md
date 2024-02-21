@@ -55,16 +55,16 @@ to equal their original id. There are some limitations to importing assets, see 
 
 ## Import Configuration
 
-| Config               | Value                                                                                                                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **action**           | Action. Available options: `import` & `export` **(required)**                                                                                           |
-| **environmentId**    | Id of Kontent.ai project **(required)**                                                                                                                 |
-| **apiKey** | Management API key **(required)**                                                                                                                       |
-| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                            |
-| itemsFilename        | Name of the items file that will be used to parse items                                                                                                 |
-| assetsFilename       | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
-| baseUrl              | Custom base URL for Kontent.ai API calls                                                                                                                |
-| skipFailedItems      | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
+| Config            | Value                                                                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **action**        | Action. Available options: `import` & `export` **(required)**                                                                                           |
+| **environmentId** | Id of Kontent.ai project **(required)**                                                                                                                 |
+| **apiKey**        | Management API key **(required)**                                                                                                                       |
+| **format**        | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                            |
+| itemsFilename     | Name of the items file that will be used to parse items                                                                                                 |
+| assetsFilename    | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
+| baseUrl           | Custom base URL for Kontent.ai API calls                                                                                                                |
+| skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
 
 ## Import CLI samples
 
@@ -116,7 +116,8 @@ Kontent.ai APIs. These migration models act as an abstraction on the API layer.
 
 ### Model definitions
 
-> Models are defined at https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/core/migration-models.ts
+> Models are defined at
+> https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/core/migration-models.ts
 
 ```typescript
 export type MigrationElementType =
@@ -254,9 +255,8 @@ const adapter = new KontentAiExportAdapter({
     }
 });
 
-const exportToolkit = new ExportToolkit({ adapter });
-
-await exportToolkit.exportAsync({
+const exportToolkit = new ExportToolkit({
+    adapter,
     items: {
         filename: 'items-export.zip',
         formatService: new ItemJsonProcessorService() // or different one, see readme.md
@@ -267,6 +267,8 @@ await exportToolkit.exportAsync({
         formatService: new AssetJsonProcessorService() // or different one, see readme.md
     }
 });
+
+await exportToolkit.exportAsync();
 ```
 
 ## CLI help
@@ -300,8 +302,8 @@ To execute your action run:
 
 ## Code samples for import & export
 
-See https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/tree/main/samples for examples of how to run this library in
-code rather then via command line.
+See https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/tree/main/samples for examples of how to run
+this library in code rather then via command line.
 
 ## Output / Input formats
 
@@ -311,8 +313,8 @@ existing format, change how it's processing or just support new formats such as 
 
 Following is a list of `built-in` format services:
 
-| Type         | Service                           | Link                                                                                                                                    |
-| ------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Type         | Service                           | Link                                                                                                                                                  |
+| ------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `csv`        | `ItemCsvProcessorService `        | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts         |
 | `json`       | `ItemJsonProcessorService `       | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-processor.service.ts        |
 | `jsonJoined` | `ItemJsonJoinedProcessorService ` | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-joined-processor.service.ts |
