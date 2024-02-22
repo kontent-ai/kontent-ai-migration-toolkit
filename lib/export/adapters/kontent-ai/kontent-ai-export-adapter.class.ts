@@ -7,6 +7,9 @@ import { exportAssetsHelper } from './helpers/export-assets.helper.js';
 import { IMigrationAsset, logDebug } from '../../../core/index.js';
 
 export class KontentAiExportAdapter implements IExportAdapter {
+
+    public readonly name: string = 'kontentAi';
+
     constructor(private config: IKontentAiExportAdapterConfig) {}
 
     async exportAsync(): Promise<IExportAdapterResult> {

@@ -15,7 +15,9 @@ import {
     defaultHttpService,
     logDebug,
     logErrorAndExit,
-    IMigrationItem
+    IMigrationItem,
+    executeWithTrackingAsync,
+    packageVersion
 } from '../core/index.js';
 import { IImportConfig, IImportSource, IImportContentType, IImportContentTypeElement } from './import.models.js';
 import { ImportAssetsHelper, getImportAssetsHelper } from './helpers/import-assets.helper.js';
@@ -91,54 +93,70 @@ export class ImportService {
     }
 
     async importAsync(sourceData: IImportSource): Promise<IImportedData> {
-        const importedData: IImportedData = {
-            assets: [],
-            contentItems: [],
-            languageVariants: []
-        };
+        return await executeWithTrackingAsync({
+            event: {
+                tool: 'migration-toolkit',
+                version: packageVersion,
+                action: 'import',
+                relatedEnvironmentId: this.config.environmentId,
+                details: {
+                    logLevel: this.config.logLevel,
+                    skipFailedItems: this.config.skipFailedItems,
+                    itemsCount: sourceData.importData.items.length,
+                    assetsCount: sourceData.importData.assets.length
+                }
+            },
+            func: async () => {
+                const importedData: IImportedData = {
+                    assets: [],
+                    contentItems: [],
+                    languageVariants: []
+                };
 
-        // this is an optional step where users can exclude certain objects from being imported
-        const dataToImport = this.getDataToImport(sourceData);
+                // this is an optional step where users can exclude certain objects from being imported
+                const dataToImport = this.getDataToImport(sourceData);
 
-        // import order matters
-        // #1 Assets
-        if (dataToImport.importData.assets.length) {
-            logDebug({
-                type: 'info',
-                message: `Importing assets`
-            });
-            await this.importAssetsHelper.importAssetsAsync({
-                managementClient: this.managementClient,
-                assets: dataToImport.importData.assets,
-                importedData: importedData
-            });
-        } else {
-            logDebug({
-                type: 'info',
-                message: `There are no assets to import`
-            });
-        }
+                // import order matters
+                // #1 Assets
+                if (dataToImport.importData.assets.length) {
+                    logDebug({
+                        type: 'info',
+                        message: `Importing assets`
+                    });
+                    await this.importAssetsHelper.importAssetsAsync({
+                        managementClient: this.managementClient,
+                        assets: dataToImport.importData.assets,
+                        importedData: importedData
+                    });
+                } else {
+                    logDebug({
+                        type: 'info',
+                        message: `There are no assets to import`
+                    });
+                }
 
-        // #2 Content items
-        if (dataToImport.importData.items.length) {
-            logDebug({
-                type: 'info',
-                message: `Importing content items`
-            });
-            await this.importmigrationContentItemAsync(dataToImport.importData.items, importedData);
-        } else {
-            logDebug({
-                type: 'info',
-                message: `There are no content items to import`
-            });
-        }
+                // #2 Content items
+                if (dataToImport.importData.items.length) {
+                    logDebug({
+                        type: 'info',
+                        message: `Importing content items`
+                    });
+                    await this.importMigrationContentItemAsync(dataToImport.importData.items, importedData);
+                } else {
+                    logDebug({
+                        type: 'info',
+                        message: `There are no content items to import`
+                    });
+                }
 
-        logDebug({
-            type: 'info',
-            message: `Finished import`
+                logDebug({
+                    type: 'info',
+                    message: `Finished import`
+                });
+
+                return importedData;
+            }
         });
-
-        return importedData;
     }
 
     private getContentTypeElements(
@@ -244,7 +262,7 @@ export class ImportService {
         return dataToImport;
     }
 
-    private async importmigrationContentItemAsync(
+    private async importMigrationContentItemAsync(
         migrationContentItem: IMigrationItem[],
         importedData: IImportedData
     ): Promise<void> {

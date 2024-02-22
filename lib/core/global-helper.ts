@@ -4,6 +4,7 @@ import { format } from 'bytes';
 import { logDebug, logErrorAndExit, logProcessingDebug } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { IChunk, IErrorData, IProcessInChunksItemInfo } from './core.models.js';
+import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
 
 const rateExceededErrorCode: number = 10000;
 
@@ -166,4 +167,30 @@ function splitArrayIntoChunks<T>(items: T[], chunkSize: number): IChunk<T>[] {
     }
 
     return chunks;
+}
+
+export async function executeWithTrackingAsync<TResult>(data: {
+    func: () => Promise<TResult>;
+    event: ITrackingEventData;
+}): Promise<TResult> {
+    const trackingService = getTrackingService();
+    const event = await trackingService.trackEventAsync(data.event);
+
+    try {
+        const result = await data.func();
+
+        await trackingService.setEventResultAsync({
+            eventId: event.eventId,
+            result: 'success'
+        });
+
+        return result;
+    } catch (error) {
+        await trackingService.setEventResultAsync({
+            eventId: event.eventId,
+            result: 'fail'
+        });
+
+        throw error;
+    }
 }

@@ -4,6 +4,7 @@ import { IExportTransformConfig, IMigrationItem, IMigrationAsset } from '../core
 import { IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
 
 export interface IExportAdapter {
+    readonly name: string;
     exportAsync(): Promise<IExportAdapterResult>;
 }
 

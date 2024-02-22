@@ -5,18 +5,18 @@
     "preferGlobal": true,
     "private": false,
     "bin": {
-        "kontent-ai-migration-toolkit": "./dist/es2022/node/cli/app.js"
+        "kontent-ai-migration-toolkit": "./dist/es2022/lib/node/cli/app.js"
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit"
     },
     "engines": {
-        "node": ">=16"
+        "node": ">=18"
     },
     "author": "Richard Sustek",
-    "exports": "./dist/es2022/index.js",
-    "types": "./dist/es2022/index.d.ts",
+    "exports": "./dist/es2022/lib/index.js",
+    "types": "./dist/es2022/lib/index.d.ts",
     "type": "module",
     "directories": {},
     "scripts": {
@@ -29,11 +29,11 @@
         "publish:beta": "npm publish --tag=next",
         "build:es2022": "tsc --p tsconfig.es2022.json",
         "build": "npm run clean && npm run build:es2022",
-        "prepareSampleExport": "npm run build && cd samples/export-data && node --max-http-header-size 150000 ../../dist/es2022/node/cli/app --max-http-header-size=80000000 --config=export-config.json ",
+        "prepareSampleExport": "npm run build && cd samples/export-data && node --max-http-header-size 150000 ../../dist/es2022/lib/node/lib/cli/app --max-http-header-size=80000000 --config=export-config.json ",
         "test:all": "npm run build",
-        "test:export": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --max-http-header-size=80000000 --config=export-config.json ",
-        "test:import": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --config=import-config.json",
-        "test:help": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/node/cli/app --help",
+        "test:export": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/lib/node/cli/app --max-http-header-size=80000000 --config=export-config.json ",
+        "test:import": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/lib/node/cli/app --config=import-config.json",
+        "test:help": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/lib/node/cli/app --help",
         "lint": "npx eslint lib",
         "clean": "node clean.js"
     },
@@ -49,6 +49,7 @@
     "dependencies": {
         "@kontent-ai/delivery-sdk": "14.6.0",
         "@kontent-ai/management-sdk": "5.8.2",
+        "@kontent-ai-consulting/tools-analytics": "0.0.4",
         "uuid-by-string": "4.0.0",
         "bytes": "3.1.2",
         "colors": "1.4.0",
