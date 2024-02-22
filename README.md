@@ -195,7 +195,9 @@ A single record of `IMigrationItem` type in `json` format may look like this:
 > You may find sample export (`.zip`) with both items & assets at
 > https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/tree/main/samples/export-data
 
-# Export
+# Export items & assets from Kontent.ai
+
+There is a built-in `kontentAi` adapter that can be used to export content items & assets from Kontent.ai environments. However, when migration from 3rd party system you typically only use the `import` capabilities of this repository.
 
 ## Export Configuration
 
