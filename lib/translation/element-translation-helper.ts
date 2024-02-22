@@ -102,7 +102,7 @@ export class ElementTranslationHelper {
                 const assetId = extractAssetIdFromUrl(assetUrl);
 
                 // find id of imported asset
-                const importedAsset = data.importedData.assets.find((s) => s.original.assetId === assetId);
+                const importedAsset = data.importedData.assets.find((s) => s.original.assetExternalId === assetId);
 
                 if (!importedAsset) {
                     logDebug({

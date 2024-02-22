@@ -13,14 +13,14 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
 
         for (const exportAsset of data.assets) {
             assetRecords.push({
-                assetId: exportAsset.assetId,
+                assetExternalId: exportAsset.assetExternalId,
                 extension: exportAsset.extension,
                 filename: exportAsset.filename,
                 url: exportAsset.url
             });
 
             await data.zip.addFile(
-                this.getAssetZipFilename(exportAsset.assetId, exportAsset.extension),
+                this.getAssetZipFilename(exportAsset.assetExternalId, exportAsset.extension),
                 exportAsset.binaryData
             );
         }
@@ -43,7 +43,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
             parsedAssets.push({
                 ...assetRecord,
                 binaryData: await data.zip.getBinaryDataAsync(
-                    this.getAssetZipFilename(assetRecord.assetId, assetRecord.extension)
+                    this.getAssetZipFilename(assetRecord.assetExternalId, assetRecord.extension)
                 )
             });
         }

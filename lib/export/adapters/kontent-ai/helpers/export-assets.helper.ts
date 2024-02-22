@@ -36,7 +36,7 @@ export class ExportAssetsHelper {
                                 ...assetElement.value.map((m) => {
                                     const asset: ExportAssetWithoutBinaryData = {
                                         url: m.url,
-                                        assetId: extractAssetIdFromUrl(m.url),
+                                        assetExternalId: extractAssetIdFromUrl(m.url),
                                         filename: extractFilenameFromUrl(m.url),
                                         extension: getExtension(m.url) ?? ''
                                     };
@@ -55,7 +55,7 @@ export class ExportAssetsHelper {
                                 ...richTextElement.images.map((m) => {
                                     const asset: ExportAssetWithoutBinaryData = {
                                         url: m.url,
-                                        assetId: extractAssetIdFromUrl(m.url),
+                                        assetExternalId: extractAssetIdFromUrl(m.url),
                                         filename: extractFilenameFromUrl(m.url),
                                         extension: getExtension(m.url) ?? ''
                                     };

@@ -34,8 +34,7 @@ export class ImportAssetsHelper {
                 };
             },
             processFunc: async (asset) => {
-                // use asset id as external id
-                const assetExternalId: string = asset.assetId;
+                const assetExternalId: string = asset.assetExternalId;
 
                 // check if asset with given external id already exists
                 let existingAsset: AssetModels.Asset | undefined;
@@ -45,7 +44,7 @@ export class ImportAssetsHelper {
                     // and such assets should not be imported again
                     existingAsset = await data.managementClient
                         .viewAsset()
-                        .byAssetExternalId(asset.assetId)
+                        .byAssetExternalId(asset.assetExternalId)
                         .toPromise()
                         .then((m) => m.data);
                 } catch (error) {

@@ -154,7 +154,7 @@ export interface IMigrationItem {
 
 export interface IMigrationAsset {
     binaryData: Buffer | Blob | undefined;
-    assetId: string;
+    assetExternalId: string;
     filename: string;
     extension: string;
     url: string;
