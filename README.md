@@ -68,21 +68,19 @@ to equal their original id. There are some limitations to importing assets, see 
 
 ## Import CLI samples
 
-Import from zip:
+```bash
+# Import from zip:
+kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json
 
-`kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json`
+# Import from zip with assets:
+kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json --assetsFilename=assets.zip
 
-Import from zip with assets:
+# Import from json file:
+kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.json --format=json
 
-`kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json --assetsFilename=assets.zip`
-
-Import from json file:
-
-`kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.json --format=json`
-
-Import from csv file:
-
-`kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv --format=csv`
+# Import from csv file:
+kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv --format=csv
+```
 
 ## Importing in code
 
@@ -221,17 +219,16 @@ A single record of `IMigrationItem` type in `json` format may look like this:
 
 ## Export CLI samples
 
-Export from Kontent.ai environment as json without assets:
+```bash
+# Export from Kontent.ai environment as json without assets
+kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json
 
-`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json`
+# Export from Kontent.ai environment as csv without assets:
+kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=csv
 
-Export from Kontent.ai environment as csv without assets:
-
-`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=csv`
-
-Export from Kontent.ai environment as single json file with assets:
-
-`kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=jsonJoined --exportAssets=true`
+# Export from Kontent.ai environment as single json file with assets:
+kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=jsonJoined --exportAssets=true
+```
 
 ## Exporting in code
 
@@ -275,7 +272,9 @@ await exportToolkit.exportAsync();
 
 To see available commands use:
 
-`kontent-ai-migration-toolkit --help`
+```bash
+kontent-ai-migration-toolkit --help
+```
 
 ## Use with config file
 
@@ -298,7 +297,9 @@ Create a `json` configuration file in the folder where you are attempting to run
 
 To execute your action run:
 
-`kontent-ai-migration-toolkit --config=export-config.json`
+```bash
+kontent-ai-migration-toolkit --config=export-config.json
+```
 
 ## Code samples for import & export
 
@@ -340,6 +341,6 @@ option (https://nodejs.org/api/cli.html#--max-http-header-sizesize)
 
 Example script call:
 
-```
+```bash
 node --max-http-header-size 150000 %USERPROFILE%\AppData\Roaming\npm\node_modules\kontent-ai-migration-toolkit\dist\cjs\lib\node\cli\app --action=export --apiKey=<key> --environmentId=<environmentId>
 ```
