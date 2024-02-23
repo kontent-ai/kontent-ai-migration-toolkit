@@ -49,7 +49,7 @@
     "dependencies": {
         "@kontent-ai/delivery-sdk": "14.6.0",
         "@kontent-ai/management-sdk": "5.8.2",
-        "@kontent-ai-consulting/tools-analytics": "0.0.4",
+        "@kontent-ai-consulting/tools-analytics": "0.0.6",
         "uuid-by-string": "4.0.0",
         "bytes": "3.1.2",
         "colors": "1.4.0",
@@ -65,7 +65,7 @@
         "@types/json2csv": "5.0.7",
         "@types/jszip": "3.4.1",
         "@types/mime": "3.0.4",
-        "@types/node": "20.11.19",
+        "@types/node": "20.11.20",
         "@types/uuid": "9.0.8",
         "@types/yargs": "17.0.32",
         "@typescript-eslint/eslint-plugin": "7.0.2",

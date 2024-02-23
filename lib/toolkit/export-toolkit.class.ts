@@ -1,4 +1,4 @@
-import { executeWithTrackingAsync, packageVersion } from '../core/index.js';
+import { eventPackage, executeWithTrackingAsync } from '../core/index.js';
 import { IExportAdapter, IExportAdapterResult } from '../export/index.js';
 import { FileProcessorService, IAssetFormatService, IItemFormatService } from '../file-processor/index.js';
 import { FileService } from '../node/index.js';
@@ -24,8 +24,8 @@ export class ExportToolkit {
     async exportAsync(): Promise<IExportAdapterResult> {
         return await executeWithTrackingAsync({
             event: {
-                tool: 'migration-toolkit',
-                version: packageVersion,
+                tool: 'migrationToolkit',
+                package: eventPackage,
                 action: 'export',
                 relatedEnvironmentId: undefined,
                 details: {

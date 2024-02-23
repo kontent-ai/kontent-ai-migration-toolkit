@@ -17,7 +17,7 @@ import {
     logErrorAndExit,
     IMigrationItem,
     executeWithTrackingAsync,
-    packageVersion
+    eventPackage
 } from '../core/index.js';
 import { IImportConfig, IImportSource, IImportContentType, IImportContentTypeElement } from './import.models.js';
 import { ImportAssetsHelper, getImportAssetsHelper } from './helpers/import-assets.helper.js';
@@ -95,8 +95,8 @@ export class ImportService {
     async importAsync(sourceData: IImportSource): Promise<IImportedData> {
         return await executeWithTrackingAsync({
             event: {
-                tool: 'migration-toolkit',
-                version: packageVersion,
+                tool: 'migrationToolkit',
+                package: eventPackage,
                 action: 'import',
                 relatedEnvironmentId: this.config.environmentId,
                 details: {
