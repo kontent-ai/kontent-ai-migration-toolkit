@@ -1,4 +1,5 @@
-import { eventPackage, executeWithTrackingAsync } from '../core/index.js';
+import { libMetadata } from '../metadata.js';
+import { executeWithTrackingAsync } from '../core/index.js';
 import { IExportAdapter, IExportAdapterResult } from '../export/index.js';
 import { FileProcessorService, IAssetFormatService, IItemFormatService } from '../file-processor/index.js';
 import { FileService } from '../node/index.js';
@@ -25,7 +26,10 @@ export class ExportToolkit {
         return await executeWithTrackingAsync({
             event: {
                 tool: 'migrationToolkit',
-                package: eventPackage,
+                package: {
+                    name: libMetadata.name,
+                    version: libMetadata.version
+                },
                 action: 'export',
                 relatedEnvironmentId: undefined,
                 details: {

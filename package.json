@@ -21,10 +21,10 @@
     "directories": {},
     "scripts": {
         "test": "echo \"no global test configured\"",
-        "release": "npm run lint && standard-version",
-        "release:major": "npm run lint && standard-version --release-as major",
-        "release:major:beta": "npm run lint && standard-version --prerelease --release-as major",
-        "release:beta": "standard-version --prerelease",
+        "release": "npm run lint && standard-version && npm run update:version",
+        "release:major": "npm run lint && standard-version --release-as major  && npm run update:version",
+        "release:major:beta": "npm run lint && standard-version --prerelease --release-as major  && npm run update:version",
+        "release:beta": "standard-version --prerelease && npm run update:version",
         "prepublishOnly": "npm run lint && npm run build",
         "publish:beta": "npm publish --tag=next",
         "build:es2022": "tsc --p tsconfig.es2022.json",
@@ -35,7 +35,8 @@
         "test:import": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/lib/node/cli/app --config=import-config.json",
         "test:help": "npm run build && cd output && node --max-http-header-size 150000 ../dist/es2022/lib/node/cli/app --help",
         "lint": "npx eslint lib",
-        "clean": "node clean.js"
+        "clean": "node clean.js",
+        "update:version": "ts-node --project tsconfig.script.json ./scripts/version/update-version.ts"
     },
     "keywords": [
         "Kontent.ai",
@@ -47,10 +48,9 @@
     ],
     "license": "MIT",
     "dependencies": {
+        "@kontent-ai-consulting/tools-analytics": "0.0.6",
         "@kontent-ai/delivery-sdk": "14.6.0",
         "@kontent-ai/management-sdk": "5.8.2",
-        "@kontent-ai-consulting/tools-analytics": "0.0.6",
-        "uuid-by-string": "4.0.0",
         "bytes": "3.1.2",
         "colors": "1.4.0",
         "csv-parse": "5.5.3",
@@ -58,6 +58,7 @@
         "jszip": "3.10.1",
         "mime": "4.0.1",
         "uuid": "9.0.1",
+        "uuid-by-string": "4.0.0",
         "yargs": "17.7.2"
     },
     "devDependencies": {
@@ -73,6 +74,7 @@
         "eslint": "8.56.0",
         "standard-version": "9.5.0",
         "ts-node": "10.9.2",
+        "tsconfig-paths": "^4.2.0",
         "tslib": "2.6.2",
         "typescript": "5.3.3"
     }

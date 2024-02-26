@@ -16,8 +16,7 @@ import {
     logDebug,
     logErrorAndExit,
     IMigrationItem,
-    executeWithTrackingAsync,
-    eventPackage
+    executeWithTrackingAsync
 } from '../core/index.js';
 import { IImportConfig, IImportSource, IImportContentType, IImportContentTypeElement } from './import.models.js';
 import { ImportAssetsHelper, getImportAssetsHelper } from './helpers/import-assets.helper.js';
@@ -27,6 +26,7 @@ import {
     getImportLanguageVariantstemHelper
 } from './helpers/import-language-variant.helper.js';
 import colors from 'colors';
+import { libMetadata } from '../metadata.js';
 
 export class ImportService {
     private readonly managementClient: ManagementClient;
@@ -96,7 +96,10 @@ export class ImportService {
         return await executeWithTrackingAsync({
             event: {
                 tool: 'migrationToolkit',
-                package: eventPackage,
+                package: {
+                    name: libMetadata.name,
+                    version: libMetadata.version
+                },
                 action: 'import',
                 relatedEnvironmentId: this.config.environmentId,
                 details: {
