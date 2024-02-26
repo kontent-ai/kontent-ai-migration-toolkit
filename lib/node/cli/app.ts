@@ -24,6 +24,7 @@ import {
 } from '../../file-processor/index.js';
 import { ExportToolkit, ImportToolkit } from '../../toolkit/index.js';
 import { IExportAdapter, KontentAiExportAdapter } from '../../export/index.js';
+import { ImportSourceType } from 'lib/index.js';
 
 type Args = { [key: string]: string | unknown };
 
@@ -154,7 +155,24 @@ const importAsync = async (config: ICliFileConfig) => {
     const itemsFilename: string | undefined = config.itemsFilename;
     const assetsFilename: string | undefined = config.assetsFilename;
 
+    const itemsFileExtension = getExtension(itemsFilename ?? '')?.toLowerCase();
+
+    let sourceType: ImportSourceType;
+
+    if (itemsFileExtension?.endsWith('zip'.toLowerCase())) {
+        sourceType = 'zip';
+    } else if (itemsFileExtension?.endsWith('csv'.toLowerCase())) {
+        sourceType = 'file';
+    } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
+        sourceType = 'file';
+    } else {
+        logErrorAndExit({
+            message: `Unsupported file type '${itemsFileExtension}'`
+        });
+    }
+
     const importToolkit = new ImportToolkit({
+        sourceType: sourceType,
         logLevel: config.logLevel,
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
@@ -183,19 +201,7 @@ const importAsync = async (config: ICliFileConfig) => {
             : undefined
     });
 
-    const itemsFileExtension = getExtension(itemsFilename ?? '')?.toLowerCase();
-
-    if (itemsFileExtension?.endsWith('zip'.toLowerCase())) {
-        await importToolkit.importFromZipAsync();
-    } else if (itemsFileExtension?.endsWith('csv'.toLowerCase())) {
-        await importToolkit.importFromFileAsync();
-    } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
-        await importToolkit.importFromFileAsync();
-    } else {
-        logErrorAndExit({
-            message: `Unsupported file type '${itemsFileExtension}'`
-        });
-    }
+    await importToolkit.importAsync();
 
     logDebug({ type: 'info', message: `Completed` });
 };

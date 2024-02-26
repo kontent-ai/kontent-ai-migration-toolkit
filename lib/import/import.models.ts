@@ -2,7 +2,10 @@ import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import { MigrationElementType, ContentItemsFetchMode, IMigrationItem, LogLevel, IMigrationAsset } from '../core/index.js';
 
+export type ImportSourceType = 'zip' | 'file';
+
 export interface IImportConfig {
+    sourceType: ImportSourceType;
     logLevel?: LogLevel;
     managementApiKey: string;
     skipFailedItems: boolean;

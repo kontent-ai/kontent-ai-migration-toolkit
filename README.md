@@ -88,6 +88,7 @@ Example below shows the most basic example of importing `content items` from a s
 
 ```typescript
 const importToolkit = new ImportToolkit({
+    sourceType: 'file',
     environmentId: '<id>',
     managementApiKey: '<mapiKey>',
     skipFailedItems: false,
@@ -103,7 +104,7 @@ const importToolkit = new ImportToolkit({
     }
 });
 
-await importToolkit.importFromFileAsync();
+await importToolkit.importAsync();
 ```
 
 # Migration models

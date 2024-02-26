@@ -1,5 +1,5 @@
 import { FileProcessorService, IAssetFormatService, IItemFormatService } from '../file-processor/index.js';
-import { IImportConfig, ImportService } from '../import/index.js';
+import { IImportConfig, IImportContentType, IImportSource, ImportService } from '../import/index.js';
 import { FileService } from '../node/index.js';
 
 export interface IImportToolkitConfig extends IImportConfig {
@@ -19,45 +19,40 @@ export class ImportToolkit {
 
     constructor(private config: IImportToolkitConfig) {}
 
-    async importFromFileAsync(): Promise<void> {
+    async importAsync(): Promise<void> {
         const importService = new ImportService(this.config);
+        let importSourceData: IImportSource;
 
         await importService.printInfoAsync();
 
         // prepare content types
         const contentTypes = await importService.getImportContentTypesAsync();
 
-        // parse data from files
-        const data = await this.fileProcessorService.parseFileAsync({
-            items: this.config.items
-                ? {
-                      file: await this.fileService.loadFileAsync(this.config.items.filename),
-                      formatService: this.config.items.formatService
-                  }
-                : undefined,
-            assets: this.config.assets
-                ? {
-                      file: await this.fileService.loadFileAsync(this.config.assets.filename),
-                      formatService: this.config.assets.formatService
-                  }
-                : undefined,
-            types: contentTypes
-        });
+        switch (this.config.sourceType) {
+            case 'zip': {
+                importSourceData = await this.getImportDataFromZipAsync({
+                    contentTypes: contentTypes
+                });
+                break;
+            }
+            case 'file': {
+                importSourceData = await this.getImportDataFromFileAsync({
+                    contentTypes: contentTypes
+                });
+                break;
+            }
+            default: {
+                throw Error(`Unsupported import type '${this.config.sourceType}'`);
+            }
+        }
 
         // import into target environment
-        await importService.importAsync(data);
+        await importService.importAsync(importSourceData);
     }
 
-    async importFromZipAsync(): Promise<void> {
-        const importService = new ImportService(this.config);
-
-        await importService.printInfoAsync();
-
-        // prepare content types
-        const contentTypes = await importService.getImportContentTypesAsync();
-
-        // parse data from zip
-        const data = await this.fileProcessorService.parseZipAsync({
+    private async getImportDataFromFileAsync(data: { contentTypes: IImportContentType[] }): Promise<IImportSource> {
+        // parse data from files
+        const importSourceData = await this.fileProcessorService.parseFileAsync({
             items: this.config.items
                 ? {
                       file: await this.fileService.loadFileAsync(this.config.items.filename),
@@ -70,10 +65,30 @@ export class ImportToolkit {
                       formatService: this.config.assets.formatService
                   }
                 : undefined,
-            types: contentTypes
+            types: data.contentTypes
         });
 
-        // import into target environment
-        await importService.importAsync(data);
+        return importSourceData;
+    }
+
+    private async getImportDataFromZipAsync(data: { contentTypes: IImportContentType[] }): Promise<IImportSource> {
+        // parse data from zip
+        const importSourceData = await this.fileProcessorService.parseZipAsync({
+            items: this.config.items
+                ? {
+                      file: await this.fileService.loadFileAsync(this.config.items.filename),
+                      formatService: this.config.items.formatService
+                  }
+                : undefined,
+            assets: this.config.assets
+                ? {
+                      file: await this.fileService.loadFileAsync(this.config.assets.filename),
+                      formatService: this.config.assets.formatService
+                  }
+                : undefined,
+            types: data.contentTypes
+        });
+
+        return importSourceData;
     }
 }
