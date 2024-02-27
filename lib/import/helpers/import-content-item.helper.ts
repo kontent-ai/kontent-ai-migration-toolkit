@@ -66,6 +66,11 @@ export class ImportContentItemHelper {
         const preparedItems: ContentItemModels.ContentItem[] = [];
 
         for (const parsedItem of data.migrationContentItems) {
+            if (!parsedItem.system.workflow || !parsedItem.system.workflow_step) {
+                // items without workflow or workflow step are components and they should not be imported individually
+                continue;
+            }
+
             try {
                 const contentItem = await this.importContentItemAsync({
                     managementClient: data.managementClient,

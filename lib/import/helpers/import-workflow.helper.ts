@@ -14,8 +14,8 @@ export class ImportWorkflowHelper {
 
         if (!workflow) {
             const errorMessages: string[] = [
-                `Workflow with codename '${workflowCodename}' does not exist in target project`,
-                `Available workflows are: ${workflows.map((m) => m.codename).join(', ')}`
+                `Workflow with codename '${colors.red(workflowCodename)}' does not exist in target project`,
+                `Available workflows are: ${workflows.map((m) => colors.cyan(m.codename)).join(', ')}`
             ];
 
             throw Error(errorMessages.join('. '));
