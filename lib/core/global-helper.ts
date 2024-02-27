@@ -1,16 +1,22 @@
-import { SharedModels } from '@kontent-ai/management-sdk';
+import { EnvironmentModels, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
+import colors from 'colors';
 import { logDebug, logErrorAndExit, logProcessingDebug } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { IChunk, IErrorData, IProcessInChunksItemInfo } from './core.models.js';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
+import prompts from 'prompts';
 
 const rateExceededErrorCode: number = 10000;
 
 export const defaultHttpService: HttpService = new HttpService({
     logErrorsToConsole: false
 });
+
+export function exitProcess(): never {
+    process.exit(1);
+}
 
 export function formatBytes(bytes: number): string {
     return format(bytes);
@@ -192,5 +198,35 @@ export async function executeWithTrackingAsync<TResult>(data: {
         });
 
         throw error;
+    }
+}
+
+export async function confirmImportAsync(data: {
+    force: boolean;
+    getEnvironmentInfo: () => Promise<EnvironmentModels.EnvironmentInformationModel>;
+}): Promise<void> {
+    const targetEnvironment = await data.getEnvironmentInfo();
+
+    if (data.force) {
+        logDebug({
+            type: 'info',
+            message: `Skipping confirmation prompt due to the use of force param`
+        });
+    } else {
+        const confirmed = await prompts({
+            type: 'confirm',
+            name: 'confirm',
+            message: `Are you sure to import data into ${colors.yellow(
+                targetEnvironment.environment
+            )} environment of project ${colors.cyan(targetEnvironment.name)}?`
+        });
+
+        if (!confirmed.confirm) {
+            logDebug({
+                type: 'cancel',
+                message: `Confirmation refused. Exiting process.`
+            });
+            exitProcess();
+        }
     }
 }

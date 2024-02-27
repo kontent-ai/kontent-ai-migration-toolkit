@@ -4,6 +4,7 @@ import {
     ContentTypeElements,
     ContentTypeModels,
     ContentTypeSnippetModels,
+    EnvironmentModels,
     ManagementClient,
     WorkflowModels,
     createManagementClient
@@ -55,15 +56,9 @@ export class ImportService {
         });
     }
 
-    async printInfoAsync(): Promise<void> {
-        const environmentInformation = (await this.managementClient.environmentInformation().toPromise()).data;
-
-        logDebug({
-            type: 'info',
-            message: `Importing into '${colors.yellow(
-                environmentInformation.project.environment
-            )}' environment of project '${colors.yellow(environmentInformation.project.name)}'`
-        });
+    async getEnvironmentInfoAsync(): Promise<EnvironmentModels.EnvironmentInformationModel> {
+        const environmentInformation = (await this.managementClient.environmentInformation().toPromise()).data.project;
+        return environmentInformation;
     }
 
     async getImportContentTypesAsync(): Promise<IImportContentType[]> {

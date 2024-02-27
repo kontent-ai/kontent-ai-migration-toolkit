@@ -65,6 +65,7 @@ to equal their original id. There are some limitations to importing assets, see 
 | assetsFilename    | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
 | baseUrl           | Custom base URL for Kontent.ai API calls                                                                                                                |
 | skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
+| force             | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                      |
 
 ## Import CLI samples
 
@@ -198,7 +199,8 @@ A single record of `IMigrationItem` type in `json` format may look like this:
 
 # Export items & assets from Kontent.ai
 
-There is a built-in `kontentAi` adapter that can be used to export content items & assets from Kontent.ai environments. However, when migration from 3rd party system you typically only use the `import` capabilities of this repository.
+There is a built-in `kontentAi` adapter that can be used to export content items & assets from Kontent.ai environments.
+However, when migration from 3rd party system you typically only use the `import` capabilities of this repository.
 
 ## Export Configuration
 

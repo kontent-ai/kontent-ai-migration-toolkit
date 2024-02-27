@@ -1,15 +1,16 @@
 import colors from 'colors';
 
 import { ActionType, ItemType, LogLevel } from './core.models.js';
+import { exitProcess } from './global-helper.js';
 
-export type DebugType = 'error' | 'warning' | 'info' | 'errorData' | ActionType;
+export type DebugType = 'error' | 'warning' | 'info' | 'errorData' | 'cancel' | ActionType;
 
 export function logErrorAndExit(data: { message: string }): never {
     logDebug({
         type: 'error',
         message: data.message
     });
-    process.exit(1);
+    exitProcess();
 }
 
 export function logProcessingDebug(data: {
@@ -42,6 +43,8 @@ export function logDebug(data: {
     } else if (data.type === 'info') {
         typeColor = colors.cyan;
     } else if (data.type === 'warning') {
+        typeColor = colors.red;
+    } else if (data.type === 'cancel') {
         typeColor = colors.red;
     }
 

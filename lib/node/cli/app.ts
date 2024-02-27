@@ -10,7 +10,8 @@ import {
     logDebug,
     handleError,
     logErrorAndExit,
-    ContentItemsFetchMode
+    ContentItemsFetchMode,
+    confirmImportAsync
 } from '../../core/index.js';
 import {
     ItemCsvProcessorService,
@@ -22,9 +23,9 @@ import {
     AssetCsvProcessorService,
     AssetJsonProcessorService
 } from '../../file-processor/index.js';
-import { ExportToolkit, ImportToolkit } from '../../toolkit/index.js';
+import { ExportToolkit, IImportToolkitConfig, ImportToolkit } from '../../toolkit/index.js';
 import { IExportAdapter, KontentAiExportAdapter } from '../../export/index.js';
-import { ImportSourceType } from 'lib/index.js';
+import { ImportService, ImportSourceType } from '../../import/index.js';
 
 type Args = { [key: string]: string | unknown };
 
@@ -171,7 +172,7 @@ const importAsync = async (config: ICliFileConfig) => {
         });
     }
 
-    const importToolkit = new ImportToolkit({
+    const importToolkitConfig: IImportToolkitConfig = {
         sourceType: sourceType,
         logLevel: config.logLevel,
         skipFailedItems: config.skipFailedItems,
@@ -199,7 +200,16 @@ const importAsync = async (config: ICliFileConfig) => {
                   formatService: getAssetFormatService(config.format)
               }
             : undefined
+    };
+
+    const importService = new ImportService(importToolkitConfig);
+
+    await confirmImportAsync({
+        force: config.force,
+        getEnvironmentInfo: async () => await importService.getEnvironmentInfoAsync()
     });
+
+    const importToolkit = new ImportToolkit(importToolkitConfig);
 
     await importToolkit.importAsync();
 
@@ -287,6 +297,7 @@ const getConfig = async () => {
         isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview', false),
         isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure', false),
         replaceInvalidLinks: getBooleanArgumentvalue(resolvedArgs, 'replaceInvalidLinks', false),
+        force: getBooleanArgumentvalue(resolvedArgs, 'force', false),
         adapter: mappedAdapter,
         format: mappedFormat,
         contentItemsFetchMode: mappedFetchMode,

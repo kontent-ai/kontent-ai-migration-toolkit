@@ -23,6 +23,7 @@ export interface ICliFileConfig {
     exportLanguages?: string[];
     exportAssets: boolean;
     logLevel: LogLevel;
+    force: boolean;
 }
 
 export type LogLevel = 'verbose' | 'default';

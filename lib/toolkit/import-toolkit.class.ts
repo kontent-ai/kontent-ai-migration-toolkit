@@ -23,8 +23,6 @@ export class ImportToolkit {
         const importService = new ImportService(this.config);
         let importSourceData: IImportSource;
 
-        await importService.printInfoAsync();
-
         // prepare content types
         const contentTypes = await importService.getImportContentTypesAsync();
 

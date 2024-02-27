@@ -59,9 +59,11 @@
         "mime": "4.0.1",
         "uuid": "9.0.1",
         "uuid-by-string": "4.0.0",
-        "yargs": "17.7.2"
+        "yargs": "17.7.2",
+        "prompts": "2.4.2"
     },
     "devDependencies": {
+        "@types/prompts": "2.4.9",
         "@types/bytes": "3.1.4",
         "@types/json2csv": "5.0.7",
         "@types/jszip": "3.4.1",
@@ -69,9 +71,9 @@
         "@types/node": "20.11.20",
         "@types/uuid": "9.0.8",
         "@types/yargs": "17.0.32",
-        "@typescript-eslint/eslint-plugin": "7.0.2",
-        "@typescript-eslint/parser": "7.0.2",
-        "eslint": "8.56.0",
+        "@typescript-eslint/eslint-plugin": "7.1.0",
+        "@typescript-eslint/parser": "7.1.0",
+        "eslint": "8.57.0",
         "standard-version": "9.5.0",
         "ts-node": "10.9.2",
         "tsconfig-paths": "^4.2.0",
