@@ -3,30 +3,28 @@ import {
     IImportedData,
     extractErrorData,
     is404Error,
-    logItemAction,
-    logDebug,
     logErrorAndExit,
     processInChunksAsync,
-    LogLevel,
     ContentItemsFetchMode,
-    IMigrationItem
+    IMigrationItem,
+    Log
 } from '../../core/index.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 import colors from 'colors';
 
 export function getImportContentItemHelper(config: {
-    logLevel: LogLevel;
+    log?: Log;
     skipFailedItems: boolean;
     fetchMode: ContentItemsFetchMode;
 }): ImportContentItemHelper {
-    return new ImportContentItemHelper(config.logLevel, config.skipFailedItems, config.fetchMode);
+    return new ImportContentItemHelper(config.log, config.skipFailedItems, config.fetchMode);
 }
 
 export class ImportContentItemHelper {
     private readonly importContentItemChunkSize: number = 3;
 
     constructor(
-        private readonly logLevel: LogLevel,
+        private readonly log: Log | undefined,
         private readonly skipFailedItems: boolean,
         private readonly fetchMode: ContentItemsFetchMode
     ) {}
@@ -41,17 +39,18 @@ export class ImportContentItemHelper {
             data.migrationContentItems
         );
 
-        logItemAction(this.logLevel, 'skip', 'contentItem', {
-            title: `Skipping '${colors.yellow(
+        this.log?.({
+            type: 'skip',
+            message: `Skipping '${colors.yellow(
                 categorizedParsedItems.componentItems.length.toString()
             )}' because they represent component items`
         });
 
         let fetchedContentItems: ContentItemModels.ContentItem[] = [];
 
-        logDebug({
-            message: `Fetching items via '${colors.yellow(this.fetchMode)}' mode`,
-            type: 'info'
+        this.log?.({
+            type: 'info',
+            message: `Fetching items via '${colors.yellow(this.fetchMode)}' mode`
         });
 
         if (this.fetchMode === 'oneByOne') {
@@ -84,11 +83,11 @@ export class ImportContentItemHelper {
                 preparedItems.push(contentItem);
             } catch (error) {
                 if (this.skipFailedItems) {
-                    logDebug({
+                    this.log?.({
                         type: 'error',
-                        message: `Failed to import content item`,
-                        partA: parsedItem.system.codename,
-                        partB: extractErrorData(error).message
+                        message: `Failed to import content item '${parsedItem.system.name}'. ${
+                            extractErrorData(error).message
+                        }`
                     });
                 } else {
                     throw error;
@@ -106,6 +105,7 @@ export class ImportContentItemHelper {
         const contentItems: ContentItemModels.ContentItem[] = [];
 
         await processInChunksAsync<IMigrationItem, void>({
+            log: this.log,
             chunkSize: this.importContentItemChunkSize,
             items: data.categorizedParsedItems.regularItems,
             itemInfo: (input) => {
@@ -117,10 +117,11 @@ export class ImportContentItemHelper {
             },
             processFunc: async (migrationContentItem) => {
                 try {
-                    logItemAction(this.logLevel, 'fetch', 'contentItem', {
-                        title: `${migrationContentItem.system.name}`,
-                        codename: migrationContentItem.system.codename
+                    this.log?.({
+                        type: 'fetch',
+                        message: `${migrationContentItem.system.name}`
                     });
+
                     const contentItem = await data.managementClient
                         .viewContentItem()
                         .byItemCodename(migrationContentItem.system.codename)
@@ -147,8 +148,9 @@ export class ImportContentItemHelper {
                 .listContentItems()
                 .withListQueryConfig({
                     responseFetched: (response, token) => {
-                        logItemAction(this.logLevel, 'fetch', 'listContentItems', {
-                            title: `Fetched '${colors.yellow(response.data.items.length.toString())}' items`
+                        this.log?.({
+                            type: 'fetch',
+                            message: `Fetched '${colors.yellow(response.data.items.length.toString())}' items`
                         });
                     }
                 })
@@ -184,9 +186,9 @@ export class ImportContentItemHelper {
                     data.collections
                 )
             ) {
-                logItemAction(this.logLevel, 'upsert', 'contentItem', {
-                    title: `${data.importContentItem.system.name}`,
-                    codename: data.importContentItem.system.codename
+                this.log?.({
+                    type: 'upsert',
+                    message: `${data.importContentItem.system.name}`
                 });
 
                 await data.managementClient

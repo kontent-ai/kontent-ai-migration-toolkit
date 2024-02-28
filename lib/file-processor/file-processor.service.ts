@@ -9,11 +9,15 @@ import {
     IAssetFormatService,
     FileBinaryData
 } from './file-processor.models.js';
-import { IExportTransformConfig, IMigrationItem, IMigrationAsset, logDebug } from '../core/index.js';
+import { IExportTransformConfig, IMigrationItem, IMigrationAsset, Log } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
+export function getFileProcessorService(log?: Log): FileProcessorService {
+    return new FileProcessorService(log);
+}
+
 export class FileProcessorService {
-    constructor() {}
+    constructor(private readonly log?: Log) {}
 
     async parseZipAsync(data: {
         items?: {
@@ -34,45 +38,45 @@ export class FileProcessorService {
         };
 
         if (data.items) {
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: 'Loading items zip file'
             });
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
 
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: 'Parsing items zip data'
             });
 
             result.importData.items.push(
                 ...(await data.items.formatService.parseContentItemsAsync({
-                    zip: new ZipPackage(itemsZipFile),
+                    zip: new ZipPackage(itemsZipFile, this.log),
                     types: data.types
                 }))
             );
         }
 
         if (data.assets) {
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: 'Loading assets zip file'
             });
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
 
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: 'Parsing assets zip data'
             });
 
             result.importData.assets.push(
                 ...(await data.assets.formatService.parseAssetsAsync({
-                    zip: new ZipPackage(assetsZipFile)
+                    zip: new ZipPackage(assetsZipFile, this.log)
                 }))
             );
         }
 
-        logDebug({
+        this.log?.({
             type: 'info',
             message: `Parsing completed. Parsed '${colors.yellow(
                 result.importData.items.length.toString()
@@ -97,27 +101,27 @@ export class FileProcessorService {
         let parsedAssets: IMigrationAsset[] = [];
 
         if (data.items) {
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: `Parsing items file with '${colors.yellow(data.items.formatService.name)}' `
             });
 
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
             parsedItems = await data.items.formatService.parseContentItemsAsync({
-                zip: new ZipPackage(itemsZipFile),
+                zip: new ZipPackage(itemsZipFile, this.log),
                 types: data.types
             });
         }
 
         if (data.assets) {
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: `Parsing assets file with '${colors.yellow(data.assets.formatService.name)}' `
             });
 
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
             parsedAssets = await data.assets.formatService.parseAssetsAsync({
-                zip: new ZipPackage(assetsZipFile)
+                zip: new ZipPackage(assetsZipFile, this.log)
             });
         }
 
@@ -128,7 +132,7 @@ export class FileProcessorService {
             }
         };
 
-        logDebug({
+        this.log?.({
             type: 'info',
             message: `Parsing completed. Parsed '${colors.yellow(
                 result.importData.items.length.toString()
@@ -146,15 +150,18 @@ export class FileProcessorService {
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {
-        logDebug({
+        this.log?.({
             type: 'info',
             message: `Creating items zip`,
-            partA: config.itemFormatService.name
+            count: {
+                index: 1,
+                total: 1
+            }
         });
 
         const zip = await config.itemFormatService.transformContentItemsAsync({
             items: exportData.items,
-            zip: new ZipPackage(new JSZip())
+            zip: new ZipPackage(new JSZip(), this.log)
         });
 
         return zip;
@@ -167,15 +174,18 @@ export class FileProcessorService {
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {
-        logDebug({
+        this.log?.({
             type: 'info',
             message: `Creating assets zip`,
-            partA: config.assetFormatService?.name
+            count: {
+                index: 1,
+                total: 1
+            }
         });
 
         const zip = await config.assetFormatService.transformAssetsAsync({
             assets: exportData.assets,
-            zip: new ZipPackage(new JSZip())
+            zip: new ZipPackage(new JSZip(), this.log)
         });
 
         return zip;

@@ -5,17 +5,23 @@ import {
     getExtension,
     extractFilenameFromUrl,
     defaultRetryStrategy,
-    logDebug,
     processInChunksAsync,
-    IMigrationAsset
+    IMigrationAsset,
+    Log
 } from '../../../../core/index.js';
 import colors from 'colors';
 
 type ExportAssetWithoutBinaryData = Omit<IMigrationAsset, 'binaryData'>;
 
+export function getExportAssetsHelper(log?: Log): ExportAssetsHelper {
+    return new ExportAssetsHelper(log);
+}
+
 export class ExportAssetsHelper {
     private readonly downloadAssetBinaryDataChunkSize: number = 10;
     private readonly httpService: HttpService = new HttpService();
+
+    constructor(private readonly log?: Log) {}
 
     async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IMigrationAsset[]> {
         const extractedAssets: ExportAssetWithoutBinaryData[] = [];
@@ -74,7 +80,7 @@ export class ExportAssetsHelper {
             ...new Map(extractedAssets.map((item) => [item.url, item])).values()
         ];
 
-        logDebug({
+        this.log?.({
             type: 'info',
             message: `Preparing to download '${colors.yellow(uniqueAssets.length.toString())}' assets`
         });
@@ -83,6 +89,7 @@ export class ExportAssetsHelper {
             ExportAssetWithoutBinaryData,
             IMigrationAsset
         >({
+            log: this.log,
             chunkSize: this.downloadAssetBinaryDataChunkSize,
             itemInfo: (input) => {
                 return {
@@ -124,5 +131,3 @@ export class ExportAssetsHelper {
         return { data: response.data, contentLength: contentLength };
     }
 }
-
-export const exportAssetsHelper = new ExportAssetsHelper();

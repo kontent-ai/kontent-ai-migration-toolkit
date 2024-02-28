@@ -1,6 +1,11 @@
-import { FileProcessorService, IAssetFormatService, IItemFormatService } from '../file-processor/index.js';
+import {
+    FileProcessorService,
+    IAssetFormatService,
+    IItemFormatService,
+    getFileProcessorService
+} from '../file-processor/index.js';
 import { IImportConfig, IImportContentType, IImportSource, ImportService } from '../import/index.js';
-import { FileService } from '../node/index.js';
+import { FileService, getFileService } from '../node/index.js';
 
 export interface IImportToolkitConfig extends IImportConfig {
     items?: {
@@ -14,10 +19,13 @@ export interface IImportToolkitConfig extends IImportConfig {
 }
 
 export class ImportToolkit {
-    private readonly fileProcessorService = new FileProcessorService();
-    private readonly fileService = new FileService();
+    private readonly fileProcessorService: FileProcessorService;
+    private readonly fileService: FileService;
 
-    constructor(private config: IImportToolkitConfig) {}
+    constructor(private config: IImportToolkitConfig) {
+        this.fileProcessorService = getFileProcessorService(config.log);
+        this.fileService = getFileService(config.log);
+    }
 
     async importAsync(): Promise<void> {
         const importService = new ImportService(this.config);

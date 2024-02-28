@@ -22,11 +22,9 @@ export interface ICliFileConfig {
     exportTypes?: string[];
     exportLanguages?: string[];
     exportAssets: boolean;
-    logLevel: LogLevel;
     force: boolean;
 }
 
-export type LogLevel = 'verbose' | 'default';
 export type CliAction = 'export' | 'import';
 export type ExportAdapter = 'kontentAi';
 export type ItemType =
@@ -136,5 +134,4 @@ export interface IChunk<T> {
 export interface IProcessInChunksItemInfo {
     title: string;
     itemType: ItemType;
-    partA?: string;
 }

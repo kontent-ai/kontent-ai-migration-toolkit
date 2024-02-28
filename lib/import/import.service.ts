@@ -14,7 +14,6 @@ import {
     IImportedData,
     defaultRetryStrategy,
     defaultHttpService,
-    logDebug,
     logErrorAndExit,
     IMigrationItem,
     executeWithTrackingAsync
@@ -44,14 +43,14 @@ export class ImportService {
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
         });
 
-        this.importAssetsHelper = getImportAssetsHelper({ logLevel: config.logLevel ?? 'default' });
+        this.importAssetsHelper = getImportAssetsHelper(this.config.log);
         this.importContentItemHelper = getImportContentItemHelper({
-            logLevel: config.logLevel ?? 'default',
+            log: config.log,
             skipFailedItems: config.skipFailedItems,
             fetchMode: config?.contentItemsFetchMode ?? 'oneByOne'
         });
         this.importLanguageVariantHelper = getImportLanguageVariantstemHelper({
-            logLevel: config.logLevel ?? 'default',
+            log: this.config.log,
             skipFailedItems: config.skipFailedItems
         });
     }
@@ -65,12 +64,12 @@ export class ImportService {
         const contentTypes = (await this.managementClient.listContentTypes().toAllPromise()).data.items;
         const contentTypeSnippets = (await this.managementClient.listContentTypeSnippets().toAllPromise()).data.items;
 
-        logDebug({
+        this.config.log?.({
             type: 'info',
             message: `Fetched '${colors.yellow(contentTypes.length.toString())}' content types`
         });
 
-        logDebug({
+        this.config.log?.({
             type: 'info',
             message: `Fetched '${colors.yellow(contentTypeSnippets.length.toString())}' content type snippets`
         });
@@ -98,7 +97,6 @@ export class ImportService {
                 action: 'import',
                 relatedEnvironmentId: this.config.environmentId,
                 details: {
-                    logLevel: this.config.logLevel,
                     skipFailedItems: this.config.skipFailedItems,
                     itemsCount: sourceData.importData.items.length,
                     assetsCount: sourceData.importData.assets.length
@@ -117,7 +115,7 @@ export class ImportService {
                 // import order matters
                 // #1 Assets
                 if (dataToImport.importData.assets.length) {
-                    logDebug({
+                    this.config.log?.({
                         type: 'info',
                         message: `Importing assets`
                     });
@@ -127,7 +125,7 @@ export class ImportService {
                         importedData: importedData
                     });
                 } else {
-                    logDebug({
+                    this.config.log?.({
                         type: 'info',
                         message: `There are no assets to import`
                     });
@@ -135,19 +133,19 @@ export class ImportService {
 
                 // #2 Content items
                 if (dataToImport.importData.items.length) {
-                    logDebug({
+                    this.config.log?.({
                         type: 'info',
                         message: `Importing content items`
                     });
                     await this.importMigrationContentItemAsync(dataToImport.importData.items, importedData);
                 } else {
-                    logDebug({
+                    this.config.log?.({
                         type: 'info',
                         message: `There are no content items to import`
                     });
                 }
 
-                logDebug({
+                this.config.log?.({
                     type: 'info',
                     message: `Finished import`
                 });
@@ -244,14 +242,14 @@ export class ImportService {
         }
 
         if (removedAssets > 0) {
-            logDebug({
+            this.config.log?.({
                 type: 'info',
                 message: `Removed '${colors.yellow(removedAssets.toString())}' assets from import`
             });
         }
 
         if (removedContentItems) {
-            logDebug({
+            this.config.log?.({
                 type: 'info',
                 message: `Removed '${colors.yellow(removedContentItems.toString())}' content items from import`
             });

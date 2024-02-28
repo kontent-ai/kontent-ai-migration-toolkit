@@ -1,22 +1,15 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import {
-    IImportedData,
-    IMigrationAsset,
-    LogLevel,
-    is404Error,
-    logItemAction,
-    processInChunksAsync
-} from '../../core/index.js';
+import { IImportedData, IMigrationAsset, Log, is404Error, processInChunksAsync } from '../../core/index.js';
 import mime from 'mime';
 
-export function getImportAssetsHelper(config: { logLevel: LogLevel }): ImportAssetsHelper {
-    return new ImportAssetsHelper(config.logLevel);
+export function getImportAssetsHelper(log?: Log): ImportAssetsHelper {
+    return new ImportAssetsHelper(log);
 }
 
 export class ImportAssetsHelper {
     private readonly importAssetsChunkSize: number = 3;
 
-    constructor(private readonly logLevel: LogLevel) {}
+    constructor(private readonly log?: Log) {}
 
     async importAssetsAsync(data: {
         managementClient: ManagementClient;
@@ -24,6 +17,7 @@ export class ImportAssetsHelper {
         importedData: IImportedData;
     }): Promise<void> {
         await processInChunksAsync<IMigrationAsset, void>({
+            log: this.log,
             chunkSize: this.importAssetsChunkSize,
             items: data.assets,
             itemInfo: (input) => {
@@ -68,10 +62,11 @@ export class ImportAssetsHelper {
 
                 if (!existingAsset) {
                     // only import asset if it didn't exist
-
-                    logItemAction(this.logLevel, 'upload', 'binaryFile', {
-                        title: asset.filename
+                    this.log?.({
+                        type: 'upload',
+                        message: asset.filename
                     });
+
                     const uploadedBinaryFile = await data.managementClient
                         .uploadBinaryFile()
                         .withData({
@@ -81,9 +76,11 @@ export class ImportAssetsHelper {
                         })
                         .toPromise();
 
-                    logItemAction(this.logLevel, 'create', 'asset', {
-                        title: asset.filename
+                    this.log?.({
+                        type: 'create',
+                        message: asset.filename
                     });
+
                     const createdAsset = await data.managementClient
                         .addAsset()
                         .withData((builder) => {
@@ -107,8 +104,10 @@ export class ImportAssetsHelper {
                         imported: existingAsset,
                         original: asset
                     });
-                    logItemAction(this.logLevel, 'skip', 'asset', {
-                        title: asset.filename
+
+                    this.log?.({
+                        type: 'skip',
+                        message: asset.filename
                     });
                 }
             }

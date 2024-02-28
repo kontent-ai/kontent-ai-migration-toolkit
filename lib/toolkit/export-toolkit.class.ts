@@ -1,10 +1,11 @@
 import { libMetadata } from '../metadata.js';
-import { executeWithTrackingAsync } from '../core/index.js';
+import { Log, executeWithTrackingAsync } from '../core/index.js';
 import { IExportAdapter, IExportAdapterResult } from '../export/index.js';
-import { FileProcessorService, IAssetFormatService, IItemFormatService } from '../file-processor/index.js';
-import { FileService } from '../node/index.js';
+import { FileProcessorService, IAssetFormatService, IItemFormatService, getFileProcessorService } from '../file-processor/index.js';
+import { FileService, getFileService } from '../node/index.js';
 
 export interface IExporToolkitConfig {
+    log?: Log;
     adapter: IExportAdapter;
     items: {
         filename: string;
@@ -17,10 +18,13 @@ export interface IExporToolkitConfig {
 }
 
 export class ExportToolkit {
-    private readonly fileProcessorService = new FileProcessorService();
-    private readonly fileService = new FileService();
+    private readonly fileProcessorService: FileProcessorService;
+    private readonly fileService: FileService;
 
-    constructor(private readonly config: IExporToolkitConfig) {}
+    constructor(private readonly config: IExporToolkitConfig) {
+        this.fileService = getFileService(config.log);
+        this.fileProcessorService = getFileProcessorService(config.log)
+    }
 
     async exportAsync(): Promise<IExportAdapterResult> {
         return await executeWithTrackingAsync({

@@ -1,24 +1,26 @@
 import { IContentType, IDeliveryClient, ILanguage, createDeliveryClient } from '@kontent-ai/delivery-sdk';
 import { IExportAdapter, IExportAdapterResult, IKontentAiExportAdapterConfig } from '../../export.models.js';
 import colors from 'colors';
-import { exportContentItemHelper } from './helpers/export-content-item.helper.js';
 import { defaultHttpService, defaultRetryStrategy } from '../../../core/global-helper.js';
-import { exportAssetsHelper } from './helpers/export-assets.helper.js';
-import { IMigrationAsset, logDebug } from '../../../core/index.js';
+import { getExportAssetsHelper } from './helpers/export-assets.helper.js';
+import { IMigrationAsset } from '../../../core/index.js';
+import { getExportContentItemHelper } from './helpers/export-content-item.helper.js';
 
 export class KontentAiExportAdapter implements IExportAdapter {
-
     public readonly name: string = 'kontentAi';
 
     constructor(private config: IKontentAiExportAdapterConfig) {}
 
     async exportAsync(): Promise<IExportAdapterResult> {
-        logDebug({
+        this.config.log?.({
             type: 'info',
             message: `Preparing export from environment ${colors.yellow(this.config.environmentId)}`
         });
-        logDebug({ type: 'info', message: this.config.isSecure ? `Using Secure API` : `Not using Secure API` });
-        logDebug({
+        this.config.log?.({
+            type: 'info',
+            message: this.config.isSecure ? `Using Secure API` : `Not using Secure API`
+        });
+        this.config.log?.({
             type: 'info',
             message: this.config.isPreview ? `Using Preview API` : `Using Delivery API`
         });
@@ -27,8 +29,9 @@ export class KontentAiExportAdapter implements IExportAdapter {
 
         const allTypes = await this.getAllContentTypesAsync(deliveryClient);
         const allLanguages = await this.getAllLanguagesAsync(deliveryClient);
+        const exportAssetsHelper = getExportAssetsHelper(this.config.log);
 
-        const contentItemsResult = await exportContentItemHelper.exportContentItemsAsync(
+        const contentItemsResult = await getExportContentItemHelper(this.config.log).exportContentItemsAsync(
             deliveryClient,
             this.config,
             allTypes,
@@ -38,12 +41,12 @@ export class KontentAiExportAdapter implements IExportAdapter {
         const assets: IMigrationAsset[] = [];
 
         if (this.config.exportAssets) {
-            logDebug({ type: 'info', message: `Extracting assets referenced by content items` });
+            this.config.log?.({ type: 'info', message: `Extracting assets referenced by content items` });
             assets.push(
                 ...(await exportAssetsHelper.extractAssetsAsync(contentItemsResult.deliveryContentItems, allTypes))
             );
         } else {
-            logDebug({ type: 'info', message: `Assets export is disabled` });
+            this.config.log?.({ type: 'info', message: `Assets export is disabled` });
         }
 
         return {

@@ -7,11 +7,11 @@ import {
     CliAction,
     getExtension,
     ExportAdapter,
-    logDebug,
     handleError,
     logErrorAndExit,
     ContentItemsFetchMode,
-    confirmImportAsync
+    confirmImportAsync,
+    withDefaultLogAsync
 } from '../../core/index.js';
 import {
     ItemCsvProcessorService,
@@ -86,134 +86,141 @@ const argv = yargs(process.argv.slice(2))
     .alias('h', 'help').argv;
 
 const exportAsync = async (config: ICliFileConfig) => {
-    if (!config.adapter) {
-        logErrorAndExit({
-            message: `Missing 'adapter' config`
-        });
-    }
-
-    let adapter: IExportAdapter | undefined;
-
-    if (config.adapter === 'kontentAi') {
-        if (!config.environmentId) {
+    await withDefaultLogAsync(async (log) => {
+        if (!config.adapter) {
             logErrorAndExit({
-                message: `Invalid 'environmentId'`
+                message: `Missing 'adapter' config`
             });
         }
 
-        adapter = new KontentAiExportAdapter({
-            environmentId: config.environmentId,
-            managementApiKey: config.managementApiKey,
-            previewApiKey: config.previewApiKey,
-            secureApiKey: config.secureApiKey,
-            isPreview: config.isPreview,
-            isSecure: config.isSecure,
-            baseUrl: config.baseUrl,
-            exportTypes: config.exportTypes,
-            exportLanguages: config.exportLanguages,
-            exportAssets: config.exportAssets
-        });
-    } else {
-        logErrorAndExit({
-            message: `Missing adapter '${config.adapter}'`
-        });
-    }
+        let adapter: IExportAdapter | undefined;
 
-    const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
-    const assetsFilename = config.assetsFilename ?? getDefaultExportFilename('assets');
+        if (config.adapter === 'kontentAi') {
+            if (!config.environmentId) {
+                logErrorAndExit({
+                    message: `Invalid 'environmentId'`
+                });
+            }
 
-    const exportToolkit = new ExportToolkit({
-        adapter,
-        items: {
-            filename: itemsFilename,
-            formatService: getItemFormatService(config.format)
-        },
-        assets: assetsFilename
-            ? {
-                  filename: assetsFilename,
-                  formatService: getAssetFormatService(config.format)
-              }
-            : undefined
+            adapter = new KontentAiExportAdapter({
+                log: log,
+                environmentId: config.environmentId,
+                managementApiKey: config.managementApiKey,
+                previewApiKey: config.previewApiKey,
+                secureApiKey: config.secureApiKey,
+                isPreview: config.isPreview,
+                isSecure: config.isSecure,
+                baseUrl: config.baseUrl,
+                exportTypes: config.exportTypes,
+                exportLanguages: config.exportLanguages,
+                exportAssets: config.exportAssets
+            });
+        } else {
+            logErrorAndExit({
+                message: `Missing adapter '${config.adapter}'`
+            });
+        }
+
+        const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
+        const assetsFilename = config.assetsFilename ?? getDefaultExportFilename('assets');
+
+        const exportToolkit = new ExportToolkit({
+            log: log,
+            adapter,
+            items: {
+                filename: itemsFilename,
+                formatService: getItemFormatService(config.format)
+            },
+            assets: assetsFilename
+                ? {
+                      filename: assetsFilename,
+                      formatService: getAssetFormatService(config.format)
+                  }
+                : undefined
+        });
+
+        await exportToolkit.exportAsync();
+
+        log({ type: 'completed', message: `Export has been successful` });
     });
-
-    await exportToolkit.exportAsync();
-
-    logDebug({ type: 'info', message: `Completed` });
 };
 
 const importAsync = async (config: ICliFileConfig) => {
-    if (!config.managementApiKey) {
-        logErrorAndExit({
-            message: `Missing 'managementApiKey' configuration option`
-        });
-    }
-    if (!config.environmentId) {
-        logErrorAndExit({
-            message: `Missing 'environmentId' configuration option`
-        });
-    }
+    await withDefaultLogAsync(async (log) => {
+        if (!config.managementApiKey) {
+            logErrorAndExit({
+                message: `Missing 'managementApiKey' configuration option`
+            });
+        }
+        if (!config.environmentId) {
+            logErrorAndExit({
+                message: `Missing 'environmentId' configuration option`
+            });
+        }
 
-    const itemsFilename: string | undefined = config.itemsFilename;
-    const assetsFilename: string | undefined = config.assetsFilename;
+        const itemsFilename: string | undefined = config.itemsFilename;
+        const assetsFilename: string | undefined = config.assetsFilename;
 
-    const itemsFileExtension = getExtension(itemsFilename ?? '')?.toLowerCase();
+        const itemsFileExtension = getExtension(itemsFilename ?? '')?.toLowerCase();
 
-    let sourceType: ImportSourceType;
+        let sourceType: ImportSourceType;
 
-    if (itemsFileExtension?.endsWith('zip'.toLowerCase())) {
-        sourceType = 'zip';
-    } else if (itemsFileExtension?.endsWith('csv'.toLowerCase())) {
-        sourceType = 'file';
-    } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
-        sourceType = 'file';
-    } else {
-        logErrorAndExit({
-            message: `Unsupported file type '${itemsFileExtension}'`
-        });
-    }
+        if (itemsFileExtension?.endsWith('zip'.toLowerCase())) {
+            sourceType = 'zip';
+        } else if (itemsFileExtension?.endsWith('csv'.toLowerCase())) {
+            sourceType = 'file';
+        } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
+            sourceType = 'file';
+        } else {
+            logErrorAndExit({
+                message: `Unsupported file type '${itemsFileExtension}'`
+            });
+        }
 
-    const importToolkitConfig: IImportToolkitConfig = {
-        sourceType: sourceType,
-        logLevel: config.logLevel,
-        skipFailedItems: config.skipFailedItems,
-        baseUrl: config.baseUrl,
-        contentItemsFetchMode: config.contentItemsFetchMode,
-        environmentId: config.environmentId,
-        managementApiKey: config.managementApiKey,
-        canImport: {
-            contentItem: (item) => {
-                return true;
+        const importToolkitConfig: IImportToolkitConfig = {
+            log: log,
+            sourceType: sourceType,
+            skipFailedItems: config.skipFailedItems,
+            baseUrl: config.baseUrl,
+            contentItemsFetchMode: config.contentItemsFetchMode,
+            environmentId: config.environmentId,
+            managementApiKey: config.managementApiKey,
+            canImport: {
+                contentItem: (item) => {
+                    return true;
+                },
+                asset: (asset) => {
+                    return true;
+                }
             },
-            asset: (asset) => {
-                return true;
-            }
-        },
-        items: itemsFilename
-            ? {
-                  filename: itemsFilename,
-                  formatService: getItemFormatService(config.format)
-              }
-            : undefined,
-        assets: assetsFilename
-            ? {
-                  filename: assetsFilename,
-                  formatService: getAssetFormatService(config.format)
-              }
-            : undefined
-    };
+            items: itemsFilename
+                ? {
+                      filename: itemsFilename,
+                      formatService: getItemFormatService(config.format)
+                  }
+                : undefined,
+            assets: assetsFilename
+                ? {
+                      filename: assetsFilename,
+                      formatService: getAssetFormatService(config.format)
+                  }
+                : undefined
+        };
 
-    const importService = new ImportService(importToolkitConfig);
+        const importService = new ImportService(importToolkitConfig);
 
-    await confirmImportAsync({
-        force: config.force,
-        getEnvironmentInfo: async () => await importService.getEnvironmentInfoAsync()
+        await confirmImportAsync({
+            log: log,
+            force: config.force,
+            getEnvironmentInfo: async () => await importService.getEnvironmentInfoAsync()
+        });
+
+        const importToolkit = new ImportToolkit(importToolkitConfig);
+
+        await importToolkit.importAsync();
+
+        log({ type: 'completed', message: `Import has been successful` });
     });
-
-    const importToolkit = new ImportToolkit(importToolkitConfig);
-
-    await importToolkit.importAsync();
-
-    logDebug({ type: 'info', message: `Completed` });
 };
 
 const run = async () => {
@@ -300,9 +307,7 @@ const getConfig = async () => {
         force: getBooleanArgumentvalue(resolvedArgs, 'force', false),
         adapter: mappedAdapter,
         format: mappedFormat,
-        contentItemsFetchMode: mappedFetchMode,
-        logLevel:
-            getOptionalArgumentValue(resolvedArgs, 'logLevel')?.toLowerCase() === 'verbose' ? 'verbose' : 'default'
+        contentItemsFetchMode: mappedFetchMode
     };
 
     return config;

@@ -2,14 +2,13 @@ import { IContentType, ILanguage, IContentItem, IDeliveryClient } from '@kontent
 import {
     MigrationElementType,
     ItemType,
-    logDebug,
-    logProcessingDebug,
     processInChunksAsync,
     IMigrationItem,
-    IMigrationElement
+    IMigrationElement,
+    Log
 } from '../../../../core/index.js';
 import { IKontentAiExportAdapterConfig } from '../../../export.models.js';
-import { translationHelper } from '../../../../translation/index.js';
+import { getElementTranslationHelper } from '../../../../translation/index.js';
 import colors from 'colors';
 
 interface ITypeLanguageMap {
@@ -17,9 +16,15 @@ interface ITypeLanguageMap {
     type: IContentType;
 }
 
+export function getExportContentItemHelper(log?: Log): ExportContentItemHelper {
+    return new ExportContentItemHelper(log);
+}
+
 export class ExportContentItemHelper {
     private readonly fetchCountForTypesChunkSize: number = 100;
     private readonly exportContentItemsChunkSize: number = 100;
+
+    constructor(private readonly log?: Log) {}
 
     async exportContentItemsAsync(
         deliveryClient: IDeliveryClient,
@@ -32,7 +37,7 @@ export class ExportContentItemHelper {
         const contentItems: IContentItem[] = [];
 
         if (config.customItemsExport) {
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: `Using custom items export`
             });
@@ -40,22 +45,21 @@ export class ExportContentItemHelper {
             const customItems = await config.customItemsExport(deliveryClient);
 
             for (const contentItem of customItems) {
-                logDebug({
+                this.log?.({
                     type: 'fetch',
-                    message: `${contentItem.system.name} | ${contentItem.system.type}`,
-                    partA: contentItem.system.language
+                    message: `${contentItem.system.name} | ${contentItem.system.type}`
                 });
                 contentItems.push(contentItem);
             }
         } else {
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: `Exporting content items of '${colors.yellow(
                     languagesToExport.length.toString()
                 )}' content types and '${colors.yellow(languagesToExport.length.toString())}' languages`
             });
 
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: `Calculating total items to export`
             });
@@ -68,7 +72,7 @@ export class ExportContentItemHelper {
             let exportedItemsCount: number = 0;
             let extractedComponentsCount: number = 0;
 
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: `Found '${colors.yellow(totalItemsToExport.toString())}' items in total to export`
             });
@@ -79,6 +83,7 @@ export class ExportContentItemHelper {
             });
 
             await processInChunksAsync<ITypeLanguageMap, void>({
+                log: this.log,
                 chunkSize: this.exportContentItemsChunkSize,
                 items: typeLanguageMaps,
                 processFunc: async (typeLanguageMap) => {
@@ -91,6 +96,7 @@ export class ExportContentItemHelper {
                                 // add items to result
                                 for (const contentItem of response.data.items) {
                                     this.logItem({
+                                        log: this.log,
                                         index: exportedItemsCount + 1,
                                         totalCount: totalItemsToExport,
                                         title: contentItem.system.name,
@@ -113,7 +119,7 @@ export class ExportContentItemHelper {
                 }
             });
 
-            logDebug({
+            this.log?.({
                 type: 'info',
                 message: `Adding '${colors.yellow(extractedComponentsCount.toString())}' components to export result`
             });
@@ -133,6 +139,7 @@ export class ExportContentItemHelper {
         let totalItemsCount: number = 0;
 
         await processInChunksAsync<IContentType, void>({
+            log: this.log,
             chunkSize: this.fetchCountForTypesChunkSize,
             itemInfo: (type) => {
                 return {
@@ -166,6 +173,8 @@ export class ExportContentItemHelper {
         types: IContentType[],
         config: IKontentAiExportAdapterConfig
     ): IMigrationItem {
+        const translationHelper = getElementTranslationHelper(this.log);
+
         const migrationItem: IMigrationItem = {
             system: {
                 codename: item.system.codename,
@@ -201,18 +210,20 @@ export class ExportContentItemHelper {
     }
 
     private logItem(data: {
+        log: Log | undefined;
         title: string;
         index: number;
         totalCount: number;
         itemType: ItemType;
         language?: string;
     }): void {
-        logProcessingDebug({
-            itemType: data.itemType,
-            title: `${data.title}`,
-            index: data.index,
-            totalCount: data.totalCount,
-            partA: data.language
+        this.log?.({
+            type: 'process',
+            message: `${data.title}`,
+            count: {
+                index: data.index,
+                total: data.totalCount
+            }
         });
     }
 
@@ -268,5 +279,3 @@ export class ExportContentItemHelper {
         return maps;
     }
 }
-
-export const exportContentItemHelper = new ExportContentItemHelper();

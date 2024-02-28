@@ -23,13 +23,19 @@ import {
 } from '../core/core.models.js';
 import { extractAssetIdFromUrl } from '../core/global-helper.js';
 import { idTranslateHelper } from './id-translate-helper.js';
-import { IMigrationItem, logDebug, logErrorAndExit, MigrationElementType } from '../core/index.js';
+import { IMigrationItem, Log, logErrorAndExit, MigrationElementType } from '../core/index.js';
 import colors from 'colors';
+
+export function getElementTranslationHelper(log?: Log): ElementTranslationHelper {
+    return new ElementTranslationHelper(log);
+}
 
 export class ElementTranslationHelper {
     private readonly linkCodenameAttributeName: string = 'data-manager-link-codename';
     private readonly dataNewWindowAttributeName: string = 'data-new-window';
     private readonly elementsBuilder = new LanguageVariantElementsBuilder();
+
+    constructor(private readonly log?: Log) {}
 
     /**
      * Elements transform used by Kontent.ai export adapter
@@ -105,10 +111,9 @@ export class ElementTranslationHelper {
                 const importedAsset = data.importedData.assets.find((s) => s.original.assetExternalId === assetId);
 
                 if (!importedAsset) {
-                    logDebug({
+                    this.log?.({
                         type: 'warning',
-                        message: `Could not find imported asset for asset with original id. Skipping asset.`,
-                        partA: assetId
+                        message: `Could not find imported asset for id '${colors.red(assetId)}'. Skipping asset.`
                     });
 
                     continue;
@@ -330,7 +335,7 @@ export class ElementTranslationHelper {
                         const linkText = this.extractTextFromLinkHtml(linkTag);
                         linkTag = linkText ?? '';
 
-                        logDebug({
+                        this.log?.({
                             type: 'warning',
                             message: `Could not find content item with id '${colors.red(
                                 id
@@ -341,7 +346,7 @@ export class ElementTranslationHelper {
                             )}'. Replacing link with plain text.`
                         });
                     } else {
-                        logDebug({
+                        this.log?.({
                             type: 'warning',
                             message: `Could not find content item with id '${colors.red(
                                 id
@@ -455,7 +460,7 @@ export class ElementTranslationHelper {
                     importedData.contentItems.find((m) => m.original.system.codename === codename)?.imported;
 
                 if (!contentItemWithGivenCodename) {
-                    logDebug({
+                    this.log?.({
                         type: 'warning',
                         message: `Could not find content item with codename '${colors.red(
                             codename
@@ -542,5 +547,3 @@ export class ElementTranslationHelper {
         return text.replace(/\s+/g, ' ');
     }
 }
-
-export const translationHelper = new ElementTranslationHelper();

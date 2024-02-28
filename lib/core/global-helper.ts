@@ -2,7 +2,7 @@ import { EnvironmentModels, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
 import colors from 'colors';
-import { logDebug, logErrorAndExit, logProcessingDebug } from './log-helper.js';
+import { Log, logErrorAndExit } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { IChunk, IErrorData, IProcessInChunksItemInfo } from './core.models.js';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
@@ -82,21 +82,8 @@ export function is404Error(error: any): boolean {
 export function handleError(error: any): void {
     const errorData = extractErrorData(error);
 
-    if (errorData.requestUrl) {
-        logDebug({
-            type: 'errorData',
-            message: errorData.requestUrl,
-            partA: 'Request Url'
-        });
-    }
-
-    if (errorData.requestData) {
-        logDebug({
-            type: 'errorData',
-            message: errorData.requestData,
-            partA: 'Request Data'
-        });
-    }
+    console.log(`${colors.red('Request url')}: ${errorData.requestUrl}`);
+    console.log(`${colors.red('Request data')}: ${errorData.requestData}`);
 
     logErrorAndExit({
         message: errorData.message
@@ -123,6 +110,7 @@ export function extractFilenameFromUrl(assetUrl: string): string {
 }
 
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
+    log: Log | undefined;
     items: TInputItem[];
     chunkSize: number;
     processFunc: (item: TInputItem) => Promise<TOutputItem>;
@@ -139,12 +127,13 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
 
                 if (data.itemInfo) {
                     const itemInfo = data.itemInfo(item);
-                    logProcessingDebug({
-                        index: processingIndex,
-                        totalCount: data.items.length,
-                        itemType: itemInfo.itemType,
-                        title: itemInfo.title,
-                        partA: itemInfo.partA
+                    data.log?.({
+                        count: {
+                            index: processingIndex,
+                            total: data.items.length
+                        },
+                        type: 'process',
+                        message: itemInfo.title
                     });
                 }
                 return data.processFunc(item).then((output) => {
@@ -202,13 +191,14 @@ export async function executeWithTrackingAsync<TResult>(data: {
 }
 
 export async function confirmImportAsync(data: {
+    log: Log | undefined;
     force: boolean;
     getEnvironmentInfo: () => Promise<EnvironmentModels.EnvironmentInformationModel>;
 }): Promise<void> {
     const targetEnvironment = await data.getEnvironmentInfo();
 
     if (data.force) {
-        logDebug({
+        data.log?.({
             type: 'info',
             message: `Skipping confirmation prompt due to the use of force param`
         });
@@ -222,7 +212,7 @@ export async function confirmImportAsync(data: {
         });
 
         if (!confirmed.confirm) {
-            logDebug({
+            data.log?.({
                 type: 'cancel',
                 message: `Confirmation refused. Exiting process.`
             });

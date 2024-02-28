@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { IExportTransformConfig, IMigrationItem, IMigrationAsset } from '../core/index.js';
+import { IExportTransformConfig, IMigrationItem, IMigrationAsset, Log } from '../core/index.js';
 import { IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
 
 export interface IExportAdapter {
@@ -34,4 +34,5 @@ export interface IKontentAiExportAdapterConfig {
     retryStrategy?: IRetryStrategyOptions;
     customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;
     transformConfig?: IExportTransformConfig;
+    log?: Log;
 }

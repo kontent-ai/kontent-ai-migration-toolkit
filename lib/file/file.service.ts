@@ -1,16 +1,20 @@
 import { promises } from 'fs';
-import { logDebug } from '../core/index.js';
+import colors from 'colors';
+import { Log } from '../core/index.js';
+
+export function getFileService(log?: Log): FileService {
+    return new FileService(log);
+}
 
 export class FileService {
-    constructor() {}
+    constructor(private readonly log?: Log) {}
 
     async loadFileAsync(filename: string): Promise<Buffer> {
         const filePath = this.getFilePath(filename);
 
-        logDebug({
+        this.log?.({
             type: 'readFs',
-            message: `Reading file system`,
-            partA: filePath
+            message: `Reading file '${colors.yellow(filePath)}'`
         });
 
         const file = await promises.readFile(filePath);
@@ -21,10 +25,9 @@ export class FileService {
     async writeFileAsync(fileNameWithoutExtension: string, content: any): Promise<void> {
         const filePath = this.getFilePath(fileNameWithoutExtension);
 
-        logDebug({
+        this.log?.({
             type: 'writeFs',
-            message: `Storing on file system`,
-            partA: filePath
+            message: `Storing file '${colors.yellow(filePath)}'`
         });
         await promises.writeFile(filePath, content);
     }

@@ -1,13 +1,13 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { logItemAction, logErrorAndExit, LogLevel, logDebug, IMigrationItem } from '../../core/index.js';
+import { logErrorAndExit, IMigrationItem, Log } from '../../core/index.js';
 import colors from 'colors';
 
-export function getImportWorkflowHelper(config: { logLevel: LogLevel }): ImportWorkflowHelper {
-    return new ImportWorkflowHelper(config.logLevel);
+export function getImportWorkflowHelper(log?: Log): ImportWorkflowHelper {
+    return new ImportWorkflowHelper(log);
 }
 
 export class ImportWorkflowHelper {
-    constructor(private readonly logLevel: LogLevel) {}
+    constructor(private readonly log?: Log) {}
 
     getWorkflowByCodename(workflowCodename: string, workflows: WorkflowModels.Workflow[]): WorkflowModels.Workflow {
         const workflow = workflows.find((m) => m.codename?.toLowerCase() === workflowCodename.toLowerCase());
@@ -15,7 +15,9 @@ export class ImportWorkflowHelper {
         if (!workflow) {
             const errorMessages: string[] = [
                 `Workflow with codename '${colors.red(workflowCodename)}' does not exist in target project`,
-                `Available workflows are (${workflows.length}): ${workflows.map((m) => colors.cyan(m.codename)).join(', ')}`
+                `Available workflows are (${workflows.length}): ${workflows
+                    .map((m) => colors.cyan(m.codename))
+                    .join(', ')}`
             ];
 
             throw Error(errorMessages.join('. '));
@@ -43,11 +45,9 @@ export class ImportWorkflowHelper {
         }
 
         if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
-            logItemAction(this.logLevel, 'publish', 'languageVariant', {
-                title: `${importContentItem.system.name}`,
-                language: importContentItem.system.language,
-                codename: importContentItem.system.codename,
-                workflowStep: importContentItem.system.workflow_step
+            this.log?.({
+                type: 'publish',
+                message: `${importContentItem.system.name}`
             });
 
             await managementClient
@@ -57,23 +57,20 @@ export class ImportWorkflowHelper {
                 .withoutData()
                 .toPromise();
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
-            logItemAction(this.logLevel, 'skip', 'languageVariant', {
-                title: `Skipping scheduled workflow step for item '${colors.yellow(importContentItem.system.name)}'`,
-                language: importContentItem.system.language,
-                codename: importContentItem.system.codename,
-                workflowStep: importContentItem.system.workflow_step
+            this.log?.({
+                type: 'skip',
+                message: `Skipping scheduled workflow step for item '${colors.yellow(importContentItem.system.name)}'`
             });
         } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
             // unpublish the language variant first if published
             // there is no way to determine if language variant is published via MAPI
             // so we have to always try unpublishing first and catching possible errors
             try {
-                logItemAction(this.logLevel, 'unpublish', 'languageVariant', {
-                    title: `${importContentItem.system.name}`,
-                    language: importContentItem.system.language,
-                    codename: importContentItem.system.codename,
-                    workflowStep: importContentItem.system.workflow_step
+                this.log?.({
+                    type: 'unpublish',
+                    message: `${importContentItem.system.name}`
                 });
+
                 await managementClient
                     .unpublishLanguageVariant()
                     .byItemCodename(importContentItem.system.codename)
@@ -82,23 +79,20 @@ export class ImportWorkflowHelper {
                     .toPromise();
             } catch (error) {
                 if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                    if (this.logLevel === 'verbose') {
-                        logDebug({
-                            type: 'info',
-                            message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
-                        });
-                    }
+                    this.log?.({
+                        type: 'unpublish',
+                        message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
+                    });
                 } else {
                     throw error;
                 }
             }
 
-            logItemAction(this.logLevel, 'archive', 'languageVariant', {
-                title: `${importContentItem.system.name}`,
-                language: importContentItem.system.language,
-                codename: importContentItem.system.codename,
-                workflowStep: importContentItem.system.workflow_step
+            this.log?.({
+                type: 'archive',
+                message: `${importContentItem.system.name}`
             });
+
             await managementClient
                 .changeWorkflowOfLanguageVariant()
                 .byItemCodename(importContentItem.system.codename)
@@ -116,11 +110,9 @@ export class ImportWorkflowHelper {
             if (workflow.codename === workflowStepCodename) {
                 // item is already in the target workflow step
             } else {
-                logItemAction(this.logLevel, 'changeWorkflowStep', 'languageVariant', {
-                    title: `${importContentItem.system.name}`,
-                    language: importContentItem.system.language,
-                    codename: importContentItem.system.codename,
-                    workflowStep: importContentItem.system.workflow_step
+                this.log?.({
+                    type: 'changeWorkflowStep',
+                    message: `${importContentItem.system.name}`
                 });
 
                 await managementClient

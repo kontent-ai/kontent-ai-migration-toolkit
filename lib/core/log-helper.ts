@@ -1,82 +1,58 @@
 import colors from 'colors';
+import ora, { Ora } from 'ora';
 
-import { ActionType, ItemType, LogLevel } from './core.models.js';
+import { ActionType } from './core.models.js';
 import { exitProcess } from './global-helper.js';
 
-export type DebugType = 'error' | 'warning' | 'info' | 'errorData' | 'cancel' | ActionType;
+export type Log = (data: {
+    type: DebugType;
+    message: string;
+    count?: {
+        index: number;
+        total: number;
+    };
+}) => void;
+
+export type DebugType = 'error' | 'completed' | 'warning' | 'info' | 'errorData' | 'cancel' | 'process' | ActionType;
 
 export function logErrorAndExit(data: { message: string }): never {
-    logDebug({
-        type: 'error',
-        message: data.message
-    });
+    console.log(`${colors.red('Error: ')} ${data.message}`);
     exitProcess();
 }
 
-export function logProcessingDebug(data: {
-    index: number;
-    totalCount: number;
-    itemType: ItemType;
-    title: string;
-    partA?: string;
-}): void {
-    console.log(
-        `[${colors.cyan(`${data.index}/${data.totalCount}`)}][${colors.yellow(data.itemType)}]${
-            data.partA ? `[${colors.green(data.partA)}]` : ''
-        }: ${data.title}`
-    );
+export async function withDefaultLogAsync(func: (log: Log) => Promise<void>): Promise<void> {
+    const spinner = ora('Processing ...').start();
+    const log = getDefaultLog(spinner);
+
+    await func(log);
+
+    spinner.clear();
+    spinner.stop();
 }
 
-export function logDebug(data: {
-    type: DebugType;
-    message: string;
-    partA?: string;
-    partB?: string;
-    partC?: string;
-    partD?: string;
-    performance?: string;
-}): void {
-    let typeColor: colors.Color = colors.green;
+function getDefaultLog(ora: Ora): Log {
+    return (data) => {
+        let typeColor = colors.yellow;
 
-    if (data.type === 'error' || data.type === 'errorData') {
-        typeColor = colors.red;
-    } else if (data.type === 'info') {
-        typeColor = colors.cyan;
-    } else if (data.type === 'warning') {
-        typeColor = colors.red;
-    } else if (data.type === 'cancel') {
-        typeColor = colors.red;
-    }
+        if (data.type === 'info') {
+            typeColor = colors.cyan;
+        } else if (
+            data.type === 'error' ||
+            data.type === 'errorData' ||
+            data.type === 'warning' ||
+            data.type === 'cancel'
+        ) {
+            typeColor = colors.red;
+        } else if (data.type === 'completed') {
+            typeColor = colors.green;
+        }
 
-    console.log(
-        `[${typeColor(data.type)}]${data.partA ? `[${colors.yellow(data.partA)}]` : ''}${
-            data.partB ? `[${colors.cyan(data.partB)}]` : ''
-        }${data.partC ? `[${colors.red(data.partC)}]` : ''}${data.partD ? `[${colors.yellow(data.partD)}]` : ''}${
-            data.performance ? `[${colors.bgYellow(colors.black(data.performance))}]` : ''
-        }: ${data.message}`
-    );
-}
-
-export function logItemAction(
-    logLevel: LogLevel,
-    actionType: ActionType,
-    itemType: ItemType,
-    data: {
-        language?: string;
-        workflowStep?: string;
-        workflow?: string;
-        title: string;
-        codename?: string;
-    }
-): void {
-    if (logLevel === 'verbose') {
-        logDebug({
-            type: actionType,
-            message: data.title,
-            partA: itemType,
-            partB: data.codename,
-            partC: data.language,
-            partD: data.workflow && data.workflowStep ? `${data.workflow}>${data.workflowStep}` : undefined
-        });
-    }
+        if (data.count) {
+            ora.text = `${typeColor(`${data.count.index}/${data.count.total}`)}: ${data.message}`;
+        } else {
+            const message = `${typeColor(data.type)}: ${data.message}`;
+            ora.clear();
+            console.log(message);
+        }
+    };
 }
