@@ -15,7 +15,7 @@ export class ImportWorkflowHelper {
         if (!workflow) {
             const errorMessages: string[] = [
                 `Workflow with codename '${colors.red(workflowCodename)}' does not exist in target project`,
-                `Available workflows are: ${workflows.map((m) => colors.cyan(m.codename)).join(', ')}`
+                `Available workflows are (${workflows.length}): ${workflows.map((m) => colors.cyan(m.codename)).join(', ')}`
             ];
 
             throw Error(errorMessages.join('. '));
@@ -85,7 +85,7 @@ export class ImportWorkflowHelper {
                     if (this.logLevel === 'verbose') {
                         logDebug({
                             type: 'info',
-                            message: `Unpublish failed, but this may be expected behavior as we cannot determine the published state of language variant. Error received: ${error.message}`
+                            message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
                         });
                     }
                 } else {
