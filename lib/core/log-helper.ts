@@ -45,7 +45,10 @@ function getDefaultLog(ora: Ora): Log {
             typeColor = colors.red;
         } else if (data.type === 'completed') {
             typeColor = colors.green;
+        } else if (data.type === 'skip') {
+            typeColor = colors.gray;
         }
+
 
         if (data.count) {
             ora.text = `${typeColor(`${data.count.index}/${data.count.total}`)}: ${data.message}`;
