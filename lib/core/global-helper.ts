@@ -1,8 +1,8 @@
-import { EnvironmentModels, SharedModels } from '@kontent-ai/management-sdk';
+import { ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
 import colors from 'colors';
-import { Log, logErrorAndExit } from './log-helper.js';
+import { Log, getLogForPrompt, logErrorAndExit } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { IChunk, IErrorData, IProcessInChunksItemInfo } from './core.models.js';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
@@ -82,12 +82,15 @@ export function is404Error(error: any): boolean {
 export function handleError(error: any): void {
     const errorData = extractErrorData(error);
 
-    console.log(`${colors.red('Request url')}: ${errorData.requestUrl}`);
-    console.log(`${colors.red('Request data')}: ${errorData.requestData}`);
+    if (errorData.requestData) {
+        console.log(`${colors.red('Request data')}: ${errorData.requestData}`);
+    }
 
-    logErrorAndExit({
-        message: errorData.message
-    });
+    if (errorData.requestUrl) {
+        console.log(`${colors.red('Request url')}: ${errorData.requestUrl}`);
+    }
+
+    console.log(`${colors.red('Error: ')} ${errorData.message}`);
 }
 
 export function extractAssetIdFromUrl(assetUrl: string): string {
@@ -191,14 +194,22 @@ export async function executeWithTrackingAsync<TResult>(data: {
 }
 
 export async function confirmImportAsync(data: {
-    log: Log | undefined;
     force: boolean;
-    getEnvironmentInfo: () => Promise<EnvironmentModels.EnvironmentInformationModel>;
+    environmentId: string;
+    apiKey: string;
 }): Promise<void> {
-    const targetEnvironment = await data.getEnvironmentInfo();
+    const log = getLogForPrompt();
+    const targetEnvironment = (
+        await new ManagementClient({
+            apiKey: data.apiKey,
+            environmentId: data.environmentId
+        })
+            .environmentInformation()
+            .toPromise()
+    ).data.project;
 
     if (data.force) {
-        data.log?.({
+        log({
             type: 'info',
             message: `Skipping confirmation prompt due to the use of force param`
         });
@@ -212,7 +223,7 @@ export async function confirmImportAsync(data: {
         });
 
         if (!confirmed.confirm) {
-            data.log?.({
+            log({
                 type: 'cancel',
                 message: `Confirmation refused. Exiting process.`
             });

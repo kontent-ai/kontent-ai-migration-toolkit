@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from 'fs';
+import colors from 'colors';
 import yargs from 'yargs';
 
 import {
@@ -25,7 +26,7 @@ import {
 } from '../../file-processor/index.js';
 import { ExportToolkit, IImportToolkitConfig, ImportToolkit } from '../../toolkit/index.js';
 import { IExportAdapter, KontentAiExportAdapter } from '../../export/index.js';
-import { ImportService, ImportSourceType } from '../../import/index.js';
+import { ImportSourceType } from '../../import/index.js';
 
 type Args = { [key: string]: string | unknown };
 
@@ -117,7 +118,7 @@ const exportAsync = async (config: ICliFileConfig) => {
             });
         } else {
             logErrorAndExit({
-                message: `Missing adapter '${config.adapter}'`
+                message: `Missing adapter '${colors.red(config.adapter)}'`
             });
         }
 
@@ -146,18 +147,27 @@ const exportAsync = async (config: ICliFileConfig) => {
 };
 
 const importAsync = async (config: ICliFileConfig) => {
-    await withDefaultLogAsync(async (log) => {
-        if (!config.managementApiKey) {
-            logErrorAndExit({
-                message: `Missing 'managementApiKey' configuration option`
-            });
-        }
-        if (!config.environmentId) {
-            logErrorAndExit({
-                message: `Missing 'environmentId' configuration option`
-            });
-        }
+    const managementApiKey = config.managementApiKey;
+    const environmentId = config.environmentId;
 
+    if (!managementApiKey) {
+        logErrorAndExit({
+            message: `Missing 'managementApiKey' configuration option`
+        });
+    }
+    if (!environmentId) {
+        logErrorAndExit({
+            message: `Missing 'environmentId' configuration option`
+        });
+    }
+
+    await confirmImportAsync({
+        force: config.force,
+        apiKey: managementApiKey,
+        environmentId: environmentId
+    });
+
+    await withDefaultLogAsync(async (log) => {
         const itemsFilename: string | undefined = config.itemsFilename;
         const assetsFilename: string | undefined = config.assetsFilename;
 
@@ -173,7 +183,7 @@ const importAsync = async (config: ICliFileConfig) => {
             sourceType = 'file';
         } else {
             logErrorAndExit({
-                message: `Unsupported file type '${itemsFileExtension}'`
+                message: `Unsupported file type '${colors.red(itemsFileExtension?.toString() ?? '')}'`
             });
         }
 
@@ -183,8 +193,8 @@ const importAsync = async (config: ICliFileConfig) => {
             skipFailedItems: config.skipFailedItems,
             baseUrl: config.baseUrl,
             contentItemsFetchMode: config.contentItemsFetchMode,
-            environmentId: config.environmentId,
-            managementApiKey: config.managementApiKey,
+            environmentId: environmentId,
+            managementApiKey: managementApiKey,
             canImport: {
                 contentItem: (item) => {
                     return true;
@@ -207,14 +217,6 @@ const importAsync = async (config: ICliFileConfig) => {
                 : undefined
         };
 
-        const importService = new ImportService(importToolkitConfig);
-
-        await confirmImportAsync({
-            log: log,
-            force: config.force,
-            getEnvironmentInfo: async () => await importService.getEnvironmentInfoAsync()
-        });
-
         const importToolkit = new ImportToolkit(importToolkitConfig);
 
         await importToolkit.importAsync();
@@ -232,7 +234,7 @@ const run = async () => {
         await importAsync(config);
     } else {
         logErrorAndExit({
-            message: `Invalid action '${config.action}'`
+            message: `Invalid action '${colors.red(config.action)}'`
         });
     }
 };
@@ -265,7 +267,7 @@ const getConfig = async () => {
     } else {
         if (action === 'export') {
             logErrorAndExit({
-                message: `Unsupported export format '${format}'`
+                message: `Unsupported export format '${colors.red(format ?? '')}'`
             });
         }
     }
@@ -327,7 +329,7 @@ function getAssetFormatService(format: ProcessingFormat | undefined): IAssetForm
     }
 
     logErrorAndExit({
-        message: `Unsupported format '${format}' for assets export`
+        message: `Unsupported format '${colors.red(format ?? '')}' for assets export`
     });
 }
 
@@ -345,7 +347,7 @@ function getItemFormatService(format: ProcessingFormat | undefined): IItemFormat
     }
 
     logErrorAndExit({
-        message: `Unsupported format '${format}' for items export`
+        message: `Unsupported format '${colors.red(format ?? '')}' for items export`
     });
 }
 
@@ -358,7 +360,7 @@ function getRequiredArgumentValue(args: Args, argName: string): string {
 
     if (!value) {
         logErrorAndExit({
-            message: `Missing '${argName}' argument value`
+            message: `Missing '${colors.red(argName)}' argument value`
         });
     }
 

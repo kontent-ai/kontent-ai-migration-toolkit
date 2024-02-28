@@ -4,7 +4,6 @@ import {
     ContentTypeElements,
     ContentTypeModels,
     ContentTypeSnippetModels,
-    EnvironmentModels,
     ManagementClient,
     WorkflowModels,
     createManagementClient
@@ -53,11 +52,6 @@ export class ImportService {
             log: this.config.log,
             skipFailedItems: config.skipFailedItems
         });
-    }
-
-    async getEnvironmentInfoAsync(): Promise<EnvironmentModels.EnvironmentInformationModel> {
-        const environmentInformation = (await this.managementClient.environmentInformation().toPromise()).data.project;
-        return environmentInformation;
     }
 
     async getImportContentTypesAsync(): Promise<IImportContentType[]> {
