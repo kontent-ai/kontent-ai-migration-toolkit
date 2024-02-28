@@ -26,8 +26,6 @@ export async function withDefaultLogAsync(func: (log: Log) => Promise<void>): Pr
     try {
         const log = getDefaultLog(spinner);
         await func(log);
-    } catch (error) {
-        throw error;
     } finally {
         spinner.clear();
         spinner.stop();
