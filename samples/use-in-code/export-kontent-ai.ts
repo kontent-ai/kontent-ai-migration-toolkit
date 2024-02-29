@@ -14,6 +14,9 @@ const run = async () => {
             // return only the items you want to export by applying filters, parameters etc..
             const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();
             return response.data.items;
+        },
+        log: (data) => {
+            console.log(`${data.type}: ${data.message}`);
         }
     });
 

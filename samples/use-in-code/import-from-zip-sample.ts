@@ -3,6 +3,10 @@ import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../lib/f
 
 const run = async () => {
     const importToolkit = new ImportToolkit({
+        sourceType: 'zip',
+        log: (data) => {
+            console.log(`${data.type}: ${data.message}`);
+        },
         environmentId: '<id>',
         managementApiKey: '<mapiKey>',
         skipFailedItems: false,
@@ -31,7 +35,7 @@ const run = async () => {
         }
     });
 
-    await importToolkit.importFromZipAsync();
+    await importToolkit.importAsync();
 };
 
 run();

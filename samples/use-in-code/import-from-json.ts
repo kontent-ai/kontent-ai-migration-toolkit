@@ -3,6 +3,10 @@ import { ItemJsonProcessorService } from '../../lib/file-processor/index.js';
 
 const run = async () => {
     const importToolkit = new ImportToolkit({
+        sourceType: 'file',
+        log: (data) => {
+            console.log(`${data.type}: ${data.message}`);
+        },
         environmentId: '<id>',
         managementApiKey: '<mapiKey>',
         skipFailedItems: false,
@@ -18,7 +22,7 @@ const run = async () => {
         }
     });
 
-    await importToolkit.importFromFileAsync();
+    await importToolkit.importAsync();
 };
 
 run();
