@@ -24,10 +24,9 @@ export function logErrorAndExit(data: { message: string }): never {
 
 export async function withDefaultLogAsync(func: (log: Log) => Promise<void>): Promise<void> {
     const spinner = ora('Processing ...');
-    let currentLogCount: ILogCount | undefined = undefined;
 
     try {
-        const log = getDefaultLog(spinner, currentLogCount);
+        const log = getDefaultLog(spinner);
         await func(log);
     } finally {
         spinner.stop();
@@ -40,7 +39,9 @@ export function getLogForPrompt(): Log {
     };
 }
 
-function getDefaultLog(ora: Ora, currentLogCount?: ILogCount): Log {
+function getDefaultLog(ora: Ora): Log {
+    let currentLogCount: ILogCount | undefined = undefined;
+
     return (data) => {
         const message = getLogDataMessage({
             message: data.message,
