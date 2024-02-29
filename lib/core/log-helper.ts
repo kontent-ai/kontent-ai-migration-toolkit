@@ -30,7 +30,7 @@ export async function withDefaultLogAsync(func: (log: Log) => Promise<void>): Pr
         const log = getDefaultLog(spinner, currentLogCount);
         await func(log);
     } finally {
-        spinner.stopAndPersist();
+        spinner.stop();
     }
 }
 
