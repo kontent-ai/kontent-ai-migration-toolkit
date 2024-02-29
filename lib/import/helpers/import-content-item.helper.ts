@@ -21,7 +21,7 @@ export function getImportContentItemHelper(config: {
 }
 
 export class ImportContentItemHelper {
-    private readonly importContentItemChunkSize: number = 3;
+    private readonly importContentItemChunkSize: number = 1;
 
     constructor(
         private readonly log: Log | undefined,
@@ -41,9 +41,9 @@ export class ImportContentItemHelper {
 
         this.log?.({
             type: 'skip',
-            message: `Skipping '${colors.yellow(
+            message: `Filtering '${colors.yellow(
                 categorizedParsedItems.componentItems.length.toString()
-            )}' because they represent component items`
+            )}' items because they represent component items`
         });
 
         let fetchedContentItems: ContentItemModels.ContentItem[] = [];
@@ -63,6 +63,11 @@ export class ImportContentItemHelper {
         }
 
         const preparedItems: ContentItemModels.ContentItem[] = [];
+
+        this.log?.({
+            type: 'info',
+            message: `Importing '${colors.yellow(data.migrationContentItems.length.toString())}' content items`
+        });
 
         for (const parsedItem of data.migrationContentItems) {
             if (!parsedItem.system.workflow || !parsedItem.system.workflow_step) {

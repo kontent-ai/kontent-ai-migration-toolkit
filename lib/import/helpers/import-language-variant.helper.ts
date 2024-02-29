@@ -29,7 +29,7 @@ export function getImportLanguageVariantstemHelper(config: {
 }
 
 export class ImportLanguageVariantHelper {
-    private readonly importContentItemChunkSize: number = 3;
+    private readonly importContentItemChunkSize: number = 1;
     private readonly importWorkflowHelper: ImportWorkflowHelper;
 
     constructor(private readonly log: Log | undefined, private readonly skipFailedItems: boolean) {
@@ -48,10 +48,10 @@ export class ImportLanguageVariantHelper {
         );
 
         this.log?.({
-            type: 'skip',
-            message: `Skipping '${colors.yellow(
-                categorizedParsedItems.componentItems.length.toString()
-            )}' because they represent components`
+            type: 'info',
+            message: `Importing '${colors.yellow(
+                categorizedParsedItems.regularItems.length.toString()
+            )}' language variants`
         });
 
         await processInChunksAsync<IMigrationItem, void>({

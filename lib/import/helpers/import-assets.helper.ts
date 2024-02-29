@@ -1,13 +1,15 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
 import { IImportedData, IMigrationAsset, Log, is404Error, processInChunksAsync } from '../../core/index.js';
 import mime from 'mime';
+import colors from 'colors';
 
 export function getImportAssetsHelper(log?: Log): ImportAssetsHelper {
     return new ImportAssetsHelper(log);
 }
 
 export class ImportAssetsHelper {
-    private readonly importAssetsChunkSize: number = 3;
+    private readonly importAssetsChunkSize: number = 1;
+    private readonly fetchAssetsChunkSize: number = 1;
 
     constructor(private readonly log?: Log) {}
 
@@ -16,9 +18,103 @@ export class ImportAssetsHelper {
         assets: IMigrationAsset[];
         importedData: IImportedData;
     }): Promise<void> {
+        this.log?.({
+            type: 'process',
+            message: `Categorizing '${colors.yellow(data.assets.length.toString())}' assets`
+        });
+        const filteredAssets = await this.getAssetsToUploadAsync({
+            assets: data.assets,
+            managementClient: data.managementClient
+        });
+
+        // add existing assets to imported data
+        data.importedData.assets.push(...filteredAssets.existingAssets);
+
+        this.log?.({
+            type: 'skip',
+            message: `Skipping '${colors.yellow(
+                filteredAssets.existingAssets.length.toString()
+            )}' as they already exist`
+        });
+
+        this.log?.({
+            type: 'process',
+            message: `Uploading '${colors.yellow(filteredAssets.assetsToUpload.length.toString())}' assets`
+        });
+
         await processInChunksAsync<IMigrationAsset, void>({
             log: this.log,
             chunkSize: this.importAssetsChunkSize,
+            items: filteredAssets.assetsToUpload,
+            itemInfo: (input) => {
+                return {
+                    itemType: 'asset',
+                    title: input.filename,
+                    partA: input.extension
+                };
+            },
+            processFunc: async (asset) => {
+                // only import asset if it didn't exist
+                this.log?.({
+                    type: 'upload',
+                    message: asset.filename
+                });
+
+                const uploadedBinaryFile = await data.managementClient
+                    .uploadBinaryFile()
+                    .withData({
+                        binaryData: asset.binaryData,
+                        contentType: mime.getType(asset.filename) ?? '',
+                        filename: asset.filename
+                    })
+                    .toPromise();
+
+                this.log?.({
+                    type: 'create',
+                    message: asset.filename
+                });
+
+                const createdAsset = await data.managementClient
+                    .addAsset()
+                    .withData((builder) => {
+                        return {
+                            file_reference: {
+                                id: uploadedBinaryFile.data.id,
+                                type: 'internal'
+                            },
+                            external_id: asset.assetExternalId
+                        };
+                    })
+                    .toPromise()
+                    .then((m) => m.data);
+
+                data.importedData.assets.push({
+                    imported: createdAsset,
+                    original: asset
+                });
+            }
+        });
+    }
+
+    private async getAssetsToUploadAsync(data: {
+        assets: IMigrationAsset[];
+        managementClient: ManagementClient;
+    }): Promise<{
+        assetsToUpload: IMigrationAsset[];
+        existingAssets: {
+            original: IMigrationAsset;
+            imported: AssetModels.Asset;
+        }[];
+    }> {
+        const assetsToUpload: IMigrationAsset[] = [];
+        const existingAssets: {
+            original: IMigrationAsset;
+            imported: AssetModels.Asset;
+        }[] = [];
+
+        await processInChunksAsync<IMigrationAsset, void>({
+            log: this.log,
+            chunkSize: this.fetchAssetsChunkSize,
             items: data.assets,
             itemInfo: (input) => {
                 return {
@@ -28,8 +124,6 @@ export class ImportAssetsHelper {
                 };
             },
             processFunc: async (asset) => {
-                const assetExternalId: string = asset.assetExternalId;
-
                 // check if asset with given external id already exists
                 let existingAsset: AssetModels.Asset | undefined;
 
@@ -38,7 +132,7 @@ export class ImportAssetsHelper {
                     // and such assets should not be imported again
                     existingAsset = await data.managementClient
                         .viewAsset()
-                        .byAssetExternalId(asset.assetExternalId)
+                        .byAssetId(asset.assetExternalId)
                         .toPromise()
                         .then((m) => m.data);
                 } catch (error) {
@@ -51,7 +145,7 @@ export class ImportAssetsHelper {
                     // check if asset with given external id was already created
                     existingAsset = await data.managementClient
                         .viewAsset()
-                        .byAssetExternalId(assetExternalId)
+                        .byAssetExternalId(asset.assetExternalId)
                         .toPromise()
                         .then((m) => m.data);
                 } catch (error) {
@@ -62,55 +156,19 @@ export class ImportAssetsHelper {
 
                 if (!existingAsset) {
                     // only import asset if it didn't exist
-                    this.log?.({
-                        type: 'upload',
-                        message: asset.filename
-                    });
-
-                    const uploadedBinaryFile = await data.managementClient
-                        .uploadBinaryFile()
-                        .withData({
-                            binaryData: asset.binaryData,
-                            contentType: mime.getType(asset.filename) ?? '',
-                            filename: asset.filename
-                        })
-                        .toPromise();
-
-                    this.log?.({
-                        type: 'create',
-                        message: asset.filename
-                    });
-
-                    const createdAsset = await data.managementClient
-                        .addAsset()
-                        .withData((builder) => {
-                            return {
-                                file_reference: {
-                                    id: uploadedBinaryFile.data.id,
-                                    type: 'internal'
-                                },
-                                external_id: assetExternalId
-                            };
-                        })
-                        .toPromise()
-                        .then((m) => m.data);
-
-                    data.importedData.assets.push({
-                        imported: createdAsset,
-                        original: asset
-                    });
+                    assetsToUpload.push(asset);
                 } else {
-                    data.importedData.assets.push({
+                    existingAssets.push({
                         imported: existingAsset,
                         original: asset
-                    });
-
-                    this.log?.({
-                        type: 'skip',
-                        message: asset.filename
                     });
                 }
             }
         });
+
+        return {
+            assetsToUpload: assetsToUpload,
+            existingAssets: existingAssets
+        };
     }
 }

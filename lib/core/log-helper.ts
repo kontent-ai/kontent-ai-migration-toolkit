@@ -3,13 +3,15 @@ import ora, { Ora } from 'ora';
 
 import { ActionType } from './core.models.js';
 
+interface ILogCount {
+    index: number;
+    total: number;
+}
+
 interface ILogData {
     type: DebugType;
     message: string;
-    count?: {
-        index: number;
-        total: number;
-    };
+    count?: ILogCount;
 }
 
 export type Log = (data: ILogData) => void;
@@ -21,14 +23,14 @@ export function logErrorAndExit(data: { message: string }): never {
 }
 
 export async function withDefaultLogAsync(func: (log: Log) => Promise<void>): Promise<void> {
-    const spinner = ora('Processing ...').start();
+    const spinner = ora('Processing ...');
+    let currentLogCount: ILogCount | undefined = undefined;
 
     try {
-        const log = getDefaultLog(spinner);
+        const log = getDefaultLog(spinner, currentLogCount);
         await func(log);
     } finally {
-        spinner.clear();
-        spinner.stop();
+        spinner.stopAndPersist();
     }
 }
 
@@ -38,15 +40,32 @@ export function getLogForPrompt(): Log {
     };
 }
 
-function getDefaultLog(ora: Ora): Log {
+function getDefaultLog(ora: Ora, currentLogCount?: ILogCount): Log {
     return (data) => {
-        const message = getLogDataMessage(data);
+        const message = getLogDataMessage({
+            message: data.message,
+            type: data.type,
+            count: data.count ?? currentLogCount
+        });
 
         if (data.count) {
+            currentLogCount = data.count;
+            if (data.count.index === 1) {
+                ora.start();
+            }
+
             ora.text = message;
+
+            if (data.count.index === data.count.total) {
+                currentLogCount = undefined;
+                ora.stop();
+            }
         } else {
-            ora.clear();
-            console.log(message);
+            if (currentLogCount) {
+                ora.text = message;
+            } else {
+                console.log(message);
+            }
         }
     };
 }

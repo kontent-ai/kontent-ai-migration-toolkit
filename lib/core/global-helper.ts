@@ -90,7 +90,7 @@ export function handleError(error: any): void {
         console.log(`${colors.red('Request url')}: ${errorData.requestUrl}`);
     }
 
-    console.log(`${colors.red('Error: ')} ${errorData.message}`);
+    console.log(`${colors.red('Error:')} ${errorData.message}`);
 }
 
 export function extractAssetIdFromUrl(assetUrl: string): string {

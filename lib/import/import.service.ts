@@ -109,10 +109,6 @@ export class ImportService {
                 // import order matters
                 // #1 Assets
                 if (dataToImport.importData.assets.length) {
-                    this.config.log?.({
-                        type: 'info',
-                        message: `Importing assets`
-                    });
                     await this.importAssetsHelper.importAssetsAsync({
                         managementClient: this.managementClient,
                         assets: dataToImport.importData.assets,
@@ -127,10 +123,6 @@ export class ImportService {
 
                 // #2 Content items
                 if (dataToImport.importData.items.length) {
-                    this.config.log?.({
-                        type: 'info',
-                        message: `Importing content items`
-                    });
                     await this.importMigrationContentItemAsync(dataToImport.importData.items, importedData);
                 } else {
                     this.config.log?.({
