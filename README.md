@@ -18,10 +18,10 @@ We recommend running data-ops with `npx`. Use `--help` anytime to get informatio
 options.
 
 ```bash
-npx kontent-ai-migration-toolkit --help
+npx @kontent-ai-consulting/content-model-accelerator --help
 
 # you can also install the package globally, or locally
-npm i kontent-ai-migration-toolkit -g
+npm i @kontent-ai-consulting/content-model-accelerator -g
 
 # with the package installed, you can call the tool as follows
 kontent-ai-migration-toolkit --help
