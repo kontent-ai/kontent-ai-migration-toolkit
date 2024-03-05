@@ -34,8 +34,7 @@ export interface IMigrationItem {
 
 export interface IMigrationAsset {
     binaryData: Buffer | Blob | undefined;
-    assetExternalId: string;
+    assetId: string;
     filename: string;
     extension: string;
-    url: string;
 }

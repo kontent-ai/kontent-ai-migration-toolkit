@@ -1,29 +1,110 @@
 import { IContentItem, IContentType, ElementType, Elements } from '@kontent-ai/delivery-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
 import {
-    extractAssetIdFromUrl,
     getExtension,
     extractFilenameFromUrl,
     defaultRetryStrategy,
     processInChunksAsync,
     IMigrationAsset,
-    Log
+    Log,
+    getAssetUrlPath
 } from '../../../../core/index.js';
 import colors from 'colors';
+import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
 
-type ExportAssetWithoutBinaryData = Omit<IMigrationAsset, 'binaryData'>;
+type ExportAssetWithoutBinaryData = {
+    filename: string;
+    extension: string;
+    url: string;
+};
 
-export function getExportAssetsHelper(log?: Log): ExportAssetsHelper {
-    return new ExportAssetsHelper(log);
+type ExportAssetWithBinaryData = {
+    binaryData: Buffer | Blob | undefined;
+    filename: string;
+    extension: string;
+    url: string;
+};
+
+interface IExtractAssetsResult {
+    migrationAssets: IMigrationAsset[];
+    allAssets: AssetModels.Asset[];
+}
+
+export function getExportAssetsHelper(managementClient: ManagementClient, log?: Log): ExportAssetsHelper {
+    return new ExportAssetsHelper(managementClient, log);
 }
 
 export class ExportAssetsHelper {
     private readonly downloadAssetBinaryDataChunkSize: number = 10;
     private readonly httpService: HttpService = new HttpService();
 
-    constructor(private readonly log?: Log) {}
+    constructor(private readonly managementClient: ManagementClient, private readonly log?: Log) {}
 
-    async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IMigrationAsset[]> {
+    async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IExtractAssetsResult> {
+        const assetsWithBinaryData = await this.getAssetsWithBinaryDataAsync(items, types);
+        return await this.getMigrationAssetsAsync(assetsWithBinaryData);
+    }
+
+    private async getMigrationAssetsAsync(
+        assetsWithBinaryData: ExportAssetWithBinaryData[]
+    ): Promise<IExtractAssetsResult> {
+        this.log?.console?.({
+            type: 'info',
+            message: `Preparing to list all assets metadata for id transformation`
+        });
+
+        this.log?.spinner?.start();
+        const managementAssets = (
+            await this.managementClient
+                .listAssets()
+                .withListQueryConfig({
+                    responseFetched: (response, token) => {
+                        this?.log?.spinner?.text?.({
+                            type: 'fetch',
+                            message: `Fetched '${colors.yellow(response.data.items.length.toString())}' asset records`
+                        });
+                    }
+                })
+                .toAllPromise()
+        ).data;
+        this.log?.spinner?.stop();
+
+        this.log?.console?.({
+            type: 'info',
+            message: `Fetched '${colors.yellow(
+                managementAssets.items.length.toString()
+            )}' asset records. Starting id transform.`
+        });
+
+        const migrationAssets: IMigrationAsset[] = [];
+
+        for (const assetWithBinaryData of assetsWithBinaryData) {
+            const assetUrlPath = getAssetUrlPath(assetWithBinaryData.url).toLowerCase();
+
+            const managementAsset = managementAssets.items.find(
+                (m) => getAssetUrlPath(m.url).toLowerCase() === assetUrlPath
+            );
+
+            if (!managementAsset) {
+                throw Error(`Could not find asset for url '${colors.red(assetWithBinaryData.url)}'`);
+            }
+
+            migrationAssets.push({
+                ...assetWithBinaryData,
+                assetId: managementAsset.id
+            });
+        }
+
+        return {
+            migrationAssets: migrationAssets,
+            allAssets: managementAssets.items
+        };
+    }
+
+    private async getAssetsWithBinaryDataAsync(
+        items: IContentItem[],
+        types: IContentType[]
+    ): Promise<ExportAssetWithBinaryData[]> {
         const extractedAssets: ExportAssetWithoutBinaryData[] = [];
 
         for (const type of types) {
@@ -42,7 +123,6 @@ export class ExportAssetsHelper {
                                 ...assetElement.value.map((m) => {
                                     const asset: ExportAssetWithoutBinaryData = {
                                         url: m.url,
-                                        assetExternalId: extractAssetIdFromUrl(m.url),
                                         filename: extractFilenameFromUrl(m.url),
                                         extension: getExtension(m.url) ?? ''
                                     };
@@ -61,7 +141,6 @@ export class ExportAssetsHelper {
                                 ...richTextElement.images.map((m) => {
                                     const asset: ExportAssetWithoutBinaryData = {
                                         url: m.url,
-                                        assetExternalId: extractAssetIdFromUrl(m.url),
                                         filename: extractFilenameFromUrl(m.url),
                                         extension: getExtension(m.url) ?? ''
                                     };
@@ -85,9 +164,9 @@ export class ExportAssetsHelper {
             message: `Preparing to download '${colors.yellow(uniqueAssets.length.toString())}' assets`
         });
 
-        const exportedAssets: IMigrationAsset[] = await processInChunksAsync<
+        const exportedAssets: ExportAssetWithBinaryData[] = await processInChunksAsync<
             ExportAssetWithoutBinaryData,
-            IMigrationAsset
+            ExportAssetWithBinaryData
         >({
             log: this.log,
             type: 'asset',
@@ -100,7 +179,7 @@ export class ExportAssetsHelper {
             },
             items: uniqueAssets,
             processFunc: async (item) => {
-                const exportAsset: IMigrationAsset = {
+                const exportAsset: ExportAssetWithBinaryData = {
                     ...item,
                     binaryData: (await this.getBinaryDataFromUrlAsync(item.url)).data
                 };

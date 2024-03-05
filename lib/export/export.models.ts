@@ -22,7 +22,7 @@ export interface IExportFilter {
 
 export interface IKontentAiExportAdapterConfig {
     environmentId: string;
-    managementApiKey?: string;
+    managementApiKey: string;
     secureApiKey?: string;
     previewApiKey?: string;
     isPreview: boolean;

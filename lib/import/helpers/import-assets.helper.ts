@@ -85,7 +85,7 @@ export class ImportAssetsHelper {
                                 id: uploadedBinaryFile.data.id,
                                 type: 'internal'
                             },
-                            external_id: asset.assetExternalId
+                            external_id: asset.assetId
                         };
                     })
                     .toPromise()
@@ -136,7 +136,7 @@ export class ImportAssetsHelper {
                     // and such assets should not be imported again
                     existingAsset = await data.managementClient
                         .viewAsset()
-                        .byAssetId(asset.assetExternalId)
+                        .byAssetId(asset.assetId)
                         .toPromise()
                         .then((m) => m.data);
                 } catch (error) {
@@ -149,7 +149,7 @@ export class ImportAssetsHelper {
                     // check if asset with given external id was already created
                     existingAsset = await data.managementClient
                         .viewAsset()
-                        .byAssetExternalId(asset.assetExternalId)
+                        .byAssetExternalId(asset.assetId)
                         .toPromise()
                         .then((m) => m.data);
                 } catch (error) {

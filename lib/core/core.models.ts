@@ -110,6 +110,7 @@ export type ExportTransformFunc = (data: {
     item: IContentItem;
     items: IContentItem[];
     types: IContentType[];
+    assets: AssetModels.Asset[];
     config: IExportTransformConfig;
 }) => string | string[] | undefined;
 

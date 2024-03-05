@@ -6,6 +6,7 @@ import { ExportToolkit } from '../../lib/toolkit/export-toolkit.class.js';
 const run = async () => {
     const adapter = new KontentAiExportAdapter({
         environmentId: '<id>',
+        managementApiKey: '<apiKey>',
         exportAssets: true,
         isPreview: false,
         isSecure: false,

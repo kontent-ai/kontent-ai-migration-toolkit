@@ -5,44 +5,54 @@ import {
     processInChunksAsync,
     IMigrationItem,
     IMigrationElement,
-    Log
+    Log,
 } from '../../../../core/index.js';
 import { IKontentAiExportAdapterConfig } from '../../../export.models.js';
 import { getElementTranslationHelper } from '../../../../translation/index.js';
 import colors from 'colors';
+import { AssetModels } from '@kontent-ai/management-sdk';
 
 interface ITypeLanguageMap {
     language: ILanguage;
     type: IContentType;
 }
 
-export function getExportContentItemHelper(log?: Log): ExportContentItemHelper {
-    return new ExportContentItemHelper(log);
+export function getExportContentItemHelper(deliveryClient: IDeliveryClient, log?: Log): ExportContentItemHelper {
+    return new ExportContentItemHelper(deliveryClient, log);
 }
 
 export class ExportContentItemHelper {
     private readonly fetchCountForTypesChunkSize: number = 100;
     private readonly exportContentItemsChunkSize: number = 100;
 
-    constructor(private readonly log?: Log) {}
+    constructor(private readonly deliveryClient: IDeliveryClient, private readonly log?: Log) {}
 
-    async exportContentItemsAsync(
-        deliveryClient: IDeliveryClient,
-        config: IKontentAiExportAdapterConfig,
-        types: IContentType[],
-        languages: ILanguage[]
-    ): Promise<{ exportContentItems: IMigrationItem[]; deliveryContentItems: IContentItem[] }> {
-        const typesToExport: IContentType[] = this.getTypesToExport(config, types);
-        const languagesToExport: ILanguage[] = this.getLanguagesToExport(config, languages);
+    mapToMigrationItems(data: {
+        config: IKontentAiExportAdapterConfig;
+        items: IContentItem[];
+        types: IContentType[];
+        assets: AssetModels.Asset[];
+        languages: ILanguage[];
+    }): IMigrationItem[] {
+        return data.items.map((m) => this.maptoExportContentItem(m, data.items, data.types, data.assets, data.config));
+    }
+
+    async exportContentItemsAsync(data: {
+        config: IKontentAiExportAdapterConfig;
+        types: IContentType[];
+        languages: ILanguage[];
+    }): Promise<{ deliveryContentItems: IContentItem[] }> {
+        const typesToExport: IContentType[] = this.getTypesToExport(data.config, data.types);
+        const languagesToExport: ILanguage[] = this.getLanguagesToExport(data.config, data.languages);
         const contentItems: IContentItem[] = [];
 
-        if (config.customItemsExport) {
+        if (data.config.customItemsExport) {
             this.log?.console?.({
                 type: 'info',
                 message: `Using custom items export`
             });
 
-            const customItems = await config.customItemsExport(deliveryClient);
+            const customItems = await data.config.customItemsExport(this.deliveryClient);
 
             for (const contentItem of customItems) {
                 this.log?.console?.({
@@ -66,7 +76,6 @@ export class ExportContentItemHelper {
 
             const totalItemsToExport: number = await this.getTotalNumberOfItemsToExportAsync({
                 typesToExport: typesToExport,
-                deliveryClient: deliveryClient,
                 languagesToExport: languagesToExport
             });
             let exportedItemsCount: number = 0;
@@ -88,7 +97,7 @@ export class ExportContentItemHelper {
                 chunkSize: this.exportContentItemsChunkSize,
                 items: typeLanguageMaps,
                 processFunc: async (typeLanguageMap) => {
-                    await deliveryClient
+                    await this.deliveryClient
                         .itemsFeed()
                         .type(typeLanguageMap.type.system.codename)
                         .equalsFilter('system.language', typeLanguageMap.language.system.codename)
@@ -127,13 +136,11 @@ export class ExportContentItemHelper {
         }
 
         return {
-            deliveryContentItems: contentItems,
-            exportContentItems: contentItems.map((m) => this.maptoExportContentItem(m, contentItems, types, config))
+            deliveryContentItems: contentItems
         };
     }
 
     private async getTotalNumberOfItemsToExportAsync(data: {
-        deliveryClient: IDeliveryClient;
         languagesToExport: ILanguage[];
         typesToExport: IContentType[];
     }): Promise<number> {
@@ -153,7 +160,7 @@ export class ExportContentItemHelper {
             items: data.typesToExport,
             processFunc: async (type) => {
                 for (const language of data.languagesToExport) {
-                    const response = await data.deliveryClient
+                    const response = await this.deliveryClient
                         .items()
                         .type(type.system.codename)
                         .equalsFilter('system.language', language.system.codename)
@@ -173,6 +180,7 @@ export class ExportContentItemHelper {
         item: IContentItem,
         items: IContentItem[],
         types: IContentType[],
+        assets: AssetModels.Asset[],
         config: IKontentAiExportAdapterConfig
     ): IMigrationItem {
         const translationHelper = getElementTranslationHelper(this.log);
@@ -199,7 +207,8 @@ export class ExportContentItemHelper {
                         element: element,
                         item: item,
                         items: items,
-                        types: types
+                        types: types,
+                        assets: assets
                     }),
                     type: element.type as MigrationElementType
                 };

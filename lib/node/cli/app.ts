@@ -103,6 +103,12 @@ const exportAsync = async (config: ICliFileConfig) => {
                 });
             }
 
+            if (!config.managementApiKey) {
+                logErrorAndExit({
+                    message: `Invalid 'managementApiKey'`
+                });
+            }
+
             adapter = new KontentAiExportAdapter({
                 log: log,
                 environmentId: config.environmentId,

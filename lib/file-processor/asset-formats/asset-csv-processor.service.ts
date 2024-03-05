@@ -26,7 +26,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
 
         for (const exportAsset of data.assets) {
             await data.zip.addFile(
-                this.getAssetZipFilename(exportAsset.assetExternalId, exportAsset.extension),
+                this.getAssetZipFilename(exportAsset.assetId, exportAsset.extension),
                 exportAsset.binaryData
             );
         }
@@ -57,10 +57,9 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
             } else {
                 // process data row
                 const parsedAsset: IMigrationAsset = {
-                    assetExternalId: '',
+                    assetId: '',
                     extension: '',
                     filename: '',
-                    url: '',
                     binaryData: undefined
                 };
 
@@ -73,7 +72,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
 
                 // add binary data to record
                 parsedAsset.binaryData = await data.zip.getBinaryDataAsync(
-                    this.getAssetZipFilename(parsedAsset.assetExternalId, parsedAsset.extension)
+                    this.getAssetZipFilename(parsedAsset.assetId, parsedAsset.extension)
                 );
 
                 parsedAssets.push(parsedAsset);

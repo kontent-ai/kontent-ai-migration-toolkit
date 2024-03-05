@@ -2,7 +2,7 @@ import { ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
 import colors from 'colors';
-import { Log, logErrorAndExit, withDefaultLogAsync } from './log-helper.js';
+import { Log, withDefaultLogAsync } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
 import { IChunk, IErrorData, IProcessInChunksItemInfo, ItemType } from './core.models.js';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
@@ -106,17 +106,8 @@ export function handleError(error: any): void {
     console.error(`${colors.red('Error:')} ${errorData.message}`);
 }
 
-export function extractAssetIdFromUrl(assetUrl: string): string {
-    const url = new URL(assetUrl);
-    const splitPaths = url.pathname.split('/');
-
-    if (splitPaths.length < 3) {
-        logErrorAndExit({
-            message: `Invalid asset url '${assetUrl}' because asset id could not be determined`
-        });
-    }
-
-    return splitPaths[2];
+export function getAssetUrlPath(url: string): string {
+    return new URL(url).pathname;
 }
 
 export function extractFilenameFromUrl(assetUrl: string): string {

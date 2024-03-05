@@ -8,6 +8,7 @@ import {
 import { validate } from 'uuid';
 import uuidByString from 'uuid-by-string';
 import {
+    AssetModels,
     ContentItemModels,
     ElementContracts,
     LanguageVariantElements,
@@ -21,9 +22,8 @@ import {
     ImportTransformFunc,
     IRichTextExportConfig
 } from '../core/core.models.js';
-import { extractAssetIdFromUrl } from '../core/global-helper.js';
 import { idTranslateHelper } from './id-translate-helper.js';
-import { IMigrationItem, Log, logErrorAndExit, MigrationElementType } from '../core/index.js';
+import { getAssetUrlPath, IMigrationItem, Log, logErrorAndExit, MigrationElementType } from '../core/index.js';
 import colors from 'colors';
 
 export function getElementTranslationHelper(log?: Log): ElementTranslationHelper {
@@ -56,7 +56,21 @@ export class ElementTranslationHelper {
         },
         asset: (data) => {
             const mappedElement = data.element as Elements.AssetsElement;
-            return mappedElement.value.map((m) => m.url);
+            const assetIds: string[] = [];
+
+            for (const asset of mappedElement.value) {
+                const fullAssetByUrl = data.assets.find(
+                    (m) => getAssetUrlPath(m.url).toLowerCase() === getAssetUrlPath(asset.url).toLowerCase()
+                );
+
+                if (!fullAssetByUrl) {
+                    throw Error(`Missing asset metadata for url '${colors.red(asset.url)}'`);
+                }
+
+                assetIds.push(fullAssetByUrl.id);
+            }
+
+            return assetIds;
         },
         taxonomy: (data) => {
             const mappedElement = data.element as Elements.TaxonomyElement;
@@ -104,11 +118,9 @@ export class ElementTranslationHelper {
         asset: (data) => {
             const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
 
-            for (const assetUrl of this.parseArrayValue(data.value)) {
-                const assetId = extractAssetIdFromUrl(assetUrl);
-
+            for (const assetId of this.parseArrayValue(data.value)) {
                 // find id of imported asset
-                const importedAsset = data.importedData.assets.find((s) => s.original.assetExternalId === assetId);
+                const importedAsset = data.importedData.assets.find((s) => s.original.assetId === assetId);
 
                 if (!importedAsset) {
                     this.log?.console?.({
@@ -262,6 +274,7 @@ export class ElementTranslationHelper {
         item: IContentItem;
         items: IContentItem[];
         types: IContentType[];
+        assets: AssetModels.Asset[];
         config: IExportTransformConfig;
     }): string | string[] | undefined {
         const transformFunc = this.exportTransforms[data.element.type];

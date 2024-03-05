@@ -5,6 +5,7 @@ import { defaultHttpService, defaultRetryStrategy } from '../../../core/global-h
 import { getExportAssetsHelper } from './helpers/export-assets.helper.js';
 import { IMigrationAsset } from '../../../core/index.js';
 import { getExportContentItemHelper } from './helpers/export-content-item.helper.js';
+import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
 
 export class KontentAiExportAdapter implements IExportAdapter {
     public readonly name: string = 'kontentAi';
@@ -26,32 +27,43 @@ export class KontentAiExportAdapter implements IExportAdapter {
         });
 
         const deliveryClient = this.getDeliveryClient();
+        const managementClient = this.getManagementClient();
 
         const allTypes = await this.getAllContentTypesAsync(deliveryClient);
         const allLanguages = await this.getAllLanguagesAsync(deliveryClient);
-        const exportAssetsHelper = getExportAssetsHelper(this.config.log);
+        const exportAssetsHelper = getExportAssetsHelper(managementClient, this.config.log);
+        const exportContentItemsHelper = getExportContentItemHelper(deliveryClient, this.config.log);
 
-        const contentItemsResult = await getExportContentItemHelper(this.config.log).exportContentItemsAsync(
-            deliveryClient,
-            this.config,
-            allTypes,
-            allLanguages
-        );
+        const { deliveryContentItems } = await exportContentItemsHelper.exportContentItemsAsync({
+            config: this.config,
+            languages: allLanguages,
+            types: allTypes
+        });
 
-        const assets: IMigrationAsset[] = [];
+        const _migrationAssets: IMigrationAsset[] = [];
+        const _allAssets: AssetModels.Asset[] = [];
 
         if (this.config.exportAssets) {
             this.config.log?.console?.({ type: 'info', message: `Extracting assets referenced by content items` });
-            assets.push(
-                ...(await exportAssetsHelper.extractAssetsAsync(contentItemsResult.deliveryContentItems, allTypes))
+            const { allAssets, migrationAssets } = await exportAssetsHelper.extractAssetsAsync(
+                deliveryContentItems,
+                allTypes
             );
+            _migrationAssets.push(...migrationAssets);
+            _allAssets.push(...allAssets);
         } else {
             this.config.log?.console?.({ type: 'info', message: `Assets export is disabled` });
         }
 
         return {
-            items: contentItemsResult.exportContentItems,
-            assets: assets
+            items: exportContentItemsHelper.mapToMigrationItems({
+                config: this.config,
+                items: deliveryContentItems,
+                languages: allLanguages,
+                types: allTypes,
+                assets: _allAssets
+            }),
+            assets: _migrationAssets
         };
     }
 
@@ -81,6 +93,17 @@ export class KontentAiExportAdapter implements IExportAdapter {
             proxy: {
                 baseUrl: this.config.baseUrl
             }
+        });
+    }
+
+    private getManagementClient(): ManagementClient {
+        const retryStrategy = this.config.retryStrategy ?? defaultRetryStrategy;
+
+        return new ManagementClient({
+            environmentId: this.config.environmentId,
+            retryStrategy: retryStrategy,
+            httpService: defaultHttpService,
+            apiKey: this.config.managementApiKey
         });
     }
 }

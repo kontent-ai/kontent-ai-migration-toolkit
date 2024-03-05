@@ -31,7 +31,7 @@ export class IdTranslateHelper {
             ...importedData.assets.map((m) => {
                 const flattened: IFlattenedImportData = {
                     importedId: m.imported.id,
-                    originalId: m.original.assetExternalId
+                    originalId: m.original.assetId
                 };
 
                 return flattened;
