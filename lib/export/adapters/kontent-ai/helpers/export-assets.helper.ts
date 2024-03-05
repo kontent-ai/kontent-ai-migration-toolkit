@@ -50,7 +50,7 @@ export class ExportAssetsHelper {
     ): Promise<IExtractAssetsResult> {
         this.log?.console?.({
             type: 'info',
-            message: `Preparing to list all assets metadata for id transformation`
+            message: `Preparing to list all assets records for id translation (Asset url -> Asset id)`
         });
 
         this.log?.spinner?.start();
