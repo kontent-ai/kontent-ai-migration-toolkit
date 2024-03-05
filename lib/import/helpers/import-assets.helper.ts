@@ -18,8 +18,8 @@ export class ImportAssetsHelper {
         assets: IMigrationAsset[];
         importedData: IImportedData;
     }): Promise<void> {
-        this.log?.({
-            type: 'process',
+        this.log?.console?.({
+            type: 'info',
             message: `Categorizing '${colors.yellow(data.assets.length.toString())}' assets`
         });
         const filteredAssets = await this.getAssetsToUploadAsync({
@@ -30,20 +30,23 @@ export class ImportAssetsHelper {
         // add existing assets to imported data
         data.importedData.assets.push(...filteredAssets.existingAssets);
 
-        this.log?.({
-            type: 'skip',
-            message: `Skipping '${colors.yellow(
-                filteredAssets.existingAssets.length.toString()
-            )}' as they already exist`
-        });
+        if (filteredAssets.existingAssets.length) {
+            this.log?.console?.({
+                type: 'skip',
+                message: `Skipping upload for '${colors.yellow(
+                    filteredAssets.existingAssets.length.toString()
+                )}' assets as they already exist`
+            });
+        }
 
-        this.log?.({
-            type: 'process',
+        this.log?.console?.({
+            type: 'upload',
             message: `Uploading '${colors.yellow(filteredAssets.assetsToUpload.length.toString())}' assets`
         });
 
         await processInChunksAsync<IMigrationAsset, void>({
             log: this.log,
+            type: 'asset',
             chunkSize: this.importAssetsChunkSize,
             items: filteredAssets.assetsToUpload,
             itemInfo: (input) => {
@@ -55,7 +58,7 @@ export class ImportAssetsHelper {
             },
             processFunc: async (asset) => {
                 // only import asset if it didn't exist
-                this.log?.({
+                this.log?.spinner?.text?.({
                     type: 'upload',
                     message: asset.filename
                 });
@@ -69,7 +72,7 @@ export class ImportAssetsHelper {
                     })
                     .toPromise();
 
-                this.log?.({
+                this.log?.spinner?.text?.({
                     type: 'create',
                     message: asset.filename
                 });
@@ -114,6 +117,7 @@ export class ImportAssetsHelper {
 
         await processInChunksAsync<IMigrationAsset, void>({
             log: this.log,
+            type: 'asset',
             chunkSize: this.fetchAssetsChunkSize,
             items: data.assets,
             itemInfo: (input) => {

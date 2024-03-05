@@ -15,8 +15,10 @@ const run = async () => {
             const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();
             return response.data.items;
         },
-        log: (data) => {
-            console.log(`${data.type}: ${data.message}`);
+        log: {
+            console: (data) => {
+                console.log(data.message);
+            }
         }
     });
 

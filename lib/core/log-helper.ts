@@ -1,7 +1,7 @@
 import colors from 'colors';
-import ora, { Ora } from 'ora';
 
-import { ActionType } from './core.models.js';
+import { ActionType, ItemType } from './core.models.js';
+import ora from 'ora';
 
 interface ILogCount {
     index: number;
@@ -14,64 +14,64 @@ interface ILogData {
     count?: ILogCount;
 }
 
-export type Log = (data: ILogData) => void;
+export type Log = {
+    spinner?: Spinner;
+    console: Console;
+};
+export type Spinner = {
+    start: () => void;
+    stop: () => void;
+    text: (data: ILogData) => void;
+};
+export type Console = (data: ILogData) => void;
 
-export type DebugType = 'error' | 'completed' | 'warning' | 'info' | 'errorData' | 'cancel' | 'process' | ActionType;
+export type DebugType =
+    | 'error'
+    | 'completed'
+    | 'warning'
+    | 'info'
+    | 'errorData'
+    | 'cancel'
+    | 'process'
+    | ActionType
+    | ItemType;
 
 export function logErrorAndExit(data: { message: string }): never {
     throw Error(data.message);
 }
 
 export async function withDefaultLogAsync(func: (log: Log) => Promise<void>): Promise<void> {
-    const spinner = ora('Processing ...');
-
-    try {
-        const log = getDefaultLog(spinner);
-        await func(log);
-    } finally {
-        spinner.stop();
-    }
+    const log = getDefaultLog();
+    await func(log);
 }
 
-export function getLogForPrompt(): Log {
-    return (data) => {
-        console.log(getLogDataMessage(data));
-    };
-}
+function getDefaultLog(): Log {
+    const spinner = ora();
+    let previousCount: ILogCount | undefined = undefined;
 
-function getDefaultLog(ora: Ora): Log {
-    let currentLogCount: ILogCount | undefined = undefined;
+    return {
+        console: (data) => console.log(getLogDataMessage(data)),
+        spinner: {
+            start: () => spinner.start(),
+            stop: () => spinner.stop(),
+            text: (data) => {
+                if (data.count) {
+                    previousCount = data.count;
+                }
 
-    return (data) => {
-        const message = getLogDataMessage({
-            message: data.message,
-            type: data.type,
-            count: data.count ?? currentLogCount
-        });
+                const message = getLogDataMessage({
+                    message: data.message,
+                    type: data.type,
+                    count: data.count ?? previousCount
+                });
 
-        if (data.count) {
-            currentLogCount = data.count;
-            if (data.count.index === 1) {
-                ora.start();
-            }
-
-            ora.text = message;
-
-            if (data.count.index === data.count.total) {
-                currentLogCount = undefined;
-                ora.stop();
-            }
-        } else {
-            if (currentLogCount) {
-                ora.text = message;
-            } else {
-                console.log(message);
+                spinner.text = message;
             }
         }
     };
 }
 
-function getLogDataMessage(data: ILogData): string {
+export function getLogDataMessage(data: ILogData): string {
     let typeColor = colors.yellow;
 
     if (data.type === 'info') {
@@ -90,7 +90,7 @@ function getLogDataMessage(data: ILogData): string {
     }
 
     if (data.count) {
-        return `${typeColor(`${data.count.index}/${data.count.total}`)}: ${data.message}`;
+        return `${typeColor(`${data.count.index}/${data.count.total}`)}: ${data.message} ${colors.cyan(data.type)} `;
     }
     return `${typeColor(data.type)}: ${data.message}`;
 }

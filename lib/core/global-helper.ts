@@ -2,11 +2,12 @@ import { ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
 import colors from 'colors';
-import { Log, getLogForPrompt, logErrorAndExit } from './log-helper.js';
+import { Log, logErrorAndExit, withDefaultLogAsync } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
-import { IChunk, IErrorData, IProcessInChunksItemInfo } from './core.models.js';
+import { IChunk, IErrorData, IProcessInChunksItemInfo, ItemType } from './core.models.js';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
 import prompts from 'prompts';
+import { DeliveryError } from '@kontent-ai/delivery-sdk';
 
 const rateExceededErrorCode: number = 10000;
 
@@ -45,11 +46,13 @@ export function getExtension(url: string): string | undefined {
 }
 
 export function extractErrorData(error: any): IErrorData {
+    let isUnknownError: boolean = true;
     let message: string = `Unknown error`;
     let requestUrl: string | undefined = undefined;
     let requestData: string | undefined = undefined;
 
     if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+        isUnknownError = false;
         message = `${error.message}`;
         requestUrl = error.originalError?.response?.config.url;
         requestData = error.originalError?.response?.config.data;
@@ -57,14 +60,20 @@ export function extractErrorData(error: any): IErrorData {
         for (const validationError of error.validationErrors) {
             message += ` ${validationError.message}`;
         }
+    } else if (error instanceof DeliveryError) {
+        isUnknownError = false;
+        message = error.message;
     } else if (error instanceof Error) {
+        isUnknownError = false;
         message = error.message;
     }
 
     return {
         message: message,
         requestData: requestData,
-        requestUrl: requestUrl
+        requestUrl: requestUrl,
+        error: error,
+        isUnknownError: isUnknownError
     };
 }
 
@@ -82,6 +91,10 @@ export function is404Error(error: any): boolean {
 export function handleError(error: any): void {
     const errorData = extractErrorData(error);
 
+    if (errorData.isUnknownError) {
+        console.error(error);
+    }
+
     if (errorData.requestData) {
         console.log(`${colors.red('Request data')}: ${errorData.requestData}`);
     }
@@ -90,7 +103,7 @@ export function handleError(error: any): void {
         console.log(`${colors.red('Request url')}: ${errorData.requestUrl}`);
     }
 
-    console.log(`${colors.red('Error:')} ${errorData.message}`);
+    console.error(`${colors.red('Error:')} ${errorData.message}`);
 }
 
 export function extractAssetIdFromUrl(assetUrl: string): string {
@@ -113,6 +126,7 @@ export function extractFilenameFromUrl(assetUrl: string): string {
 }
 
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
+    type: ItemType;
     log: Log | undefined;
     items: TInputItem[];
     chunkSize: number;
@@ -123,30 +137,48 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     const outputItems: TOutputItem[] = [];
     let processingIndex: number = 0;
 
-    for (const chunk of chunks) {
-        await Promise.all(
-            chunk.items.map((item) => {
-                processingIndex++;
+    data?.log?.spinner?.start();
 
-                if (data.itemInfo) {
-                    const itemInfo = data.itemInfo(item);
-                    data.log?.({
-                        count: {
-                            index: processingIndex,
-                            total: data.items.length
-                        },
-                        type: 'process',
-                        message: itemInfo.title
+    try {
+        for (const chunk of chunks) {
+            await Promise.all(
+                chunk.items.map((item) => {
+                    processingIndex++;
+
+                    if (data.itemInfo) {
+                        const itemInfo = data.itemInfo(item);
+
+                        if (data.log?.spinner) {
+                            data?.log?.spinner?.text?.({
+                                message: itemInfo.title,
+                                type: data.type,
+                                count: {
+                                    index: processingIndex,
+                                    total: data.items.length
+                                }
+                            });
+                        } else {
+                            data.log?.console({
+                                message: itemInfo.title,
+                                type: data.type,
+                                count: {
+                                    index: processingIndex,
+                                    total: data.items.length
+                                }
+                            });
+                        }
+                    }
+                    return data.processFunc(item).then((output) => {
+                        outputItems.push(output);
                     });
-                }
-                return data.processFunc(item).then((output) => {
-                    outputItems.push(output);
-                });
-            })
-        );
-    }
+                })
+            );
+        }
 
-    return outputItems;
+        return outputItems;
+    } finally {
+        data?.log?.spinner?.stop();
+    }
 }
 
 function splitArrayIntoChunks<T>(items: T[], chunkSize: number): IChunk<T>[] {
@@ -198,36 +230,37 @@ export async function confirmImportAsync(data: {
     environmentId: string;
     apiKey: string;
 }): Promise<void> {
-    const log = getLogForPrompt();
-    const targetEnvironment = (
-        await new ManagementClient({
-            apiKey: data.apiKey,
-            environmentId: data.environmentId
-        })
-            .environmentInformation()
-            .toPromise()
-    ).data.project;
+    await withDefaultLogAsync(async (log) => {
+        const targetEnvironment = (
+            await new ManagementClient({
+                apiKey: data.apiKey,
+                environmentId: data.environmentId
+            })
+                .environmentInformation()
+                .toPromise()
+        ).data.project;
 
-    if (data.force) {
-        log({
-            type: 'info',
-            message: `Skipping confirmation prompt due to the use of force param`
-        });
-    } else {
-        const confirmed = await prompts({
-            type: 'confirm',
-            name: 'confirm',
-            message: `Are you sure to import data into ${colors.yellow(
-                targetEnvironment.environment
-            )} environment of project ${colors.cyan(targetEnvironment.name)}?`
-        });
-
-        if (!confirmed.confirm) {
-            log({
-                type: 'cancel',
-                message: `Confirmation refused. Exiting process.`
+        if (data.force) {
+            log.console({
+                type: 'info',
+                message: `Skipping confirmation prompt due to the use of force param`
             });
-            exitProcess();
+        } else {
+            const confirmed = await prompts({
+                type: 'confirm',
+                name: 'confirm',
+                message: `Are you sure to import data into ${colors.yellow(
+                    targetEnvironment.environment
+                )} environment of project ${colors.cyan(targetEnvironment.name)}?`
+            });
+
+            if (!confirmed.confirm) {
+                log.console({
+                    type: 'cancel',
+                    message: `Confirmation refused. Exiting process.`
+                });
+                exitProcess();
+            }
         }
-    }
+    });
 }

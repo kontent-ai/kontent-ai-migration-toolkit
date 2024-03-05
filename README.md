@@ -14,8 +14,7 @@ This library can only be used in `node.js`. Use in Browsers is not supported.
 
 # Getting started
 
-We recommend running data-ops with `npx`. Use `--help` anytime to get information about available commands and their
-options.
+Use `--help` anytime to get information about available commands and their options.
 
 ```bash
 npx @kontent-ai-consulting/content-model-accelerator --help
@@ -65,7 +64,7 @@ to equal their original id. There are some limitations to importing assets, see 
 | assetsFilename    | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
 | baseUrl           | Custom base URL for Kontent.ai API calls                                                                                                                |
 | skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
-| force             | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                      |
+| force             | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
 
 ## Import CLI samples
 
@@ -90,6 +89,11 @@ Example below shows the most basic example of importing `content items` from a s
 ```typescript
 const importToolkit = new ImportToolkit({
     sourceType: 'file',
+    log: {
+        console: (data) => {
+            console.log(data.message);
+        }
+    },
     environmentId: '<id>',
     managementApiKey: '<mapiKey>',
     skipFailedItems: false,
@@ -267,6 +271,11 @@ const exportToolkit = new ExportToolkit({
     assets: {
         filename: 'assets-export.zip',
         formatService: new AssetJsonProcessorService() // or different one, see readme.md
+    },
+    log: {
+        console: (data) => {
+            console.log(data.message);
+        }
     }
 });
 

@@ -39,7 +39,7 @@ export class ImportContentItemHelper {
             data.migrationContentItems
         );
 
-        this.log?.({
+        this.log?.console?.({
             type: 'skip',
             message: `Filtering '${colors.yellow(
                 categorizedParsedItems.componentItems.length.toString()
@@ -48,7 +48,7 @@ export class ImportContentItemHelper {
 
         let fetchedContentItems: ContentItemModels.ContentItem[] = [];
 
-        this.log?.({
+        this.log?.console?.({
             type: 'info',
             message: `Fetching items via '${colors.yellow(this.fetchMode)}' mode`
         });
@@ -64,7 +64,7 @@ export class ImportContentItemHelper {
 
         const preparedItems: ContentItemModels.ContentItem[] = [];
 
-        this.log?.({
+        this.log?.console?.({
             type: 'info',
             message: `Importing '${colors.yellow(data.migrationContentItems.length.toString())}' content items`
         });
@@ -88,7 +88,7 @@ export class ImportContentItemHelper {
                 preparedItems.push(contentItem);
             } catch (error) {
                 if (this.skipFailedItems) {
-                    this.log?.({
+                    this.log?.console?.({
                         type: 'error',
                         message: `Failed to import content item '${parsedItem.system.name}'. ${
                             extractErrorData(error).message
@@ -111,6 +111,7 @@ export class ImportContentItemHelper {
 
         await processInChunksAsync<IMigrationItem, void>({
             log: this.log,
+            type: 'contentItem',
             chunkSize: this.importContentItemChunkSize,
             items: data.categorizedParsedItems.regularItems,
             itemInfo: (input) => {
@@ -122,7 +123,7 @@ export class ImportContentItemHelper {
             },
             processFunc: async (migrationContentItem) => {
                 try {
-                    this.log?.({
+                    this.log?.spinner?.text?.({
                         type: 'fetch',
                         message: `${migrationContentItem.system.name}`
                     });
@@ -153,7 +154,7 @@ export class ImportContentItemHelper {
                 .listContentItems()
                 .withListQueryConfig({
                     responseFetched: (response, token) => {
-                        this.log?.({
+                        this.log?.console?.({
                             type: 'fetch',
                             message: `Fetched '${colors.yellow(response.data.items.length.toString())}' items`
                         });
@@ -191,7 +192,7 @@ export class ImportContentItemHelper {
                     data.collections
                 )
             ) {
-                this.log?.({
+                this.log?.spinner?.text?.({
                     type: 'upsert',
                     message: `${data.importContentItem.system.name}`
                 });

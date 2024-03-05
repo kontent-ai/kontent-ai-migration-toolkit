@@ -64,6 +64,8 @@ export interface IErrorData {
     message: string;
     requestData?: string;
     requestUrl?: string;
+    isUnknownError: boolean;
+    error: any;
 }
 
 export interface IProcessedItem {

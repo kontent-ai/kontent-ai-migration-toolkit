@@ -4,8 +4,10 @@ import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../lib/f
 const run = async () => {
     const importToolkit = new ImportToolkit({
         sourceType: 'zip',
-        log: (data) => {
-            console.log(`${data.type}: ${data.message}`);
+        log: {
+            console: (data) => {
+                console.log(data.message);
+            }
         },
         environmentId: '<id>',
         managementApiKey: '<mapiKey>',

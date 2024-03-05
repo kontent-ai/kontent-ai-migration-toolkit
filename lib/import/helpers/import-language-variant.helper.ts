@@ -47,7 +47,7 @@ export class ImportLanguageVariantHelper {
             data.importContentItems
         );
 
-        this.log?.({
+        this.log?.console?.({
             type: 'info',
             message: `Importing '${colors.yellow(
                 categorizedParsedItems.regularItems.length.toString()
@@ -56,6 +56,7 @@ export class ImportLanguageVariantHelper {
 
         await processInChunksAsync<IMigrationItem, void>({
             log: this.log,
+            type: 'languageVariant',
             chunkSize: this.importContentItemChunkSize,
             items: categorizedParsedItems.regularItems,
             itemInfo: (input) => {
@@ -89,7 +90,7 @@ export class ImportLanguageVariantHelper {
                     });
                 } catch (error) {
                     if (this.skipFailedItems) {
-                        this.log?.({
+                        this.log?.console?.({
                             type: 'error',
                             message: `Failed to import language variant '${colors.red(
                                 importContentItem.system.name
@@ -119,9 +120,33 @@ export class ImportLanguageVariantHelper {
             workflows: data.workflows
         });
 
-        this.log?.({
+        const workflowStepCodename = data.importContentItem.system.workflow_step;
+        const workflowCodename = data.importContentItem.system.workflow;
+
+        this.log?.spinner?.text?.({
             type: 'upsert',
             message: `${data.preparedContentItem.name}`
+        });
+
+        if (!workflowCodename) {
+            throw Error(
+                `Content item '${colors.red(data.importContentItem.system.codename)}' does not have a workflow assigned`
+            );
+        }
+
+        if (!workflowStepCodename) {
+            throw Error(
+                `Content item '${colors.red(
+                    data.importContentItem.system.codename
+                )}' does not have a workflow step assigned`
+            );
+        }
+
+        // validate workflow
+        const { workflow } = this.importWorkflowHelper.getWorkflowAndStep({
+            workflowCodename: workflowCodename,
+            workflowStepCodename: workflowStepCodename,
+            workflows: data.workflows
         });
 
         const upsertedLanguageVariant = await data.managementClient
@@ -135,7 +160,15 @@ export class ImportLanguageVariantHelper {
                     );
 
                 return {
-                    elements: mappedElements
+                    elements: mappedElements,
+                    workflow: {
+                        workflow_identifier: {
+                            codename: workflow.codename
+                        },
+                        step_identifier: {
+                            codename: workflow.steps[0].codename // use always first step
+                        }
+                    }
                 };
             })
             .toPromise()
@@ -147,15 +180,13 @@ export class ImportLanguageVariantHelper {
         });
 
         // set workflow of language variant
-        if (data.importContentItem.system.workflow_step && data.importContentItem.system.workflow) {
-            await this.importWorkflowHelper.setWorkflowOfLanguageVariantAsync(
-                data.managementClient,
-                data.importContentItem.system.workflow,
-                data.importContentItem.system.workflow_step,
-                data.importContentItem,
-                data.workflows
-            );
-        }
+        await this.importWorkflowHelper.setWorkflowOfLanguageVariantAsync(
+            data.managementClient,
+            workflowCodename,
+            workflowStepCodename,
+            data.importContentItem,
+            data.workflows
+        );
     }
 
     private async prepareLanguageVariantForImportAsync(data: {
@@ -165,16 +196,28 @@ export class ImportLanguageVariantHelper {
     }): Promise<void> {
         let languageVariantOfContentItem: undefined | LanguageVariantModels.ContentItemLanguageVariant;
         const workflowCodename = data.importContentItem.system.workflow;
+        const workflowStepCodename = data.importContentItem.system.workflow_step;
 
         if (!workflowCodename) {
             throw Error(
                 `Item with codename '${data.importContentItem.system.codename}' does not have workflow property assigned`
             );
         }
-        const workflow = this.importWorkflowHelper.getWorkflowByCodename(workflowCodename, data.workflows);
+
+        if (!workflowStepCodename) {
+            throw Error(
+                `Item with codename '${data.importContentItem.system.codename}' does not have workflow step assigned`
+            );
+        }
+
+        const { workflow } = this.importWorkflowHelper.getWorkflowAndStep({
+            workflows: data.workflows,
+            workflowCodename: workflowCodename,
+            workflowStepCodename: workflowStepCodename
+        });
 
         try {
-            this.log?.({
+            this.log?.spinner?.text?.({
                 type: 'fetch',
                 message: `${data.importContentItem.system.name}`
             });
@@ -205,7 +248,7 @@ export class ImportLanguageVariantHelper {
             // language variant exists
             // check if variant is published or archived
             if (this.isLanguageVariantPublished(languageVariantOfContentItem, data.workflows)) {
-                this.log?.({
+                this.log?.spinner?.text?.({
                     type: 'createNewVersion',
                     message: `${data.importContentItem.system.name}`
                 });
@@ -218,7 +261,7 @@ export class ImportLanguageVariantHelper {
                     .toPromise();
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, data.workflows)) {
                 // change workflow step to draft
-                this.log?.({
+                this.log?.spinner?.text?.({
                     type: 'unArchive',
                     message: `${data.importContentItem.system.name}`
                 });

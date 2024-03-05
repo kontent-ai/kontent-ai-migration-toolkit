@@ -58,12 +58,12 @@ export class ImportService {
         const contentTypes = (await this.managementClient.listContentTypes().toAllPromise()).data.items;
         const contentTypeSnippets = (await this.managementClient.listContentTypeSnippets().toAllPromise()).data.items;
 
-        this.config.log?.({
+        this.config.log?.console?.({
             type: 'info',
             message: `Fetched '${colors.yellow(contentTypes.length.toString())}' content types`
         });
 
-        this.config.log?.({
+        this.config.log?.console?.({
             type: 'info',
             message: `Fetched '${colors.yellow(contentTypeSnippets.length.toString())}' content type snippets`
         });
@@ -115,7 +115,7 @@ export class ImportService {
                         importedData: importedData
                     });
                 } else {
-                    this.config.log?.({
+                    this.config.log?.console?.({
                         type: 'info',
                         message: `There are no assets to import`
                     });
@@ -125,13 +125,13 @@ export class ImportService {
                 if (dataToImport.importData.items.length) {
                     await this.importMigrationContentItemAsync(dataToImport.importData.items, importedData);
                 } else {
-                    this.config.log?.({
+                    this.config.log?.console?.({
                         type: 'info',
                         message: `There are no content items to import`
                     });
                 }
 
-                this.config.log?.({
+                this.config.log?.console?.({
                     type: 'info',
                     message: `Finished import`
                 });
@@ -228,14 +228,14 @@ export class ImportService {
         }
 
         if (removedAssets > 0) {
-            this.config.log?.({
+            this.config.log?.console?.({
                 type: 'info',
                 message: `Removed '${colors.yellow(removedAssets.toString())}' assets from import`
             });
         }
 
         if (removedContentItems) {
-            this.config.log?.({
+            this.config.log?.console?.({
                 type: 'info',
                 message: `Removed '${colors.yellow(removedContentItems.toString())}' content items from import`
             });

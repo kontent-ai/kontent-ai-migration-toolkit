@@ -4,8 +4,10 @@ import { ItemCsvProcessorService } from '../../lib/file-processor/index.js';
 const run = async () => {
     const importToolkit = new ImportToolkit({
         sourceType: 'file',
-        log: (data) => {
-            console.log(`${data.type}: ${data.message}`);
+        log: {
+            console: (data) => {
+                console.log(data.message);
+            },
         },
         environmentId: '<id>',
         managementApiKey: '<mapiKey>',

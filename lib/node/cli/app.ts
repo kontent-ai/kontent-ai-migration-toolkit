@@ -142,7 +142,7 @@ const exportAsync = async (config: ICliFileConfig) => {
 
         await exportToolkit.exportAsync();
 
-        log({ type: 'completed', message: `Export has been successful` });
+        log.console({ type: 'completed', message: `Export has been successful` });
     });
 };
 
@@ -221,7 +221,7 @@ const importAsync = async (config: ICliFileConfig) => {
 
         await importToolkit.importAsync();
 
-        log({ type: 'completed', message: `Import has been successful` });
+        log.console({ type: 'completed', message: `Import has been successful` });
     });
 };
 

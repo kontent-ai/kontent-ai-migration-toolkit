@@ -80,7 +80,7 @@ export class ExportAssetsHelper {
             ...new Map(extractedAssets.map((item) => [item.url, item])).values()
         ];
 
-        this.log?.({
+        this.log?.console?.({
             type: 'info',
             message: `Preparing to download '${colors.yellow(uniqueAssets.length.toString())}' assets`
         });
@@ -90,6 +90,7 @@ export class ExportAssetsHelper {
             IMigrationAsset
         >({
             log: this.log,
+            type: 'asset',
             chunkSize: this.downloadAssetBinaryDataChunkSize,
             itemInfo: (input) => {
                 return {

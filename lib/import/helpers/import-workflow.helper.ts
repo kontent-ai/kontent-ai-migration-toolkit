@@ -1,6 +1,16 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { logErrorAndExit, IMigrationItem, Log } from '../../core/index.js';
+import { IMigrationItem, Log } from '../../core/index.js';
 import colors from 'colors';
+
+interface IWorkflowStep {
+    codename: string;
+    id: string;
+}
+
+interface IWorkflowAndStep {
+    workflow: WorkflowModels.Workflow;
+    step: IWorkflowStep;
+}
 
 export function getImportWorkflowHelper(log?: Log): ImportWorkflowHelper {
     return new ImportWorkflowHelper(log);
@@ -9,13 +19,17 @@ export function getImportWorkflowHelper(log?: Log): ImportWorkflowHelper {
 export class ImportWorkflowHelper {
     constructor(private readonly log?: Log) {}
 
-    getWorkflowByCodename(workflowCodename: string, workflows: WorkflowModels.Workflow[]): WorkflowModels.Workflow {
-        const workflow = workflows.find((m) => m.codename?.toLowerCase() === workflowCodename.toLowerCase());
+    getWorkflowAndStep(data: {
+        workflowStepCodename: string;
+        workflowCodename: string;
+        workflows: WorkflowModels.Workflow[];
+    }): IWorkflowAndStep {
+        const workflow = data.workflows.find((m) => m.codename?.toLowerCase() === data.workflowCodename.toLowerCase());
 
         if (!workflow) {
             const errorMessages: string[] = [
-                `Workflow with codename '${colors.red(workflowCodename)}' does not exist in target project`,
-                `Available workflows are (${workflows.length}): ${workflows
+                `Workflow with codename '${colors.red(data.workflowCodename)}' does not exist in target project`,
+                `Available workflows are (${data.workflows.length}): ${data.workflows
                     .map((m) => colors.cyan(m.codename))
                     .join(', ')}`
             ];
@@ -23,7 +37,51 @@ export class ImportWorkflowHelper {
             throw Error(errorMessages.join('. '));
         }
 
-        return workflow;
+        const workflowStep = this.getWorkflowStep(workflow, data.workflowStepCodename);
+
+        if (!workflowStep) {
+            throw Error(
+                `Workflow step with codename '${colors.red(
+                    data.workflowStepCodename
+                )}' does not exist within worklflow '${colors.cyan(workflow.codename)}'`
+            );
+        }
+
+        return {
+            step: workflowStep,
+            workflow: workflow
+        };
+    }
+
+    private getWorkflowStep(workflow: WorkflowModels.Workflow, stepCodename: string): IWorkflowStep | undefined {
+        if (workflow.archivedStep.codename === stepCodename) {
+            return {
+                codename: workflow.archivedStep.codename,
+                id: workflow.archivedStep.id
+            };
+        }
+        if (workflow.publishedStep.codename === stepCodename) {
+            return {
+                codename: workflow.publishedStep.codename,
+                id: workflow.publishedStep.id
+            };
+        }
+        if (workflow.scheduledStep.codename === stepCodename) {
+            return {
+                codename: workflow.scheduledStep.codename,
+                id: workflow.scheduledStep.id
+            };
+        }
+        const step = workflow.steps.find((m) => m.codename === stepCodename);
+
+        if (step) {
+            return {
+                codename: step.codename,
+                id: step.id
+            };
+        }
+
+        return undefined;
     }
 
     async setWorkflowOfLanguageVariantAsync(
@@ -33,19 +91,14 @@ export class ImportWorkflowHelper {
         importContentItem: IMigrationItem,
         workflows: WorkflowModels.Workflow[]
     ): Promise<void> {
-        const workflow = this.getWorkflowByCodename(workflowCodename, workflows);
-
-        // check if workflow step exists in target project
-        if (!this.doesWorkflowStepExist(workflowCodename, workflowStepCodename, workflows)) {
-            logErrorAndExit({
-                message: `Could not change workflow step for item '${colors.yellow(
-                    importContentItem.system.codename
-                )}' because step with codename '${colors.red(workflowStepCodename)}' does not exist`
-            });
-        }
+        const { workflow, step } = this.getWorkflowAndStep({
+            workflows: workflows,
+            workflowCodename: workflowCodename,
+            workflowStepCodename: workflowStepCodename
+        });
 
         if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
-            this.log?.({
+            this.log?.spinner?.text?.({
                 type: 'publish',
                 message: `${importContentItem.system.name}`
             });
@@ -57,7 +110,7 @@ export class ImportWorkflowHelper {
                 .withoutData()
                 .toPromise();
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
-            this.log?.({
+            this.log?.spinner?.text?.({
                 type: 'skip',
                 message: `Skipping scheduled workflow step for item '${colors.yellow(importContentItem.system.name)}'`
             });
@@ -66,7 +119,7 @@ export class ImportWorkflowHelper {
             // there is no way to determine if language variant is published via MAPI
             // so we have to always try unpublishing first and catching possible errors
             try {
-                this.log?.({
+                this.log?.spinner?.text?.({
                     type: 'unpublish',
                     message: `${importContentItem.system.name}`
                 });
@@ -79,7 +132,7 @@ export class ImportWorkflowHelper {
                     .toPromise();
             } catch (error) {
                 if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                    this.log?.({
+                    this.log?.spinner?.text?.({
                         type: 'unpublish',
                         message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
                     });
@@ -88,7 +141,7 @@ export class ImportWorkflowHelper {
                 }
             }
 
-            this.log?.({
+            this.log?.spinner?.text?.({
                 type: 'archive',
                 message: `${importContentItem.system.name}`
             });
@@ -110,7 +163,7 @@ export class ImportWorkflowHelper {
             if (workflow.codename === workflowStepCodename) {
                 // item is already in the target workflow step
             } else {
-                this.log?.({
+                this.log?.spinner?.text?.({
                     type: 'changeWorkflowStep',
                     message: `${importContentItem.system.name}`
                 });
@@ -121,7 +174,7 @@ export class ImportWorkflowHelper {
                     .byLanguageCodename(importContentItem.system.language)
                     .withData({
                         step_identifier: {
-                            codename: importContentItem.system.workflow_step
+                            codename: step.codename
                         },
                         workflow_identifier: {
                             codename: workflow.codename
@@ -166,31 +219,6 @@ export class ImportWorkflowHelper {
             if (workflow.scheduledStep.codename === stepCodename) {
                 return true;
             }
-        }
-
-        return false;
-    }
-
-    private doesWorkflowStepExist(
-        workflowCodename: string,
-        stepCodename: string,
-        workflows: WorkflowModels.Workflow[]
-    ): boolean {
-        const workflow = this.getWorkflowByCodename(workflowCodename, workflows);
-
-        if (workflow.archivedStep.codename === stepCodename) {
-            return true;
-        }
-        if (workflow.publishedStep.codename === stepCodename) {
-            return true;
-        }
-        if (workflow.scheduledStep.codename === stepCodename) {
-            return true;
-        }
-        const step = workflow.steps.find((m) => m.codename === stepCodename);
-
-        if (step) {
-            return true;
         }
 
         return false;

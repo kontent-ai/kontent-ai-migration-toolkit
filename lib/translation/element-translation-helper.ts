@@ -111,7 +111,7 @@ export class ElementTranslationHelper {
                 const importedAsset = data.importedData.assets.find((s) => s.original.assetExternalId === assetId);
 
                 if (!importedAsset) {
-                    this.log?.({
+                    this.log?.console?.({
                         type: 'warning',
                         message: `Could not find imported asset for id '${colors.red(assetId)}'. Skipping asset.`
                     });
@@ -335,7 +335,7 @@ export class ElementTranslationHelper {
                         const linkText = this.extractTextFromLinkHtml(linkTag);
                         linkTag = linkText ?? '';
 
-                        this.log?.({
+                        this.log?.console?.({
                             type: 'warning',
                             message: `Could not find content item with id '${colors.red(
                                 id
@@ -346,7 +346,7 @@ export class ElementTranslationHelper {
                             )}'. Replacing link with plain text.`
                         });
                     } else {
-                        this.log?.({
+                        this.log?.console?.({
                             type: 'warning',
                             message: `Could not find content item with id '${colors.red(
                                 id
@@ -460,7 +460,7 @@ export class ElementTranslationHelper {
                     importedData.contentItems.find((m) => m.original.system.codename === codename)?.imported;
 
                 if (!contentItemWithGivenCodename) {
-                    this.log?.({
+                    this.log?.console?.({
                         type: 'warning',
                         message: `Could not find content item with codename '${colors.red(
                             codename
