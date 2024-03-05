@@ -23,7 +23,15 @@ import {
     IRichTextExportConfig
 } from '../core/core.models.js';
 import { idTranslateHelper } from './id-translate-helper.js';
-import { getAssetUrlPath, IMigrationItem, Log, logErrorAndExit, MigrationElementType } from '../core/index.js';
+import {
+    getAssetFilename,
+    getAssetIdFromFilename,
+    getAssetUrlPath,
+    IMigrationItem,
+    Log,
+    logErrorAndExit,
+    MigrationElementType
+} from '../core/index.js';
 import colors from 'colors';
 
 export function getElementTranslationHelper(log?: Log): ElementTranslationHelper {
@@ -56,7 +64,7 @@ export class ElementTranslationHelper {
         },
         asset: (data) => {
             const mappedElement = data.element as Elements.AssetsElement;
-            const assetIds: string[] = [];
+            const assetFilenames: string[] = [];
 
             for (const asset of mappedElement.value) {
                 const fullAssetByUrl = data.assets.find(
@@ -67,10 +75,10 @@ export class ElementTranslationHelper {
                     throw Error(`Missing asset metadata for url '${colors.red(asset.url)}'`);
                 }
 
-                assetIds.push(fullAssetByUrl.id);
+                assetFilenames.push(getAssetFilename(fullAssetByUrl));
             }
 
-            return assetIds;
+            return assetFilenames;
         },
         taxonomy: (data) => {
             const mappedElement = data.element as Elements.TaxonomyElement;
@@ -118,14 +126,18 @@ export class ElementTranslationHelper {
         asset: (data) => {
             const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
 
-            for (const assetId of this.parseArrayValue(data.value)) {
+            for (const assetFilename of this.parseArrayValue(data.value)) {
                 // find id of imported asset
-                const importedAsset = data.importedData.assets.find((s) => s.original.assetId === assetId);
+                const importedAsset = data.importedData.assets.find(
+                    (s) => s.original.assetId?.toLowerCase() === getAssetIdFromFilename(assetFilename)
+                );
 
                 if (!importedAsset) {
                     this.log?.console?.({
                         type: 'warning',
-                        message: `Could not find imported asset for id '${colors.red(assetId)}'. Skipping asset.`
+                        message: `Could not find imported asset for filename '${colors.red(
+                            assetFilename
+                        )}'. Skipping asset.`
                     });
 
                     continue;

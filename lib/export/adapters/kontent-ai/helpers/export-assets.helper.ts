@@ -1,27 +1,22 @@
 import { IContentItem, IContentType, ElementType, Elements } from '@kontent-ai/delivery-sdk';
 import { HttpService } from '@kontent-ai/core-sdk';
 import {
-    getExtension,
-    extractFilenameFromUrl,
     defaultRetryStrategy,
     processInChunksAsync,
     IMigrationAsset,
     Log,
-    getAssetUrlPath
+    getAssetUrlPath,
+    getAssetFilename
 } from '../../../../core/index.js';
 import colors from 'colors';
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
 
 type ExportAssetWithoutBinaryData = {
-    filename: string;
-    extension: string;
     url: string;
 };
 
 type ExportAssetWithBinaryData = {
     binaryData: Buffer | Blob | undefined;
-    filename: string;
-    extension: string;
     url: string;
 };
 
@@ -90,8 +85,12 @@ export class ExportAssetsHelper {
             }
 
             migrationAssets.push({
-                ...assetWithBinaryData,
-                assetId: managementAsset.id
+                binaryData: assetWithBinaryData.binaryData,
+                title: managementAsset.fileName,
+                codename: managementAsset.codename,
+                filename: getAssetFilename(managementAsset),
+                assetId: managementAsset.id,
+                assetExternalId: managementAsset.id // use external id to prevent same asset from being uploaded multiple times
             });
         }
 
@@ -122,9 +121,7 @@ export class ExportAssetsHelper {
                             extractedAssets.push(
                                 ...assetElement.value.map((m) => {
                                     const asset: ExportAssetWithoutBinaryData = {
-                                        url: m.url,
-                                        filename: extractFilenameFromUrl(m.url),
-                                        extension: getExtension(m.url) ?? ''
+                                        url: m.url
                                     };
 
                                     return asset;
@@ -140,9 +137,7 @@ export class ExportAssetsHelper {
                             extractedAssets.push(
                                 ...richTextElement.images.map((m) => {
                                     const asset: ExportAssetWithoutBinaryData = {
-                                        url: m.url,
-                                        filename: extractFilenameFromUrl(m.url),
-                                        extension: getExtension(m.url) ?? ''
+                                        url: m.url
                                     };
 
                                     return asset;
@@ -180,7 +175,7 @@ export class ExportAssetsHelper {
             items: uniqueAssets,
             processFunc: async (item) => {
                 const exportAsset: ExportAssetWithBinaryData = {
-                    ...item,
+                    url: item.url,
                     binaryData: (await this.getBinaryDataFromUrlAsync(item.url)).data
                 };
 

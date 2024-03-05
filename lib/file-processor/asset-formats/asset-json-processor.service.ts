@@ -14,14 +14,13 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
         for (const exportAsset of data.assets) {
             assetRecords.push({
                 assetId: exportAsset.assetId,
-                extension: exportAsset.extension,
+                assetExternalId: exportAsset.assetExternalId,
                 filename: exportAsset.filename,
+                title: exportAsset.title,
+                codename: exportAsset.codename
             });
 
-            await data.zip.addFile(
-                this.getAssetZipFilename(exportAsset.assetId, exportAsset.extension),
-                exportAsset.binaryData
-            );
+            await data.zip.addFile(exportAsset.filename, exportAsset.binaryData);
         }
 
         data.zip.addFile(this.assetsFilename, JSON.stringify(assetRecords));
@@ -41,16 +40,10 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
         for (const assetRecord of assetRecords) {
             parsedAssets.push({
                 ...assetRecord,
-                binaryData: await data.zip.getBinaryDataAsync(
-                    this.getAssetZipFilename(assetRecord.assetId, assetRecord.extension)
-                )
+                binaryData: await data.zip.getBinaryDataAsync(assetRecord.filename)
             });
         }
 
         return parsedAssets;
-    }
-
-    private getAssetZipFilename(assetId: string, extension: string): string {
-        return `${assetId}.${extension}`; // use id as filename to prevent filename conflicts
     }
 }

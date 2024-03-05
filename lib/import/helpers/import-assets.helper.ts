@@ -52,8 +52,7 @@ export class ImportAssetsHelper {
             itemInfo: (input) => {
                 return {
                     itemType: 'asset',
-                    title: input.filename,
-                    partA: input.extension
+                    title: input.filename
                 };
             },
             processFunc: async (asset) => {
@@ -85,6 +84,8 @@ export class ImportAssetsHelper {
                                 id: uploadedBinaryFile.data.id,
                                 type: 'internal'
                             },
+                            codename: asset.codename,
+                            title: asset.title,
                             external_id: asset.assetId
                         };
                     })
@@ -123,38 +124,41 @@ export class ImportAssetsHelper {
             itemInfo: (input) => {
                 return {
                     itemType: 'asset',
-                    title: input.filename,
-                    partA: input.extension
+                    title: input.filename
                 };
             },
             processFunc: async (asset) => {
                 // check if asset with given external id already exists
                 let existingAsset: AssetModels.Asset | undefined;
 
-                try {
-                    // when target project is the same as source project, the id of asset would be the same
-                    // and such assets should not be imported again
-                    existingAsset = await data.managementClient
-                        .viewAsset()
-                        .byAssetId(asset.assetId)
-                        .toPromise()
-                        .then((m) => m.data);
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
+                if (asset.assetId) {
+                    try {
+                        // when target project is the same as source project, the id of asset would be the same
+                        // and such assets should not be imported again
+                        existingAsset = await data.managementClient
+                            .viewAsset()
+                            .byAssetId(asset.assetId)
+                            .toPromise()
+                            .then((m) => m.data);
+                    } catch (error) {
+                        if (!is404Error(error)) {
+                            throw error;
+                        }
                     }
                 }
 
-                try {
-                    // check if asset with given external id was already created
-                    existingAsset = await data.managementClient
-                        .viewAsset()
-                        .byAssetExternalId(asset.assetId)
-                        .toPromise()
-                        .then((m) => m.data);
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
+                if (asset.assetExternalId) {
+                    try {
+                        // check if asset with given external id was already created
+                        existingAsset = await data.managementClient
+                            .viewAsset()
+                            .byAssetExternalId(asset.assetExternalId)
+                            .toPromise()
+                            .then((m) => m.data);
+                    } catch (error) {
+                        if (!is404Error(error)) {
+                            throw error;
+                        }
                     }
                 }
 

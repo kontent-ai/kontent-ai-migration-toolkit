@@ -1,4 +1,4 @@
-import { ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
+import { AssetModels, ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { format } from 'bytes';
 import colors from 'colors';
@@ -86,6 +86,19 @@ export function is404Error(error: any): boolean {
     }
 
     return false;
+}
+
+export function getAssetFilename(asset: AssetModels.Asset): string {
+    return `${asset.id}.${getExtension(asset.url)}`;
+}
+
+export function getAssetIdFromFilename(filename: string): string {
+    const lastDotIndex = filename.lastIndexOf('.');
+    if (lastDotIndex === -1) {
+        // If there's no dot in the filename, return the full filename
+        return filename;
+    }
+    return filename.slice(0, lastDotIndex);
 }
 
 export function handleError(error: any): void {

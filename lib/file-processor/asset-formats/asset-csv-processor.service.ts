@@ -25,10 +25,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
         data.zip.addFile(this.assetsFilename, csvContent);
 
         for (const exportAsset of data.assets) {
-            await data.zip.addFile(
-                this.getAssetZipFilename(exportAsset.assetId, exportAsset.extension),
-                exportAsset.binaryData
-            );
+            await data.zip.addFile(exportAsset.filename, exportAsset.binaryData);
         }
 
         return data.zip.generateZipAsync();
@@ -57,9 +54,11 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
             } else {
                 // process data row
                 const parsedAsset: IMigrationAsset = {
-                    assetId: '',
-                    extension: '',
+                    assetId: undefined,
                     filename: '',
+                    assetExternalId: undefined,
+                    title: '',
+                    codename: undefined,
                     binaryData: undefined
                 };
 
@@ -71,9 +70,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
                 }
 
                 // add binary data to record
-                parsedAsset.binaryData = await data.zip.getBinaryDataAsync(
-                    this.getAssetZipFilename(parsedAsset.assetId, parsedAsset.extension)
-                );
+                parsedAsset.binaryData = await data.zip.getBinaryDataAsync(parsedAsset.filename);
 
                 parsedAssets.push(parsedAsset);
             }
@@ -81,10 +78,6 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
         }
 
         return parsedAssets;
-    }
-
-    private getAssetZipFilename(assetId: string, extension: string): string {
-        return `${assetId}.${extension}`; // use id as filename to prevent filename conflicts
     }
 
     private geCsvParser(config: { fields: string[] | FieldInfo<string>[] }): AsyncParser<string> {
