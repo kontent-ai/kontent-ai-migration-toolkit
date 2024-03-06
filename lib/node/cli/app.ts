@@ -19,7 +19,6 @@ import {
     ProcessingFormat,
     IItemFormatService,
     ItemJsonProcessorService,
-    ItemJsonJoinedProcessorService,
     IAssetFormatService,
     AssetCsvProcessorService,
     AssetJsonProcessorService
@@ -66,7 +65,7 @@ const argv = yargs(process.argv.slice(2))
     .alias('af', 'assetsFilename')
     .describe('af', 'Name of assets file to export / import')
     .alias('of', 'format')
-    .describe('of', 'Format of the export. One of: "csv" | "json" | "jsonJoined"')
+    .describe('of', 'Format of the export. One of: "csv" | "json"')
     .alias('b', 'baseUrl')
     .describe('b', 'Custom base URL for Management API calls.')
     .alias('sfi', 'skipFailedItems')
@@ -268,8 +267,6 @@ const getConfig = async () => {
         mappedFormat = 'csv';
     } else if (format?.toLowerCase() === <ProcessingFormat>'json'.toLowerCase()) {
         mappedFormat = 'json';
-    } else if (format?.toLowerCase() === <ProcessingFormat>'jsonJoined'.toLowerCase()) {
-        mappedFormat = 'jsonJoined';
     } else {
         if (action === 'export') {
             logErrorAndExit({
@@ -330,7 +327,7 @@ function getAssetFormatService(format: ProcessingFormat | undefined): IAssetForm
         return new AssetCsvProcessorService();
     }
 
-    if (format === 'json' || format === 'jsonJoined') {
+    if (format === 'json') {
         return new AssetJsonProcessorService();
     }
 
@@ -346,10 +343,6 @@ function getItemFormatService(format: ProcessingFormat | undefined): IItemFormat
 
     if (format === 'json') {
         return new ItemJsonProcessorService();
-    }
-
-    if (format === 'jsonJoined') {
-        return new ItemJsonJoinedProcessorService();
     }
 
     logErrorAndExit({

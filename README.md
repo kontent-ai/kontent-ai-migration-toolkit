@@ -59,7 +59,7 @@ to equal their original id. There are some limitations to importing assets, see 
 | **action**        | Action. Available options: `import` & `export` **(required)**                                                                                           |
 | **environmentId** | Id of Kontent.ai project **(required)**                                                                                                                 |
 | **apiKey**        | Management API key **(required)**                                                                                                                       |
-| **format**        | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                            |
+| **format**        | Format used to export data. Available options: `csv`, `json` **(required)**                                                                             |
 | itemsFilename     | Name of the items file that will be used to parse items                                                                                                 |
 | assetsFilename    | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
 | baseUrl           | Custom base URL for Kontent.ai API calls                                                                                                                |
@@ -152,7 +152,7 @@ export interface IMigrationItem {
         language: string;
         type: string;
         collection: string;
-        
+
         workflow_step?: string;
         workflow?: string;
     };
@@ -217,7 +217,7 @@ However, when migration from 3rd party system you typically only use the `import
 | **environmentId**    | Id of Kontent.ai environment **(required)**                                                                                                                                                                           |
 | **managementApiKey** | Management API key of Kontent.ai environment. Need to fetch assets. **(required)**                                                                                                                                    |
 | **adapter**          | Adapter used to export data into known format that can be used for importing data. Available options: `kontentAi` **(required)**                                                                                      |
-| **format**           | Format used to export data. Available options: `csv`, `json` and `jsonJoined` **(required)**                                                                                                                          |
+| **format**           | Format used to export data. Available options: `csv`, `json` **(required)**                                                                                                                                           |
 | secureApiKey         | API key for secure Access. `isSecure` also needs to be enabled                                                                                                                                                        |
 | previewApiKey        | API key for preview. `isPreview` also needs to be enabled                                                                                                                                                             |
 | isSecure             | When set to `true`, Secure API will be used to make data export. Defaults to `false`                                                                                                                                  |
@@ -240,7 +240,7 @@ kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId
 kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=csv
 
 # Export from Kontent.ai environment as single json file with assets:
-kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=jsonJoined --exportAssets=true
+kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json --exportAssets=true
 ```
 
 ## Exporting in code
@@ -308,7 +308,7 @@ Create a `json` configuration file in the folder where you are attempting to run
     "exportAssets": true,
     "action": "export",
     "baseUrl": null,
-    "format": "json" // or 'jsonJoined' / 'csv'
+    "format": "json" // or 'csv'
 }
 ```
 
@@ -331,11 +331,10 @@ existing format, change how it's processing or just support new formats such as 
 
 Following is a list of `built-in` format services:
 
-| Type         | Service                           | Link                                                                                                                                                  |
-| ------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `csv`        | `ItemCsvProcessorService `        | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts         |
-| `json`       | `ItemJsonProcessorService `       | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-processor.service.ts        |
-| `jsonJoined` | `ItemJsonJoinedProcessorService ` | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-joined-processor.service.ts |
+| Type   | Service                     | Link                                                                                                                                                  |
+| ------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `csv`  | `ItemCsvProcessorService `  | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts         |
+| `json` | `ItemJsonProcessorService ` | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-joined-processor.service.ts |
 
 ## Limitations
 

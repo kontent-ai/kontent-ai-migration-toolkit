@@ -9,7 +9,7 @@ export type ZipContext = 'node.js' | 'browser';
 
 export type FileBinaryData = Blob | Buffer;
 
-export type ProcessingFormat = 'csv' | 'json' | 'jsonJoined';
+export type ProcessingFormat = 'csv' | 'json';
 
 export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
