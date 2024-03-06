@@ -3,9 +3,8 @@ import { IExportAdapter, IExportAdapterResult, IKontentAiExportAdapterConfig } f
 import colors from 'colors';
 import { defaultHttpService, defaultRetryStrategy } from '../../../core/global-helper.js';
 import { getExportAssetsHelper } from './helpers/export-assets.helper.js';
-import { IMigrationAsset } from '../../../core/index.js';
 import { getExportContentItemHelper } from './helpers/export-content-item.helper.js';
-import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
+import { ManagementClient } from '@kontent-ai/management-sdk';
 
 export class KontentAiExportAdapter implements IExportAdapter {
     public readonly name: string = 'kontentAi';
@@ -40,20 +39,11 @@ export class KontentAiExportAdapter implements IExportAdapter {
             types: allTypes
         });
 
-        const _migrationAssets: IMigrationAsset[] = [];
-        const _allAssets: AssetModels.Asset[] = [];
-
-        if (this.config.exportAssets) {
-            this.config.log?.console?.({ type: 'info', message: `Extracting assets referenced by content items` });
-            const { allAssets, migrationAssets } = await exportAssetsHelper.extractAssetsAsync(
-                deliveryContentItems,
-                allTypes
-            );
-            _migrationAssets.push(...migrationAssets);
-            _allAssets.push(...allAssets);
-        } else {
-            this.config.log?.console?.({ type: 'info', message: `Assets export is disabled` });
-        }
+        this.config.log?.console?.({ type: 'info', message: `Extracting assets referenced by content items` });
+        const { allAssets, migrationAssets } = await exportAssetsHelper.extractAssetsAsync(
+            deliveryContentItems,
+            allTypes
+        );
 
         return {
             items: exportContentItemsHelper.mapToMigrationItems({
@@ -61,9 +51,9 @@ export class KontentAiExportAdapter implements IExportAdapter {
                 items: deliveryContentItems,
                 languages: allLanguages,
                 types: allTypes,
-                assets: _allAssets
+                assets: allAssets
             }),
-            assets: _migrationAssets
+            assets: migrationAssets
         };
     }
 

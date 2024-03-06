@@ -5,7 +5,6 @@
     "itemsFilename": "items-export.zip",
     "assetsFilename": "assets-export.zip",
     "isPreview": false,
-    "exportAssets": true,
     "action": "export",
     "baseUrl": null,
     "format": "json"

@@ -30,7 +30,6 @@ export interface IKontentAiExportAdapterConfig {
     baseUrl?: string;
     exportTypes?: string[];
     exportLanguages?: string[];
-    exportAssets: boolean;
     retryStrategy?: IRetryStrategyOptions;
     customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;
     transformConfig?: IExportTransformConfig;

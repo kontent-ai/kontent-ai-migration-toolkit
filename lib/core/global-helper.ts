@@ -4,10 +4,25 @@ import { format } from 'bytes';
 import colors from 'colors';
 import { Log, withDefaultLogAsync } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
-import { IChunk, IErrorData, IProcessInChunksItemInfo, ItemType } from './core.models.js';
+import {
+    AssetsFormatConfig,
+    IChunk,
+    IErrorData,
+    IProcessInChunksItemInfo,
+    ItemType,
+    ItemsFormatConfig
+} from './core.models.js';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
 import prompts from 'prompts';
 import { DeliveryError } from '@kontent-ai/delivery-sdk';
+import {
+    AssetCsvProcessorService,
+    AssetJsonProcessorService,
+    IAssetFormatService,
+    IItemFormatService,
+    ItemCsvProcessorService,
+    ItemJsonProcessorService
+} from '../file-processor/index.js';
 
 const rateExceededErrorCode: number = 10000;
 
@@ -267,4 +282,28 @@ export async function confirmImportAsync(data: {
             }
         }
     });
+}
+
+export function getItemsFormatService(type: ItemsFormatConfig): IItemFormatService {
+    if (type === 'csv') {
+        return new ItemCsvProcessorService();
+    }
+
+    if (type === 'json') {
+        return new ItemJsonProcessorService();
+    }
+
+    return type;
+}
+
+export function getAssetsFormatService(type: AssetsFormatConfig): IAssetFormatService {
+    if (type === 'csv') {
+        return new AssetCsvProcessorService();
+    }
+
+    if (type === 'json') {
+        return new AssetJsonProcessorService();
+    }
+
+    return type;
 }

@@ -1,20 +1,16 @@
-import {
-    FileProcessorService,
-    IAssetFormatService,
-    IItemFormatService,
-    getFileProcessorService
-} from '../file-processor/index.js';
+import { AssetsFormatConfig, ItemsFormatConfig, getAssetsFormatService, getItemsFormatService } from '../core/index.js';
+import { FileProcessorService, getFileProcessorService } from '../file-processor/index.js';
 import { IImportConfig, IImportContentType, IImportSource, ImportService } from '../import/index.js';
 import { FileService, getFileService } from '../node/index.js';
 
 export interface IImportToolkitConfig extends IImportConfig {
     items?: {
         filename: string;
-        formatService: IItemFormatService;
+        formatService: ItemsFormatConfig;
     };
     assets?: {
         filename: string;
-        formatService: IAssetFormatService;
+        formatService: AssetsFormatConfig;
     };
 }
 
@@ -62,13 +58,13 @@ export class ImportToolkit {
             items: this.config.items
                 ? {
                       file: await this.fileService.loadFileAsync(this.config.items.filename),
-                      formatService: this.config.items.formatService
+                      formatService: getItemsFormatService(this.config.items.formatService)
                   }
                 : undefined,
             assets: this.config.assets
                 ? {
                       file: await this.fileService.loadFileAsync(this.config.assets.filename),
-                      formatService: this.config.assets.formatService
+                      formatService: getAssetsFormatService(this.config.assets.formatService)
                   }
                 : undefined,
             types: data.contentTypes
@@ -83,13 +79,13 @@ export class ImportToolkit {
             items: this.config.items
                 ? {
                       file: await this.fileService.loadFileAsync(this.config.items.filename),
-                      formatService: this.config.items.formatService
+                      formatService: getItemsFormatService(this.config.items.formatService)
                   }
                 : undefined,
             assets: this.config.assets
                 ? {
                       file: await this.fileService.loadFileAsync(this.config.assets.filename),
-                      formatService: this.config.assets.formatService
+                      formatService: getAssetsFormatService(this.config.assets.formatService)
                   }
                 : undefined,
             types: data.contentTypes

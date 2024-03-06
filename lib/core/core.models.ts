@@ -1,5 +1,5 @@
 import { AssetModels, ContentItemModels, ElementContracts, LanguageVariantModels } from '@kontent-ai/management-sdk';
-import { ProcessingFormat } from '../file-processor/index.js';
+import { IAssetFormatService, IItemFormatService, ProcessingFormat } from '../file-processor/index.js';
 import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IMigrationItem, IMigrationAsset } from './migration-models.js';
 
@@ -21,7 +21,6 @@ export interface ICliFileConfig {
     baseUrl?: string;
     exportTypes?: string[];
     exportLanguages?: string[];
-    exportAssets: boolean;
     force: boolean;
 }
 
@@ -138,3 +137,6 @@ export interface IProcessInChunksItemInfo {
     title: string;
     itemType: ItemType;
 }
+
+export type ItemsFormatConfig = IItemFormatService | 'json' | 'csv';
+export type AssetsFormatConfig = IAssetFormatService | 'json' | 'csv';

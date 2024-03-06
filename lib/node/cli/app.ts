@@ -54,8 +54,6 @@ const argv = yargs(process.argv.slice(2))
     .describe('papi', 'Use if you want to export data using Preview API')
     .alias('ip', 'isPreview')
     .describe('ip', 'Disables / enables use of preview API for export')
-    .alias('ea', 'exportAssets')
-    .describe('ea', 'Disables / enables asset export')
     .alias('is', 'isSecure')
     .describe('is', 'Disables / enables use of Secure API for export')
     .alias('a', 'action')
@@ -119,7 +117,6 @@ const exportAsync = async (config: ICliFileConfig) => {
                 baseUrl: config.baseUrl,
                 exportTypes: config.exportTypes,
                 exportLanguages: config.exportLanguages,
-                exportAssets: config.exportAssets
             });
         } else {
             logErrorAndExit({
@@ -305,7 +302,6 @@ const getConfig = async () => {
         skipFailedItems: getBooleanArgumentvalue(resolvedArgs, 'skipFailedItems', false),
         secureApiKey: getOptionalArgumentValue(resolvedArgs, 'secureApiKey'),
         previewApiKey: getOptionalArgumentValue(resolvedArgs, 'previewApiKey'),
-        exportAssets: getBooleanArgumentvalue(resolvedArgs, 'exportAssets', false),
         isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview', false),
         isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure', false),
         replaceInvalidLinks: getBooleanArgumentvalue(resolvedArgs, 'replaceInvalidLinks', false),

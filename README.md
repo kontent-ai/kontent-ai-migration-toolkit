@@ -59,7 +59,7 @@ to equal their original id. There are some limitations to importing assets, see 
 | **action**        | Action. Available options: `import` & `export` **(required)**                                                                                           |
 | **environmentId** | Id of Kontent.ai project **(required)**                                                                                                                 |
 | **apiKey**        | Management API key **(required)**                                                                                                                       |
-| **format**        | Format used to export data. Available options: `csv`, `json` **(required)**                                                                             |
+| **format**        | Format used to export data. Available options: `csv`, `json` or custom implementation **(required)**                                                    |
 | itemsFilename     | Name of the items file that will be used to parse items                                                                                                 |
 | assetsFilename    | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
 | baseUrl           | Custom base URL for Kontent.ai API calls                                                                                                                |
@@ -105,7 +105,7 @@ const importToolkit = new ImportToolkit({
     },
     items: {
         filename: 'items.json',
-        formatService: new ItemJsonProcessorService()
+        formatService: 'json'
     }
 });
 
@@ -222,7 +222,6 @@ However, when migration from 3rd party system you typically only use the `import
 | previewApiKey        | API key for preview. `isPreview` also needs to be enabled                                                                                                                                                             |
 | isSecure             | When set to `true`, Secure API will be used to make data export. Defaults to `false`                                                                                                                                  |
 | isPreview            | When set to `true`, Preview API will be used to make data export. Defaults to `false`                                                                                                                                 |
-| exportAssets         | When set to `true`, Binary data of assets is exported. Defaults to `false`                                                                                                                                            |
 | exporTypes           | CSV of content type codenames of which content items will be exported. If none is provided, all types are exported                                                                                                    |
 | exporLanguages       | CSV of language codenames of which content items will be exported. If none is provided, all types are exported                                                                                                        |
 | replaceInvalidLinks  | RTE may contain links to invalid items. You won't be able to re-import such items due to validation error. By setting this to `true` the Migration Toolkit will automatically remove these links. Defaults to `false` |
@@ -233,14 +232,11 @@ However, when migration from 3rd party system you typically only use the `import
 ## Export CLI samples
 
 ```bash
-# Export from Kontent.ai environment as json without assets
+# Export from Kontent.ai environment as json
 kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json
 
-# Export from Kontent.ai environment as csv without assets:
+# Export from Kontent.ai environment as csv
 kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=csv
-
-# Export from Kontent.ai environment as single json file with assets:
-kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json --exportAssets=true
 ```
 
 ## Exporting in code
@@ -254,7 +250,6 @@ Example:
 ```typescript
 const adapter = new KontentAiExportAdapter({
     environmentId: '<id>',
-    exportAssets: true,
     isPreview: false,
     isSecure: false,
     // optional filter to customize what items are exported
@@ -269,12 +264,12 @@ const exportToolkit = new ExportToolkit({
     adapter,
     items: {
         filename: 'items-export.zip',
-        formatService: new ItemJsonProcessorService() // or different one, see readme.md
+        formatService: 'json' // 'csv' or custom implementation
     },
     // assets are optional
     assets: {
         filename: 'assets-export.zip',
-        formatService: new AssetJsonProcessorService() // or different one, see readme.md
+        formatService: 'json' // 'csv' or custom implementation
     },
     log: {
         console: (data) => {
@@ -305,7 +300,6 @@ Create a `json` configuration file in the folder where you are attempting to run
     "adapter": "kontentAi",
     "isSecure": true,
     "isPreview": false,
-    "exportAssets": true,
     "action": "export",
     "baseUrl": null,
     "format": "json" // or 'csv'
@@ -325,9 +319,9 @@ this library in code rather then via command line.
 
 ## Output / Input formats
 
-This library provides `csv`, `json`, `jsoinJoined` formats out of the box. However, you can create your own format by
-implementing `IFormatService` and supplying that to import / export functions. This is useful if you need to extend the
-existing format, change how it's processing or just support new formats such as `xliff`, `xlxs`, `xml` or other.
+This library provides `csv` and `json` formats out of the box. However, you can create your own format by implementing
+`IFormatService` and supplying that to import / export functions. This is useful if you need to extend the existing
+format, change how it's processing or just support new formats such as `xliff`, `xlxs`, `xml` or other.
 
 Following is a list of `built-in` format services:
 
@@ -340,10 +334,9 @@ Following is a list of `built-in` format services:
 
 Export is made with `Delivery API` for speed and efficiency, but this brings some limitations:
 
--   Assets are exported without their `title`. If you import these assets back to a different project, the `filename` is
-    used as a `title`. Similarly, folder structure of imported assets is not preserved. This only applies when asset is
-    actually imported as if the asset already exists in target project, it is skipped from import (this is often the
-    case if the export and import environments are one and the same)
+-   Folder structure of imported assets is not preserved. This only applies when asset is actually imported as if the
+    asset already exists in target project, it is skipped from import (this is often the case if the export and import
+    environments are one and the same)
 -   Language variants in `Scheduled` workflow step are not migrated to this workflow step because the API is missing the
     information about scheduled time so there is no way to specify scheduled publish time
 
