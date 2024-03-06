@@ -15,6 +15,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
             assetRecords.push({
                 assetId: exportAsset.assetId,
                 assetExternalId: exportAsset.assetExternalId,
+                _zipFilename: exportAsset._zipFilename,
                 filename: exportAsset.filename,
                 title: exportAsset.title,
                 codename: exportAsset.codename

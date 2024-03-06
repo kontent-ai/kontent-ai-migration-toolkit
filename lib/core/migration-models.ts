@@ -34,6 +34,7 @@ export interface IMigrationItem {
 }
 
 export interface IMigrationAsset {
+    _zipFilename: string;
     binaryData: Buffer | Blob | undefined;
     filename: string;
     title: string;

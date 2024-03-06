@@ -25,7 +25,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
         data.zip.addFile(this.assetsFilename, csvContent);
 
         for (const exportAsset of data.assets) {
-            await data.zip.addFile(exportAsset.filename, exportAsset.binaryData);
+            await data.zip.addFile(exportAsset._zipFilename, exportAsset.binaryData);
         }
 
         return data.zip.generateZipAsync();
@@ -55,6 +55,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
                 // process data row
                 const parsedAsset: IMigrationAsset = {
                     assetId: undefined,
+                    _zipFilename: '',
                     filename: '',
                     assetExternalId: undefined,
                     title: '',

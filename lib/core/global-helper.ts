@@ -88,7 +88,7 @@ export function is404Error(error: any): boolean {
     return false;
 }
 
-export function getAssetFilename(asset: AssetModels.Asset): string {
+export function getAssetZipFilename(asset: AssetModels.Asset): string {
     return `${asset.id}.${getExtension(asset.url)}`;
 }
 

@@ -6,7 +6,7 @@ import {
     IMigrationAsset,
     Log,
     getAssetUrlPath,
-    getAssetFilename
+    getAssetZipFilename
 } from '../../../../core/index.js';
 import colors from 'colors';
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
@@ -86,9 +86,10 @@ export class ExportAssetsHelper {
 
             migrationAssets.push({
                 binaryData: assetWithBinaryData.binaryData,
-                title: managementAsset.fileName,
+                title: managementAsset.title ?? managementAsset.fileName,
                 codename: managementAsset.codename,
-                filename: getAssetFilename(managementAsset),
+                filename: managementAsset.fileName,
+                _zipFilename: getAssetZipFilename(managementAsset),
                 assetId: managementAsset.id,
                 assetExternalId: managementAsset.id // use external id to prevent same asset from being uploaded multiple times
             });

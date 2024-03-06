@@ -52,14 +52,14 @@ export class ImportAssetsHelper {
             itemInfo: (input) => {
                 return {
                     itemType: 'asset',
-                    title: input.filename
+                    title: input.title
                 };
             },
             processFunc: async (asset) => {
                 // only import asset if it didn't exist
                 this.log?.spinner?.text?.({
                     type: 'upload',
-                    message: asset.filename
+                    message: asset.title
                 });
 
                 const uploadedBinaryFile = await data.managementClient
@@ -73,7 +73,7 @@ export class ImportAssetsHelper {
 
                 this.log?.spinner?.text?.({
                     type: 'create',
-                    message: asset.filename
+                    message: asset.title
                 });
 
                 const createdAsset = await data.managementClient
@@ -124,7 +124,7 @@ export class ImportAssetsHelper {
             itemInfo: (input) => {
                 return {
                     itemType: 'asset',
-                    title: input.filename
+                    title: input.title
                 };
             },
             processFunc: async (asset) => {

@@ -24,7 +24,7 @@ import {
 } from '../core/core.models.js';
 import { idTranslateHelper } from './id-translate-helper.js';
 import {
-    getAssetFilename,
+    getAssetZipFilename,
     getAssetIdFromFilename,
     getAssetUrlPath,
     IMigrationItem,
@@ -75,7 +75,7 @@ export class ElementTranslationHelper {
                     throw Error(`Missing asset metadata for url '${colors.red(asset.url)}'`);
                 }
 
-                assetFilenames.push(getAssetFilename(fullAssetByUrl));
+                assetFilenames.push(getAssetZipFilename(fullAssetByUrl));
             }
 
             return assetFilenames;
