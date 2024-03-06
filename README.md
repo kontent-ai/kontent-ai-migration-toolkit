@@ -152,6 +152,7 @@ export interface IMigrationItem {
         language: string;
         type: string;
         collection: string;
+        
         workflow_step?: string;
         workflow?: string;
     };
@@ -160,11 +161,12 @@ export interface IMigrationItem {
 
 export interface IMigrationAsset {
     binaryData: Buffer | Blob | undefined;
+    filename: string;
+    title: string;
+
     assetId?: string;
     assetExternalId?: string;
     codename?: string;
-    filename: string;
-    title: string;
 }
 ```
 
