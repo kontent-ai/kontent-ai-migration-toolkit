@@ -6,6 +6,5 @@
     "assetsFilename": "assets-export.zip",
     "isPreview": false,
     "action": "export",
-    "baseUrl": null,
     "format": "json"
 }

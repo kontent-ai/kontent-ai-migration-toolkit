@@ -1,5 +1,4 @@
 import { ImportToolkit } from '../../lib/toolkit/import-toolkit.class.js';
-import { ItemCsvProcessorService } from '../../lib/file-processor/index.js';
 
 const run = async () => {
     const importToolkit = new ImportToolkit({
@@ -7,7 +6,7 @@ const run = async () => {
         log: {
             console: (data) => {
                 console.log(data.message);
-            },
+            }
         },
         environmentId: '<id>',
         managementApiKey: '<mapiKey>',
@@ -20,7 +19,7 @@ const run = async () => {
         },
         items: {
             filename: 'items-export.csv',
-            formatService: new ItemCsvProcessorService()
+            formatService: 'csv'
         }
     });
 

@@ -1,5 +1,4 @@
 import { ImportToolkit } from '../../lib/toolkit/import-toolkit.class.js';
-import { ItemJsonProcessorService } from '../../lib/file-processor/index.js';
 
 const run = async () => {
     const importToolkit = new ImportToolkit({
@@ -20,7 +19,7 @@ const run = async () => {
         },
         items: {
             filename: 'items-export.json',
-            formatService: new ItemJsonProcessorService()
+            formatService: 'json'
         }
     });
 
