@@ -70,16 +70,13 @@ to equal their original id. There are some limitations to importing assets, see 
 
 ```bash
 # Import from zip:
-kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json
-
-# Import from zip with assets:
-kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.zip --format=json --assetsFilename=assets.zip
+kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --format=json --itemsFilename=items.zip --assetsFilename=assets.zip
 
 # Import from json file:
-kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.json --format=json
+kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --format=json --itemsFilename=items.json
 
 # Import from csv file:
-kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --itemsFilename=data.csv --format=csv
+kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --format=csv --itemsFilename=items.csv
 ```
 
 ## Importing in code
@@ -98,7 +95,6 @@ const importToolkit = new ImportToolkit({
     managementApiKey: '<mapiKey>',
     skipFailedItems: false,
     // be careful when filtering data to import because you might break data consistency.
-    // for example, it might not be possible to import language variant without first importing content item and so on.
     canImport: {
         asset: (item) => true, // all assets will be imported
         contentItem: (item) => true // all content items will be imported,
