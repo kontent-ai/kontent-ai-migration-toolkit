@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.6](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v0.1.5...v0.1.6) (2024-03-07)
+
+
+### Features
+
+* makes log required ([5ae845d](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/commit/5ae845dc6f88aa356dc1694958de352b8ebd1a15))
+* updates log to be always required, updates readme, extends migration assets options ([9065129](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/commit/906512909df9e4af6fbb9941437043f5dbc193f8))
+
 ### [0.1.5](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v0.1.4...v0.1.5) (2024-03-07)
 
 
