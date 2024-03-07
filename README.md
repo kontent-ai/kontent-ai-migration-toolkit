@@ -17,10 +17,10 @@ This library can only be used in `node.js`. Use in Browsers is not supported.
 Use `--help` anytime to get information about available commands and their options.
 
 ```bash
-npx @kontent-ai-consulting/content-model-accelerator --help
+npx @kontent-ai-consulting/migration-toolkit --help
 
 # you can also install the package globally, or locally
-npm i @kontent-ai-consulting/content-model-accelerator -g
+npm i @kontent-ai-consulting/migration-toolkit -g
 
 # with the package installed, you can call the tool as follows
 kontent-ai-migration-toolkit --help
