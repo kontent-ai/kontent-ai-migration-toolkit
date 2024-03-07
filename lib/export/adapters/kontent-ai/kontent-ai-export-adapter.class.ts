@@ -12,15 +12,15 @@ export class KontentAiExportAdapter implements IExportAdapter {
     constructor(private config: IKontentAiExportAdapterConfig) {}
 
     async exportAsync(): Promise<IExportAdapterResult> {
-        this.config.log.console?.({
+        this.config.log.console({
             type: 'info',
             message: `Preparing export from environment ${colors.yellow(this.config.environmentId)}`
         });
-        this.config.log.console?.({
+        this.config.log.console({
             type: 'info',
             message: this.config.isSecure ? `Using Secure API` : `Not using Secure API`
         });
-        this.config.log.console?.({
+        this.config.log.console({
             type: 'info',
             message: this.config.isPreview ? `Using Preview API` : `Using Delivery API`
         });
@@ -39,7 +39,7 @@ export class KontentAiExportAdapter implements IExportAdapter {
             types: allTypes
         });
 
-        this.config.log.console?.({ type: 'info', message: `Extracting assets referenced by content items` });
+        this.config.log.console({ type: 'info', message: `Extracting assets referenced by content items` });
         const { allAssets, migrationAssets } = await exportAssetsHelper.extractAssetsAsync(
             deliveryContentItems,
             allTypes

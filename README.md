@@ -35,9 +35,10 @@ https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit?tab=readme
 The standard migration process would look like:
 
 1. Prepare the desired structure (content types, taxonomies...) in your Kontent.ai environment
-2. Install this library and write a custom `adapter` where you download / fetch data from your system and convert it to appropriate format defined by this library & your content model
+2. Install this library and write a custom `adapter` where you download / fetch data from your system and convert it to
+   appropriate format defined by this library & your content model
 3. Use `ExportToolkit` with your `adapter` which will create files on File system with your data
-2. Import the export files into a target environment using `ImportToolkit` in code or via `CLI`
+4. Import the export files into a target environment using `ImportToolkit` in code or via `CLI`
 
 ### Migration example
 
@@ -147,14 +148,14 @@ The Migration Toolkit creates content items that are not present in target proje
 project (based on item's `codename`) the item will be updated. The workflow of imported language variant will be set
 according to `workflowStep` field.
 
-You can run `kontent-ai-migration-toolkit` many times over without being worried that identical content item will be
-created multiple times.
+You can run `kontent-ai-migration-toolkit` many times over without being worried that identical content items will be
+created multiple times. Same goes for assets if you use `externalId` when migrationg assets over.
 
 ## How are assets imported?
 
 If asset exists in target project, the asset upload will be skipped and not uploaded at all. If asset doesn't exist, the
-asset from the zip folder will be uploaded. The Migration Toolkit will also set `external_id` of newly uploaded assets
-to equal their original id. There are some limitations to importing assets, see _Limitations_ sections for more info.
+asset from the zip folder will be uploaded. It is highly recommended that you set `externalId` when migrating assets as
+that will prevent duplicate assets from being created if you run the migration multiple times.
 
 ## Import Configuration
 
@@ -249,13 +250,21 @@ export interface IMigrationItem {
         type: string;
         collection: string;
 
+        // workflow_step & workflow is required for Content items, but optional for Components
         workflow_step?: string;
         workflow?: string;
     };
     elements: IMigrationElement[];
 }
 
+export interface IMigrationReference {
+    id?: string;
+    codename?: string;
+    external_id?: string;
+}
+
 export interface IMigrationAsset {
+    _zipFilename: string;
     binaryData: Buffer | Blob | undefined;
     filename: string;
     title: string;
@@ -263,6 +272,8 @@ export interface IMigrationAsset {
     assetId?: string;
     assetExternalId?: string;
     codename?: string;
+    collection?: IMigrationReference;
+    folder?: IMigrationReference;
 }
 ```
 
@@ -424,13 +435,8 @@ Following is a list of `built-in` format services:
 
 ## Limitations
 
-Export is made with `Delivery API` for speed and efficiency, but this brings some limitations:
-
--   Folder structure of imported assets is not preserved. This only applies when asset is actually imported as if the
-    asset already exists in target project, it is skipped from import (this is often the case if the export and import
-    environments are one and the same)
--   Language variants in `Scheduled` workflow step are not migrated to this workflow step because the API is missing the
-    information about scheduled time so there is no way to specify scheduled publish time
+-   Language variants in `Scheduled` workflow step exported with built-in Kontent.ai export adapter are not imported
+    with this state as the information about scheduled time is missing in API response.
 
 ## FAQ
 

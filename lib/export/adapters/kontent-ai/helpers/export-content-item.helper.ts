@@ -47,7 +47,7 @@ export class ExportContentItemHelper {
         const contentItems: IContentItem[] = [];
 
         if (data.config.customItemsExport) {
-            this.log.console?.({
+            this.log.console({
                 type: 'info',
                 message: `Using custom items export`
             });
@@ -55,21 +55,21 @@ export class ExportContentItemHelper {
             const customItems = await data.config.customItemsExport(this.deliveryClient);
 
             for (const contentItem of customItems) {
-                this.log.console?.({
+                this.log.console({
                     type: 'fetch',
                     message: `${contentItem.system.name} | ${contentItem.system.type}`
                 });
                 contentItems.push(contentItem);
             }
         } else {
-            this.log.console?.({
+            this.log.console({
                 type: 'info',
                 message: `Exporting content items of '${colors.yellow(
                     languagesToExport.length.toString()
                 )}' content types and '${colors.yellow(languagesToExport.length.toString())}' languages`
             });
 
-            this.log.console?.({
+            this.log.console({
                 type: 'info',
                 message: `Calculating total items to export`
             });
@@ -81,7 +81,7 @@ export class ExportContentItemHelper {
             let exportedItemsCount: number = 0;
             let extractedComponentsCount: number = 0;
 
-            this.log.console?.({
+            this.log.console({
                 type: 'info',
                 message: `Found '${colors.yellow(totalItemsToExport.toString())}' items in total to export`
             });
@@ -129,7 +129,7 @@ export class ExportContentItemHelper {
                 }
             });
 
-            this.log.console?.({
+            this.log.console({
                 type: 'info',
                 message: `Adding '${colors.yellow(extractedComponentsCount.toString())}' components to export result`
             });

@@ -26,11 +26,17 @@ export interface IMigrationItem {
         language: string;
         type: string;
         collection: string;
-        
+
         workflow?: string;
         workflow_step?: string;
     };
     elements: IMigrationElement[];
+}
+
+export interface IMigrationReference {
+    id?: string;
+    codename?: string;
+    external_id?: string;
 }
 
 export interface IMigrationAsset {
@@ -42,4 +48,6 @@ export interface IMigrationAsset {
     assetId?: string;
     assetExternalId?: string;
     codename?: string;
+    collection?: IMigrationReference;
+    folder?: IMigrationReference;
 }

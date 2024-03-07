@@ -3,7 +3,7 @@ import { IImportedData, IMigrationAsset, Log, is404Error, processInChunksAsync }
 import mime from 'mime';
 import colors from 'colors';
 
-export function getImportAssetsHelper(log?: Log): ImportAssetsHelper {
+export function getImportAssetsHelper(log: Log): ImportAssetsHelper {
     return new ImportAssetsHelper(log);
 }
 
@@ -11,14 +11,14 @@ export class ImportAssetsHelper {
     private readonly importAssetsChunkSize: number = 1;
     private readonly fetchAssetsChunkSize: number = 1;
 
-    constructor(private readonly log?: Log) {}
+    constructor(private readonly log: Log) {}
 
     async importAssetsAsync(data: {
         managementClient: ManagementClient;
         assets: IMigrationAsset[];
         importedData: IImportedData;
     }): Promise<void> {
-        this.log.console?.({
+        this.log.console({
             type: 'info',
             message: `Categorizing '${colors.yellow(data.assets.length.toString())}' assets`
         });
@@ -31,7 +31,7 @@ export class ImportAssetsHelper {
         data.importedData.assets.push(...filteredAssets.existingAssets);
 
         if (filteredAssets.existingAssets.length) {
-            this.log.console?.({
+            this.log.console({
                 type: 'skip',
                 message: `Skipping upload for '${colors.yellow(
                     filteredAssets.existingAssets.length.toString()
@@ -39,7 +39,7 @@ export class ImportAssetsHelper {
             });
         }
 
-        this.log.console?.({
+        this.log.console({
             type: 'upload',
             message: `Uploading '${colors.yellow(filteredAssets.assetsToUpload.length.toString())}' assets`
         });
@@ -86,7 +86,13 @@ export class ImportAssetsHelper {
                             },
                             codename: asset.codename,
                             title: asset.title,
-                            external_id: asset.assetId
+                            external_id: asset.assetId,
+                            collection: asset.collection
+                                ? {
+                                      reference: asset.collection
+                                  }
+                                : undefined,
+                            folder: asset.folder
                         };
                     })
                     .toPromise()

@@ -12,7 +12,7 @@ export class FileService {
     async loadFileAsync(filename: string): Promise<Buffer> {
         const filePath = this.getFilePath(filename);
 
-        this.log.console?.({
+        this.log.console({
             type: 'readFs',
             message: `Reading file '${colors.yellow(filePath)}'`
         });
@@ -25,7 +25,7 @@ export class FileService {
     async writeFileAsync(fileNameWithoutExtension: string, content: any): Promise<void> {
         const filePath = this.getFilePath(fileNameWithoutExtension);
 
-        this.log.console?.({
+        this.log.console({
             type: 'writeFs',
             message: `Storing file '${colors.yellow(filePath)}'`
         });

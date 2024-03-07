@@ -43,7 +43,7 @@ export class ExportAssetsHelper {
     private async getMigrationAssetsAsync(
         assetsWithBinaryData: ExportAssetWithBinaryData[]
     ): Promise<IExtractAssetsResult> {
-        this.log.console?.({
+        this.log.console({
             type: 'info',
             message: `Preparing to list all assets records for id translation (Asset url -> Asset id)`
         });
@@ -64,7 +64,7 @@ export class ExportAssetsHelper {
         ).data;
         this.log.spinner?.stop();
 
-        this.log.console?.({
+        this.log.console({
             type: 'info',
             message: `Fetched '${colors.yellow(
                 managementAssets.items.length.toString()
@@ -155,7 +155,7 @@ export class ExportAssetsHelper {
             ...new Map(extractedAssets.map((item) => [item.url, item])).values()
         ];
 
-        this.log.console?.({
+        this.log.console({
             type: 'info',
             message: `Preparing to download '${colors.yellow(uniqueAssets.length.toString())}' assets`
         });

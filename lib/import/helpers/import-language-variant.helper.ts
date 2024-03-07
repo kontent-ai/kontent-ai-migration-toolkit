@@ -47,7 +47,7 @@ export class ImportLanguageVariantHelper {
             data.importContentItems
         );
 
-        this.log.console?.({
+        this.log.console({
             type: 'info',
             message: `Importing '${colors.yellow(
                 categorizedParsedItems.regularItems.length.toString()
@@ -90,7 +90,7 @@ export class ImportLanguageVariantHelper {
                     });
                 } catch (error) {
                     if (this.skipFailedItems) {
-                        this.log.console?.({
+                        this.log.console({
                             type: 'error',
                             message: `Failed to import language variant '${colors.red(
                                 importContentItem.system.name
