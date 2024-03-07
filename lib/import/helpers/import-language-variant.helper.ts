@@ -22,7 +22,7 @@ import { getElementTranslationHelper } from '../../translation/index.js';
 import colors from 'colors';
 
 export function getImportLanguageVariantstemHelper(config: {
-    log?: Log;
+    log: Log;
     skipFailedItems: boolean;
 }): ImportLanguageVariantHelper {
     return new ImportLanguageVariantHelper(config.log, config.skipFailedItems);
@@ -32,7 +32,7 @@ export class ImportLanguageVariantHelper {
     private readonly importContentItemChunkSize: number = 1;
     private readonly importWorkflowHelper: ImportWorkflowHelper;
 
-    constructor(private readonly log: Log | undefined, private readonly skipFailedItems: boolean) {
+    constructor(private readonly log: Log, private readonly skipFailedItems: boolean) {
         this.importWorkflowHelper = getImportWorkflowHelper(log);
     }
 
@@ -47,7 +47,7 @@ export class ImportLanguageVariantHelper {
             data.importContentItems
         );
 
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Importing '${colors.yellow(
                 categorizedParsedItems.regularItems.length.toString()
@@ -90,7 +90,7 @@ export class ImportLanguageVariantHelper {
                     });
                 } catch (error) {
                     if (this.skipFailedItems) {
-                        this.log?.console?.({
+                        this.log.console?.({
                             type: 'error',
                             message: `Failed to import language variant '${colors.red(
                                 importContentItem.system.name
@@ -123,7 +123,7 @@ export class ImportLanguageVariantHelper {
         const workflowStepCodename = data.importContentItem.system.workflow_step;
         const workflowCodename = data.importContentItem.system.workflow;
 
-        this.log?.spinner?.text?.({
+        this.log.spinner?.text?.({
             type: 'upsert',
             message: `${data.preparedContentItem.name}`
         });
@@ -217,7 +217,7 @@ export class ImportLanguageVariantHelper {
         });
 
         try {
-            this.log?.spinner?.text?.({
+            this.log.spinner?.text?.({
                 type: 'fetch',
                 message: `${data.importContentItem.system.name}`
             });
@@ -248,7 +248,7 @@ export class ImportLanguageVariantHelper {
             // language variant exists
             // check if variant is published or archived
             if (this.isLanguageVariantPublished(languageVariantOfContentItem, data.workflows)) {
-                this.log?.spinner?.text?.({
+                this.log.spinner?.text?.({
                     type: 'createNewVersion',
                     message: `${data.importContentItem.system.name}`
                 });
@@ -261,7 +261,7 @@ export class ImportLanguageVariantHelper {
                     .toPromise();
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, data.workflows)) {
                 // change workflow step to draft
-                this.log?.spinner?.text?.({
+                this.log.spinner?.text?.({
                     type: 'unArchive',
                     message: `${data.importContentItem.system.name}`
                 });

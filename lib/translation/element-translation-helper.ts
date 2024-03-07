@@ -34,7 +34,7 @@ import {
 } from '../core/index.js';
 import colors from 'colors';
 
-export function getElementTranslationHelper(log?: Log): ElementTranslationHelper {
+export function getElementTranslationHelper(log: Log): ElementTranslationHelper {
     return new ElementTranslationHelper(log);
 }
 
@@ -43,7 +43,7 @@ export class ElementTranslationHelper {
     private readonly dataNewWindowAttributeName: string = 'data-new-window';
     private readonly elementsBuilder = new LanguageVariantElementsBuilder();
 
-    constructor(private readonly log?: Log) {}
+    constructor(private readonly log: Log) {}
 
     /**
      * Elements transform used by Kontent.ai export adapter
@@ -133,7 +133,7 @@ export class ElementTranslationHelper {
                 );
 
                 if (!importedAsset) {
-                    this.log?.console?.({
+                    this.log.console?.({
                         type: 'warning',
                         message: `Could not find imported asset for filename '${colors.red(
                             assetFilename
@@ -360,7 +360,7 @@ export class ElementTranslationHelper {
                         const linkText = this.extractTextFromLinkHtml(linkTag);
                         linkTag = linkText ?? '';
 
-                        this.log?.console?.({
+                        this.log.console?.({
                             type: 'warning',
                             message: `Could not find content item with id '${colors.red(
                                 id
@@ -371,7 +371,7 @@ export class ElementTranslationHelper {
                             )}'. Replacing link with plain text.`
                         });
                     } else {
-                        this.log?.console?.({
+                        this.log.console?.({
                             type: 'warning',
                             message: `Could not find content item with id '${colors.red(
                                 id
@@ -485,7 +485,7 @@ export class ElementTranslationHelper {
                     importedData.contentItems.find((m) => m.original.system.codename === codename)?.imported;
 
                 if (!contentItemWithGivenCodename) {
-                    this.log?.console?.({
+                    this.log.console?.({
                         type: 'warning',
                         message: `Could not find content item with codename '${colors.red(
                             codename

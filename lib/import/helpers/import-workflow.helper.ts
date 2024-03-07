@@ -12,12 +12,12 @@ interface IWorkflowAndStep {
     step: IWorkflowStep;
 }
 
-export function getImportWorkflowHelper(log?: Log): ImportWorkflowHelper {
+export function getImportWorkflowHelper(log: Log): ImportWorkflowHelper {
     return new ImportWorkflowHelper(log);
 }
 
 export class ImportWorkflowHelper {
-    constructor(private readonly log?: Log) {}
+    constructor(private readonly log: Log) {}
 
     getWorkflowAndStep(data: {
         workflowStepCodename: string;
@@ -98,7 +98,7 @@ export class ImportWorkflowHelper {
         });
 
         if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
-            this.log?.spinner?.text?.({
+            this.log.spinner?.text?.({
                 type: 'publish',
                 message: `${importContentItem.system.name}`
             });
@@ -110,7 +110,7 @@ export class ImportWorkflowHelper {
                 .withoutData()
                 .toPromise();
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
-            this.log?.spinner?.text?.({
+            this.log.spinner?.text?.({
                 type: 'skip',
                 message: `Skipping scheduled workflow step for item '${colors.yellow(importContentItem.system.name)}'`
             });
@@ -119,7 +119,7 @@ export class ImportWorkflowHelper {
             // there is no way to determine if language variant is published via MAPI
             // so we have to always try unpublishing first and catching possible errors
             try {
-                this.log?.spinner?.text?.({
+                this.log.spinner?.text?.({
                     type: 'unpublish',
                     message: `${importContentItem.system.name}`
                 });
@@ -132,7 +132,7 @@ export class ImportWorkflowHelper {
                     .toPromise();
             } catch (error) {
                 if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                    this.log?.spinner?.text?.({
+                    this.log.spinner?.text?.({
                         type: 'unpublish',
                         message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
                     });
@@ -141,7 +141,7 @@ export class ImportWorkflowHelper {
                 }
             }
 
-            this.log?.spinner?.text?.({
+            this.log.spinner?.text?.({
                 type: 'archive',
                 message: `${importContentItem.system.name}`
             });
@@ -163,7 +163,7 @@ export class ImportWorkflowHelper {
             if (workflow.codename === workflowStepCodename) {
                 // item is already in the target workflow step
             } else {
-                this.log?.spinner?.text?.({
+                this.log.spinner?.text?.({
                     type: 'changeWorkflowStep',
                     message: `${importContentItem.system.name}`
                 });

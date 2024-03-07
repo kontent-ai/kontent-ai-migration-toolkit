@@ -5,6 +5,7 @@ import { MigrationElementType, ContentItemsFetchMode, IMigrationItem, IMigration
 export type ImportSourceType = 'zip' | 'file';
 
 export interface IImportConfig {
+    log: Log;
     sourceType: ImportSourceType;
     managementApiKey: string;
     skipFailedItems: boolean;
@@ -16,7 +17,6 @@ export interface IImportConfig {
         contentItem?: (item: IMigrationItem) => boolean | Promise<boolean>;
         asset?: (item: IMigrationAsset) => boolean | Promise<boolean>;
     };
-    log?: Log;
 }
 
 export interface IImportAllResult {

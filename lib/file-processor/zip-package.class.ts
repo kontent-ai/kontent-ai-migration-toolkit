@@ -12,7 +12,7 @@ export class ZipPackage {
     private readonly context: ZipContext = 'node.js';
     private readonly compressionLevel: ZipCompressionLevel = 9;
 
-    constructor(private readonly jsZip: JSZip, private readonly log: Log | undefined) {}
+    constructor(private readonly jsZip: JSZip, private readonly log: Log) {}
 
     addFile(filePath: string, data: any): void {
         this.jsZip.file(filePath, data);
@@ -54,7 +54,7 @@ export class ZipPackage {
     async generateZipAsync(): Promise<FileBinaryData> {
         const zipOutputType = this.getZipOutputType(this.context);
 
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Creating zip file using '${zipOutputType}' with compression level '${this.compressionLevel.toString()}'`
         });
@@ -68,7 +68,7 @@ export class ZipPackage {
             streamFiles: true
         });
 
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Zip successfully generated (${colors.yellow(formatBytes(this.getZipSizeInBytes(result)))})`
         });

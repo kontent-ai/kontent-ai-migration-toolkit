@@ -25,7 +25,7 @@ interface IExtractAssetsResult {
     allAssets: AssetModels.Asset[];
 }
 
-export function getExportAssetsHelper(managementClient: ManagementClient, log?: Log): ExportAssetsHelper {
+export function getExportAssetsHelper(managementClient: ManagementClient, log: Log): ExportAssetsHelper {
     return new ExportAssetsHelper(managementClient, log);
 }
 
@@ -33,7 +33,7 @@ export class ExportAssetsHelper {
     private readonly downloadAssetBinaryDataChunkSize: number = 10;
     private readonly httpService: HttpService = new HttpService();
 
-    constructor(private readonly managementClient: ManagementClient, private readonly log?: Log) {}
+    constructor(private readonly managementClient: ManagementClient, private readonly log: Log) {}
 
     async extractAssetsAsync(items: IContentItem[], types: IContentType[]): Promise<IExtractAssetsResult> {
         const assetsWithBinaryData = await this.getAssetsWithBinaryDataAsync(items, types);
@@ -43,18 +43,18 @@ export class ExportAssetsHelper {
     private async getMigrationAssetsAsync(
         assetsWithBinaryData: ExportAssetWithBinaryData[]
     ): Promise<IExtractAssetsResult> {
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Preparing to list all assets records for id translation (Asset url -> Asset id)`
         });
 
-        this.log?.spinner?.start();
+        this.log.spinner?.start();
         const managementAssets = (
             await this.managementClient
                 .listAssets()
                 .withListQueryConfig({
                     responseFetched: (response, token) => {
-                        this?.log?.spinner?.text?.({
+                        this?.log.spinner?.text?.({
                             type: 'fetch',
                             message: `Fetched '${colors.yellow(response.data.items.length.toString())}' asset records`
                         });
@@ -62,9 +62,9 @@ export class ExportAssetsHelper {
                 })
                 .toAllPromise()
         ).data;
-        this.log?.spinner?.stop();
+        this.log.spinner?.stop();
 
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Fetched '${colors.yellow(
                 managementAssets.items.length.toString()
@@ -155,7 +155,7 @@ export class ExportAssetsHelper {
             ...new Map(extractedAssets.map((item) => [item.url, item])).values()
         ];
 
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Preparing to download '${colors.yellow(uniqueAssets.length.toString())}' assets`
         });

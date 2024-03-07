@@ -19,6 +19,7 @@ const run = async () => {
 
     const exportToolkit = new ExportToolkit({
         adapter,
+        log: getDefaultLog(),
         items: {
             filename: 'items-export.zip',
             formatService: 'json' // or different one, see readme.md

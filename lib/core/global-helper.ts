@@ -146,7 +146,7 @@ export function extractFilenameFromUrl(assetUrl: string): string {
 
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     type: ItemType;
-    log: Log | undefined;
+    log: Log;
     items: TInputItem[];
     chunkSize: number;
     processFunc: (item: TInputItem) => Promise<TOutputItem>;
@@ -156,7 +156,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     const outputItems: TOutputItem[] = [];
     let processingIndex: number = 0;
 
-    data?.log?.spinner?.start();
+    data?.log.spinner?.start();
 
     try {
         for (const chunk of chunks) {
@@ -167,8 +167,8 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
                     if (data.itemInfo) {
                         const itemInfo = data.itemInfo(item);
 
-                        if (data.log?.spinner) {
-                            data?.log?.spinner?.text?.({
+                        if (data.log.spinner) {
+                            data?.log.spinner?.text?.({
                                 message: itemInfo.title,
                                 type: data.type,
                                 count: {
@@ -177,7 +177,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
                                 }
                             });
                         } else {
-                            data.log?.console({
+                            data.log.console({
                                 message: itemInfo.title,
                                 type: data.type,
                                 count: {
@@ -196,7 +196,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
 
         return outputItems;
     } finally {
-        data?.log?.spinner?.stop();
+        data?.log.spinner?.stop();
     }
 }
 

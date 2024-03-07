@@ -15,7 +15,7 @@ import {
 import { FileService, getFileService } from '../node/index.js';
 
 export interface IExporToolkitConfig {
-    log?: Log;
+    log: Log;
     adapter: IExportAdapter;
     items: {
         filename: string;

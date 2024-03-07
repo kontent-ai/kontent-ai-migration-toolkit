@@ -12,12 +12,12 @@ import {
 import { IExportTransformConfig, IMigrationItem, IMigrationAsset, Log } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
-export function getFileProcessorService(log?: Log): FileProcessorService {
+export function getFileProcessorService(log: Log): FileProcessorService {
     return new FileProcessorService(log);
 }
 
 export class FileProcessorService {
-    constructor(private readonly log?: Log) {}
+    constructor(private readonly log: Log) {}
 
     async parseZipAsync(data: {
         items?: {
@@ -38,13 +38,13 @@ export class FileProcessorService {
         };
 
         if (data.items) {
-            this.log?.console?.({
+            this.log.console?.({
                 type: 'info',
                 message: 'Loading items zip file'
             });
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
 
-            this.log?.console?.({
+            this.log.console?.({
                 type: 'info',
                 message: 'Parsing items zip data'
             });
@@ -58,13 +58,13 @@ export class FileProcessorService {
         }
 
         if (data.assets) {
-            this.log?.console?.({
+            this.log.console?.({
                 type: 'info',
                 message: 'Loading assets zip file'
             });
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
 
-            this.log?.console?.({
+            this.log.console?.({
                 type: 'info',
                 message: 'Parsing assets zip data'
             });
@@ -76,7 +76,7 @@ export class FileProcessorService {
             );
         }
 
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Parsing completed. Parsed '${colors.yellow(
                 result.importData.items.length.toString()
@@ -101,7 +101,7 @@ export class FileProcessorService {
         let parsedAssets: IMigrationAsset[] = [];
 
         if (data.items) {
-            this.log?.console?.({
+            this.log.console?.({
                 type: 'info',
                 message: `Parsing items file with '${colors.yellow(data.items.formatService.name)}' `
             });
@@ -114,7 +114,7 @@ export class FileProcessorService {
         }
 
         if (data.assets) {
-            this.log?.console?.({
+            this.log.console?.({
                 type: 'info',
                 message: `Parsing assets file with '${colors.yellow(data.assets.formatService.name)}' `
             });
@@ -132,7 +132,7 @@ export class FileProcessorService {
             }
         };
 
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Parsing completed. Parsed '${colors.yellow(
                 result.importData.items.length.toString()
@@ -150,7 +150,7 @@ export class FileProcessorService {
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Creating items zip`,
             count: {
@@ -174,7 +174,7 @@ export class FileProcessorService {
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Creating assets zip`,
             count: {

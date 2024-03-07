@@ -21,6 +21,7 @@ export interface IExportFilter {
 }
 
 export interface IKontentAiExportAdapterConfig {
+    log: Log;
     environmentId: string;
     managementApiKey: string;
     secureApiKey?: string;
@@ -33,5 +34,4 @@ export interface IKontentAiExportAdapterConfig {
     retryStrategy?: IRetryStrategyOptions;
     customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;
     transformConfig?: IExportTransformConfig;
-    log?: Log;
 }

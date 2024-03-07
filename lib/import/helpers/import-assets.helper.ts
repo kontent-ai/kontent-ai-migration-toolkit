@@ -18,7 +18,7 @@ export class ImportAssetsHelper {
         assets: IMigrationAsset[];
         importedData: IImportedData;
     }): Promise<void> {
-        this.log?.console?.({
+        this.log.console?.({
             type: 'info',
             message: `Categorizing '${colors.yellow(data.assets.length.toString())}' assets`
         });
@@ -31,7 +31,7 @@ export class ImportAssetsHelper {
         data.importedData.assets.push(...filteredAssets.existingAssets);
 
         if (filteredAssets.existingAssets.length) {
-            this.log?.console?.({
+            this.log.console?.({
                 type: 'skip',
                 message: `Skipping upload for '${colors.yellow(
                     filteredAssets.existingAssets.length.toString()
@@ -39,7 +39,7 @@ export class ImportAssetsHelper {
             });
         }
 
-        this.log?.console?.({
+        this.log.console?.({
             type: 'upload',
             message: `Uploading '${colors.yellow(filteredAssets.assetsToUpload.length.toString())}' assets`
         });
@@ -57,7 +57,7 @@ export class ImportAssetsHelper {
             },
             processFunc: async (asset) => {
                 // only import asset if it didn't exist
-                this.log?.spinner?.text?.({
+                this.log.spinner?.text?.({
                     type: 'upload',
                     message: asset.title
                 });
@@ -71,7 +71,7 @@ export class ImportAssetsHelper {
                     })
                     .toPromise();
 
-                this.log?.spinner?.text?.({
+                this.log.spinner?.text?.({
                     type: 'create',
                     message: asset.title
                 });
