@@ -26,7 +26,7 @@ npm i @kontent-ai-consulting/content-model-accelerator -g
 kontent-ai-migration-toolkit --help
 ```
 
-# Preparing import from external / 3rd party system
+# Preparing migration data from external / 3rd party systems
 
 In order to import data into your Kontent.ai environment you first need to prepare the data you want to import and
 convert them into appropriate format (see more at
@@ -34,8 +34,10 @@ https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit?tab=readme
 
 The standard migration process would look like:
 
-1. Prepare export files (for assets & items) using `ExportToolkit` with custom `adapter`
-2. Import the export files into a specified environment using `ImportToolkit` in code or via `CLI`
+1. Prepare the desired structure (content types, taxonomies...) in your Kontent.ai environment
+2. Install this library and write a custom `adapter` where you download / fetch data from your system and convert it to appropriate format defined by this library & your content model
+3. Use `ExportToolkit` with your `adapter` which will create files on File system with your data
+2. Import the export files into a target environment using `ImportToolkit` in code or via `CLI`
 
 ### Migration example
 
