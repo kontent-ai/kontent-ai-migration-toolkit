@@ -45,7 +45,7 @@ export async function withDefaultLogAsync(func: (log: Log) => Promise<void>): Pr
     await func(log);
 }
 
-function getDefaultLog(): Log {
+export function getDefaultLog(): Log {
     const spinner = ora();
     let previousCount: ILogCount | undefined = undefined;
 
