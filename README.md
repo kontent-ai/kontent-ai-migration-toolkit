@@ -46,6 +46,7 @@ import {
   IMigrationItem,
   ExportToolkit,
   IMigrationAsset,
+  getDefaultLog,
   IExportAdapter,
 } from '@kontent-ai-consulting/migration-toolkit';
 
@@ -116,11 +117,7 @@ const run = async () => {
       filename: 'assets.zip',
       formatService: 'json',
     },
-    log: {
-      console: (data) => {
-        console.log(data.message);
-      },
-    },
+    log: getDefaultLog(),
     adapter: customExportAdapter,
   });
 
@@ -191,11 +188,7 @@ Example below shows the most basic example of importing `content items` from a s
 ```typescript
 const importToolkit = new ImportToolkit({
     sourceType: 'file',
-    log: {
-        console: (data) => {
-            console.log(data.message);
-        }
-    },
+    log: getDefaultLog(),
     environmentId: '<id>',
     managementApiKey: '<mapiKey>',
     skipFailedItems: false,
@@ -372,11 +365,7 @@ const exportToolkit = new ExportToolkit({
         filename: 'assets-export.zip',
         formatService: 'json' // 'csv' or custom implementation
     },
-    log: {
-        console: (data) => {
-            console.log(data.message);
-        }
-    }
+    log: getDefaultLog()
 });
 
 await exportToolkit.exportAsync();

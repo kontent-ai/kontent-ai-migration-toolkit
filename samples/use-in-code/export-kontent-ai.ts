@@ -1,5 +1,5 @@
-import { KontentAiExportAdapter } from 'lib/index.js';
-
+import { getDefaultLog } from '../../lib/core/index.js';
+import { KontentAiExportAdapter } from '../../lib/export/index.js';
 import { ExportToolkit } from '../../lib/toolkit/export-toolkit.class.js';
 
 const run = async () => {
@@ -14,11 +14,7 @@ const run = async () => {
             const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();
             return response.data.items;
         },
-        log: {
-            console: (data) => {
-                console.log(data.message);
-            }
-        }
+        log: getDefaultLog()
     });
 
     const exportToolkit = new ExportToolkit({

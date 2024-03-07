@@ -1,13 +1,10 @@
 import { ImportToolkit } from '../../lib/toolkit/import-toolkit.class.js';
+import { getDefaultLog } from '../../lib/core/index.js';
 
 const run = async () => {
     const importToolkit = new ImportToolkit({
         sourceType: 'zip',
-        log: {
-            console: (data) => {
-                console.log(data.message);
-            }
-        },
+        log: getDefaultLog(),
         environmentId: '<id>',
         managementApiKey: '<mapiKey>',
         skipFailedItems: false,
