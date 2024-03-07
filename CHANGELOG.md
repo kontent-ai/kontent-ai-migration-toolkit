@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.5](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v0.1.4...v0.1.5) (2024-03-07)
+
+
+### Features
+
+* exposes getDefaultLog ([29840f2](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/commit/29840f277ac43187af84f0c05c4a590f23062d5c))
+
 ### [0.1.4](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v0.1.3...v0.1.4) (2024-03-07)
 
 
