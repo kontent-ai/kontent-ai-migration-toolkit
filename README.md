@@ -26,6 +26,111 @@ npm i @kontent-ai-consulting/content-model-accelerator -g
 kontent-ai-migration-toolkit --help
 ```
 
+# Preparing import from external / 3rd party system
+
+In order to import data into your Kontent.ai environment you first need to prepare the data you want to import and
+convert them into appropriate format (see more at
+https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit?tab=readme-ov-file#migration-models).
+
+The standard migration process would look like:
+
+1. Prepare export files (for assets & items) using `ExportToolkit` with custom `adapter`
+2. Import the export files into a specified environment using `ImportToolkit` in code or via `CLI`
+
+### Migration example
+
+A very simplified export script would look something like this:
+
+```typescript
+import {
+  IMigrationItem,
+  ExportToolkit,
+  IMigrationAsset,
+  IExportAdapter,
+} from '@kontent-ai-consulting/migration-toolkit';
+
+const customExportAdapter: IExportAdapter = {
+  name: 'customExportAdapter',
+  exportAsync: async () => {
+    // Typically you query your external system to create the migration items & assets
+    const migrationItems: IMigrationItem[] = [
+      {
+        system: {
+          codename: 'myArticle',
+          // collection codename must match the collection in your target K.ai environment
+          collection: 'default',
+          // language codename must match the language in your target K.ai environment
+          language: 'default',
+        // type codename must match the content type codename in your target K.ai environment
+          type: 'article',
+          name: 'My article',
+        },
+        elements: [
+          {
+            // the codename of the element must match codename of the element in your target K.ai environment
+            // In this example it is expected that the target environment contains content type with codename 'article' that contains an element with codename 'title' that is of 'text' type
+            codename: 'title',
+            type: 'text',
+            value: 'My article',
+          },
+          {
+            // the codename of the element must match codename of the element in your target K.ai environment
+            codename: 'summary',
+            type: 'rich_text',
+            value: '<p>My article summary</p>',
+          },
+        ],
+      },
+    ];
+
+    const migrationAssets: IMigrationAsset[] = [
+      {
+        // _zipFilename is a name of the file within the export .zip package. It is used only for identifying the file within export
+        _zipFilename: 'filename.txt',
+        // filename will be used in K.ai asset as a filename
+        filename: 'filename.txt',
+        // title will be used in K.ai asset as a title
+        title: 'My file',
+        // assetExternalId is optional, but highly recommended as if you would run the import multiple times this prevents
+        // upload / creation of duplicate assets
+        assetExternalId: 'uniqueFileId',
+        // and this is the actual binary data of the asset you want to upload
+        binaryData: Buffer.from('myFile', 'utf8'),
+      },
+    ];
+
+    return {
+      items: migrationItems,
+      assets: migrationAssets,
+    };
+  },
+};
+
+const run = async () => {
+  const exportToolkit = new ExportToolkit({
+    items: {
+      filename: 'items.json',
+      formatService: 'json',
+    },
+    assets: {
+      filename: 'assets.zip',
+      formatService: 'json',
+    },
+    log: {
+      console: (data) => {
+        console.log(data.message);
+      },
+    },
+    adapter: customExportAdapter,
+  });
+
+  /*
+  1) This will create items.json & assets.zip files within current folder
+  2) Once exported, you can use import CLI (or importToolkit in code) to import data to a specified Kontent.ai environment
+  */
+  await exportToolkit.exportAsync();
+```
+
 # Import
 
 > [!CAUTION]  
@@ -205,7 +310,7 @@ A single record of `IMigrationItem` type in `json` format may look like this:
 There is a built-in `kontentAi` adapter that can be used to export content items & assets from Kontent.ai environments.
 However, when migration from 3rd party system you typically only use the `import` capabilities of this repository.
 
-## Export Configuration
+## Export from Kontent.ai Configuration
 
 | Config               | Value                                                                                                                                                                                                                 |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
