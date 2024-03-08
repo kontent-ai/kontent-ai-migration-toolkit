@@ -149,7 +149,7 @@ project (based on item's `codename`) the item will be updated. The workflow of i
 according to `workflowStep` field.
 
 You can run `kontent-ai-migration-toolkit` many times over without being worried that identical content items will be
-created multiple times. Same goes for assets if you use `externalId` when migrationg assets over.
+created multiple times. Same goes for assets if you use `externalId` when migrating assets over.
 
 ## How are assets imported?
 
