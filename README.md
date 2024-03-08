@@ -33,7 +33,9 @@ In order to import data into your Kontent.ai environment you first need to prepa
 convert them into appropriate format (see more at
 https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit?tab=readme-ov-file#migration-models).
 
-You have 2 options to prepare your data. Either you use `ExportToolkit` to fetch your data from external system and store them on File system which you then use to import data. Or you can use `ImportToolkit` directly without storing anything on File system.
+You have 2 options to prepare your data. Either you use `ExportToolkit` to fetch your data from external system and
+store them on File system which you then use to import data. Or you can use `ImportToolkit` directly without storing
+anything on File system.
 
 ### Option 1 - Use `ExportToolkit`
 
@@ -41,18 +43,21 @@ You have 2 options to prepare your data. Either you use `ExportToolkit` to fetch
 2. Install this library and write a custom `adapter` to download / fetch data from your system and convert it to
    appropriate formats defined by this library & your content model
 3. Use `ExportToolkit` with your `adapter` which creates files on File system
-4. Import the export files into a target environment using `ImportToolkit.importFromFilesAsync` in code or via `CLI` using the exported files
+4. Import the export files into a target environment using `ImportToolkit.importFromFilesAsync` in code or via `CLI`
+   using the exported files
 
-An example script can be found at TODO
+An example script can be found
+[here](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-with-files.ts)
 
 ### Option 2 - Direct import
 
 1. Prepare the desired structure (content types, taxonomies...) in your Kontent.ai environment
-2. Install this library and write a code to download / fetch data from your system and convert it to
-   appropriate formats defined by this library & your content model
+2. Install this library and write a code to download / fetch data from your system and convert it to appropriate formats
+   defined by this library & your content model
 3. Use `ImportToolkit.importAsync` function to directly import the data into your Kontent.ai environment
 
-An example script can be found at TODO
+An example script can be found
+[here](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-directly.ts)
 
 # Import
 
@@ -82,17 +87,17 @@ assets as that will prevent duplicate assets from being created if you run the m
 
 ## Import Configuration
 
-| Config             | Value                                                                                                                                                   |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **action**         | Action. Available options: `import` & `export` **(required)**                                                                                           |
-| **environmentId**  | Id of Kontent.ai project **(required)**                                                                                                                 |
-| **apiKey**         | Management API key **(required)**                                                                                                                       |
-| **format**         | Format used to export data. Available options: `csv`, `json` or custom implementation **(required)**                                                    |
-| **itemsFilename**  | Name of the items file that will be used to parse items **(required)**                                                                                                  |
-| assetsFilename | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
-| baseUrl            | Custom base URL for Kontent.ai API calls                                                                                                                |
-| skipFailedItems    | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
-| force              | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
+| Config            | Value                                                                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **action**        | Action. Available options: `import` & `export` **(required)**                                                                                           |
+| **environmentId** | Id of Kontent.ai project **(required)**                                                                                                                 |
+| **apiKey**        | Management API key **(required)**                                                                                                                       |
+| **format**        | Format used to export data. Available options: `csv`, `json` or custom implementation **(required)**                                                    |
+| **itemsFilename** | Name of the items file that will be used to parse items **(required)**                                                                                  |
+| assetsFilename    | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
+| baseUrl           | Custom base URL for Kontent.ai API calls                                                                                                                |
+| skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
+| force             | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
 
 ## Import CLI samples
 
@@ -109,28 +114,12 @@ kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --
 
 ## Importing in code
 
-Example below shows the most basic example of importing `content items` from a single `json` file
+Examples of importing in code can be found at:
 
-```typescript
-const importToolkit = new ImportToolkit({
-    sourceType: 'file',
-    log: getDefaultLog(),
-    environmentId: '<id>',
-    managementApiKey: '<mapiKey>',
-    skipFailedItems: false,
-    // be careful when filtering data to import because you might break data consistency.
-    canImport: {
-        asset: (item) => true, // all assets will be imported
-        contentItem: (item) => true // all content items will be imported,
-    },
-    items: {
-        filename: 'items.json',
-        formatService: 'json'
-    }
-});
-
-await importToolkit.importAsync();
-```
+1. [Import from json](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-from-json.ts)
+1. [Import from csv](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-from-csv.ts)
+1. [Import from zip](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-from-zip-sample.ts)
+1. [Direct import without files](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-directly.ts)
 
 # Migration models
 
@@ -275,37 +264,11 @@ You may customize what items get exported by using the `customItemsExport` optio
 allows you to export exactly the items you need, however be aware that the exported items may reference other items that
 you might not export and subsequent re-import may fail because of the fact that there are missing items.
 
-Example:
+Examples:
 
-```typescript
-const adapter = new KontentAiExportAdapter({
-    environmentId: '<id>',
-    isPreview: false,
-    isSecure: false,
-    // optional filter to customize what items are exported
-    customItemsExport: async (client) => {
-        // return only the items you want to export by applying filters, parameters etc..
-        const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();
-        return response.data.items;
-    }
-});
-
-const exportToolkit = new ExportToolkit({
-    adapter,
-    items: {
-        filename: 'items-export.zip',
-        formatService: 'json' // 'csv' or custom implementation
-    },
-    // assets are optional
-    assets: {
-        filename: 'assets-export.zip',
-        formatService: 'json' // 'csv' or custom implementation
-    },
-    log: getDefaultLog()
-});
-
-await exportToolkit.exportAsync();
-```
+1. [Export from Kontent.ai environment](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-kontent-ai.ts)
+1. [Custom export with files](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-with-files.ts)
+1. [Custom export and direct import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-directly.ts)
 
 ## CLI help
 
