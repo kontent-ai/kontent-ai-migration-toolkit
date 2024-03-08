@@ -1,9 +1,23 @@
-import { AssetsFormatConfig, ItemsFormatConfig, getAssetsFormatService, getItemsFormatService } from '../core/index.js';
+import {
+    AssetsFormatConfig,
+    IMigrationAsset,
+    IMigrationItem,
+    ItemsFormatConfig,
+    getAssetsFormatService,
+    getItemsFormatService
+} from '../core/index.js';
 import { FileProcessorService, getFileProcessorService } from '../file-processor/index.js';
 import { IImportConfig, IImportContentType, IImportSource, ImportService } from '../import/index.js';
 import { FileService, getFileService } from '../node/index.js';
 
-export interface IImportToolkitConfig extends IImportConfig {
+export interface IImportToolkitConfig extends IImportConfig {}
+
+export interface IImportData {
+    items: IMigrationItem[];
+    assets: IMigrationAsset[];
+}
+
+export interface IImportFromFilesData {
     items?: {
         filename: string;
         formatService: ItemsFormatConfig;
@@ -23,7 +37,20 @@ export class ImportToolkit {
         this.fileService = getFileService(config.log);
     }
 
-    async importAsync(): Promise<void> {
+    async importAsync(data: IImportData): Promise<void> {
+        const importService = new ImportService(this.config);
+
+        const importSourceData: IImportSource = {
+            importData: {
+                items: data.items,
+                assets: data.assets
+            }
+        };
+
+        await importService.importAsync(importSourceData);
+    }
+
+    async importFromFilesAsync(data: IImportFromFilesData): Promise<void> {
         const importService = new ImportService(this.config);
         let importSourceData: IImportSource;
 
@@ -33,12 +60,14 @@ export class ImportToolkit {
         switch (this.config.sourceType) {
             case 'zip': {
                 importSourceData = await this.getImportDataFromZipAsync({
+                    ...data,
                     contentTypes: contentTypes
                 });
                 break;
             }
             case 'file': {
-                importSourceData = await this.getImportDataFromFileAsync({
+                importSourceData = await this.getImportDataFromNonZipFileAsync({
+                    ...data,
                     contentTypes: contentTypes
                 });
                 break;
@@ -48,23 +77,26 @@ export class ImportToolkit {
             }
         }
 
-        // import into target environment
         await importService.importAsync(importSourceData);
     }
 
-    private async getImportDataFromFileAsync(data: { contentTypes: IImportContentType[] }): Promise<IImportSource> {
+    private async getImportDataFromNonZipFileAsync(
+        data: IImportFromFilesData & {
+            contentTypes: IImportContentType[];
+        }
+    ): Promise<IImportSource> {
         // parse data from files
         const importSourceData = await this.fileProcessorService.parseFileAsync({
-            items: this.config.items
+            items: data.items
                 ? {
-                      file: await this.fileService.loadFileAsync(this.config.items.filename),
-                      formatService: getItemsFormatService(this.config.items.formatService)
+                      file: await this.fileService.loadFileAsync(data.items.filename),
+                      formatService: getItemsFormatService(data.items.formatService)
                   }
                 : undefined,
-            assets: this.config.assets
+            assets: data.assets
                 ? {
-                      file: await this.fileService.loadFileAsync(this.config.assets.filename),
-                      formatService: getAssetsFormatService(this.config.assets.formatService)
+                      file: await this.fileService.loadFileAsync(data.assets.filename),
+                      formatService: getAssetsFormatService(data.assets.formatService)
                   }
                 : undefined,
             types: data.contentTypes
@@ -73,19 +105,21 @@ export class ImportToolkit {
         return importSourceData;
     }
 
-    private async getImportDataFromZipAsync(data: { contentTypes: IImportContentType[] }): Promise<IImportSource> {
+    private async getImportDataFromZipAsync(
+        data: IImportFromFilesData & { contentTypes: IImportContentType[] }
+    ): Promise<IImportSource> {
         // parse data from zip
         const importSourceData = await this.fileProcessorService.parseZipAsync({
-            items: this.config.items
+            items: data.items
                 ? {
-                      file: await this.fileService.loadFileAsync(this.config.items.filename),
-                      formatService: getItemsFormatService(this.config.items.formatService)
+                      file: await this.fileService.loadFileAsync(data.items.filename),
+                      formatService: getItemsFormatService(data.items.formatService)
                   }
                 : undefined,
-            assets: this.config.assets
+            assets: data.assets
                 ? {
-                      file: await this.fileService.loadFileAsync(this.config.assets.filename),
-                      formatService: getAssetsFormatService(this.config.assets.formatService)
+                      file: await this.fileService.loadFileAsync(data.assets.filename),
+                      formatService: getAssetsFormatService(data.assets.formatService)
                   }
                 : undefined,
             types: data.contentTypes

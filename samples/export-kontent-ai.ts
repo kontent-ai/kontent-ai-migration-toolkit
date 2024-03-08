@@ -1,6 +1,6 @@
-import { getDefaultLog } from '../../lib/core/index.js';
-import { KontentAiExportAdapter } from '../../lib/export/index.js';
-import { ExportToolkit } from '../../lib/toolkit/export-toolkit.class.js';
+import { getDefaultLog } from '../lib/core/index.js';
+import { KontentAiExportAdapter } from '../lib/export/index.js';
+import { ExportToolkit } from '../lib/toolkit/index.js';
 
 const run = async () => {
     const adapter = new KontentAiExportAdapter({

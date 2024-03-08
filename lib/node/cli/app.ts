@@ -116,7 +116,7 @@ const exportAsync = async (config: ICliFileConfig) => {
                 isSecure: config.isSecure,
                 baseUrl: config.baseUrl,
                 exportTypes: config.exportTypes,
-                exportLanguages: config.exportLanguages,
+                exportLanguages: config.exportLanguages
             });
         } else {
             logErrorAndExit({
@@ -204,7 +204,12 @@ const importAsync = async (config: ICliFileConfig) => {
                 asset: (asset) => {
                     return true;
                 }
-            },
+            }
+        };
+
+        const importToolkit = new ImportToolkit(importToolkitConfig);
+
+        await importToolkit.importFromFilesAsync({
             items: itemsFilename
                 ? {
                       filename: itemsFilename,
@@ -217,11 +222,7 @@ const importAsync = async (config: ICliFileConfig) => {
                       formatService: getAssetFormatService(config.format)
                   }
                 : undefined
-        };
-
-        const importToolkit = new ImportToolkit(importToolkitConfig);
-
-        await importToolkit.importAsync();
+        });
 
         log.console({ type: 'completed', message: `Import has been successful` });
     });

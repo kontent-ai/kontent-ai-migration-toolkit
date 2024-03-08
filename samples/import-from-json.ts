@@ -1,5 +1,5 @@
-import { ImportToolkit } from '../../lib/toolkit/import-toolkit.class.js';
-import { getDefaultLog } from '../../lib/core/index.js';
+import { ImportToolkit } from '../lib/toolkit/index.js';
+import { getDefaultLog } from '../lib/core/index.js';
 
 const run = async () => {
     const importToolkit = new ImportToolkit({
@@ -13,14 +13,15 @@ const run = async () => {
         canImport: {
             asset: (item) => true, // all assets will be imported
             contentItem: (item) => true // all content items will be imported,
-        },
+        }
+    });
+
+    await importToolkit.importFromFilesAsync({
         items: {
             filename: 'items-export.json',
             formatService: 'json'
         }
     });
-
-    await importToolkit.importAsync();
 };
 
 run();

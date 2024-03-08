@@ -5,10 +5,11 @@ and export adapters. We provide `Kontent.ai` export adapter by default (meaning 
 re-import it to the same or different project).
 
 > [!TIP]  
-> The idea behind this tool is to help migration of data into `Kontent.ai` from a simple object structure (json, csv..).
-> Developers should export data from their system into this format and use this tool to import it. This tool takes care
-> of preparing content items, language variants, moving items through workflow, publishing, archiving, uploading assets,
-> retry policy and some basic validation and more.
+> The idea behind this tool is to facilitate migration into `Kontent.ai` from external / 3rd party system. This library
+> provides the tools for developers to prepare the data for migration which is stored on File system in designated
+> format. Once the migration data is prepared, the `import` functionality (either in code or via CLI) can be used to
+> start migration into Kontent.ai environment. This tool takes care of preparing content items, language variants,
+> moving items through workflow, publishing, archiving, uploading assets, retry policy and more.
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
 
@@ -26,110 +27,32 @@ npm i @kontent-ai-consulting/migration-toolkit -g
 kontent-ai-migration-toolkit --help
 ```
 
-# Preparing migration data from external / 3rd party systems
+# Migrating data from external / 3rd party systems
 
 In order to import data into your Kontent.ai environment you first need to prepare the data you want to import and
 convert them into appropriate format (see more at
 https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit?tab=readme-ov-file#migration-models).
 
-The standard migration process would look like:
+You have 2 options to prepare your data. Either you use `ExportToolkit` to fetch your data from external system and store them on File system which you then use to import data. Or you can use `ImportToolkit` directly without storing anything on File system.
+
+### Option 1 - Use `ExportToolkit`
 
 1. Prepare the desired structure (content types, taxonomies...) in your Kontent.ai environment
-2. Install this library and write a custom `adapter` where you download / fetch data from your system and convert it to
-   appropriate format defined by this library & your content model
-3. Use `ExportToolkit` with your `adapter` which will create files on File system with your data
-4. Import the export files into a target environment using `ImportToolkit` in code or via `CLI`
+2. Install this library and write a custom `adapter` to download / fetch data from your system and convert it to
+   appropriate formats defined by this library & your content model
+3. Use `ExportToolkit` with your `adapter` which creates files on File system
+4. Import the export files into a target environment using `ImportToolkit.importFromFilesAsync` in code or via `CLI` using the exported files
 
-### Migration script example
+An example script can be found at TODO
 
-A very simplified script that prepares your migration data for import may look like:
+### Option 2 - Direct import
 
-```typescript
-import {
-  IMigrationItem,
-  ExportToolkit,
-  IMigrationAsset,
-  getDefaultLog,
-  IExportAdapter,
-} from '@kontent-ai-consulting/migration-toolkit';
+1. Prepare the desired structure (content types, taxonomies...) in your Kontent.ai environment
+2. Install this library and write a code to download / fetch data from your system and convert it to
+   appropriate formats defined by this library & your content model
+3. Use `ImportToolkit.importAsync` function to directly import the data into your Kontent.ai environment
 
-const customExportAdapter: IExportAdapter = {
-  name: 'customExportAdapter',
-  exportAsync: async () => {
-    // Typically you query your external system to create the migration items & assets
-    const migrationItems: IMigrationItem[] = [
-      {
-        system: {
-          codename: 'myArticle',
-          // collection codename must match the collection in your target K.ai environment
-          collection: 'default',
-          // language codename must match the language in your target K.ai environment
-          language: 'default',
-          // type codename must match the content type codename in your target K.ai environment
-          type: 'article',
-          name: 'My article',
-        },
-        elements: [
-          {
-            // the codename of the element must match codename of the element in your target K.ai environment
-            // In this example it is expected that the target environment contains content type with codename 'article' that contains an element with codename 'title' that is of 'text' type
-            codename: 'title',
-            type: 'text',
-            value: 'My article',
-          },
-          {
-            // the codename of the element must match codename of the element in your target K.ai environment
-            codename: 'summary',
-            type: 'rich_text',
-            value: '<p>My article summary</p>',
-          },
-        ],
-      },
-    ];
-
-    const migrationAssets: IMigrationAsset[] = [
-      {
-        // _zipFilename is a name of the file within the export .zip package. It is used only for identifying the file within export
-        _zipFilename: 'filename.txt',
-        // filename will be used in K.ai asset as a filename
-        filename: 'filename.txt',
-        // title will be used in K.ai asset as a title
-        title: 'My file',
-        // assetExternalId is optional, but highly recommended as if you would run the import multiple times this prevents
-        // upload / creation of duplicate assets
-        assetExternalId: 'uniqueFileId',
-        // and this is the actual binary data of the asset you want to upload
-        binaryData: Buffer.from('myFile', 'utf8'),
-      },
-    ];
-
-    return {
-      items: migrationItems,
-      assets: migrationAssets,
-    };
-  },
-};
-
-const run = async () => {
-  const exportToolkit = new ExportToolkit({
-    items: {
-      filename: 'items.json',
-      formatService: 'json',
-    },
-    assets: {
-      filename: 'assets.zip',
-      formatService: 'json',
-    },
-    log: getDefaultLog(),
-    adapter: customExportAdapter,
-  });
-
-  /*
-  1) This will create items.json & assets.zip files within current folder
-  2) Once exported, you can use import CLI (or importToolkit in code) to import data to a specified Kontent.ai environment
-  */
-  await exportToolkit.exportAsync();
-```
+An example script can be found at TODO
 
 # Import
 
@@ -145,31 +68,31 @@ const run = async () => {
 ## How are content items & language variants imported?
 
 The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
-project (based on item's `codename`) the item will be updated. The workflow of imported language variant will be set
-according to `workflowStep` field.
+project (based on item's `codename`) the item will be updated instead. The workflow of imported language variant will be
+set according to `workflow_step` and `workflow` fields.
 
 You can run `kontent-ai-migration-toolkit` many times over without being worried that identical content items will be
-created multiple times. Same goes for assets if you use `externalId` when migrating assets over.
+created multiple times. Same goes for assets if you use `assetExternalId` when migrating assets over.
 
 ## How are assets imported?
 
 If asset exists in target project, the asset upload will be skipped and not uploaded at all. If asset doesn't exist, the
-asset from the zip folder will be uploaded. It is highly recommended that you set `externalId` when migrating assets as
-that will prevent duplicate assets from being created if you run the migration multiple times.
+asset from the zip folder will be uploaded. It is highly recommended that you set `assetExternalId` when migrating
+assets as that will prevent duplicate assets from being created if you run the migration multiple times.
 
 ## Import Configuration
 
-| Config            | Value                                                                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **action**        | Action. Available options: `import` & `export` **(required)**                                                                                           |
-| **environmentId** | Id of Kontent.ai project **(required)**                                                                                                                 |
-| **apiKey**        | Management API key **(required)**                                                                                                                       |
-| **format**        | Format used to export data. Available options: `csv`, `json` or custom implementation **(required)**                                                    |
-| itemsFilename     | Name of the items file that will be used to parse items                                                                                                 |
-| assetsFilename    | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
-| baseUrl           | Custom base URL for Kontent.ai API calls                                                                                                                |
-| skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
-| force             | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
+| Config             | Value                                                                                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **action**         | Action. Available options: `import` & `export` **(required)**                                                                                           |
+| **environmentId**  | Id of Kontent.ai project **(required)**                                                                                                                 |
+| **apiKey**         | Management API key **(required)**                                                                                                                       |
+| **format**         | Format used to export data. Available options: `csv`, `json` or custom implementation **(required)**                                                    |
+| **itemsFilename**  | Name of the items file that will be used to parse items **(required)**                                                                                                  |
+| assetsFilename | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
+| baseUrl            | Custom base URL for Kontent.ai API calls                                                                                                                |
+| skipFailedItems    | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
+| force              | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
 
 ## Import CLI samples
 

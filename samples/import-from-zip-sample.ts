@@ -1,5 +1,5 @@
-import { ImportToolkit } from '../../lib/toolkit/import-toolkit.class.js';
-import { getDefaultLog } from '../../lib/core/index.js';
+import { ImportToolkit } from '../lib/toolkit/index.js';
+import { getDefaultLog } from '../lib/core/index.js';
 
 const run = async () => {
     const importToolkit = new ImportToolkit({
@@ -21,7 +21,10 @@ const run = async () => {
             },
 
             contentItem: (item) => true // all content items will be imported,
-        },
+        }
+    });
+
+    await importToolkit.importFromFilesAsync({
         items: {
             filename: 'items-export.zip',
             formatService: 'json' // or different one, see readme.md
@@ -31,8 +34,6 @@ const run = async () => {
             formatService: 'json' // or different one, see readme.md
         }
     });
-
-    await importToolkit.importAsync();
 };
 
 run();
