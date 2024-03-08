@@ -40,9 +40,9 @@ The standard migration process would look like:
 3. Use `ExportToolkit` with your `adapter` which will create files on File system with your data
 4. Import the export files into a target environment using `ImportToolkit` in code or via `CLI`
 
-### Migration example
+### Migration script example
 
-A very simplified export script would look something like this:
+A very simplified script that prepares your migration data for import may look like:
 
 ```typescript
 import {
@@ -65,7 +65,7 @@ const customExportAdapter: IExportAdapter = {
           collection: 'default',
           // language codename must match the language in your target K.ai environment
           language: 'default',
-        // type codename must match the content type codename in your target K.ai environment
+          // type codename must match the content type codename in your target K.ai environment
           type: 'article',
           name: 'My article',
         },
