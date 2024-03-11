@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.7](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v0.1.6...v0.1.7) (2024-03-11)
+
+
+### Features
+
+* Extends ImportToolkit to allow direct import, updates samples & prepares updated readme ([0259d44](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/commit/0259d44b8681ac55c3d99792ff2952674bb6b616))
+
 ### [0.1.6](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v0.1.5...v0.1.6) (2024-03-07)
 
 
