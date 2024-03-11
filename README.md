@@ -40,8 +40,7 @@ anything on File system.
 2. Write a custom `adapter` to download / fetch data from your system and convert it to appropriate formats defined by
    this library & your content model
 3. Use `ExportToolkit` with your `adapter` which creates files on File system
-4. Import the export files into a target environment using `ImportToolkit.importFromFilesAsync` in code or via `CLI`
-   using the exported files
+4. Import the generated export files into a target environment using `ImportToolkit.importFromFilesAsync` in code or via `CLI`
 
 An example script can be found
 [here](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-with-files.ts)
