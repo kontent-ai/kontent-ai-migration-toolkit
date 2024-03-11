@@ -1,15 +1,12 @@
 # Kontent.ai Migration Toolkit
 
-The purpose of this project is to import content data to [Kontent.ai](https://kontent.ai) projects using various formats
-and export adapters. We provide `Kontent.ai` export adapter by default (meaning you can export data from Kontent.ai and
-re-import it to the same or different project).
+The purpose of this tool is to facilitate migration to [Kontent.ai](https://kontent.ai) environment using a developer friendly abstraction layer where developers focus on data transformation from external systems rather then spending time on writing customized import scripts.
 
 > [!TIP]  
-> The idea behind this tool is to facilitate migration into `Kontent.ai` from external / 3rd party system. This library
-> provides the tools for developers to prepare the data for migration which is stored on File system in designated
-> format. Once the migration data is prepared, the `import` functionality (either in code or via CLI) can be used to
-> start migration into Kontent.ai environment. This tool takes care of preparing content items, language variants,
-> moving items through workflow, publishing, archiving, uploading assets, retry policy and more.
+> This library provides the tools for developers to prepare the data for migration in designated format (`json`, `csv`)
+> and `import` functionality (either in code or via CLI) to bring this over to your Kontent.ai environment.The tool
+> takes care of preparing content items, language variants, moving items through workflow, publishing, archiving,
+> uploading assets, retry policy and more.
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
 
@@ -40,8 +37,8 @@ anything on File system.
 ### Option 1 - Use `ExportToolkit`
 
 1. Prepare the desired structure (content types, taxonomies...) in your Kontent.ai environment
-2. Install this library and write a custom `adapter` to download / fetch data from your system and convert it to
-   appropriate formats defined by this library & your content model
+2. Write a custom `adapter` to download / fetch data from your system and convert it to appropriate formats defined by
+   this library & your content model
 3. Use `ExportToolkit` with your `adapter` which creates files on File system
 4. Import the export files into a target environment using `ImportToolkit.importFromFilesAsync` in code or via `CLI`
    using the exported files
@@ -52,8 +49,8 @@ An example script can be found
 ### Option 2 - Direct import
 
 1. Prepare the desired structure (content types, taxonomies...) in your Kontent.ai environment
-2. Install this library and write a code to download / fetch data from your system and convert it to appropriate formats
-   defined by this library & your content model
+2. Write a code to download / fetch data from your system and convert it to appropriate formats defined by this library
+   & your content model
 3. Use `ImportToolkit.importAsync` function to directly import the data into your Kontent.ai environment
 
 An example script can be found
@@ -125,7 +122,7 @@ Examples of importing in code can be found at:
 
 This tools uses simplified models to make migration simpler and more developer friendly. This is useful especially when
 migrating from external systems because data structure is almost certainly very different to models used within
-Kontent.ai APIs. These migration models act as an abstraction on the API layer.
+Kontent.ai APIs.
 
 ### Model definitions
 
@@ -162,7 +159,7 @@ export interface IMigrationItem {
         type: string;
         collection: string;
 
-        // workflow_step & workflow is required for Content items, but optional for Components
+        // workflow_step & workflow is required for Content items, but optional for Component items
         workflow_step?: string;
         workflow?: string;
     };
