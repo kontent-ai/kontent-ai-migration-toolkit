@@ -1,6 +1,6 @@
 
 export const libMetadata = {
 	name: '@kontent-ai-consulting/migration-toolkit',
-    timestamp: 'Mon, 11 Mar 2024 08:41:44 GMT',
+    timestamp: 'Wed, 03 Apr 2024 07:12:03 GMT',
     version: '0.1.7'
 };
