@@ -20,7 +20,7 @@
     "type": "module",
     "directories": {},
     "scripts": {
-        "test": "echo \"no global test configured\"",
+        "test": "npm run test:all",
         "release": "npm run lint && standard-version && npm run update:version",
         "release:major": "npm run lint && standard-version --release-as major  && npm run update:version",
         "release:major:beta": "npm run lint && standard-version --prerelease --release-as major  && npm run update:version",
@@ -50,7 +50,7 @@
     "dependencies": {
         "@kontent-ai-consulting/tools-analytics": "0.0.6",
         "@kontent-ai/delivery-sdk": "14.8.0",
-        "@kontent-ai/management-sdk": "5.9.0",
+        "@kontent-ai/management-sdk": "6.1.0",
         "bytes": "3.1.2",
         "colors": "1.4.0",
         "csv-parse": "5.5.5",
@@ -68,17 +68,16 @@
         "@types/bytes": "3.1.4",
         "@types/json2csv": "5.0.7",
         "@types/jszip": "3.4.1",
-        "@types/mime": "3.0.4",
-        "@types/node": "20.11.24",
+        "@types/node": "20.12.3",
         "@types/uuid": "9.0.8",
         "@types/yargs": "17.0.32",
-        "@typescript-eslint/eslint-plugin": "7.1.1",
-        "@typescript-eslint/parser": "7.1.1",
+        "@typescript-eslint/eslint-plugin": "7.5.0",
+        "@typescript-eslint/parser": "7.5.0",
         "eslint": "8.57.0",
         "standard-version": "9.5.0",
         "ts-node": "10.9.2",
         "tsconfig-paths": "^4.2.0",
         "tslib": "2.6.2",
-        "typescript": "5.3.3"
+        "typescript": "5.4.3"
     }
 }
