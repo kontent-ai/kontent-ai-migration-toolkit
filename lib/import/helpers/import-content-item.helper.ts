@@ -7,7 +7,8 @@ import {
     processInChunksAsync,
     ContentItemsFetchMode,
     IMigrationItem,
-    Log
+    Log,
+    getItemExternalIdForCodename
 } from '../../core/index.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
 import colors from 'colors';
@@ -113,7 +114,7 @@ export class ImportContentItemHelper {
             log: this.log,
             type: 'contentItem',
             chunkSize: this.importContentItemChunkSize,
-            items: data.categorizedParsedItems.regularItems,
+            items: data.categorizedParsedItems.contentItems,
             itemInfo: (input) => {
                 return {
                     itemType: 'contentItem',
@@ -252,6 +253,7 @@ export class ImportContentItemHelper {
                 type: {
                     codename: migrationContentItem.system.type
                 },
+                external_id: getItemExternalIdForCodename(migrationContentItem.system.codename),
                 codename: migrationContentItem.system.codename,
                 collection: {
                     codename: migrationContentItem.system.collection

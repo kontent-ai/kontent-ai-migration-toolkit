@@ -2,7 +2,7 @@ import { IMigrationItem } from '../../core/index.js';
 
 export interface ICategorizedParsedItems {
     componentItems: IMigrationItem[];
-    regularItems: IMigrationItem[];
+    contentItems: IMigrationItem[];
 }
 
 export class ParsedItemsHelper {
@@ -11,7 +11,7 @@ export class ParsedItemsHelper {
             // if content item does not have a workflow step it means it is used as a component within Rich text element
             // such items are procesed within element transform
             componentItems: items.filter((m) => !m.system.workflow_step?.length),
-            regularItems: items.filter((m) => m.system.workflow_step?.length)
+            contentItems: items.filter((m) => m.system.workflow_step?.length)
         };
     }
 }

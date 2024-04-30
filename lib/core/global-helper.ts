@@ -144,6 +144,10 @@ export function extractFilenameFromUrl(assetUrl: string): string {
     return splitPaths[splitPaths.length - 1];
 }
 
+export function getItemExternalIdForCodename(codename: string): string {
+    return `content_item_${codename}`;
+}
+
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     type: ItemType;
     log: Log;

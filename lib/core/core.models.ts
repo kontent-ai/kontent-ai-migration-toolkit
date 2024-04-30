@@ -2,6 +2,7 @@ import { AssetModels, ContentItemModels, ElementContracts, LanguageVariantModels
 import { IAssetFormatService, IItemFormatService, ProcessingFormat } from '../file-processor/index.js';
 import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IMigrationItem, IMigrationAsset } from './migration-models.js';
+import { GetItemsByCodenames } from 'lib/translation/element-translation-helper.js';
 
 export interface ICliFileConfig {
     adapter?: ExportAdapter;
@@ -118,7 +119,8 @@ export type ImportTransformFunc = (data: {
     elementCodename: string;
     importedData: IImportedData;
     sourceItems: IMigrationItem[];
-}) => ElementContracts.IContentItemElementContract;
+    getItemsByCodenames: GetItemsByCodenames;
+}) => Promise<ElementContracts.IContentItemElementContract>;
 
 export interface IExportTransformConfig {
     richTextConfig: IRichTextExportConfig;

@@ -18,7 +18,7 @@ import {
 } from '../../core/index.js';
 import { ImportWorkflowHelper, getImportWorkflowHelper } from './import-workflow.helper.js';
 import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
-import { getElementTranslationHelper } from '../../translation/index.js';
+import { ElementTranslationHelper, getElementTranslationHelper } from '../../translation/index.js';
 import colors from 'colors';
 
 export function getImportLanguageVariantstemHelper(config: {
@@ -31,9 +31,11 @@ export function getImportLanguageVariantstemHelper(config: {
 export class ImportLanguageVariantHelper {
     private readonly importContentItemChunkSize: number = 1;
     private readonly importWorkflowHelper: ImportWorkflowHelper;
+    private readonly elementTranslationHelper: ElementTranslationHelper;
 
     constructor(private readonly log: Log, private readonly skipFailedItems: boolean) {
         this.importWorkflowHelper = getImportWorkflowHelper(log);
+        this.elementTranslationHelper = getElementTranslationHelper(this.log);
     }
 
     async importLanguageVariantsAsync(data: {
@@ -50,7 +52,7 @@ export class ImportLanguageVariantHelper {
         this.log.console({
             type: 'info',
             message: `Importing '${colors.yellow(
-                categorizedParsedItems.regularItems.length.toString()
+                categorizedParsedItems.contentItems.length.toString()
             )}' language variants`
         });
 
@@ -58,7 +60,7 @@ export class ImportLanguageVariantHelper {
             log: this.log,
             type: 'languageVariant',
             chunkSize: this.importContentItemChunkSize,
-            items: categorizedParsedItems.regularItems,
+            items: categorizedParsedItems.contentItems,
             itemInfo: (input) => {
                 return {
                     itemType: 'languageVariant',
@@ -106,6 +108,48 @@ export class ImportLanguageVariantHelper {
         });
     }
 
+    private async getContentItemsByCodenamesAsync(data: {
+        managementClient: ManagementClient;
+        itemCodenames: string[];
+    }): Promise<ContentItemModels.ContentItem[]> {
+        const contentItems: ContentItemModels.ContentItem[] = [];
+
+        await processInChunksAsync<string, void>({
+            log: this.log,
+            type: 'contentItem',
+            chunkSize: this.importContentItemChunkSize,
+            items: data.itemCodenames,
+            itemInfo: (codename) => {
+                return {
+                    itemType: 'contentItem',
+                    title: codename
+                };
+            },
+            processFunc: async (codename) => {
+                try {
+                    this.log.spinner?.text?.({
+                        type: 'fetch',
+                        message: `${codename}`
+                    });
+
+                    const contentItem = await data.managementClient
+                        .viewContentItem()
+                        .byItemCodename(codename)
+                        .toPromise()
+                        .then((m) => m.data);
+
+                    contentItems.push(contentItem);
+                } catch (error) {
+                    if (!is404Error(error)) {
+                        throw error;
+                    }
+                }
+            }
+        });
+
+        return contentItems;
+    }
+
     private async importLanguageVariantAsync(data: {
         importContentItem: IMigrationItem;
         preparedContentItem: ContentItemModels.ContentItem;
@@ -149,16 +193,25 @@ export class ImportLanguageVariantHelper {
             workflows: data.workflows
         });
 
+        // prepare & map elements
+        const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] = [];
+
+        for (const element of data.importContentItem.elements) {
+            mappedElements.push(
+                await this.getElementContractAsync(
+                    data.managementClient,
+                    data.importContentItems,
+                    element,
+                    data.importedData
+                )
+            );
+        }
+
         const upsertedLanguageVariant = await data.managementClient
             .upsertLanguageVariant()
             .byItemCodename(data.preparedContentItem.codename)
             .byLanguageCodename(data.importContentItem.system.language)
             .withData((builder) => {
-                const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] =
-                    data.importContentItem.elements.map((m) =>
-                        this.getElementContract(data.importContentItems, m, data.importedData)
-                    );
-
                 return {
                     elements: mappedElements,
                     workflow: {
@@ -306,17 +359,23 @@ export class ImportLanguageVariantHelper {
         return false;
     }
 
-    private getElementContract(
+    private async getElementContractAsync(
+        managementClient: ManagementClient,
         sourceItems: IMigrationItem[],
         element: IMigrationElement,
         importedData: IImportedData
-    ): ElementContracts.IContentItemElementContract {
-        const importContract = getElementTranslationHelper(this.log).transformToImportValue(
+    ): Promise<ElementContracts.IContentItemElementContract> {
+        const importContract = await this.elementTranslationHelper.transformToImportValueAsync(
             element.value,
             element.codename,
             element.type,
             importedData,
-            sourceItems
+            sourceItems,
+            async (codenames) =>
+                await this.getContentItemsByCodenamesAsync({
+                    managementClient: managementClient,
+                    itemCodenames: codenames
+                })
         );
 
         if (!importContract) {

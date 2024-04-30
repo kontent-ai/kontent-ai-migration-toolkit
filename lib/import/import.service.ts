@@ -123,7 +123,7 @@ export class ImportService {
 
                 // #2 Content items
                 if (dataToImport.importData.items.length) {
-                    await this.importMigrationContentItemAsync(dataToImport.importData.items, importedData);
+                    await this.importMigrationItemAsync(dataToImport.importData.items, importedData);
                 } else {
                     this.config.log.console({
                         type: 'info',
@@ -244,7 +244,7 @@ export class ImportService {
         return dataToImport;
     }
 
-    private async importMigrationContentItemAsync(
+    private async importMigrationItemAsync(
         migrationContentItem: IMigrationItem[],
         importedData: IImportedData
     ): Promise<void> {
