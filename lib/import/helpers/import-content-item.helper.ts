@@ -10,7 +10,7 @@ import {
     Log,
     getItemExternalIdForCodename
 } from '../../core/index.js';
-import { ICategorizedParsedItems, ParsedItemsHelper, getParsedItemsHelper } from './parsed-items-helper.js';
+import { ICategorizedParsedItems } from './parsed-items-helper.js';
 import colors from 'colors';
 
 export function getImportContentItemHelper(config: {
@@ -23,30 +23,23 @@ export function getImportContentItemHelper(config: {
 
 export class ImportContentItemHelper {
     private readonly importContentItemChunkSize: number = 1;
-    private readonly parsedItemsHelper: ParsedItemsHelper;
 
     constructor(
         private readonly log: Log,
         private readonly skipFailedItems: boolean,
         private readonly fetchMode: ContentItemsFetchMode
-    ) {
-        this.parsedItemsHelper = getParsedItemsHelper(log);
-    }
+    ) {}
 
     async importContentItemsAsync(data: {
         managementClient: ManagementClient;
-        migrationContentItems: IMigrationItem[];
+        categorizedItems: ICategorizedParsedItems;
         collections: CollectionModels.Collection[];
         importedData: IImportedData;
     }): Promise<ContentItemModels.ContentItem[]> {
-        const categorizedParsedItems: ICategorizedParsedItems = this.parsedItemsHelper.categorizeParsedItems(
-            data.migrationContentItems
-        );
-
         this.log.console({
             type: 'skip',
             message: `Filtering '${colors.yellow(
-                categorizedParsedItems.componentItems.length.toString()
+                data.categorizedItems.componentItems.length.toString()
             )}' items because they represent component items`
         });
 
@@ -59,7 +52,7 @@ export class ImportContentItemHelper {
 
         if (this.fetchMode === 'oneByOne') {
             fetchedContentItems = await this.fetchContentItemsOneByOneAsync({
-                categorizedParsedItems: categorizedParsedItems,
+                categorizedParsedItems: data.categorizedItems,
                 managementClient: data.managementClient
             });
         } else {
@@ -70,10 +63,10 @@ export class ImportContentItemHelper {
 
         this.log.console({
             type: 'info',
-            message: `Importing '${colors.yellow(data.migrationContentItems.length.toString())}' content items`
+            message: `Importing '${colors.yellow(data.categorizedItems.contentItems.length.toString())}' content items`
         });
 
-        for (const parsedItem of data.migrationContentItems) {
+        for (const parsedItem of data.categorizedItems.contentItems) {
             if (!parsedItem.system.workflow || !parsedItem.system.workflow_step) {
                 // items without workflow or workflow step are components and they should not be imported individually
                 continue;

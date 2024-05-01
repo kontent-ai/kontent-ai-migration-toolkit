@@ -26,12 +26,14 @@ import {
 } from './helpers/import-language-variant.helper.js';
 import colors from 'colors';
 import { libMetadata } from '../metadata.js';
+import { ICategorizedParsedItems, ParsedItemsHelper, getParsedItemsHelper } from './helpers/parsed-items-helper.js';
 
 export class ImportService {
     private readonly managementClient: ManagementClient;
     private readonly importAssetsHelper: ImportAssetsHelper;
     private readonly importContentItemHelper: ImportContentItemHelper;
     private readonly importLanguageVariantHelper: ImportLanguageVariantHelper;
+    private readonly parsedItemsHelper: ParsedItemsHelper;
 
     constructor(private config: IImportConfig) {
         this.managementClient = createManagementClient({
@@ -42,16 +44,17 @@ export class ImportService {
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
         });
 
-        this.importAssetsHelper = getImportAssetsHelper(this.config.log);
+        this.importAssetsHelper = getImportAssetsHelper(config.log);
         this.importContentItemHelper = getImportContentItemHelper({
             log: config.log,
             skipFailedItems: config.skipFailedItems,
             fetchMode: config?.contentItemsFetchMode ?? 'oneByOne'
         });
         this.importLanguageVariantHelper = getImportLanguageVariantstemHelper({
-            log: this.config.log,
+            log: config.log,
             skipFailedItems: config.skipFailedItems
         });
+        this.parsedItemsHelper = getParsedItemsHelper(config.log);
     }
 
     async getImportContentTypesAsync(): Promise<IImportContentType[]> {
@@ -251,17 +254,22 @@ export class ImportService {
         const workflows = await this.getWorkflowsAsync();
         const collections = await this.getCollectionsAsync();
 
+        // categorize items
+        const categorizedParsedItems: ICategorizedParsedItems =
+            this.parsedItemsHelper.categorizeParsedItems(migrationContentItem);
+
         // first prepare content items
         const preparedContentItems: ContentItemModels.ContentItem[] =
             await this.importContentItemHelper.importContentItemsAsync({
                 managementClient: this.managementClient,
                 collections: collections,
                 importedData: importedData,
-                migrationContentItems: migrationContentItem
+                categorizedItems: categorizedParsedItems
             });
 
         // then process language variants
         await this.importLanguageVariantHelper.importLanguageVariantsAsync({
+            categorizedParsedItems: categorizedParsedItems,
             managementClient: this.managementClient,
             importContentItems: migrationContentItem,
             importedData: importedData,

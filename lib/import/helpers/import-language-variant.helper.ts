@@ -17,7 +17,7 @@ import {
     Log
 } from '../../core/index.js';
 import { ImportWorkflowHelper, getImportWorkflowHelper } from './import-workflow.helper.js';
-import { ICategorizedParsedItems, ParsedItemsHelper, getParsedItemsHelper } from './parsed-items-helper.js';
+import { ICategorizedParsedItems } from './parsed-items-helper.js';
 import { ElementTranslationHelper, getElementTranslationHelper } from '../../translation/index.js';
 import colors from 'colors';
 
@@ -32,29 +32,24 @@ export class ImportLanguageVariantHelper {
     private readonly importContentItemChunkSize: number = 1;
     private readonly importWorkflowHelper: ImportWorkflowHelper;
     private readonly elementTranslationHelper: ElementTranslationHelper;
-    private readonly parsedItemsHelper: ParsedItemsHelper;
 
     constructor(private readonly log: Log, private readonly skipFailedItems: boolean) {
         this.importWorkflowHelper = getImportWorkflowHelper(log);
         this.elementTranslationHelper = getElementTranslationHelper(this.log);
-        this.parsedItemsHelper = getParsedItemsHelper(this.log);
     }
 
     async importLanguageVariantsAsync(data: {
+        categorizedParsedItems: ICategorizedParsedItems;
         managementClient: ManagementClient;
         importContentItems: IMigrationItem[];
         workflows: WorkflowModels.Workflow[];
         preparedContentItems: ContentItemModels.ContentItem[];
         importedData: IImportedData;
     }): Promise<void> {
-        const categorizedParsedItems: ICategorizedParsedItems = this.parsedItemsHelper.categorizeParsedItems(
-            data.importContentItems
-        );
-
         this.log.console({
             type: 'info',
             message: `Importing '${colors.yellow(
-                categorizedParsedItems.contentItems.length.toString()
+                data.categorizedParsedItems.contentItems.length.toString()
             )}' language variants`
         });
 
@@ -62,7 +57,7 @@ export class ImportLanguageVariantHelper {
             log: this.log,
             type: 'languageVariant',
             chunkSize: this.importContentItemChunkSize,
-            items: categorizedParsedItems.contentItems,
+            items: data.categorizedParsedItems.contentItems,
             itemInfo: (input) => {
                 return {
                     itemType: 'languageVariant',
