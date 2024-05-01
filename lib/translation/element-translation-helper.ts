@@ -31,9 +31,11 @@ import {
     Log,
     logErrorAndExit,
     MigrationElementType,
-    getItemExternalIdForCodename
+    getItemExternalIdForCodename,
+    parseArrayValue
 } from '../core/index.js';
 import colors from 'colors';
+import { getRichTextHelper, RichTextHelper } from './rich-text-helper.js';
 
 export type GetItemsByCodenames = (codenames: string[]) => Promise<ContentItemModels.ContentItem[]>;
 
@@ -42,11 +44,12 @@ export function getElementTranslationHelper(log: Log): ElementTranslationHelper 
 }
 
 export class ElementTranslationHelper {
-    private readonly linkCodenameAttributeName: string = 'data-manager-link-codename';
-    private readonly dataNewWindowAttributeName: string = 'data-new-window';
     private readonly elementsBuilder = new LanguageVariantElementsBuilder();
+    private readonly richTextHelper: RichTextHelper;
 
-    constructor(private readonly log: Log) {}
+    constructor(private readonly log: Log) {
+        this.richTextHelper = getRichTextHelper(log);
+    }
 
     /**
      * Elements transform used by Kontent.ai export adapter
@@ -119,7 +122,7 @@ export class ElementTranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: this.parseArrayValue(data.value).map((m) => {
+                value: parseArrayValue(data.value).map((m) => {
                     return {
                         codename: m
                     };
@@ -129,7 +132,7 @@ export class ElementTranslationHelper {
         asset: async (data) => {
             const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
 
-            for (const assetFilename of this.parseArrayValue(data.value)) {
+            for (const assetFilename of parseArrayValue(data.value)) {
                 // find id of imported asset
                 const importedAsset = data.importedData.assets.find(
                     (s) => s.original.assetId?.toLowerCase() === getAssetIdFromFilename(assetFilename)
@@ -176,7 +179,7 @@ export class ElementTranslationHelper {
         },
         modular_content: async (data) => {
             const value: SharedContracts.IReferenceObjectContract[] = [];
-            const linkedItemCodenames: string[] = this.parseArrayValue(data.value);
+            const linkedItemCodenames: string[] = parseArrayValue(data.value);
             const linkedItems = await data.getItemsByCodenames(linkedItemCodenames);
 
             for (const linkedItemCodename of linkedItemCodenames) {
@@ -209,7 +212,7 @@ export class ElementTranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: this.parseArrayValue(data.value).map((m) => {
+                value: parseArrayValue(data.value).map((m) => {
                     return {
                         codename: m
                     };
@@ -225,7 +228,9 @@ export class ElementTranslationHelper {
             });
         },
         rich_text: async (data) => {
-            const processedRte = this.processImportRichTextHtmlValue(data.value?.toString() ?? '', data.importedData);
+            const rteHtml = data.value?.toString() ?? '';
+
+            const processedRte = await this.processImportRichTextHtmlValueAsync(rteHtml, data.importedData);
             const componentItems: IMigrationItem[] = [];
             const richTextComponents: LanguageVariantElements.IRichTextComponent[] = [];
 
@@ -281,7 +286,7 @@ export class ElementTranslationHelper {
                 element: {
                     codename: data.elementCodename
                 },
-                value: this.parseArrayValue(data.value).map((m) => {
+                value: parseArrayValue(data.value).map((m) => {
                     return {
                         codename: m
                     };
@@ -338,15 +343,7 @@ export class ElementTranslationHelper {
         });
     }
 
-    private parseArrayValue(value: string | Array<string> | null | undefined): string[] {
-        if (!value) {
-            return [];
-        }
-        if (Array.isArray(value)) {
-            return value;
-        }
-        return JSON.parse(value);
-    }
+  
 
     private processExportRichTextHtmlValue(data: {
         richTextElement: Elements.RichTextElement;
@@ -412,7 +409,7 @@ export class ElementTranslationHelper {
                     }
                 } else {
                     linkTag = linkTag.replace(id, contentItemWithGivenId.system.codename);
-                    linkTag = linkTag.replace('data-item-id', this.linkCodenameAttributeName);
+                    linkTag = linkTag.replace('data-item-id', this.richTextHelper.linkCodenameAttributeName);
                 }
             }
 
@@ -431,14 +428,14 @@ export class ElementTranslationHelper {
         return text.match(/<a [^>]+>([^<]+)<\/a>/)?.[1];
     }
 
-    private processImportRichTextHtmlValue(
+    private async processImportRichTextHtmlValueAsync(
         richTextHtml: string | undefined,
         importedData: IImportedData
-    ): {
+    ): Promise<{
         processedHtml: string;
         linkedItemCodenames: string[];
         componentCodenames: string[];
-    } {
+    }> {
         const componentCodenames: string[] = [];
         const linkedItemCodenames: string[] = [];
 
@@ -451,18 +448,9 @@ export class ElementTranslationHelper {
         }
 
         // extract linked items / components
-        const objectStart: string = '<object';
-        const objectEnd: string = '</object>';
-
-        const dataCodenameStart: string = 'data-codename=\\"';
-        const dataCodename: string = '\\"';
-
-        const objectRegex = new RegExp(`${objectStart}(.+?)${objectEnd}`, 'g');
-        const dataCodenameRegex = new RegExp(`${dataCodenameStart}(.+?)${dataCodename}`);
-
-        let processedRichText = richTextHtml.replaceAll(objectRegex, (objectTag) => {
+        let processedRichText = richTextHtml.replaceAll(this.richTextHelper.rteRegexes.objectRegex, (objectTag) => {
             if (objectTag.includes('type="application/kenticocloud"') && objectTag.includes('data-type="item"')) {
-                const codenameMatch = objectTag.match(dataCodenameRegex);
+                const codenameMatch = objectTag.match(this.richTextHelper.rteRegexes.dataCodenameRegex);
                 if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                     const codename = codenameMatch[1];
 
@@ -486,15 +474,6 @@ export class ElementTranslationHelper {
         });
 
         // process links
-        const linkStart: string = '<a';
-        const linkEnd: string = '</a>';
-
-        const csvmLinkCodenameStart: string = this.linkCodenameAttributeName + '=\\"';
-        const csvmLinkCodenameEnd: string = '\\"';
-
-        const linkRegex = new RegExp(`${linkStart}(.+?)${linkEnd}`, 'g');
-        const csvmLinkCodenameRegex = new RegExp(`${csvmLinkCodenameStart}(.+?)${csvmLinkCodenameEnd}`);
-
         const relStart: string = 'rel="';
         const relEnd: string = '\\"';
         const relRegex = new RegExp(`${relStart}(.+?)${relEnd}`, 'g');
@@ -503,8 +482,8 @@ export class ElementTranslationHelper {
         const hrefEnd: string = '\\"';
         const hrefRegex = new RegExp(`${hrefStart}(.+?)${hrefEnd}`, 'g');
 
-        processedRichText = processedRichText.replaceAll(linkRegex, (linkTag) => {
-            const codenameMatch = linkTag.match(csvmLinkCodenameRegex);
+        processedRichText = processedRichText.replaceAll(this.richTextHelper.rteRegexes.linkRegex, (linkTag) => {
+            const codenameMatch = linkTag.match(this.richTextHelper.rteRegexes.csvmLinkCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
@@ -521,17 +500,17 @@ export class ElementTranslationHelper {
                     });
                 } else {
                     linkTag = linkTag.replace(codename, contentItemWithGivenCodename.id);
-                    linkTag = linkTag.replace(this.linkCodenameAttributeName, 'data-item-id');
+                    linkTag = linkTag.replace(this.richTextHelper.linkCodenameAttributeName, 'data-item-id');
                 }
             }
 
             // make sure only valid RTE attributes for links are present
             const targetBlankAttr = 'target="_blank"';
             if (linkTag.includes(targetBlankAttr)) {
-                if (linkTag.includes(this.dataNewWindowAttributeName)) {
+                if (linkTag.includes(this.richTextHelper.dataNewWindowAttributeName)) {
                     linkTag = linkTag.replace(targetBlankAttr, '');
                 } else {
-                    linkTag = linkTag.replace(targetBlankAttr, this.dataNewWindowAttributeName);
+                    linkTag = linkTag.replace(targetBlankAttr, this.richTextHelper.dataNewWindowAttributeName);
                 }
             }
 

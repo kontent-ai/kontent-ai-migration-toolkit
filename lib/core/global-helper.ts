@@ -148,6 +148,16 @@ export function getItemExternalIdForCodename(codename: string): string {
     return `content_item_${codename}`;
 }
 
+export function parseArrayValue(value: string | Array<string> | null | undefined): string[] {
+    if (!value) {
+        return [];
+    }
+    if (Array.isArray(value)) {
+        return value;
+    }
+    return JSON.parse(value);
+}
+
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     type: ItemType;
     log: Log;

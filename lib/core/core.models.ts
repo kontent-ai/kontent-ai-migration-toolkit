@@ -75,6 +75,10 @@ export interface IProcessedItem {
     data: any;
 }
 
+export interface IReferencedItemInContent {
+    codename: string;
+}
+
 export interface IImportedData {
     assets: {
         original: IMigrationAsset;

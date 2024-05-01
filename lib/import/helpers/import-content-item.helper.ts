@@ -10,7 +10,7 @@ import {
     Log,
     getItemExternalIdForCodename
 } from '../../core/index.js';
-import { ICategorizedParsedItems, parsedItemsHelper } from './parsed-items-helper.js';
+import { ICategorizedParsedItems, ParsedItemsHelper, getParsedItemsHelper } from './parsed-items-helper.js';
 import colors from 'colors';
 
 export function getImportContentItemHelper(config: {
@@ -23,12 +23,15 @@ export function getImportContentItemHelper(config: {
 
 export class ImportContentItemHelper {
     private readonly importContentItemChunkSize: number = 1;
+    private readonly parsedItemsHelper: ParsedItemsHelper;
 
     constructor(
         private readonly log: Log,
         private readonly skipFailedItems: boolean,
         private readonly fetchMode: ContentItemsFetchMode
-    ) {}
+    ) {
+        this.parsedItemsHelper = getParsedItemsHelper(log);
+    }
 
     async importContentItemsAsync(data: {
         managementClient: ManagementClient;
@@ -36,7 +39,7 @@ export class ImportContentItemHelper {
         collections: CollectionModels.Collection[];
         importedData: IImportedData;
     }): Promise<ContentItemModels.ContentItem[]> {
-        const categorizedParsedItems: ICategorizedParsedItems = parsedItemsHelper.categorizeParsedItems(
+        const categorizedParsedItems: ICategorizedParsedItems = this.parsedItemsHelper.categorizeParsedItems(
             data.migrationContentItems
         );
 
@@ -82,7 +85,6 @@ export class ImportContentItemHelper {
                     collections: data.collections,
                     importContentItem: parsedItem,
                     importedData: data.importedData,
-                    migrationContentItems: data.migrationContentItems,
                     fetchedContentItems: fetchedContentItems
                 });
 
@@ -168,7 +170,6 @@ export class ImportContentItemHelper {
     private async importContentItemAsync(data: {
         importContentItem: IMigrationItem;
         managementClient: ManagementClient;
-        migrationContentItems: IMigrationItem[];
         collections: CollectionModels.Collection[];
         importedData: IImportedData;
         fetchedContentItems: ContentItemModels.ContentItem[];
