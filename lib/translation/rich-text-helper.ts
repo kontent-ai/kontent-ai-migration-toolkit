@@ -8,7 +8,7 @@ export class RichTextHelper {
     public readonly linkCodenameAttributeName: string = 'data-manager-link-codename';
     public readonly dataNewWindowAttributeName: string = 'data-new-window';
     public readonly rteRegexes = {
-        objectRegex: new RegExp(`objectStart(.+?)</object>`, 'g'),
+        objectRegex: new RegExp(`<object(.+?)</object>`, 'g'),
         dataCodenameRegex: new RegExp(`data-codename=\\"(.+?)\\"`),
 
         linkRegex: new RegExp(`<a(.+?)</a>`, 'g'),
