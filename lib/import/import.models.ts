@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { MigrationElementType, ContentItemsFetchMode, IMigrationItem, IMigrationAsset, Log } from '../core/index.js';
+import { MigrationElementType, IMigrationItem, IMigrationAsset, Log } from '../core/index.js';
 
 export type ImportSourceType = 'zip' | 'file';
 
@@ -12,7 +12,6 @@ export interface IImportConfig {
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;
     environmentId: string;
-    contentItemsFetchMode?: ContentItemsFetchMode;
     canImport?: {
         contentItem?: (item: IMigrationItem) => boolean | Promise<boolean>;
         asset?: (item: IMigrationAsset) => boolean | Promise<boolean>;

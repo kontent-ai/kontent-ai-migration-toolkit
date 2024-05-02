@@ -10,7 +10,7 @@ import {
 } from '@kontent-ai/management-sdk';
 
 import {
-    IImportedData,
+    IImportContext,
     defaultRetryStrategy,
     defaultHttpService,
     logErrorAndExit,
@@ -26,7 +26,8 @@ import {
 } from './helpers/import-language-variant.helper.js';
 import colors from 'colors';
 import { libMetadata } from '../metadata.js';
-import { ICategorizedParsedItems, ParsedItemsHelper, getParsedItemsHelper } from './helpers/parsed-items-helper.js';
+import { ParsedItemsHelper, getParsedItemsHelper } from './helpers/parsed-items-helper.js';
+import { IImportData } from '../toolkit/import-toolkit.class.js';
 
 export class ImportService {
     private readonly managementClient: ManagementClient;
@@ -47,8 +48,7 @@ export class ImportService {
         this.importAssetsHelper = getImportAssetsHelper(config.log);
         this.importContentItemHelper = getImportContentItemHelper({
             log: config.log,
-            skipFailedItems: config.skipFailedItems,
-            fetchMode: config?.contentItemsFetchMode ?? 'oneByOne'
+            skipFailedItems: config.skipFailedItems
         });
         this.importLanguageVariantHelper = getImportLanguageVariantstemHelper({
             log: config.log,
@@ -83,7 +83,7 @@ export class ImportService {
         ];
     }
 
-    async importAsync(sourceData: IImportSource): Promise<IImportedData> {
+    async importAsync(sourceData: IImportSource): Promise<IImportContext> {
         return await executeWithTrackingAsync({
             event: {
                 tool: 'migrationToolkit',
@@ -100,14 +100,10 @@ export class ImportService {
                 }
             },
             func: async () => {
-                const importedData: IImportedData = {
-                    assets: [],
-                    contentItems: [],
-                    languageVariants: []
-                };
-
                 // this is an optional step where users can exclude certain objects from being imported
                 const dataToImport = this.getDataToImport(sourceData);
+
+                const importContext = await this.getImportContextAsync(dataToImport.importData);
 
                 // import order matters
                 // #1 Assets
@@ -115,7 +111,7 @@ export class ImportService {
                     await this.importAssetsHelper.importAssetsAsync({
                         managementClient: this.managementClient,
                         assets: dataToImport.importData.assets,
-                        importedData: importedData
+                        importedData: importContext
                     });
                 } else {
                     this.config.log.console({
@@ -126,7 +122,7 @@ export class ImportService {
 
                 // #2 Content items
                 if (dataToImport.importData.items.length) {
-                    await this.importMigrationItemAsync(dataToImport.importData.items, importedData);
+                    await this.importMigrationItemsAsync(dataToImport.importData.items, importContext);
                 } else {
                     this.config.log.console({
                         type: 'info',
@@ -139,9 +135,27 @@ export class ImportService {
                     message: `Finished import`
                 });
 
-                return importedData;
+                return importContext;
             }
         });
+    }
+
+    private async getImportContextAsync(dataToImport: IImportData): Promise<IImportContext> {
+        const importContext: IImportContext = {
+            importedAssets: [],
+            importedContentItems: [],
+            importedLanguageVariants: [],
+            categorizedItems: await this.parsedItemsHelper.categorizeParsedItemsAsync(
+                dataToImport.items,
+                async (codenames) =>
+                    this.importContentItemHelper.getContentItemsByCodenamesAsync({
+                        itemCodenames: codenames,
+                        managementClient: this.managementClient
+                    })
+            )
+        };
+
+        return importContext;
     }
 
     private getContentTypeElements(
@@ -247,32 +261,26 @@ export class ImportService {
         return dataToImport;
     }
 
-    private async importMigrationItemAsync(
-        migrationContentItem: IMigrationItem[],
-        importedData: IImportedData
+    private async importMigrationItemsAsync(
+        migrationContentItems: IMigrationItem[],
+        importContext: IImportContext
     ): Promise<void> {
         const workflows = await this.getWorkflowsAsync();
         const collections = await this.getCollectionsAsync();
-
-        // categorize items
-        const categorizedParsedItems: ICategorizedParsedItems =
-            this.parsedItemsHelper.categorizeParsedItems(migrationContentItem);
 
         // first prepare content items
         const preparedContentItems: ContentItemModels.ContentItem[] =
             await this.importContentItemHelper.importContentItemsAsync({
                 managementClient: this.managementClient,
                 collections: collections,
-                importedData: importedData,
-                categorizedItems: categorizedParsedItems
+                importContext: importContext
             });
 
         // then process language variants
         await this.importLanguageVariantHelper.importLanguageVariantsAsync({
-            categorizedParsedItems: categorizedParsedItems,
             managementClient: this.managementClient,
-            importContentItems: migrationContentItem,
-            importedData: importedData,
+            importContentItems: migrationContentItems,
+            importContext: importContext,
             preparedContentItems: preparedContentItems,
             workflows: workflows
         });

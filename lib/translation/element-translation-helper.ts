@@ -18,7 +18,7 @@ import {
 import {
     ExportTransformFunc,
     IExportTransformConfig,
-    IImportedData,
+    IImportContext,
     ImportTransformFunc,
     IRichTextExportConfig
 } from '../core/core.models.js';
@@ -31,13 +31,10 @@ import {
     Log,
     logErrorAndExit,
     MigrationElementType,
-    getItemExternalIdForCodename,
     parseArrayValue
 } from '../core/index.js';
 import colors from 'colors';
 import { getRichTextHelper, RichTextHelper } from './rich-text-helper.js';
-
-export type GetItemsByCodenames = (codenames: string[]) => Promise<ContentItemModels.ContentItem[]>;
 
 export function getElementTranslationHelper(log: Log): ElementTranslationHelper {
     return new ElementTranslationHelper(log);
@@ -134,7 +131,7 @@ export class ElementTranslationHelper {
 
             for (const assetFilename of parseArrayValue(data.value)) {
                 // find id of imported asset
-                const importedAsset = data.importedData.assets.find(
+                const importedAsset = data.importContext.importedAssets.find(
                     (s) => s.original.assetId?.toLowerCase() === getAssetIdFromFilename(assetFilename)
                 );
 
@@ -180,22 +177,20 @@ export class ElementTranslationHelper {
         modular_content: async (data) => {
             const value: SharedContracts.IReferenceObjectContract[] = [];
             const linkedItemCodenames: string[] = parseArrayValue(data.value);
-            const linkedItems = await data.getItemsByCodenames(linkedItemCodenames);
 
             for (const linkedItemCodename of linkedItemCodenames) {
-                const linkedItem = linkedItems.find(
-                    (m) => m.codename.toLowerCase() === linkedItemCodename.toLowerCase()
-                );
+                const itemState =
+                    data.importContext.categorizedItems.getItemStateInTargetEnvironment(linkedItemCodename);
 
-                if (linkedItem) {
+                if (itemState.item) {
                     // linked item already exists in target environment
                     value.push({
-                        codename: linkedItem.codename
+                        codename: itemState.codename
                     });
                 } else {
-                    // linked item is new, use external id to reference it
+                    // linked item is new, reference it with external id
                     value.push({
-                        external_id: getItemExternalIdForCodename(linkedItemCodename)
+                        external_id: itemState.externalIdToUse
                     });
                 }
             }
@@ -230,7 +225,7 @@ export class ElementTranslationHelper {
         rich_text: async (data) => {
             const rteHtml = data.value?.toString() ?? '';
 
-            const processedRte = await this.processImportRichTextHtmlValueAsync(rteHtml, data.importedData);
+            const processedRte = await this.processImportRichTextHtmlValueAsync(rteHtml, data.importContext);
             const componentItems: IMigrationItem[] = [];
             const richTextComponents: LanguageVariantElements.IRichTextComponent[] = [];
 
@@ -252,9 +247,8 @@ export class ElementTranslationHelper {
                         element.value,
                         element.codename,
                         element.type,
-                        data.importedData,
-                        data.sourceItems,
-                        data.getItemsByCodenames
+                        data.importContext,
+                        data.sourceItems
                     );
 
                     if (transformedElement) {
@@ -328,22 +322,18 @@ export class ElementTranslationHelper {
         value: string | string[] | undefined,
         elementCodename: string,
         type: MigrationElementType,
-        importedData: IImportedData,
-        sourceItems: IMigrationItem[],
-        getItemsByCodenames: GetItemsByCodenames
+        importContext: IImportContext,
+        sourceItems: IMigrationItem[]
     ): Promise<ElementContracts.IContentItemElementContract | undefined> {
         const transformFunc = this.importTransforms[type];
 
         return await transformFunc({
-            importedData: importedData,
+            importContext: importContext,
             elementCodename: elementCodename,
             value: value,
-            sourceItems: sourceItems,
-            getItemsByCodenames: getItemsByCodenames
+            sourceItems: sourceItems
         });
     }
-
-  
 
     private processExportRichTextHtmlValue(data: {
         richTextElement: Elements.RichTextElement;
@@ -430,7 +420,7 @@ export class ElementTranslationHelper {
 
     private async processImportRichTextHtmlValueAsync(
         richTextHtml: string | undefined,
-        importedData: IImportedData
+        importContext: IImportContext
     ): Promise<{
         processedHtml: string;
         linkedItemCodenames: string[];
@@ -486,21 +476,35 @@ export class ElementTranslationHelper {
             const codenameMatch = linkTag.match(this.richTextHelper.rteRegexes.csvmLinkCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
+                let itemFound: boolean = false;
 
-                // find content item with given codename and replace it with id
-                const contentItemWithGivenCodename: ContentItemModels.ContentItem | undefined =
-                    importedData.contentItems.find((m) => m.original.system.codename === codename)?.imported;
+                // try finding imported content item with given codename and replace it with id
+                const importedContentItemWithGivenCodename: ContentItemModels.ContentItem | undefined =
+                    importContext.importedContentItems.find((m) => m.original.system.codename === codename)?.imported;
 
-                if (!contentItemWithGivenCodename) {
+                if (importedContentItemWithGivenCodename) {
+                    itemFound = true;
+                    linkTag = linkTag.replace(codename, importedContentItemWithGivenCodename.id);
+                    linkTag = linkTag.replace(this.richTextHelper.linkCodenameAttributeName, 'data-item-id');
+                } else {
+                    // try finding content item in target env
+                    const itemWithGivenCodenameInTargetEnv =
+                        importContext.categorizedItems.getItemStateInTargetEnvironment(codename);
+
+                    if (itemWithGivenCodenameInTargetEnv.item) {
+                        itemFound = true;
+                        linkTag = linkTag.replace(codename, itemWithGivenCodenameInTargetEnv.item.id);
+                        linkTag = linkTag.replace(this.richTextHelper.linkCodenameAttributeName, 'data-item-id');
+                    }
+                }
+
+                if (!itemFound) {
                     this.log.console({
                         type: 'warning',
                         message: `Could not find content item with codename '${colors.red(
                             codename
                         )}'. This item was referenced as a link in Rich text element.`
                     });
-                } else {
-                    linkTag = linkTag.replace(codename, contentItemWithGivenCodename.id);
-                    linkTag = linkTag.replace(this.richTextHelper.linkCodenameAttributeName, 'data-item-id');
                 }
             }
 
@@ -551,7 +555,7 @@ export class ElementTranslationHelper {
         });
 
         // replace old ids with new ids
-        processedRichText = idTranslateHelper.replaceIdsInRichText(processedRichText, importedData);
+        processedRichText = idTranslateHelper.replaceIdsInRichText(processedRichText, importContext);
 
         // remove unsupported attributes
         processedRichText = processedRichText.replaceAll(`data-rel="link"`, '');

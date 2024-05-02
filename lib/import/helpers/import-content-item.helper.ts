@@ -1,72 +1,82 @@
 import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 import {
-    IImportedData,
+    IImportContext,
     extractErrorData,
     is404Error,
     logErrorAndExit,
     processInChunksAsync,
-    ContentItemsFetchMode,
     IMigrationItem,
     Log,
     getItemExternalIdForCodename
 } from '../../core/index.js';
-import { ICategorizedParsedItems } from './parsed-items-helper.js';
 import colors from 'colors';
 
-export function getImportContentItemHelper(config: {
-    log: Log;
-    skipFailedItems: boolean;
-    fetchMode: ContentItemsFetchMode;
-}): ImportContentItemHelper {
-    return new ImportContentItemHelper(config.log, config.skipFailedItems, config.fetchMode);
+export function getImportContentItemHelper(config: { log: Log; skipFailedItems: boolean }): ImportContentItemHelper {
+    return new ImportContentItemHelper(config.log, config.skipFailedItems);
 }
 
 export class ImportContentItemHelper {
     private readonly importContentItemChunkSize: number = 1;
 
-    constructor(
-        private readonly log: Log,
-        private readonly skipFailedItems: boolean,
-        private readonly fetchMode: ContentItemsFetchMode
-    ) {}
+    constructor(private readonly log: Log, private readonly skipFailedItems: boolean) {}
+
+    async getContentItemsByCodenamesAsync(data: {
+        managementClient: ManagementClient;
+        itemCodenames: string[];
+    }): Promise<ContentItemModels.ContentItem[]> {
+        const contentItems: ContentItemModels.ContentItem[] = [];
+
+        await processInChunksAsync<string, void>({
+            log: this.log,
+            type: 'contentItem',
+            chunkSize: this.importContentItemChunkSize,
+            items: data.itemCodenames,
+            itemInfo: (codename) => {
+                return {
+                    itemType: 'contentItem',
+                    title: codename
+                };
+            },
+            processFunc: async (codename) => {
+                try {
+                    this.log.spinner?.text?.({
+                        type: 'fetch',
+                        message: `${codename}`
+                    });
+
+                    const contentItem = await data.managementClient
+                        .viewContentItem()
+                        .byItemCodename(codename)
+                        .toPromise()
+                        .then((m) => m.data);
+
+                    contentItems.push(contentItem);
+                } catch (error) {
+                    if (!is404Error(error)) {
+                        throw error;
+                    }
+                }
+            }
+        });
+
+        return contentItems;
+    }
 
     async importContentItemsAsync(data: {
         managementClient: ManagementClient;
-        categorizedItems: ICategorizedParsedItems;
         collections: CollectionModels.Collection[];
-        importedData: IImportedData;
+        importContext: IImportContext;
     }): Promise<ContentItemModels.ContentItem[]> {
-        this.log.console({
-            type: 'skip',
-            message: `Filtering '${colors.yellow(
-                data.categorizedItems.componentItems.length.toString()
-            )}' items because they represent component items`
-        });
-
-        let fetchedContentItems: ContentItemModels.ContentItem[] = [];
-
-        this.log.console({
-            type: 'info',
-            message: `Fetching items via '${colors.yellow(this.fetchMode)}' mode`
-        });
-
-        if (this.fetchMode === 'oneByOne') {
-            fetchedContentItems = await this.fetchContentItemsOneByOneAsync({
-                categorizedParsedItems: data.categorizedItems,
-                managementClient: data.managementClient
-            });
-        } else {
-            fetchedContentItems = await this.fetchAllContentItemsAsync({ managementClient: data.managementClient });
-        }
-
         const preparedItems: ContentItemModels.ContentItem[] = [];
 
         this.log.console({
             type: 'info',
-            message: `Importing '${colors.yellow(data.categorizedItems.contentItems.length.toString())}' content items`
+            message: `Importing '${colors.yellow(
+                data.importContext.categorizedItems.contentItems.length.toString()
+            )}' content items`
         });
 
-        for (const parsedItem of data.categorizedItems.contentItems) {
+        for (const parsedItem of data.importContext.categorizedItems.contentItems) {
             if (!parsedItem.system.workflow || !parsedItem.system.workflow_step) {
                 // items without workflow or workflow step are components and they should not be imported individually
                 continue;
@@ -77,8 +87,7 @@ export class ImportContentItemHelper {
                     managementClient: data.managementClient,
                     collections: data.collections,
                     importContentItem: parsedItem,
-                    importedData: data.importedData,
-                    fetchedContentItems: fetchedContentItems
+                    importContext: data.importContext
                 });
 
                 preparedItems.push(contentItem);
@@ -99,81 +108,19 @@ export class ImportContentItemHelper {
         return preparedItems;
     }
 
-    private async fetchContentItemsOneByOneAsync(data: {
-        managementClient: ManagementClient;
-        categorizedParsedItems: ICategorizedParsedItems;
-    }): Promise<ContentItemModels.ContentItem[]> {
-        const contentItems: ContentItemModels.ContentItem[] = [];
-
-        await processInChunksAsync<IMigrationItem, void>({
-            log: this.log,
-            type: 'contentItem',
-            chunkSize: this.importContentItemChunkSize,
-            items: data.categorizedParsedItems.contentItems,
-            itemInfo: (input) => {
-                return {
-                    itemType: 'contentItem',
-                    title: input.system.name,
-                    partA: input.system.type
-                };
-            },
-            processFunc: async (migrationContentItem) => {
-                try {
-                    this.log.spinner?.text?.({
-                        type: 'fetch',
-                        message: `${migrationContentItem.system.name}`
-                    });
-
-                    const contentItem = await data.managementClient
-                        .viewContentItem()
-                        .byItemCodename(migrationContentItem.system.codename)
-                        .toPromise()
-                        .then((m) => m.data);
-
-                    contentItems.push(contentItem);
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
-                    }
-                }
-            }
-        });
-
-        return contentItems;
-    }
-
-    private async fetchAllContentItemsAsync(data: {
-        managementClient: ManagementClient;
-    }): Promise<ContentItemModels.ContentItem[]> {
-        return (
-            await data.managementClient
-                .listContentItems()
-                .withListQueryConfig({
-                    responseFetched: (response, token) => {
-                        this.log.console({
-                            type: 'fetch',
-                            message: `Fetched '${colors.yellow(response.data.items.length.toString())}' items`
-                        });
-                    }
-                })
-                .toAllPromise()
-        ).data.items;
-    }
-
     private async importContentItemAsync(data: {
         importContentItem: IMigrationItem;
         managementClient: ManagementClient;
         collections: CollectionModels.Collection[];
-        importedData: IImportedData;
-        fetchedContentItems: ContentItemModels.ContentItem[];
+        importContext: IImportContext;
     }): Promise<ContentItemModels.ContentItem> {
         const preparedContentItemResult = await this.prepareContentItemAsync(
             data.managementClient,
             data.importContentItem,
-            data.fetchedContentItems
+            data.importContext
         );
 
-        data.importedData.contentItems.push({
+        data.importContext.importedContentItems.push({
             original: data.importContentItem,
             imported: preparedContentItemResult.contentItem
         });
@@ -230,13 +177,15 @@ export class ImportContentItemHelper {
     private async prepareContentItemAsync(
         managementClient: ManagementClient,
         migrationContentItem: IMigrationItem,
-        fetchedContentItems: ContentItemModels.ContentItem[]
+        context: IImportContext
     ): Promise<{ contentItem: ContentItemModels.ContentItem; status: 'created' | 'itemAlreadyExists' }> {
-        const contentItem = fetchedContentItems.find((m) => m.codename === migrationContentItem.system.codename);
+        const itemStateInTargetEnv = context.categorizedItems.getItemStateInTargetEnvironment(
+            migrationContentItem.system.codename
+        );
 
-        if (contentItem) {
+        if (itemStateInTargetEnv.state === 'exists' && itemStateInTargetEnv.item) {
             return {
-                contentItem: contentItem,
+                contentItem: itemStateInTargetEnv.item,
                 status: 'itemAlreadyExists'
             };
         }

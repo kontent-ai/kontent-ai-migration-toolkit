@@ -8,10 +8,7 @@ import {
     getItemsFormatService
 } from '../core/index.js';
 import { IExportAdapter, IExportAdapterResult } from '../export/index.js';
-import {
-    FileProcessorService,
-    getFileProcessorService
-} from '../file-processor/index.js';
+import { FileProcessorService, getFileProcessorService } from '../file-processor/index.js';
 import { FileService, getFileService } from '../node/index.js';
 
 export interface IExporToolkitConfig {
@@ -64,7 +61,7 @@ export class ExportToolkit {
 
                 await this.fileService.writeFileAsync(this.config.items.filename, itemsZipFile);
 
-                if (data.assets.length && this.config.assets) {
+                if (this.config.assets) {
                     const assetsZipFile = await this.fileProcessorService.createAssetsZipAsync(data, {
                         assetFormatService: getAssetsFormatService(this.config.assets.formatService)
                     });

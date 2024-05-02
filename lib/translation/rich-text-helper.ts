@@ -5,17 +5,17 @@ export function getRichTextHelper(log: Log): RichTextHelper {
 }
 
 export class RichTextHelper {
-    public readonly linkCodenameAttributeName: string = 'data-manager-link-codename';
-    public readonly dataNewWindowAttributeName: string = 'data-new-window';
+    public readonly linkCodenameAttributeName: string = 'data-manager-link-codename' as const;
+    public readonly dataNewWindowAttributeName: string = 'data-new-window' as const;
     public readonly rteRegexes = {
         objectRegex: new RegExp(`<object(.+?)</object>`, 'g'),
         dataCodenameRegex: new RegExp(`data-codename=\\"(.+?)\\"`),
 
         linkRegex: new RegExp(`<a(.+?)</a>`, 'g'),
         csvmLinkCodenameRegex: new RegExp(`${this.linkCodenameAttributeName}=\\"(.+?)\\"`)
-    };
+    } as const;
 
-    constructor(private readonly log: Log) {}
+    constructor(log: Log) {}
 
     extractAllCodenamesFromRte(richTextHtml: string | undefined): string[] {
         if (!richTextHtml) {

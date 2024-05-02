@@ -2,7 +2,6 @@ import { AssetModels, ContentItemModels, ElementContracts, LanguageVariantModels
 import { IAssetFormatService, IItemFormatService, ProcessingFormat } from '../file-processor/index.js';
 import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IMigrationItem, IMigrationAsset } from './migration-models.js';
-import { GetItemsByCodenames } from 'lib/translation/element-translation-helper.js';
 
 export interface ICliFileConfig {
     adapter?: ExportAdapter;
@@ -14,7 +13,6 @@ export interface ICliFileConfig {
     isPreview: boolean;
     isSecure: boolean;
     skipFailedItems: boolean;
-    contentItemsFetchMode?: ContentItemsFetchMode;
     replaceInvalidLinks: boolean;
     action: CliAction;
     itemsFilename?: string;
@@ -36,7 +34,6 @@ export type ItemType =
     | 'binaryFile'
     | 'zipFile'
     | 'count';
-export type ContentItemsFetchMode = 'oneByOne' | 'listAll';
 
 export type ActionType =
     | 'skip'
@@ -79,23 +76,44 @@ export interface IReferencedItemInContent {
     codename: string;
 }
 
-export interface IImportedData {
-    assets: {
+export interface IImportContext {
+    importedAssets: {
         original: IMigrationAsset;
         imported: AssetModels.Asset;
     }[];
-    contentItems: {
+    importedContentItems: {
         original: IMigrationItem;
         imported: ContentItemModels.ContentItem;
     }[];
-    languageVariants: {
+    importedLanguageVariants: {
         original: IMigrationItem;
         imported: LanguageVariantModels.ContentItemLanguageVariant;
     }[];
+    categorizedItems: ICategorizedItems;
 }
+
+export type GetItemsByCodenames = (codenames: string[]) => Promise<ContentItemModels.ContentItem[]>;
 
 export interface IIdCodenameTranslationResult {
     [key: string]: string;
+}
+
+export type TargetItemState = 'exists' | 'doesNotExists';
+
+export interface IItemStateInTargetEnvironment {
+    state: TargetItemState;
+    codename: string;
+    item: ContentItemModels.ContentItem | undefined;
+    externalIdToUse: string;
+}
+
+export interface ICategorizedItems {
+    componentItems: IMigrationItem[];
+    contentItems: IMigrationItem[];
+    itemsReferencedInContent: IReferencedItemInContent[];
+    itemsInTargetEnvironment: IItemStateInTargetEnvironment[];
+
+    getItemStateInTargetEnvironment: (codename: string) => IItemStateInTargetEnvironment;
 }
 
 export interface IPackageMetadata {
@@ -121,9 +139,8 @@ export type ExportTransformFunc = (data: {
 export type ImportTransformFunc = (data: {
     value: string | string[] | undefined;
     elementCodename: string;
-    importedData: IImportedData;
+    importContext: IImportContext;
     sourceItems: IMigrationItem[];
-    getItemsByCodenames: GetItemsByCodenames;
 }) => Promise<ElementContracts.IContentItemElementContract>;
 
 export interface IExportTransformConfig {

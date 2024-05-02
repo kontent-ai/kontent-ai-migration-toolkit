@@ -1,5 +1,5 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportedData, IMigrationAsset, Log, is404Error, processInChunksAsync } from '../../core/index.js';
+import { IImportContext, IMigrationAsset, Log, is404Error, processInChunksAsync } from '../../core/index.js';
 import mime from 'mime';
 import colors from 'colors';
 
@@ -16,7 +16,7 @@ export class ImportAssetsHelper {
     async importAssetsAsync(data: {
         managementClient: ManagementClient;
         assets: IMigrationAsset[];
-        importedData: IImportedData;
+        importedData: IImportContext;
     }): Promise<void> {
         this.log.console({
             type: 'info',
@@ -28,7 +28,7 @@ export class ImportAssetsHelper {
         });
 
         // add existing assets to imported data
-        data.importedData.assets.push(...filteredAssets.existingAssets);
+        data.importedData.importedAssets.push(...filteredAssets.existingAssets);
 
         if (filteredAssets.existingAssets.length) {
             this.log.console({
@@ -98,7 +98,7 @@ export class ImportAssetsHelper {
                     .toPromise()
                     .then((m) => m.data);
 
-                data.importedData.assets.push({
+                data.importedData.importedAssets.push({
                     imported: createdAsset,
                     original: asset
                 });

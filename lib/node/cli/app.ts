@@ -10,7 +10,6 @@ import {
     ExportAdapter,
     handleError,
     logErrorAndExit,
-    ContentItemsFetchMode,
     confirmImportAsync,
     withDefaultLogAsync
 } from '../../core/index.js';
@@ -44,8 +43,6 @@ const argv = yargs(process.argv.slice(2))
     .describe('ad', 'Adapter used to export data')
     .alias('e', 'environmentId')
     .describe('e', 'environmentId')
-    .alias('fm', 'fetchMode')
-    .describe('fm', 'Fetch mode. One of: "oneByOne" | "listAll')
     .alias('mapi', 'apiKey')
     .describe('mapi', 'Management API Key')
     .alias('sapi', 'secureApiKey')
@@ -194,7 +191,6 @@ const importAsync = async (config: ICliFileConfig) => {
             sourceType: sourceType,
             skipFailedItems: config.skipFailedItems,
             baseUrl: config.baseUrl,
-            contentItemsFetchMode: config.contentItemsFetchMode,
             environmentId: environmentId,
             managementApiKey: managementApiKey,
             canImport: {
@@ -255,11 +251,9 @@ const getConfig = async () => {
     const action: CliAction = getRequiredArgumentValue(resolvedArgs, 'action') as CliAction;
     const format: string | undefined = getOptionalArgumentValue(resolvedArgs, 'format');
     const adapter: string | undefined = getOptionalArgumentValue(resolvedArgs, 'adapter');
-    const fetchMode: string | undefined = getOptionalArgumentValue(resolvedArgs, 'fetchMode');
 
     let mappedFormat: ProcessingFormat = 'csv';
     let mappedAdapter: ExportAdapter = 'kontentAi';
-    let mappedFetchMode: ContentItemsFetchMode = 'oneByOne';
 
     if (format?.toLowerCase() === <ProcessingFormat>'csv'.toLowerCase()) {
         mappedFormat = 'csv';
@@ -283,12 +277,6 @@ const getConfig = async () => {
         }
     }
 
-    if (fetchMode?.toLowerCase() === <ContentItemsFetchMode>'listAll'.toLowerCase()) {
-        mappedFetchMode = 'listAll';
-    } else {
-        mappedFetchMode = 'oneByOne';
-    }
-
     const config: ICliFileConfig = {
         action: action,
         managementApiKey: getOptionalArgumentValue(resolvedArgs, 'managementApiKey'),
@@ -308,8 +296,7 @@ const getConfig = async () => {
         replaceInvalidLinks: getBooleanArgumentvalue(resolvedArgs, 'replaceInvalidLinks', false),
         force: getBooleanArgumentvalue(resolvedArgs, 'force', false),
         adapter: mappedAdapter,
-        format: mappedFormat,
-        contentItemsFetchMode: mappedFetchMode
+        format: mappedFormat
     };
 
     return config;
