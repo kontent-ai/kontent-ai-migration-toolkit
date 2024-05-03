@@ -14,11 +14,9 @@ export function getExtractionService(log: Log): ExtractionService {
 }
 
 export class ExtractionService {
-    private readonly richTextHelper: RichTextHelper;
+    private readonly richTextHelper: RichTextHelper = getRichTextHelper();
 
-    constructor(log: Log) {
-        this.richTextHelper = getRichTextHelper(log);
-    }
+    constructor(log: Log) {}
 
     extractReferencedDataFromExportItems(items: IKontentAiPreparedExportItem[]): IReferencedDataInLanguageVariants {
         const itemIds: string[] = [];
@@ -72,7 +70,7 @@ export class ExtractionService {
         for (const item of items) {
             for (const element of item.elements) {
                 if (element.type === 'rich_text') {
-                    const codenamesUsedWithinRte = this.richTextHelper.extractAllCodenamesFromDeliveryRte(
+                    const codenamesUsedWithinRte = this.richTextHelper.extractAllCodenamesFromRte(
                         element.value?.toString()
                     );
 

@@ -1,5 +1,8 @@
-import { ExportTransformFunc, MigrationElementType } from '../../core/index.js';
+import { ExportTransformFunc, IExportContext, MigrationElementType } from '../../core/index.js';
 import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
+import { RichTextHelper, getRichTextHelper } from '../rich-text-helper.js';
+
+const richTextHelper: RichTextHelper = getRichTextHelper();
 
 /**
  * Elements transform used by Kontent.ai export adapter
@@ -8,7 +11,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
     text: (data) => data.value?.toString(),
     number: (data) => data.value?.toString(),
     date_time: (data) => data.value?.toString(),
-    rich_text: (data) => data.value?.toString(),
+    rich_text: (data) => transformRichTextValue(data.value?.toString(), data.context),
     asset: (data) => {
         if (!data.value) {
             return [];
@@ -184,4 +187,33 @@ function findTaxonomy(termId: string, taxonomy: TaxonomyModels.Taxonomy): Taxono
     }
 
     return undefined;
+}
+
+function transformRichTextValue(richTextHtml: string | undefined, context: IExportContext): string | undefined {
+    if (!richTextHtml) {
+        return richTextHtml;
+    }
+
+    // replace item ids with codenames
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.objectRegex, (objectTag) => {
+        const itemIdMatch = objectTag.match(richTextHelper.rteRegexes.dataIdRegex);
+        if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
+            const itemId = itemIdMatch[1];
+
+            const itemInEnv = context.getItemStateInSourceEnvironment(itemId).item;
+
+            if (!itemInEnv) {
+                throw Error(`Failed to get item with id '${itemId}'`);
+            }
+
+            return objectTag.replace(
+                `${richTextHelper.dataIdAttributeName}="${itemId}"`,
+                `${richTextHelper.rteItemCodenameAttribute}="${itemInEnv.codename}"`
+            );
+        }
+
+        return objectTag;
+    });
+
+    return richTextHtml;
 }

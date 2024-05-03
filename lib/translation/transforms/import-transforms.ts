@@ -1,7 +1,4 @@
-import {
-    SharedContracts,
-    LanguageVariantElementsBuilder
-} from '@kontent-ai/management-sdk';
+import { SharedContracts, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
 import {
     ImportTransformFunc,
     parseArrayValue,
@@ -10,8 +7,10 @@ import {
     IImportContext
 } from '../../core/index.js';
 import colors from 'colors';
+import { RichTextHelper, getRichTextHelper } from '../rich-text-helper.js';
 
 const elementsBuilder = new LanguageVariantElementsBuilder();
+const richTextHelper: RichTextHelper = getRichTextHelper();
 
 /**
  * General import transforms used to prepare parsed element values for Management API
@@ -128,14 +127,13 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         });
     },
     rich_text: async (data) => {
-        const rteHtml = data.value?.toString() ?? '';
-        const processedRte = await processImportRichTextHtmlValueAsync(rteHtml, data.importContext);
+        const rteHtml = await processImportRichTextHtmlValueAsync(data.value?.toString(), data.importContext);
 
         return elementsBuilder.richTextElement({
             element: {
                 codename: data.elementCodename
             },
-            value: processedRte.processedHtml
+            value: rteHtml ?? null
         });
     },
     taxonomy: async (data) => {
@@ -172,25 +170,34 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
 async function processImportRichTextHtmlValueAsync(
     richTextHtml: string | undefined,
     importContext: IImportContext
-): Promise<{
-    processedHtml: string;
-    linkedItemCodenames: string[];
-    componentCodenames: string[];
-}> {
-    const componentCodenames: string[] = [];
-    const linkedItemCodenames: string[] = [];
-
+): Promise<string | undefined> {
     if (!richTextHtml) {
-        return {
-            linkedItemCodenames: [],
-            componentCodenames: [],
-            processedHtml: ''
-        };
+        return richTextHtml;
     }
 
-    return {
-        linkedItemCodenames: linkedItemCodenames,
-        componentCodenames: componentCodenames,
-        processedHtml: richTextHtml
-    };
+    // replace codename with id or external_id
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.objectRegex, (objectTag) => {
+        const codenameMatch = objectTag.match(richTextHelper.rteRegexes.rteItemCodenameRegex);
+        if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
+            const codename = codenameMatch[1];
+
+            const itemState = importContext.categorizedItems.getItemStateInTargetEnvironment(codename);
+
+            if (itemState.state === 'exists' && itemState.item) {
+                return objectTag.replace(
+                    `${richTextHelper.rteItemCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.dataIdAttributeName}="${itemState.item.id}"`
+                );
+            } else {
+                return objectTag.replace(
+                    `${richTextHelper.rteItemCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.dataExternalIdAttributeName}="${itemState.externalIdToUse}"`
+                );
+            }
+        }
+
+        return objectTag;
+    });
+
+    return richTextHtml;
 }
