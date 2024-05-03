@@ -1,15 +1,15 @@
 import { IContentType, IDeliveryClient, ILanguage, createDeliveryClient } from '@kontent-ai/delivery-sdk';
-import { IExportAdapter, IExportAdapterResult, IKontentAiExportAdapterConfig } from '../../export.models.js';
+import { IExportAdapter, IExportAdapterResult, IKontentAiDeliveryExportAdapterConfig } from '../../export.models.js';
 import colors from 'colors';
 import { defaultHttpService, defaultRetryStrategy } from '../../../core/global-helper.js';
 import { getExportAssetsHelper } from './helpers/export-assets.helper.js';
 import { getExportContentItemHelper } from './helpers/export-content-item.helper.js';
 import { ManagementClient } from '@kontent-ai/management-sdk';
 
-export class KontentAiExportAdapter implements IExportAdapter {
+export class KontentAiDeliveryExportAdapter implements IExportAdapter {
     public readonly name: string = 'kontentAi';
 
-    constructor(private config: IKontentAiExportAdapterConfig) {}
+    constructor(private config: IKontentAiDeliveryExportAdapterConfig) {}
 
     async exportAsync(): Promise<IExportAdapterResult> {
         this.config.log.console({

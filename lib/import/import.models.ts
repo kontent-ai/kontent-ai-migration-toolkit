@@ -1,6 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { MigrationElementType, IMigrationItem, IMigrationAsset, Log } from '../core/index.js';
+import { IMigrationItem, IMigrationAsset, Log } from '../core/index.js';
 
 export type ImportSourceType = 'zip' | 'file';
 
@@ -36,14 +36,4 @@ export interface IFlattenedFolder {
     name: string;
     externalId?: string;
     id: string;
-}
-
-export interface IImportContentTypeElement {
-    codename: string;
-    type: MigrationElementType;
-}
-
-export interface IImportContentType {
-    contentTypeCodename: string;
-    elements: IImportContentTypeElement[];
 }

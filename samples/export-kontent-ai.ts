@@ -1,9 +1,9 @@
 import { getDefaultLog } from '../lib/core/index.js';
-import { KontentAiExportAdapter } from '../lib/export/index.js';
+import { KontentAiDeliveryExportAdapter } from '../lib/export/index.js';
 import { ExportToolkit } from '../lib/toolkit/index.js';
 
 const run = async () => {
-    const adapter = new KontentAiExportAdapter({
+    const adapter = new KontentAiDeliveryExportAdapter({
         environmentId: '<id>',
         managementApiKey: '<apiKey>',
         isPreview: false,

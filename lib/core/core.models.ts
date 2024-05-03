@@ -1,7 +1,8 @@
-import { AssetModels, ContentItemModels, ElementContracts, LanguageVariantModels } from '@kontent-ai/management-sdk';
+import { AssetModels, CollectionModels, ContentItemModels, ContentTypeElements, ElementContracts, LanguageModels, LanguageVariantModels, WorkflowModels } from '@kontent-ai/management-sdk';
 import { IAssetFormatService, IItemFormatService, ProcessingFormat } from '../file-processor/index.js';
 import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
-import { IMigrationItem, IMigrationAsset } from './migration-models.js';
+import { IMigrationItem, IMigrationAsset, MigrationElementType } from './migration-models.js';
+import { IKontentAiPreparedExportItem } from 'lib/export/export.models.js';
 
 export interface ICliFileConfig {
     adapter?: ExportAdapter;
@@ -72,8 +73,12 @@ export interface IProcessedItem {
     data: any;
 }
 
-export interface IReferencedItemInContent {
-    codename: string;
+export interface IReferencedDataInMigrationItems {
+    itemCodenames: string[];
+}
+
+export interface IReferencedDataInLanguageVariants {
+    itemIds: string[];
 }
 
 export interface IImportContext {
@@ -92,7 +97,23 @@ export interface IImportContext {
     categorizedItems: ICategorizedItems;
 }
 
+export interface IExportContextEnvironmentData {
+    languages: LanguageModels.LanguageModel[];
+    contentTypes: IFlattenedContentType[];
+    collections: CollectionModels.Collection[];
+    workflows: WorkflowModels.Workflow[];
+}
+
+export interface IExportContext {
+    environmentData: IExportContextEnvironmentData;
+    referencedData: IReferencedDataInLanguageVariants;
+    itemsInSourceEnvironment: IItemStateInSourceEnvironmentById[];
+    getItemStateInSourceEnvironment: (id: string) => IItemStateInSourceEnvironmentById;
+    preparedExportItems: IKontentAiPreparedExportItem[];
+}
+
 export type GetItemsByCodenames = (codenames: string[]) => Promise<ContentItemModels.ContentItem[]>;
+export type GetItemsByIds = (ids: string[]) => Promise<ContentItemModels.ContentItem[]>;
 
 export interface IIdCodenameTranslationResult {
     [key: string]: string;
@@ -100,7 +121,13 @@ export interface IIdCodenameTranslationResult {
 
 export type TargetItemState = 'exists' | 'doesNotExists';
 
-export interface IItemStateInTargetEnvironment {
+export interface IItemStateInSourceEnvironmentById {
+    state: TargetItemState;
+    id: string;
+    item: ContentItemModels.ContentItem | undefined;
+}
+
+export interface IItemStateInTargetEnvironmentByCodename {
     state: TargetItemState;
     codename: string;
     item: ContentItemModels.ContentItem | undefined;
@@ -110,10 +137,9 @@ export interface IItemStateInTargetEnvironment {
 export interface ICategorizedItems {
     componentItems: IMigrationItem[];
     contentItems: IMigrationItem[];
-    itemsReferencedInContent: IReferencedItemInContent[];
-    itemsInTargetEnvironment: IItemStateInTargetEnvironment[];
-
-    getItemStateInTargetEnvironment: (codename: string) => IItemStateInTargetEnvironment;
+    referencedData: IReferencedDataInMigrationItems;
+    itemsInTargetEnvironment: IItemStateInTargetEnvironmentByCodename[];
+    getItemStateInTargetEnvironment: (codename: string) => IItemStateInTargetEnvironmentByCodename;
 }
 
 export interface IPackageMetadata {
@@ -163,3 +189,16 @@ export interface IProcessInChunksItemInfo {
 
 export type ItemsFormatConfig = IItemFormatService | 'json' | 'csv';
 export type AssetsFormatConfig = IAssetFormatService | 'json' | 'csv';
+
+export interface IFlattenedContentTypeElement {
+    codename: string;
+    id: string;
+    type: MigrationElementType;
+    element: ContentTypeElements.ContentTypeElementModel;
+}
+
+export interface IFlattenedContentType {
+    contentTypeCodename: string;
+    contentTypeId: string;
+    elements: IFlattenedContentTypeElement[];
+}

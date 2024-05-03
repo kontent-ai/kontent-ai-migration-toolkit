@@ -33,6 +33,7 @@
         "test:all": "npm run build",
         "test:export": "cd output && tsx ../lib/node/cli/app --config=export-config-bein.json ",
         "test:import": "cd output && tsx ../lib/node/cli/app --config=import-config-bein.json",
+        "test:export-via-code": "cd output && tsx test-export.ts",
         "test:help": "cd output && tsx ../lib/node/cli/app --help",
         "lint": "npx eslint lib",
         "clean": "tsx clean.ts",

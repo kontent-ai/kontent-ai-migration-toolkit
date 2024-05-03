@@ -7,7 +7,7 @@ import {
     IMigrationElement,
     Log,
 } from '../../../../core/index.js';
-import { IKontentAiExportAdapterConfig } from '../../../export.models.js';
+import { IKontentAiDeliveryExportAdapterConfig } from '../../../export.models.js';
 import { getElementTranslationHelper } from '../../../../translation/index.js';
 import colors from 'colors';
 import { AssetModels } from '@kontent-ai/management-sdk';
@@ -28,7 +28,7 @@ export class ExportContentItemHelper {
     constructor(private readonly deliveryClient: IDeliveryClient, private readonly log: Log) {}
 
     mapToMigrationItems(data: {
-        config: IKontentAiExportAdapterConfig;
+        config: IKontentAiDeliveryExportAdapterConfig;
         items: IContentItem[];
         types: IContentType[];
         assets: AssetModels.Asset[];
@@ -38,7 +38,7 @@ export class ExportContentItemHelper {
     }
 
     async exportContentItemsAsync(data: {
-        config: IKontentAiExportAdapterConfig;
+        config: IKontentAiDeliveryExportAdapterConfig;
         types: IContentType[];
         languages: ILanguage[];
     }): Promise<{ deliveryContentItems: IContentItem[] }> {
@@ -181,7 +181,7 @@ export class ExportContentItemHelper {
         items: IContentItem[],
         types: IContentType[],
         assets: AssetModels.Asset[],
-        config: IKontentAiExportAdapterConfig
+        config: IKontentAiDeliveryExportAdapterConfig
     ): IMigrationItem {
         const translationHelper = getElementTranslationHelper(this.log);
 
@@ -238,7 +238,7 @@ export class ExportContentItemHelper {
         });
     }
 
-    private getTypesToExport(config: IKontentAiExportAdapterConfig, types: IContentType[]): IContentType[] {
+    private getTypesToExport(config: IKontentAiDeliveryExportAdapterConfig, types: IContentType[]): IContentType[] {
         const filteredTypes: IContentType[] = [];
 
         if (!config?.exportTypes?.length) {
@@ -255,7 +255,7 @@ export class ExportContentItemHelper {
         return filteredTypes;
     }
 
-    private getLanguagesToExport(config: IKontentAiExportAdapterConfig, languages: ILanguage[]): ILanguage[] {
+    private getLanguagesToExport(config: IKontentAiDeliveryExportAdapterConfig, languages: ILanguage[]): ILanguage[] {
         const filteredLanguages: ILanguage[] = [];
 
         if (!config?.exportLanguages?.length) {

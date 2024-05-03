@@ -2,9 +2,7 @@ import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-
 import {
     IImportContext,
     extractErrorData,
-    is404Error,
     logErrorAndExit,
-    processInChunksAsync,
     IMigrationItem,
     Log,
     getItemExternalIdForCodename
@@ -16,51 +14,7 @@ export function getImportContentItemHelper(config: { log: Log; skipFailedItems: 
 }
 
 export class ImportContentItemHelper {
-    private readonly importContentItemChunkSize: number = 1;
-
     constructor(private readonly log: Log, private readonly skipFailedItems: boolean) {}
-
-    async getContentItemsByCodenamesAsync(data: {
-        managementClient: ManagementClient;
-        itemCodenames: string[];
-    }): Promise<ContentItemModels.ContentItem[]> {
-        const contentItems: ContentItemModels.ContentItem[] = [];
-
-        await processInChunksAsync<string, void>({
-            log: this.log,
-            type: 'contentItem',
-            chunkSize: this.importContentItemChunkSize,
-            items: data.itemCodenames,
-            itemInfo: (codename) => {
-                return {
-                    itemType: 'contentItem',
-                    title: codename
-                };
-            },
-            processFunc: async (codename) => {
-                try {
-                    this.log.spinner?.text?.({
-                        type: 'fetch',
-                        message: `${codename}`
-                    });
-
-                    const contentItem = await data.managementClient
-                        .viewContentItem()
-                        .byItemCodename(codename)
-                        .toPromise()
-                        .then((m) => m.data);
-
-                    contentItems.push(contentItem);
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
-                    }
-                }
-            }
-        });
-
-        return contentItems;
-    }
 
     async importContentItemsAsync(data: {
         managementClient: ManagementClient;

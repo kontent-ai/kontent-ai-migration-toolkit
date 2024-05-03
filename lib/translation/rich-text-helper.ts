@@ -17,7 +17,17 @@ export class RichTextHelper {
 
     constructor(log: Log) {}
 
-    extractAllCodenamesFromRte(richTextHtml: string | undefined): string[] {
+    extractAllIdsFromManagementRte(richTextHtml: string | undefined): string[] {
+        if (!richTextHtml) {
+            return [];
+        }
+
+        const codenames: string[] = [];
+
+        return codenames;
+    }
+
+    extractAllCodenamesFromDeliveryRte(richTextHtml: string | undefined): string[] {
         if (!richTextHtml) {
             return [];
         }
@@ -41,19 +51,6 @@ export class RichTextHelper {
             }
 
             return objectTag;
-        });
-
-        richTextHtml.replaceAll(this.rteRegexes.linkRegex, (linkTag) => {
-            const codenameMatch = linkTag.match(this.rteRegexes.csvmLinkCodenameRegex);
-            if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
-                const codename = codenameMatch[1];
-
-                if (!codenames.find((m) => m === codename)) {
-                    codenames.push(codename);
-                }
-            }
-
-            return linkTag;
         });
 
         richTextHtml.replaceAll(this.rteRegexes.linkRegex, (linkTag) => {

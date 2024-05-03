@@ -1,9 +1,6 @@
 import {
     CollectionModels,
     ContentItemModels,
-    ContentTypeElements,
-    ContentTypeModels,
-    ContentTypeSnippetModels,
     ManagementClient,
     WorkflowModels,
     createManagementClient
@@ -13,11 +10,10 @@ import {
     IImportContext,
     defaultRetryStrategy,
     defaultHttpService,
-    logErrorAndExit,
     IMigrationItem,
     executeWithTrackingAsync
 } from '../core/index.js';
-import { IImportConfig, IImportSource, IImportContentType, IImportContentTypeElement } from './import.models.js';
+import { IImportConfig, IImportSource } from './import.models.js';
 import { ImportAssetsHelper, getImportAssetsHelper } from './helpers/import-assets.helper.js';
 import { ImportContentItemHelper, getImportContentItemHelper } from './helpers/import-content-item.helper.js';
 import {
@@ -26,15 +22,14 @@ import {
 } from './helpers/import-language-variant.helper.js';
 import colors from 'colors';
 import { libMetadata } from '../metadata.js';
-import { ParsedItemsHelper, getParsedItemsHelper } from './helpers/parsed-items-helper.js';
-import { IImportData } from '../toolkit/import-toolkit.class.js';
+import { ImportContextHelper, getImportContextHelper } from './helpers/import-context-helper.js';
 
 export class ImportService {
-    private readonly managementClient: ManagementClient;
+    public readonly managementClient: ManagementClient;
     private readonly importAssetsHelper: ImportAssetsHelper;
     private readonly importContentItemHelper: ImportContentItemHelper;
     private readonly importLanguageVariantHelper: ImportLanguageVariantHelper;
-    private readonly parsedItemsHelper: ParsedItemsHelper;
+    private readonly importContextHelper: ImportContextHelper;
 
     constructor(private config: IImportConfig) {
         this.managementClient = createManagementClient({
@@ -54,33 +49,7 @@ export class ImportService {
             log: config.log,
             skipFailedItems: config.skipFailedItems
         });
-        this.parsedItemsHelper = getParsedItemsHelper(config.log);
-    }
-
-    async getImportContentTypesAsync(): Promise<IImportContentType[]> {
-        const contentTypes = (await this.managementClient.listContentTypes().toAllPromise()).data.items;
-        const contentTypeSnippets = (await this.managementClient.listContentTypeSnippets().toAllPromise()).data.items;
-
-        this.config.log.console({
-            type: 'info',
-            message: `Fetched '${colors.yellow(contentTypes.length.toString())}' content types`
-        });
-
-        this.config.log.console({
-            type: 'info',
-            message: `Fetched '${colors.yellow(contentTypeSnippets.length.toString())}' content type snippets`
-        });
-
-        return [
-            ...contentTypes.map((contentType) => {
-                const importType: IImportContentType = {
-                    contentTypeCodename: contentType.codename,
-                    elements: this.getContentTypeElements(contentType, contentTypeSnippets)
-                };
-
-                return importType;
-            })
-        ];
+        this.importContextHelper = getImportContextHelper(config.log, this.managementClient);
     }
 
     async importAsync(sourceData: IImportSource): Promise<IImportContext> {
@@ -103,7 +72,7 @@ export class ImportService {
                 // this is an optional step where users can exclude certain objects from being imported
                 const dataToImport = this.getDataToImport(sourceData);
 
-                const importContext = await this.getImportContextAsync(dataToImport.importData);
+                const importContext = await this.importContextHelper.getImportContextAsync(dataToImport.importData);
 
                 // import order matters
                 // #1 Assets
@@ -138,73 +107,6 @@ export class ImportService {
                 return importContext;
             }
         });
-    }
-
-    private async getImportContextAsync(dataToImport: IImportData): Promise<IImportContext> {
-        const importContext: IImportContext = {
-            importedAssets: [],
-            importedContentItems: [],
-            importedLanguageVariants: [],
-            categorizedItems: await this.parsedItemsHelper.categorizeParsedItemsAsync(
-                dataToImport.items,
-                async (codenames) =>
-                    this.importContentItemHelper.getContentItemsByCodenamesAsync({
-                        itemCodenames: codenames,
-                        managementClient: this.managementClient
-                    })
-            )
-        };
-
-        return importContext;
-    }
-
-    private getContentTypeElements(
-        contentType: ContentTypeModels.ContentType,
-        contentTypeSnippets: ContentTypeSnippetModels.ContentTypeSnippet[]
-    ): IImportContentTypeElement[] {
-        const elements: IImportContentTypeElement[] = [];
-
-        for (const element of contentType.elements) {
-            if (!element.codename) {
-                continue;
-            }
-            const importElement: IImportContentTypeElement = {
-                codename: element.codename,
-                type: element.type
-            };
-
-            if (importElement.type === 'snippet') {
-                const snippetElement = element as ContentTypeElements.ISnippetElement;
-
-                // replace snippet element with actual elements
-                const contentTypeSnippet = contentTypeSnippets.find(
-                    (m) => m.id.toLowerCase() === snippetElement.snippet.id?.toLowerCase()
-                );
-
-                if (!contentTypeSnippet) {
-                    logErrorAndExit({
-                        message: `Could not find content type snippet for element. This snippet is referenced in type '${colors.red(
-                            contentType.codename
-                        )}'`
-                    });
-                }
-
-                for (const snippetElement of contentTypeSnippet.elements) {
-                    if (!snippetElement.codename) {
-                        continue;
-                    }
-
-                    elements.push({
-                        codename: snippetElement.codename,
-                        type: snippetElement.type
-                    });
-                }
-            } else {
-                elements.push(importElement);
-            }
-        }
-
-        return elements;
     }
 
     private getDataToImport(source: IImportSource): IImportSource {

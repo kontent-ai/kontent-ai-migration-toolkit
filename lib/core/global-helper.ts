@@ -158,6 +158,10 @@ export function parseArrayValue(value: string | Array<string> | null | undefined
     return JSON.parse(value);
 }
 
+export function uniqueStringFilter(value: string, index: number, self: string[]): boolean {
+    return self.indexOf(value) === index;
+}
+
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     type: ItemType;
     log: Log;

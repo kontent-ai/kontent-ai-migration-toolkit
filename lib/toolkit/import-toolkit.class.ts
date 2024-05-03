@@ -1,13 +1,15 @@
 import {
     AssetsFormatConfig,
+    IFlattenedContentType,
     IMigrationAsset,
     IMigrationItem,
     ItemsFormatConfig,
     getAssetsFormatService,
+    getFlattenedContentTypesAsync,
     getItemsFormatService
 } from '../core/index.js';
 import { FileProcessorService, getFileProcessorService } from '../file-processor/index.js';
-import { IImportConfig, IImportContentType, IImportSource, ImportService } from '../import/index.js';
+import { IImportConfig, IImportSource, ImportService } from '../import/index.js';
 import { FileService, getFileService } from '../node/index.js';
 
 export interface IImportToolkitConfig extends IImportConfig {}
@@ -55,7 +57,7 @@ export class ImportToolkit {
         let importSourceData: IImportSource;
 
         // prepare content types
-        const contentTypes = await importService.getImportContentTypesAsync();
+        const contentTypes = await getFlattenedContentTypesAsync(importService.managementClient, this.config.log);
 
         switch (this.config.sourceType) {
             case 'zip': {
@@ -82,7 +84,7 @@ export class ImportToolkit {
 
     private async getImportDataFromNonZipFileAsync(
         data: IImportFromFilesData & {
-            contentTypes: IImportContentType[];
+            contentTypes: IFlattenedContentType[];
         }
     ): Promise<IImportSource> {
         // parse data from files
@@ -106,7 +108,7 @@ export class ImportToolkit {
     }
 
     private async getImportDataFromZipAsync(
-        data: IImportFromFilesData & { contentTypes: IImportContentType[] }
+        data: IImportFromFilesData & { contentTypes: IFlattenedContentType[] }
     ): Promise<IImportSource> {
         // parse data from zip
         const importSourceData = await this.fileProcessorService.parseZipAsync({
