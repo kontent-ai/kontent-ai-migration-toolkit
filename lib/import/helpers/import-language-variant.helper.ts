@@ -18,7 +18,7 @@ import {
 } from '../../core/index.js';
 import { ImportWorkflowHelper, getImportWorkflowHelper } from './import-workflow.helper.js';
 import colors from 'colors';
-import { importTransforms } from 'lib/translation/index.js';
+import { importTransforms } from '../../translation/index.js';
 
 export function getImportLanguageVariantstemHelper(config: {
     log: Log;
