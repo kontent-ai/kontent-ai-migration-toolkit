@@ -1,3 +1,4 @@
+import { HttpService } from '@kontent-ai/core-sdk';
 import {
     IExportAdapter,
     IExportAdapterResult,
@@ -6,7 +7,7 @@ import {
     throwErrorForItemRequest
 } from '../../export.models.js';
 import colors from 'colors';
-import { ContentTypeElements, ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
+import { AssetModels, ContentTypeElements, ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
 import {
     defaultRetryStrategy,
     IMigrationAsset,
@@ -15,11 +16,13 @@ import {
     defaultHttpService,
     IExportContext,
     IFlattenedContentTypeElement,
-    extractErrorData
+    extractErrorData,
+    processInChunksAsync
 } from '../../../core/index.js';
 import { ExportContextHelper, getExportContextHelper } from './helpers/export-context-helper.js';
 
 export class KontentAiManagementExportAdapter implements IExportAdapter {
+    private readonly httpService: HttpService = new HttpService();
     public readonly name: string = 'kontentAi';
     private readonly managementClient: ManagementClient;
     private readonly exportContextHelper: ExportContextHelper;
@@ -41,7 +44,7 @@ export class KontentAiManagementExportAdapter implements IExportAdapter {
 
         return {
             items: await this.mapPreparedItemToMigrationItemsAsync(exportContext),
-            assets: await this.exportAssetsAsync()
+            assets: await this.exportAssetsAsync(exportContext)
         };
     }
 
@@ -204,10 +207,18 @@ export class KontentAiManagementExportAdapter implements IExportAdapter {
         }
     }
 
-    private async exportAssetsAsync(): Promise<IMigrationAsset[]> {
-        const assets: IMigrationAsset[] = [];
+    private async exportAssetsAsync(context: IExportContext): Promise<IMigrationAsset[]> {
+        const assets: AssetModels.Asset[] = [];
 
-        return assets;
+        for (const assetId of context.referencedData.assetIds) {
+            const assetState = context.getAssetStateInSourceEnvironment(assetId);
+
+            if (assetState.asset) {
+                assets.push(assetState.asset);
+            }
+        }
+
+        return await this.getMigrationAssetsWithBinaryDataAsync(assets);
     }
 
     private getManagementClient(config: IKontentAiManagementExportAdapterConfig): ManagementClient {
@@ -219,5 +230,60 @@ export class KontentAiManagementExportAdapter implements IExportAdapter {
             httpService: defaultHttpService,
             apiKey: config.managementApiKey
         });
+    }
+
+    private async getMigrationAssetsWithBinaryDataAsync(assets: AssetModels.Asset[]): Promise<IMigrationAsset[]> {
+        this.config.log.console({
+            type: 'info',
+            message: `Preparing to download '${colors.yellow(assets.length.toString())}' assets`
+        });
+
+        const exportedAssets: IMigrationAsset[] = await processInChunksAsync<AssetModels.Asset, IMigrationAsset>({
+            log: this.config.log,
+            type: 'asset',
+            chunkSize: 5,
+            itemInfo: (input) => {
+                return {
+                    title: input.codename,
+                    itemType: 'asset'
+                };
+            },
+            items: assets,
+            processFunc: async (asset) => {
+                const migrationAsset: IMigrationAsset = {
+                    _zipFilename: asset.fileName,
+                    filename: asset.fileName,
+                    title: asset.title ?? '',
+                    assetExternalId: asset.externalId,
+                    assetId: asset.id,
+                    codename: asset.codename,
+                    binaryData: (await this.getBinaryDataFromUrlAsync(asset.url)).data
+                };
+
+                return migrationAsset;
+            }
+        });
+
+        return exportedAssets;
+    }
+
+    private async getBinaryDataFromUrlAsync(url: string): Promise<{ data: any; contentLength: number }> {
+        // temp fix for Kontent.ai Repository not validating url
+        url = url.replace('#', '%23');
+
+        const response = await this.httpService.getAsync(
+            {
+                url
+            },
+            {
+                responseType: 'arraybuffer',
+                retryStrategy: defaultRetryStrategy
+            }
+        );
+
+        const contentLengthHeader = response.headers.find((m) => m.header.toLowerCase() === 'content-length');
+        const contentLength = contentLengthHeader ? +contentLengthHeader.value : 0;
+
+        return { data: response.data, contentLength: contentLength };
     }
 }
