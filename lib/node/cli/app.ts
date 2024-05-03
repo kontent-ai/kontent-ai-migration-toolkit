@@ -23,7 +23,7 @@ import {
     AssetJsonProcessorService
 } from '../../file-processor/index.js';
 import { ExportToolkit, IImportToolkitConfig, ImportToolkit } from '../../toolkit/index.js';
-import { IExportAdapter, KontentAiDeliveryExportAdapter } from '../../export/index.js';
+import { IExportAdapter, KontentAiManagementExportAdapter } from '../../export/index.js';
 import { ImportSourceType } from '../../import/index.js';
 
 type Args = { [key: string]: string | unknown };
@@ -103,17 +103,12 @@ const exportAsync = async (config: ICliFileConfig) => {
                 });
             }
 
-            adapter = new KontentAiDeliveryExportAdapter({
+            adapter = new KontentAiManagementExportAdapter({
                 log: log,
                 environmentId: config.environmentId,
                 managementApiKey: config.managementApiKey,
-                previewApiKey: config.previewApiKey,
-                secureApiKey: config.secureApiKey,
-                isPreview: config.isPreview,
-                isSecure: config.isSecure,
                 baseUrl: config.baseUrl,
-                exportTypes: config.exportTypes,
-                exportLanguages: config.exportLanguages
+                exportItems: []
             });
         } else {
             logErrorAndExit({

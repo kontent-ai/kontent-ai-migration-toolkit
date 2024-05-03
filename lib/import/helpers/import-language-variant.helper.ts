@@ -17,8 +17,8 @@ import {
     Log
 } from '../../core/index.js';
 import { ImportWorkflowHelper, getImportWorkflowHelper } from './import-workflow.helper.js';
-import { ElementTranslationHelper, getElementTranslationHelper } from '../../translation/index.js';
 import colors from 'colors';
+import { importTransforms } from 'lib/translation/index.js';
 
 export function getImportLanguageVariantstemHelper(config: {
     log: Log;
@@ -30,11 +30,9 @@ export function getImportLanguageVariantstemHelper(config: {
 export class ImportLanguageVariantHelper {
     private readonly importContentItemChunkSize: number = 1;
     private readonly importWorkflowHelper: ImportWorkflowHelper;
-    private readonly elementTranslationHelper: ElementTranslationHelper;
 
     constructor(private readonly log: Log, private readonly skipFailedItems: boolean) {
         this.importWorkflowHelper = getImportWorkflowHelper(log);
-        this.elementTranslationHelper = getElementTranslationHelper(this.log);
     }
 
     async importLanguageVariantsAsync(data: {
@@ -101,7 +99,6 @@ export class ImportLanguageVariantHelper {
         });
     }
 
-
     private async importLanguageVariantAsync(data: {
         importContentItem: IMigrationItem;
         preparedContentItem: ContentItemModels.ContentItem;
@@ -150,11 +147,7 @@ export class ImportLanguageVariantHelper {
 
         for (const element of data.importContentItem.elements) {
             mappedElements.push(
-                await this.getElementContractAsync(
-                    data.importContentItems,
-                    element,
-                    data.importContext
-                )
+                await this.getElementContractAsync(data.importContentItems, element, data.importContext)
             );
         }
 
@@ -315,14 +308,12 @@ export class ImportLanguageVariantHelper {
         element: IMigrationElement,
         importContext: IImportContext
     ): Promise<ElementContracts.IContentItemElementContract> {
-        const importContract = await this.elementTranslationHelper.transformToImportValueAsync(
-            element.value,
-            element.codename,
-            element.type,
-            importContext,
-            sourceItems,
-           
-        );
+        const importContract = await importTransforms[element.type]({
+            elementCodename: element.codename,
+            importContext: importContext,
+            sourceItems: sourceItems,
+            value: element.value
+        });
 
         if (!importContract) {
             logErrorAndExit({

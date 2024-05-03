@@ -6,10 +6,10 @@ import {
     ElementContracts,
     LanguageModels,
     LanguageVariantModels,
+    SharedModels,
     WorkflowModels
 } from '@kontent-ai/management-sdk';
 import { IAssetFormatService, IItemFormatService, ProcessingFormat } from '../file-processor/index.js';
-import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IMigrationItem, IMigrationAsset, MigrationElementType } from './migration-models.js';
 import { IKontentAiPreparedExportItem } from 'lib/export/export.models.js';
 
@@ -170,12 +170,10 @@ export interface IPackageDataOverview {
 }
 
 export type ExportTransformFunc = (data: {
-    element: ContentItemElementsIndexer;
-    item: IContentItem;
-    items: IContentItem[];
-    types: IContentType[];
-    assets: AssetModels.Asset[];
-    config: IExportTransformConfig;
+    exportItem: IKontentAiPreparedExportItem;
+    typeElement: IFlattenedContentTypeElement;
+    value: string | number | SharedModels.ReferenceObject[] | undefined;
+    context: IExportContext;
 }) => string | string[] | undefined;
 
 export type ImportTransformFunc = (data: {

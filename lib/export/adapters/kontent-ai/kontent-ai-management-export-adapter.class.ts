@@ -7,7 +7,7 @@ import {
     throwErrorForItemRequest
 } from '../../export.models.js';
 import colors from 'colors';
-import { AssetModels, ContentTypeElements, ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
+import { AssetModels, ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
 import {
     defaultRetryStrategy,
     IMigrationAsset,
@@ -20,6 +20,7 @@ import {
     processInChunksAsync
 } from '../../../core/index.js';
 import { ExportContextHelper, getExportContextHelper } from './helpers/export-context-helper.js';
+import { exportTransforms } from 'lib/translation/index.js';
 
 export class KontentAiManagementExportAdapter implements IExportAdapter {
     private readonly httpService: HttpService = new HttpService();
@@ -33,9 +34,20 @@ export class KontentAiManagementExportAdapter implements IExportAdapter {
     }
 
     async exportAsync(): Promise<IExportAdapterResult> {
+        const sourceEnvironment = (
+            await new ManagementClient({
+                apiKey: this.config.managementApiKey,
+                environmentId: this.config.environmentId
+            })
+                .environmentInformation()
+                .toPromise()
+        ).data.project;
+
         this.config.log.console({
             type: 'info',
-            message: `Preparing export from environment ${colors.yellow(this.config.environmentId)}`
+            message: `Preparing export from environment ${colors.yellow(
+                sourceEnvironment.environment
+            )} in project ${colors.cyan(sourceEnvironment.name)}`
         });
 
         const exportContext = await this.exportContextHelper.getExportContextAsync({
@@ -107,87 +119,7 @@ export class KontentAiManagementExportAdapter implements IExportAdapter {
         context: IExportContext;
     }): string | undefined | string[] {
         try {
-            if (!data.value) {
-                return undefined;
-            }
-
-            if (data.typeElement.type === 'asset') {
-                if (!Array.isArray(data.value)) {
-                    throw Error(`Expected value to be an array`);
-                }
-
-                // translate asset id to codename
-                const assetCodenames: string[] = [];
-                for (const arrayVal of data.value) {
-                    if (!arrayVal.id) {
-                        continue;
-                    }
-
-                    const assetState = data.context.getAssetStateInSourceEnvironment(arrayVal.id);
-
-                    if (assetState.asset) {
-                        // reference asset by codename
-                        assetCodenames.push(assetState.asset.codename);
-                    } else {
-                        throw Error(`Missing asset with id '${arrayVal.id}'`);
-                    }
-                }
-
-                return assetCodenames;
-            }
-
-            if (data.typeElement.type === 'modular_content' || data.typeElement.type === 'subpages') {
-                if (!Array.isArray(data.value)) {
-                    throw Error(`Expected value to be an array`);
-                }
-
-                // translate item id to codename
-                const codenames: string[] = [];
-                for (const arrayVal of data.value) {
-                    if (!arrayVal.id) {
-                        continue;
-                    }
-
-                    const itemState = data.context.getItemStateInSourceEnvironment(arrayVal.id);
-
-                    if (itemState.item) {
-                        // reference item by codename
-                        codenames.push(itemState.item.codename);
-                    } else {
-                        throw Error(`Missing item with id '${arrayVal.id}'`);
-                    }
-                }
-
-                return codenames;
-            }
-
-            if (data.typeElement.type === 'multiple_choice') {
-                if (!Array.isArray(data.value)) {
-                    throw Error(`Expected value to be an array`);
-                }
-
-                // translate multiple choice option id to codename
-                const multipleChoiceElement = data.typeElement.element as ContentTypeElements.IMultipleChoiceElement;
-                const selectedOptionCodenames: string[] = [];
-
-                for (const arrayVal of data.value) {
-                    if (!arrayVal.id) {
-                        continue;
-                    }
-
-                    const option = multipleChoiceElement.options.find((m) => m.id === arrayVal.id);
-
-                    if (!option) {
-                        throw Error(`Could not find multiple choice element with option id '${arrayVal.id}'`);
-                    }
-
-                    selectedOptionCodenames.push(option.codename as string);
-                }
-
-                return selectedOptionCodenames;
-            }
-
-            return data.value?.toString();
+            return exportTransforms[data.typeElement.type](data);
         } catch (error) {
             const errorData = extractErrorData(error);
             let jsonValue = 'n/a';
