@@ -22,6 +22,7 @@ import {
     LanguageModels,
     LanguageVariantModels,
     ManagementClient,
+    TaxonomyModels,
     WorkflowModels
 } from '@kontent-ai/management-sdk';
 import colors from 'colors';
@@ -44,7 +45,8 @@ export class ExportContextHelper {
             collections: await this.getAllCollectionsAsync(),
             contentTypes: await getFlattenedContentTypesAsync(this.managementClient, this.log),
             languages: await this.getAllLanguagesAsync(),
-            workflows: await this.getAllWorkflowsAsync()
+            workflows: await this.getAllWorkflowsAsync(),
+            taxonomies: await this.getAllTaxonomiesAsync()
         };
 
         this.log.console({
@@ -233,6 +235,12 @@ export class ExportContextHelper {
         this.log.console({ type: 'info', message: `Loading workflows` });
         const response = await this.managementClient.listWorkflows().toPromise();
         return response.data;
+    }
+
+    private async getAllTaxonomiesAsync(): Promise<TaxonomyModels.Taxonomy[]> {
+        this.log.console({ type: 'info', message: `Loading taxonomies` });
+        const response = await this.managementClient.listTaxonomies().toAllPromise();
+        return response.data.items;
     }
 
     private async getContentItemsByIdsAsync(itemIds: string[]): Promise<ContentItemModels.ContentItem[]> {

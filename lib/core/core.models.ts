@@ -7,6 +7,7 @@ import {
     LanguageModels,
     LanguageVariantModels,
     SharedModels,
+    TaxonomyModels,
     WorkflowModels
 } from '@kontent-ai/management-sdk';
 import { IAssetFormatService, IItemFormatService, ProcessingFormat } from '../file-processor/index.js';
@@ -112,6 +113,7 @@ export interface IExportContextEnvironmentData {
     contentTypes: IFlattenedContentType[];
     collections: CollectionModels.Collection[];
     workflows: WorkflowModels.Workflow[];
+    taxonomies: TaxonomyModels.Taxonomy[];
 }
 
 export interface IExportContext {
