@@ -251,11 +251,10 @@ export class KontentAiManagementExportAdapter implements IExportAdapter {
             items: assets,
             processFunc: async (asset) => {
                 const migrationAsset: IMigrationAsset = {
-                    _zipFilename: asset.fileName,
+                    _zipFilename: asset.codename,
                     filename: asset.fileName,
                     title: asset.title ?? '',
                     assetExternalId: asset.externalId,
-                    assetId: asset.id,
                     codename: asset.codename,
                     binaryData: (await this.getBinaryDataFromUrlAsync(asset.url)).data
                 };

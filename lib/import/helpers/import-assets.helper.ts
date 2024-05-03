@@ -86,7 +86,7 @@ export class ImportAssetsHelper {
                             },
                             codename: asset.codename,
                             title: asset.title,
-                            external_id: asset.assetId,
+                            external_id: asset.assetExternalId,
                             collection: asset.collection
                                 ? {
                                       reference: asset.collection
@@ -134,16 +134,14 @@ export class ImportAssetsHelper {
                 };
             },
             processFunc: async (asset) => {
-                // check if asset with given external id already exists
+                // check if asset with given codename already exists
                 let existingAsset: AssetModels.Asset | undefined;
 
-                if (asset.assetId) {
+                if (asset.codename) {
                     try {
-                        // when target project is the same as source project, the id of asset would be the same
-                        // and such assets should not be imported again
                         existingAsset = await data.managementClient
                             .viewAsset()
-                            .byAssetId(asset.assetId)
+                            .byAssetCodename(asset.codename)
                             .toPromise()
                             .then((m) => m.data);
                     } catch (error) {

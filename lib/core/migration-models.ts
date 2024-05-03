@@ -45,7 +45,6 @@ export interface IMigrationAsset {
     filename: string;
     title: string;
 
-    assetId?: string;
     assetExternalId?: string;
     codename?: string;
     collection?: IMigrationReference;

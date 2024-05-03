@@ -25,7 +25,6 @@ import {
 import { idTranslateHelper } from './id-translate-helper.js';
 import {
     getAssetZipFilename,
-    getAssetIdFromFilename,
     getAssetUrlPath,
     IMigrationItem,
     Log,
@@ -129,17 +128,17 @@ export class ElementTranslationHelper {
         asset: async (data) => {
             const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
 
-            for (const assetFilename of parseArrayValue(data.value)) {
-                // find id of imported asset
+            for (const assetCodename of parseArrayValue(data.value)) {
+                // find imported asset
                 const importedAsset = data.importContext.importedAssets.find(
-                    (s) => s.original.assetId?.toLowerCase() === getAssetIdFromFilename(assetFilename)
+                    (s) => s.original.codename?.toLowerCase() === assetCodename.toLowerCase()
                 );
 
                 if (!importedAsset) {
                     this.log.console({
                         type: 'warning',
-                        message: `Could not find imported asset for filename '${colors.red(
-                            assetFilename
+                        message: `Could not find imported asset with codename '${colors.red(
+                            assetCodename
                         )}'. Skipping asset.`
                     });
 

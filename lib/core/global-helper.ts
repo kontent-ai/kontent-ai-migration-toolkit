@@ -107,15 +107,6 @@ export function getAssetZipFilename(asset: AssetModels.Asset): string {
     return `${asset.id}.${getExtension(asset.url)}`;
 }
 
-export function getAssetIdFromFilename(filename: string): string {
-    const lastDotIndex = filename.lastIndexOf('.');
-    if (lastDotIndex === -1) {
-        // If there's no dot in the filename, return the full filename
-        return filename;
-    }
-    return filename.slice(0, lastDotIndex);
-}
-
 export function handleError(error: any): void {
     const errorData = extractErrorData(error);
 
