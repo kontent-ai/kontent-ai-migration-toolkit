@@ -109,16 +109,37 @@ export class KontentAiManagementExportAdapter implements IExportAdapter {
             }
 
             if (data.typeElement.type === 'asset') {
-                // todo
-            }
-
-            if (data.typeElement.type === 'modular_content' || data.typeElement.type === 'subpages') {
-                const codenames: string[] = [];
-
                 if (!Array.isArray(data.value)) {
                     throw Error(`Expected value to be an array`);
                 }
+
+                // translate asset id to codename
+                const assetCodenames: string[] = [];
+                for (const arrayVal of data.value) {
+                    if (!arrayVal.id) {
+                        continue;
+                    }
+
+                    const assetState = data.context.getAssetStateInSourceEnvironment(arrayVal.id);
+
+                    if (assetState.asset) {
+                        // reference asset by codename
+                        assetCodenames.push(assetState.asset.codename);
+                    } else {
+                        throw Error(`Missing asset with id '${arrayVal.id}'`);
+                    }
+                }
+
+                return assetCodenames;
+            }
+
+            if (data.typeElement.type === 'modular_content' || data.typeElement.type === 'subpages') {
+                if (!Array.isArray(data.value)) {
+                    throw Error(`Expected value to be an array`);
+                }
+
                 // translate item id to codename
+                const codenames: string[] = [];
                 for (const arrayVal of data.value) {
                     if (!arrayVal.id) {
                         continue;
@@ -142,6 +163,7 @@ export class KontentAiManagementExportAdapter implements IExportAdapter {
                     throw Error(`Expected value to be an array`);
                 }
 
+                // translate multiple choice option id to codename
                 const multipleChoiceElement = data.typeElement.element as ContentTypeElements.IMultipleChoiceElement;
                 const selectedOptionCodenames: string[] = [];
 

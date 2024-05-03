@@ -1,4 +1,13 @@
-import { AssetModels, CollectionModels, ContentItemModels, ContentTypeElements, ElementContracts, LanguageModels, LanguageVariantModels, WorkflowModels } from '@kontent-ai/management-sdk';
+import {
+    AssetModels,
+    CollectionModels,
+    ContentItemModels,
+    ContentTypeElements,
+    ElementContracts,
+    LanguageModels,
+    LanguageVariantModels,
+    WorkflowModels
+} from '@kontent-ai/management-sdk';
 import { IAssetFormatService, IItemFormatService, ProcessingFormat } from '../file-processor/index.js';
 import { ContentItemElementsIndexer, IContentItem, IContentType } from '@kontent-ai/delivery-sdk';
 import { IMigrationItem, IMigrationAsset, MigrationElementType } from './migration-models.js';
@@ -79,6 +88,7 @@ export interface IReferencedDataInMigrationItems {
 
 export interface IReferencedDataInLanguageVariants {
     itemIds: string[];
+    assetIds: string[];
 }
 
 export interface IImportContext {
@@ -107,8 +117,8 @@ export interface IExportContextEnvironmentData {
 export interface IExportContext {
     environmentData: IExportContextEnvironmentData;
     referencedData: IReferencedDataInLanguageVariants;
-    itemsInSourceEnvironment: IItemStateInSourceEnvironmentById[];
     getItemStateInSourceEnvironment: (id: string) => IItemStateInSourceEnvironmentById;
+    getAssetStateInSourceEnvironment: (id: string) => IAssetStateInSourceEnvironmentById;
     preparedExportItems: IKontentAiPreparedExportItem[];
 }
 
@@ -125,6 +135,12 @@ export interface IItemStateInSourceEnvironmentById {
     state: TargetItemState;
     id: string;
     item: ContentItemModels.ContentItem | undefined;
+}
+
+export interface IAssetStateInSourceEnvironmentById {
+    state: TargetItemState;
+    id: string;
+    asset: AssetModels.Asset | undefined;
 }
 
 export interface IItemStateInTargetEnvironmentByCodename {

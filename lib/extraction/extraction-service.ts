@@ -20,8 +20,9 @@ export class ExtractionService {
         this.richTextHelper = getRichTextHelper(log);
     }
 
-    extractReferencedItemsFromExportItems(items: IKontentAiPreparedExportItem[]): IReferencedDataInLanguageVariants {
-        const extractedIds: string[] = [];
+    extractReferencedDataFromExportItems(items: IKontentAiPreparedExportItem[]): IReferencedDataInLanguageVariants {
+        const itemIds: string[] = [];
+        const assetIds: string[] = [];
 
         for (const item of items) {
             for (const typeElement of item.contentType.elements) {
@@ -32,18 +33,27 @@ export class ExtractionService {
                 }
 
                 if (typeElement.type === 'rich_text') {
-                    const idsUsedWithinRte = this.richTextHelper.extractAllIdsFromManagementRte(
+                    const itemIdsWithinRte = this.richTextHelper.extractAllIdsFromManagementRte(
                         itemElement.value?.toString()
                     );
 
-                    extractedIds.push(...idsUsedWithinRte);
+                    itemIds.push(...itemIdsWithinRte);
                 } else if (typeElement.type === 'modular_content' || typeElement.type === 'subpages') {
                     if (itemElement.value && Array.isArray(itemElement.value)) {
                         for (const arrayVal of itemElement.value) {
                             if (!arrayVal.id) {
                                 continue;
                             }
-                            extractedIds.push(arrayVal.id);
+                            itemIds.push(arrayVal.id);
+                        }
+                    }
+                } else if (typeElement.type === 'asset') {
+                    if (itemElement.value && Array.isArray(itemElement.value)) {
+                        for (const arrayVal of itemElement.value) {
+                            if (!arrayVal.id) {
+                                continue;
+                            }
+                            assetIds.push(arrayVal.id);
                         }
                     }
                 }
@@ -51,7 +61,8 @@ export class ExtractionService {
         }
 
         return {
-            itemIds: extractedIds
+            itemIds: itemIds,
+            assetIds: assetIds
         };
     }
 

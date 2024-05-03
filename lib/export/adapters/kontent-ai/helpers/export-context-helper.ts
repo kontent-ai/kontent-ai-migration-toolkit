@@ -4,6 +4,7 @@ import {
     throwErrorForItemRequest
 } from '../../../../export/export.models.js';
 import {
+    IAssetStateInSourceEnvironmentById,
     IExportContext,
     IExportContextEnvironmentData,
     IItemStateInSourceEnvironmentById,
@@ -15,6 +16,7 @@ import {
 } from '../../../../core/index.js';
 import { ExtractionService, getExtractionService } from '../../../../extraction/extraction-service.js';
 import {
+    AssetModels,
     CollectionModels,
     ContentItemModels,
     LanguageModels,
@@ -47,7 +49,7 @@ export class ExportContextHelper {
 
         this.log.console({
             type: 'info',
-            message: `Preparing items to export`
+            message: `Preparing items for export`
         });
         const preparedItems = await this.prepareExportItemsAsync({
             environmentData: environmentData,
@@ -56,14 +58,18 @@ export class ExportContextHelper {
 
         this.log.console({
             type: 'info',
-            message: `Extracting referenced items`
+            message: `Extracting referenced items from content`
         });
-        const referencedData = this.extractionService.extractReferencedItemsFromExportItems(preparedItems);
 
+        const referencedData = this.extractionService.extractReferencedDataFromExportItems(preparedItems);
+
+        // fetch both referenced items and items that are set to be exported
         const itemIdsToCheckInTargetEnv: string[] = [
             ...referencedData.itemIds,
             ...preparedItems.map((m) => m.contentItem.id)
         ].filter(uniqueStringFilter);
+
+        const assetIdsToCheckInTargetEnv: string[] = [...referencedData.assetIds];
 
         this.log.console({
             type: 'info',
@@ -73,11 +79,27 @@ export class ExportContextHelper {
             itemIdsToCheckInTargetEnv
         );
 
+        this.log.console({
+            type: 'info',
+            message: `Fetching referenced assets`
+        });
+        const assetStates: IAssetStateInSourceEnvironmentById[] = await this.getAssetStatesAsync(
+            assetIdsToCheckInTargetEnv
+        );
+
         return {
             preparedExportItems: preparedItems,
             environmentData: environmentData,
             referencedData: referencedData,
-            itemsInSourceEnvironment: itemStates,
+            getAssetStateInSourceEnvironment: (id) => {
+                const assetSate = assetStates.find((m) => m.id === id);
+
+                if (!assetSate) {
+                    throw Error(`Invalid state for asset '${id}'. It is expected that all asset states will exist`);
+                }
+
+                return assetSate;
+            },
             getItemStateInSourceEnvironment: (id) => {
                 const itemState = itemStates.find((m) => m.id === id);
 
@@ -252,6 +274,45 @@ export class ExportContextHelper {
         return contentItems;
     }
 
+    private async getAssetsByIdsAsync(itemIds: string[]): Promise<AssetModels.Asset[]> {
+        const assets: AssetModels.Asset[] = [];
+
+        await processInChunksAsync<string, void>({
+            log: this.log,
+            type: 'asset',
+            chunkSize: 1,
+            items: itemIds,
+            itemInfo: (id) => {
+                return {
+                    itemType: 'asset',
+                    title: id
+                };
+            },
+            processFunc: async (id) => {
+                try {
+                    this.log.spinner?.text?.({
+                        type: 'fetch',
+                        message: `${id}`
+                    });
+
+                    const asset = await this.managementClient
+                        .viewAsset()
+                        .byAssetId(id)
+                        .toPromise()
+                        .then((m) => m.data);
+
+                    assets.push(asset);
+                } catch (error) {
+                    if (!is404Error(error)) {
+                        throw error;
+                    }
+                }
+            }
+        });
+
+        return assets;
+    }
+
     private async getItemStatesAsync(itemIds: string[]): Promise<IItemStateInSourceEnvironmentById[]> {
         const items = await this.getContentItemsByIdsAsync(itemIds);
         const itemStates: IItemStateInSourceEnvironmentById[] = [];
@@ -275,5 +336,30 @@ export class ExportContextHelper {
         }
 
         return itemStates;
+    }
+
+    private async getAssetStatesAsync(assetIds: string[]): Promise<IAssetStateInSourceEnvironmentById[]> {
+        const assets = await this.getAssetsByIdsAsync(assetIds);
+        const assetStates: IAssetStateInSourceEnvironmentById[] = [];
+
+        for (const assetId of assetIds) {
+            const asset = assets.find((m) => m.id === assetId);
+
+            if (asset) {
+                assetStates.push({
+                    id: assetId,
+                    asset: asset,
+                    state: 'exists'
+                });
+            } else {
+                assetStates.push({
+                    id: assetId,
+                    asset: undefined,
+                    state: 'doesNotExists'
+                });
+            }
+        }
+
+        return assetStates;
     }
 }
