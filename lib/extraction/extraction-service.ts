@@ -31,11 +31,10 @@ export class ExtractionService {
                 }
 
                 if (typeElement.type === 'rich_text') {
-                    const itemIdsWithinRte = this.richTextHelper.extractAllIdsFromManagementRte(
-                        itemElement.value?.toString()
-                    );
+                    const rteValue = itemElement.value?.toString();
 
-                    itemIds.push(...itemIdsWithinRte);
+                    itemIds.push(...this.richTextHelper.extractDataIdsFromManagementRte(rteValue));
+                    assetIds.push(...this.richTextHelper.extractAssetIdsFromManagementRte(rteValue));
                 } else if (typeElement.type === 'modular_content' || typeElement.type === 'subpages') {
                     if (itemElement.value && Array.isArray(itemElement.value)) {
                         for (const arrayVal of itemElement.value) {
@@ -71,11 +70,10 @@ export class ExtractionService {
         for (const item of items) {
             for (const element of item.elements) {
                 if (element.type === 'rich_text') {
-                    const codenamesUsedWithinRte = this.richTextHelper.extractAllCodenamesFromRte(
-                        element.value?.toString()
-                    );
+                    const richTextHtml = element.value?.toString();
 
-                    itemCodenames.push(...codenamesUsedWithinRte);
+                    itemCodenames.push(... this.richTextHelper.extractRteItemCodenamesFromRte(richTextHtml));
+                    assetCodenames.push(...this.richTextHelper.extractRteAssetCodenamesFromRte(richTextHtml));
                 } else if (element.type === 'modular_content' || element.type === 'subpages') {
                     itemCodenames.push(...parseArrayValue(element.value));
                 } else if (element.type === 'asset') {

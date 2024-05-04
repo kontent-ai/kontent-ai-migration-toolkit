@@ -206,13 +206,34 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
                 throw Error(`Failed to get item with id '${itemId}'`);
             }
 
-            return objectTag.replace(
+            return objectTag.replaceAll(
                 `${richTextHelper.dataIdAttributeName}="${itemId}"`,
                 `${richTextHelper.rteItemCodenameAttribute}="${itemInEnv.codename}"`
             );
         }
 
         return objectTag;
+    });
+
+    // replace asset ids with codenames
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.figureRegex, (figureTag) => {
+        const assetIdMatch = figureTag.match(richTextHelper.rteRegexes.dataAssetIdRegex);
+        if (assetIdMatch && (assetIdMatch?.length ?? 0) >= 2) {
+            const assetId = assetIdMatch[1];
+
+            const assetInEnv = context.getAssetStateInSourceEnvironment(assetId).asset;
+
+            if (!assetInEnv) {
+                throw Error(`Failed to get asset with id '${assetId}'`);
+            }
+
+            return figureTag.replaceAll(
+                `${richTextHelper.dataAssetIdAttributeName}="${assetId}"`,
+                `${richTextHelper.rteAssetCodenameAttribute}="${assetInEnv.codename}"`
+            );
+        }
+
+        return figureTag;
     });
 
     return richTextHtml;
