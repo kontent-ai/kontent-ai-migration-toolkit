@@ -139,6 +139,10 @@ export function getItemExternalIdForCodename(codename: string): string {
     return `content_item_${codename}`;
 }
 
+export function getAssetExternalIdForCodename(codename: string): string {
+    return `asset_${codename}`;
+}
+
 export function parseArrayValue(value: string | Array<string> | null | undefined): string[] {
     if (!value) {
         return [];

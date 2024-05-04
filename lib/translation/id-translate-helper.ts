@@ -43,15 +43,15 @@ export class IdTranslateHelper {
 
     private flattenImportDataWithIds(importContext: IImportContext): IFlattenedImportData[] {
         const flattenedImportData: IFlattenedImportData[] = [
-            ...importContext.importedAssets.map((m) => {
+            ...importContext.imported.assets.map((m) => {
                 const flattened: IFlattenedImportData = {
                     newId: m.imported.id,
-                    originalId: m.original.assetId
+                   // originalId: m.original.assetId
                 };
 
                 return flattened;
             }),
-            ...importContext.importedContentItems.map((m) => {
+            ...importContext.imported.contentItems.map((m) => {
                 const flattened: IFlattenedImportData = {
                     newId: m.imported.id,
                     originalCodename: m.original.system.codename
@@ -59,7 +59,7 @@ export class IdTranslateHelper {
 
                 return flattened;
             }),
-            ...importContext.categorizedItems.itemsInTargetEnvironment
+            ...importContext.itemsInTargetEnvironment
                 .filter((m) => m.item)
                 .map((m) => {
                     const item = m.item as ContentItemModels.ContentItem;
@@ -77,7 +77,7 @@ export class IdTranslateHelper {
 
     private flattenImportDataWithExternalIds(importContext: IImportContext): IFlattenedImportData[] {
         const flattenedImportData: IFlattenedImportData[] = [
-            ...importContext.categorizedItems.itemsInTargetEnvironment.map((m) => {
+            ...importContext.itemsInTargetEnvironment.map((m) => {
                 const flattened: IFlattenedImportData = {
                     newId: m.externalIdToUse,
                     originalCodename: m.codename

@@ -26,11 +26,11 @@ export class ImportContentItemHelper {
         this.log.console({
             type: 'info',
             message: `Importing '${colors.yellow(
-                data.importContext.categorizedItems.contentItems.length.toString()
+                data.importContext.imported.contentItems.length.toString()
             )}' content items`
         });
 
-        for (const parsedItem of data.importContext.categorizedItems.contentItems) {
+        for (const parsedItem of data.importContext.contentItems) {
             if (!parsedItem.system.workflow || !parsedItem.system.workflow_step) {
                 // items without workflow or workflow step are components and they should not be imported individually
                 continue;
@@ -74,7 +74,7 @@ export class ImportContentItemHelper {
             data.importContext
         );
 
-        data.importContext.importedContentItems.push({
+        data.importContext.imported.contentItems.push({
             original: data.importContentItem,
             imported: preparedContentItemResult.contentItem
         });
@@ -133,9 +133,7 @@ export class ImportContentItemHelper {
         migrationContentItem: IMigrationItem,
         context: IImportContext
     ): Promise<{ contentItem: ContentItemModels.ContentItem; status: 'created' | 'itemAlreadyExists' }> {
-        const itemStateInTargetEnv = context.categorizedItems.getItemStateInTargetEnvironment(
-            migrationContentItem.system.codename
-        );
+        const itemStateInTargetEnv = context.getItemStateInTargetEnvironment(migrationContentItem.system.codename);
 
         if (itemStateInTargetEnv.state === 'exists' && itemStateInTargetEnv.item) {
             return {

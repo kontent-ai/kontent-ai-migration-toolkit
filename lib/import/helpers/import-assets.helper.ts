@@ -16,7 +16,7 @@ export class ImportAssetsHelper {
     async importAssetsAsync(data: {
         managementClient: ManagementClient;
         assets: IMigrationAsset[];
-        importedData: IImportContext;
+        importContext: IImportContext;
     }): Promise<void> {
         this.log.console({
             type: 'info',
@@ -28,7 +28,7 @@ export class ImportAssetsHelper {
         });
 
         // add existing assets to imported data
-        data.importedData.importedAssets.push(...filteredAssets.existingAssets);
+        data.importContext.imported.assets.push(...filteredAssets.existingAssets);
 
         if (filteredAssets.existingAssets.length) {
             this.log.console({
@@ -98,7 +98,7 @@ export class ImportAssetsHelper {
                     .toPromise()
                     .then((m) => m.data);
 
-                data.importedData.importedAssets.push({
+                data.importContext.imported.assets.push({
                     imported: createdAsset,
                     original: asset
                 });

@@ -85,6 +85,7 @@ export interface IProcessedItem {
 
 export interface IReferencedDataInMigrationItems {
     itemCodenames: string[];
+    assetCodenames: string[];
 }
 
 export interface IReferencedDataInLanguageVariants {
@@ -93,19 +94,26 @@ export interface IReferencedDataInLanguageVariants {
 }
 
 export interface IImportContext {
-    importedAssets: {
-        original: IMigrationAsset;
-        imported: AssetModels.Asset;
-    }[];
-    importedContentItems: {
-        original: IMigrationItem;
-        imported: ContentItemModels.ContentItem;
-    }[];
-    importedLanguageVariants: {
-        original: IMigrationItem;
-        imported: LanguageVariantModels.ContentItemLanguageVariant;
-    }[];
-    categorizedItems: ICategorizedItems;
+    imported: {
+        assets: {
+            original: IMigrationAsset;
+            imported: AssetModels.Asset;
+        }[];
+        contentItems: {
+            original: IMigrationItem;
+            imported: ContentItemModels.ContentItem;
+        }[];
+        languageVariants: {
+            original: IMigrationItem;
+            imported: LanguageVariantModels.ContentItemLanguageVariant;
+        }[];
+    };
+    componentItems: IMigrationItem[];
+    contentItems: IMigrationItem[];
+    referencedData: IReferencedDataInMigrationItems;
+    itemsInTargetEnvironment: IItemStateInTargetEnvironmentByCodename[];
+    getItemStateInTargetEnvironment: (codename: string) => IItemStateInTargetEnvironmentByCodename;
+    getAssetStateInTargetEnvironment: (codename: string) => IAssetStateInTargetEnvironmentByCodename;
 }
 
 export interface IExportContextEnvironmentData {
@@ -123,9 +131,6 @@ export interface IExportContext {
     getAssetStateInSourceEnvironment: (id: string) => IAssetStateInSourceEnvironmentById;
     preparedExportItems: IKontentAiPreparedExportItem[];
 }
-
-export type GetItemsByCodenames = (codenames: string[]) => Promise<ContentItemModels.ContentItem[]>;
-export type GetItemsByIds = (ids: string[]) => Promise<ContentItemModels.ContentItem[]>;
 
 export interface IIdCodenameTranslationResult {
     [key: string]: string;
@@ -152,12 +157,11 @@ export interface IItemStateInTargetEnvironmentByCodename {
     externalIdToUse: string;
 }
 
-export interface ICategorizedItems {
-    componentItems: IMigrationItem[];
-    contentItems: IMigrationItem[];
-    referencedData: IReferencedDataInMigrationItems;
-    itemsInTargetEnvironment: IItemStateInTargetEnvironmentByCodename[];
-    getItemStateInTargetEnvironment: (codename: string) => IItemStateInTargetEnvironmentByCodename;
+export interface IAssetStateInTargetEnvironmentByCodename {
+    state: TargetItemState;
+    codename: string;
+    asset: AssetModels.Asset | undefined;
+    externalIdToUse: string;
 }
 
 export interface IPackageMetadata {

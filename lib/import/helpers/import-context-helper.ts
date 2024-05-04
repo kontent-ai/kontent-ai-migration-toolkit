@@ -1,18 +1,17 @@
 import { IImportData } from '../../toolkit/index.js';
 import {
-    GetItemsByCodenames,
-    ICategorizedItems,
+    IAssetStateInTargetEnvironmentByCodename,
     IImportContext,
     IItemStateInTargetEnvironmentByCodename,
-    IMigrationItem,
     Log,
+    getAssetExternalIdForCodename,
     getItemExternalIdForCodename,
     is404Error,
     processInChunksAsync,
     uniqueStringFilter
 } from '../../core/index.js';
 import { ExtractionService, getExtractionService } from '../../extraction/extraction-service.js';
-import { ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
+import { AssetModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 
 export function getImportContextHelper(log: Log, managementClient: ManagementClient): ImportContextHelper {
     return new ImportContextHelper(log, managementClient);
@@ -26,32 +25,71 @@ export class ImportContextHelper {
     }
 
     async getImportContextAsync(dataToImport: IImportData): Promise<IImportContext> {
+        const referencedData = this.extractionService.extractReferencedItemsFromMigrationItems(dataToImport.items);
+        const contentItems = dataToImport.items.filter((m) => m.system.workflow);
+
+        const itemCodenamesToCheckInTargetEnv: string[] = [
+            ...referencedData.itemCodenames,
+            ...contentItems.map((m) => m.system.codename)
+        ].filter(uniqueStringFilter);
+
+        const assetCodenamesToCheckInTargetEnv: string[] = [...referencedData.assetCodenames];
+
+        const itemStates: IItemStateInTargetEnvironmentByCodename[] = await this.getItemStatesAsync(
+            itemCodenamesToCheckInTargetEnv
+        );
+
+        const assetStates: IAssetStateInTargetEnvironmentByCodename[] = await this.getAssetStatesAsync(
+            assetCodenamesToCheckInTargetEnv
+        );
+
         const importContext: IImportContext = {
-            importedAssets: [],
-            importedContentItems: [],
-            importedLanguageVariants: [],
-            categorizedItems: await this.categorizeMigrationItemsAsync(dataToImport.items, async (codenames) =>
-                this.getContentItemsByCodenamesAsync({
-                    itemCodenames: codenames,
-                    managementClient: this.managementClient
-                })
-            )
+            imported: {
+                assets: [],
+                contentItems: [],
+                languageVariants: []
+            },
+            // if content item does not have a workflow step it means it is used as a component within Rich text element
+            // such items are procesed within element transform
+            componentItems: dataToImport.items.filter((m) => !m.system.workflow?.length),
+            contentItems: contentItems,
+            referencedData: referencedData,
+            itemsInTargetEnvironment: itemStates,
+            getItemStateInTargetEnvironment: (codename) => {
+                const itemState = itemStates.find((m) => m.codename === codename);
+
+                if (!itemState) {
+                    throw Error(
+                        `Invalid state for item '${codename}'. It is expected that all item states will be initialized`
+                    );
+                }
+
+                return itemState;
+            },
+            getAssetStateInTargetEnvironment: (codename) => {
+                const assetState = assetStates.find((m) => m.codename === codename);
+
+                if (!assetState) {
+                    throw Error(
+                        `Invalid state for asset '${codename}'. It is expected that all asset states will be initialized`
+                    );
+                }
+
+                return assetState;
+            }
         };
 
         return importContext;
     }
 
-    private async getContentItemsByCodenamesAsync(data: {
-        managementClient: ManagementClient;
-        itemCodenames: string[];
-    }): Promise<ContentItemModels.ContentItem[]> {
+    private async getContentItemsByCodenamesAsync(itemCodenames: string[]): Promise<ContentItemModels.ContentItem[]> {
         const contentItems: ContentItemModels.ContentItem[] = [];
 
         await processInChunksAsync<string, void>({
             log: this.log,
             type: 'contentItem',
             chunkSize: 1,
-            items: data.itemCodenames,
+            items: itemCodenames,
             itemInfo: (codename) => {
                 return {
                     itemType: 'contentItem',
@@ -65,7 +103,7 @@ export class ImportContextHelper {
                         message: `${codename}`
                     });
 
-                    const contentItem = await data.managementClient
+                    const contentItem = await this.managementClient
                         .viewContentItem()
                         .byItemCodename(codename)
                         .toPromise()
@@ -83,49 +121,47 @@ export class ImportContextHelper {
         return contentItems;
     }
 
-    private async categorizeMigrationItemsAsync(
-        items: IMigrationItem[],
-        getItemsByCodenames: GetItemsByCodenames
-    ): Promise<ICategorizedItems> {
-        const referencedData = this.extractionService.extractReferencedItemsFromMigrationItems(items);
-        const contentItems = items.filter((m) => m.system.workflow);
+    private async getAssetsByCodenamesAsync(assetCodenames: string[]): Promise<AssetModels.Asset[]> {
+        const assets: AssetModels.Asset[] = [];
 
-        const itemCodenamesToCheckInTargetEnv: string[] = [
-            ...referencedData.itemCodenames,
-            ...contentItems.map((m) => m.system.codename)
-        ].filter(uniqueStringFilter);
+        await processInChunksAsync<string, void>({
+            log: this.log,
+            type: 'asset',
+            chunkSize: 1,
+            items: assetCodenames,
+            itemInfo: (codename) => {
+                return {
+                    itemType: 'asset',
+                    title: codename
+                };
+            },
+            processFunc: async (codename) => {
+                try {
+                    this.log.spinner?.text?.({
+                        type: 'fetch',
+                        message: `${codename}`
+                    });
 
-        const itemStates: IItemStateInTargetEnvironmentByCodename[] = await this.getItemStatesAsync(
-            itemCodenamesToCheckInTargetEnv,
-            getItemsByCodenames
-        );
+                    const asset = await this.managementClient
+                        .viewAsset()
+                        .byAssetCodename(codename)
+                        .toPromise()
+                        .then((m) => m.data);
 
-        return {
-            // if content item does not have a workflow step it means it is used as a component within Rich text element
-            // such items are procesed within element transform
-            componentItems: items.filter((m) => !m.system.workflow?.length),
-            contentItems: contentItems,
-            referencedData: referencedData,
-            itemsInTargetEnvironment: itemStates,
-            getItemStateInTargetEnvironment: (codename) => {
-                const itemState = itemStates.find((m) => m.codename === codename);
-
-                if (!itemState) {
-                    throw Error(
-                        `Invalid state for item '${codename}'. It is expected that all item states will be initialized`
-                    );
+                    assets.push(asset);
+                } catch (error) {
+                    if (!is404Error(error)) {
+                        throw error;
+                    }
                 }
-
-                return itemState;
             }
-        };
+        });
+
+        return assets;
     }
 
-    private async getItemStatesAsync(
-        itemCodenames: string[],
-        getItemsByCodenames: GetItemsByCodenames
-    ): Promise<IItemStateInTargetEnvironmentByCodename[]> {
-        const items = await getItemsByCodenames(itemCodenames);
+    private async getItemStatesAsync(itemCodenames: string[]): Promise<IItemStateInTargetEnvironmentByCodename[]> {
+        const items = await this.getContentItemsByCodenamesAsync(itemCodenames);
         const itemStates: IItemStateInTargetEnvironmentByCodename[] = [];
 
         for (const codename of itemCodenames) {
@@ -150,5 +186,33 @@ export class ImportContextHelper {
         }
 
         return itemStates;
+    }
+
+    private async getAssetStatesAsync(assetCodenames: string[]): Promise<IAssetStateInTargetEnvironmentByCodename[]> {
+        const assets = await this.getAssetsByCodenamesAsync(assetCodenames);
+        const assetStates: IAssetStateInTargetEnvironmentByCodename[] = [];
+
+        for (const codename of assetCodenames) {
+            const asset = assets.find((m) => m.codename === codename);
+            const externalId = getAssetExternalIdForCodename(codename);
+
+            if (asset) {
+                assetStates.push({
+                    codename: codename,
+                    asset: asset,
+                    state: 'exists',
+                    externalIdToUse: externalId
+                });
+            } else {
+                assetStates.push({
+                    codename: codename,
+                    asset: undefined,
+                    state: 'doesNotExists',
+                    externalIdToUse: externalId
+                });
+            }
+        }
+
+        return assetStates;
     }
 }

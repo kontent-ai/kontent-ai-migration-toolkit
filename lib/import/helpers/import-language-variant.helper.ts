@@ -171,7 +171,7 @@ export class ImportLanguageVariantHelper {
             .toPromise()
             .then((m) => m.data);
 
-        data.importContext.importedLanguageVariants.push({
+        data.importContext.imported.languageVariants.push({
             original: data.importContentItem,
             imported: upsertedLanguageVariant
         });

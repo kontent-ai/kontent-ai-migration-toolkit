@@ -6,7 +6,6 @@ import {
     MigrationElementType,
     IImportContext
 } from '../../core/index.js';
-import colors from 'colors';
 import { RichTextHelper, getRichTextHelper } from '../rich-text-helper.js';
 
 const elementsBuilder = new LanguageVariantElementsBuilder();
@@ -42,18 +41,20 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
 
         for (const assetCodename of parseArrayValue(data.value)) {
-            // find imported asset
-            const importedAsset = data.importContext.importedAssets.find(
-                (s) => s.original.codename?.toLowerCase() === assetCodename.toLowerCase()
-            );
+            // check if asset already exists in target env
+            const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(assetCodename);
 
-            if (!importedAsset) {
-                throw Error(`Could not find imported asset with codename '${colors.red(assetCodename)}'`);
+            if (assetStateInTargetEnv.state === 'exists' && assetStateInTargetEnv.asset) {
+                // asset exists, use its id as reference
+                assetReferences.push({
+                    id: assetStateInTargetEnv.asset.id
+                });
+            } else {
+                // reference it via external id otherwise
+                assetReferences.push({
+                    external_id: assetStateInTargetEnv.externalIdToUse
+                });
             }
-
-            assetReferences.push({
-                id: importedAsset.imported.id
-            });
         }
 
         return elementsBuilder.assetElement({
@@ -84,7 +85,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         const linkedItemCodenames: string[] = parseArrayValue(data.value);
 
         for (const linkedItemCodename of linkedItemCodenames) {
-            const itemState = data.importContext.categorizedItems.getItemStateInTargetEnvironment(linkedItemCodename);
+            const itemState = data.importContext.getItemStateInTargetEnvironment(linkedItemCodename);
 
             if (itemState.item) {
                 // linked item already exists in target environment
@@ -181,7 +182,7 @@ async function processImportRichTextHtmlValueAsync(
         if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
             const codename = codenameMatch[1];
 
-            const itemState = importContext.categorizedItems.getItemStateInTargetEnvironment(codename);
+            const itemState = importContext.getItemStateInTargetEnvironment(codename);
 
             if (itemState.state === 'exists' && itemState.item) {
                 return objectTag.replace(

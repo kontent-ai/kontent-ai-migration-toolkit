@@ -80,7 +80,7 @@ export class ImportService {
                     await this.importAssetsHelper.importAssetsAsync({
                         managementClient: this.managementClient,
                         assets: dataToImport.importData.assets,
-                        importedData: importContext
+                        importContext: importContext
                     });
                 } else {
                     this.config.log.console({

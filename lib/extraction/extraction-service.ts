@@ -59,13 +59,14 @@ export class ExtractionService {
         }
 
         return {
-            itemIds: itemIds,
-            assetIds: assetIds
+            itemIds: itemIds.filter(uniqueStringFilter),
+            assetIds: assetIds.filter(uniqueStringFilter)
         };
     }
 
     extractReferencedItemsFromMigrationItems(items: IMigrationItem[]): IReferencedDataInMigrationItems {
-        const extractedCodenames: string[] = [];
+        const itemCodenames: string[] = [];
+        const assetCodenames: string[] = [];
 
         for (const item of items) {
             for (const element of item.elements) {
@@ -74,15 +75,18 @@ export class ExtractionService {
                         element.value?.toString()
                     );
 
-                    extractedCodenames.push(...codenamesUsedWithinRte);
+                    itemCodenames.push(...codenamesUsedWithinRte);
                 } else if (element.type === 'modular_content' || element.type === 'subpages') {
-                    extractedCodenames.push(...parseArrayValue(element.value));
+                    itemCodenames.push(...parseArrayValue(element.value));
+                } else if (element.type === 'asset') {
+                    assetCodenames.push(...parseArrayValue(element.value));
                 }
             }
         }
 
         const data: IReferencedDataInMigrationItems = {
-            itemCodenames: extractedCodenames.filter(uniqueStringFilter)
+            itemCodenames: itemCodenames.filter(uniqueStringFilter),
+            assetCodenames: assetCodenames.filter(uniqueStringFilter)
         };
 
         return data;
