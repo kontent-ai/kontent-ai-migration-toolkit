@@ -1,8 +1,7 @@
 import colors from 'colors';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { IExportTransformConfig, IMigrationItem, IMigrationAsset, Log, IFlattenedContentType } from '../core/index.js';
-import { IContentItem, IDeliveryClient } from '@kontent-ai/delivery-sdk';
+import { IMigrationItem, IMigrationAsset, Log, IFlattenedContentType } from '../core/index.js';
 import {
     LanguageVariantModels,
     ContentItemModels,
@@ -21,40 +20,17 @@ export interface IExportAdapterResult {
     assets: IMigrationAsset[];
 }
 
-export interface IExportFilter {
-    /**
-     * Array of content type codenames to export. Defaults to all content types if none type is provided.
-     */
-    types?: string[];
-}
-
-export interface IKontentAiDeliveryExportAdapterConfig {
-    log: Log;
-    environmentId: string;
-    managementApiKey: string;
-    secureApiKey?: string;
-    previewApiKey?: string;
-    isPreview: boolean;
-    isSecure: boolean;
-    baseUrl?: string;
-    exportTypes?: string[];
-    exportLanguages?: string[];
-    retryStrategy?: IRetryStrategyOptions;
-    customItemsExport?: (client: IDeliveryClient) => Promise<IContentItem[]>;
-    transformConfig?: IExportTransformConfig;
-}
-
-export interface IKontentAiManagementExportRequestItem {
+export interface IKontentAiExportRequestItem {
     itemCodename: string;
     languageCodename: string;
 }
 
-export interface IKontentAiManagementExportAdapterConfig {
+export interface IKontentAiExportAdapterConfig {
     log: Log;
     environmentId: string;
     managementApiKey: string;
     baseUrl?: string;
-    exportItems: IKontentAiManagementExportRequestItem[];
+    exportItems: IKontentAiExportRequestItem[];
     retryStrategy?: IRetryStrategyOptions;
 }
 
@@ -65,11 +41,11 @@ export interface IKontentAiPreparedExportItem {
     language: LanguageModels.LanguageModel;
     workflow: WorkflowModels.Workflow;
     workflowStepCodename: string;
-    requestItem: IKontentAiManagementExportRequestItem;
+    requestItem: IKontentAiExportRequestItem;
     contentType: IFlattenedContentType;
 }
 
-export function throwErrorForItemRequest(itemRequest: IKontentAiManagementExportRequestItem, message: string): never {
+export function throwErrorForItemRequest(itemRequest: IKontentAiExportRequestItem, message: string): never {
     throw Error(
         `Export failed for item '${colors.yellow(itemRequest.itemCodename)}' in language '${colors.cyan(
             itemRequest.languageCodename

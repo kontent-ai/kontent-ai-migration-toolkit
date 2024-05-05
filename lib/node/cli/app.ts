@@ -23,7 +23,7 @@ import {
     AssetJsonProcessorService
 } from '../../file-processor/index.js';
 import { ExportToolkit, IImportToolkitConfig, ImportToolkit } from '../../toolkit/index.js';
-import { IExportAdapter, KontentAiManagementExportAdapter } from '../../export/index.js';
+import { IExportAdapter, KontentAiExportAdapter } from '../../export/index.js';
 import { ImportSourceType } from '../../import/index.js';
 
 type Args = { [key: string]: string | unknown };
@@ -103,7 +103,7 @@ const exportAsync = async (config: ICliFileConfig) => {
                 });
             }
 
-            adapter = new KontentAiManagementExportAdapter({
+            adapter = new KontentAiExportAdapter({
                 log: log,
                 environmentId: config.environmentId,
                 managementApiKey: config.managementApiKey,

@@ -9,7 +9,7 @@ import {
     IAssetFormatService,
     FileBinaryData
 } from './file-processor.models.js';
-import { IExportTransformConfig, IMigrationItem, IMigrationAsset, Log, IFlattenedContentType } from '../core/index.js';
+import { IMigrationItem, IMigrationAsset, Log, IFlattenedContentType } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
 export function getFileProcessorService(log: Log): FileProcessorService {
@@ -145,7 +145,6 @@ export class FileProcessorService {
     async createItemsZipAsync(
         exportData: IExportAdapterResult,
         config: {
-            transformConfig: IExportTransformConfig;
             itemFormatService: IItemFormatService;
             compressionLevel?: ZipCompressionLevel;
         }

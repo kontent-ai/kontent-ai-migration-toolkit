@@ -1,6 +1,6 @@
 import colors from 'colors';
 
-import { ActionType, ItemType } from './core.models.js';
+import { ActionType, FetchItemType, ItemType } from './core.models.js';
 import ora from 'ora';
 
 interface ILogCount {
@@ -43,6 +43,13 @@ export function logErrorAndExit(data: { message: string }): never {
 export async function withDefaultLogAsync(func: (log: Log) => Promise<void>): Promise<void> {
     const log = getDefaultLog();
     await func(log);
+}
+
+export function logFetchedItems(data: { count: number; itemType: FetchItemType; log: Log }): void {
+    data.log.console({
+        type: 'info',
+        message: `Fetched '${colors.yellow(data.count.toString())}' ${data.itemType}`
+    });
 }
 
 export function getDefaultLog(): Log {

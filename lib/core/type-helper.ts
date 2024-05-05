@@ -5,9 +5,8 @@ import {
     ManagementClient
 } from '@kontent-ai/management-sdk';
 import { IFlattenedContentType, IFlattenedContentTypeElement } from './core.models.js';
-import { Log, logErrorAndExit } from './log-helper.js';
+import { Log, logErrorAndExit, logFetchedItems } from './log-helper.js';
 import colors from 'colors';
-import { logFetchedItems } from './global-helper.js';
 
 export async function getFlattenedContentTypesAsync(
     managementClient: ManagementClient,

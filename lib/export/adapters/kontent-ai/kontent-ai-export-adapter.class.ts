@@ -2,7 +2,7 @@ import { HttpService } from '@kontent-ai/core-sdk';
 import {
     IExportAdapter,
     IExportAdapterResult,
-    IKontentAiManagementExportAdapterConfig,
+    IKontentAiExportAdapterConfig,
     IKontentAiPreparedExportItem,
     throwErrorForItemRequest
 } from '../../export.models.js';
@@ -20,15 +20,15 @@ import {
     processInChunksAsync
 } from '../../../core/index.js';
 import { ExportContextHelper, getExportContextHelper } from './helpers/export-context-helper.js';
-import { exportTransforms } from 'lib/translation/index.js';
+import { exportTransforms } from '../../../translation/index.js';
 
-export class KontentAiManagementExportAdapter implements IExportAdapter {
+export class KontentAiExportAdapter implements IExportAdapter {
     private readonly httpService: HttpService = new HttpService();
     public readonly name: string = 'kontentAi';
     private readonly managementClient: ManagementClient;
     private readonly exportContextHelper: ExportContextHelper;
 
-    constructor(private config: IKontentAiManagementExportAdapterConfig) {
+    constructor(private config: IKontentAiExportAdapterConfig) {
         this.managementClient = this.getManagementClient(config);
         this.exportContextHelper = getExportContextHelper(this.config.log, this.managementClient);
     }
@@ -153,7 +153,7 @@ export class KontentAiManagementExportAdapter implements IExportAdapter {
         return await this.getMigrationAssetsWithBinaryDataAsync(assets);
     }
 
-    private getManagementClient(config: IKontentAiManagementExportAdapterConfig): ManagementClient {
+    private getManagementClient(config: IKontentAiExportAdapterConfig): ManagementClient {
         const retryStrategy = config.retryStrategy ?? defaultRetryStrategy;
 
         return new ManagementClient({

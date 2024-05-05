@@ -1,5 +1,5 @@
 import {
-    IKontentAiManagementExportRequestItem,
+    IKontentAiExportRequestItem,
     IKontentAiPreparedExportItem,
     throwErrorForItemRequest
 } from '../../../../export/export.models.js';
@@ -40,7 +40,7 @@ export class ExportContextHelper {
     }
 
     async getExportContextAsync(data: {
-        exportItems: IKontentAiManagementExportRequestItem[];
+        exportItems: IKontentAiExportRequestItem[];
     }): Promise<IExportContext> {
         const environmentData: IExportContextEnvironmentData = {
             collections: await this.getAllCollectionsAsync(),
@@ -117,7 +117,7 @@ export class ExportContextHelper {
 
     private async prepareExportItemsAsync(data: {
         environmentData: IExportContextEnvironmentData;
-        exportItems: IKontentAiManagementExportRequestItem[];
+        exportItems: IKontentAiExportRequestItem[];
     }): Promise<IKontentAiPreparedExportItem[]> {
         const items: IKontentAiPreparedExportItem[] = [];
 
@@ -222,7 +222,6 @@ export class ExportContextHelper {
 
     private async getAllLanguagesAsync(): Promise<LanguageModels.LanguageModel[]> {
         const response = await this.managementClient.listLanguages().toAllPromise();
-
         logFetchedItems({
             count: response.data.items.length,
             itemType: 'languages',
@@ -233,31 +232,31 @@ export class ExportContextHelper {
 
     private async getAllCollectionsAsync(): Promise<CollectionModels.Collection[]> {
         const response = await this.managementClient.listCollections().toPromise();
-           logFetchedItems({
-               count: response.data.collections.length,
-               itemType: 'collections',
-               log: this.log
-           });
+        logFetchedItems({
+            count: response.data.collections.length,
+            itemType: 'collections',
+            log: this.log
+        });
         return response.data.collections;
     }
 
     private async getAllWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
         const response = await this.managementClient.listWorkflows().toPromise();
-           logFetchedItems({
-               count: response.data.length,
-               itemType: 'workflows',
-               log: this.log
-           });
+        logFetchedItems({
+            count: response.data.length,
+            itemType: 'workflows',
+            log: this.log
+        });
         return response.data;
     }
 
     private async getAllTaxonomiesAsync(): Promise<TaxonomyModels.Taxonomy[]> {
         const response = await this.managementClient.listTaxonomies().toAllPromise();
-           logFetchedItems({
-               count: response.data.items.length,
-               itemType: 'taxonomies',
-               log: this.log
-           });
+        logFetchedItems({
+            count: response.data.items.length,
+            itemType: 'taxonomies',
+            log: this.log
+        });
         return response.data.items;
     }
 

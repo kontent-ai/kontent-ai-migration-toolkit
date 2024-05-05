@@ -84,13 +84,6 @@ export interface IErrorData {
     error: any;
 }
 
-export interface IProcessedItem {
-    title: string;
-    actionType: ActionType;
-    itemType: ItemType;
-    data: any;
-}
-
 export interface IReferencedDataInMigrationItems {
     itemCodenames: string[];
     assetCodenames: string[];
@@ -138,10 +131,6 @@ export interface IExportContext {
     getItemStateInSourceEnvironment: (id: string) => IItemStateInSourceEnvironmentById;
     getAssetStateInSourceEnvironment: (id: string) => IAssetStateInSourceEnvironmentById;
     preparedExportItems: IKontentAiPreparedExportItem[];
-}
-
-export interface IIdCodenameTranslationResult {
-    [key: string]: string;
 }
 
 export type TargetItemState = 'exists' | 'doesNotExists';
@@ -196,14 +185,6 @@ export type ImportTransformFunc = (data: {
     importContext: IImportContext;
     sourceItems: IMigrationItem[];
 }) => Promise<ElementContracts.IContentItemElementContract>;
-
-export interface IExportTransformConfig {
-    richTextConfig: IRichTextExportConfig;
-}
-
-export interface IRichTextExportConfig {
-    replaceInvalidLinks: boolean;
-}
 
 export interface IChunk<T> {
     items: T[];
