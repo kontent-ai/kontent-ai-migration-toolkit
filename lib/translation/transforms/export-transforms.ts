@@ -195,67 +195,43 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
     }
 
     // replace item ids with codenames
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.objectTagRegex, (objectTag) => {
-        const itemIdMatch = objectTag.match(richTextHelper.rteRegexes.attrs.dataIdAttrRegex);
-        if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
-            const itemId = itemIdMatch[1];
+    richTextHtml = richTextHelper.processDataIds(richTextHtml, (id) => {
+        const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
-            const itemInEnv = context.getItemStateInSourceEnvironment(itemId).item;
-
-            if (!itemInEnv) {
-                throw Error(`Failed to get item with id '${itemId}'`);
-            }
-
-            return objectTag.replaceAll(
-                `${richTextHelper.attributes.data.dataIdAttributeName}="${itemId}"`,
-                `${richTextHelper.attributes.rteCodenames.rteItemCodenameAttribute}="${itemInEnv.codename}"`
-            );
+        if (!itemInEnv) {
+            throw Error(`Failed to get item with id '${id}'`);
         }
 
-        return objectTag;
-    });
+        return {
+            codename: itemInEnv.codename
+        };
+    }).html;
 
     // replace link item ids with codenames
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.linkTagRegex, (linkTag) => {
-        const itemIdMatch = linkTag.match(richTextHelper.rteRegexes.attrs.dataItemIdAttrRegex);
-        if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
-            const itemId = itemIdMatch[1];
+    richTextHtml = richTextHelper.processLinkItemIds(richTextHtml, (id) => {
+        const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
-            const itemInEnv = context.getItemStateInSourceEnvironment(itemId).item;
-
-            if (!itemInEnv) {
-                throw Error(`Failed to get item with id '${itemId}'`);
-            }
-
-            return linkTag.replaceAll(
-                `${richTextHelper.attributes.data.dataItemIdAttributeName}="${itemId}"`,
-                `${richTextHelper.attributes.rteCodenames.rteLinkItemCodenameAttribute}="${itemInEnv.codename}"`
-            );
+        if (!itemInEnv) {
+            throw Error(`Failed to get item with id '${id}'`);
         }
 
-        return linkTag;
-    });
+        return {
+            codename: itemInEnv.codename
+        };
+    }).html;
 
     // replace asset ids with codenames
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.figureTagRegex, (figureTag) => {
-        const assetIdMatch = figureTag.match(richTextHelper.rteRegexes.attrs.dataAssetIdAttrRegex);
-        if (assetIdMatch && (assetIdMatch?.length ?? 0) >= 2) {
-            const assetId = assetIdMatch[1];
+    richTextHtml = richTextHelper.processAssetIds(richTextHtml, (id) => {
+        const assetInEnv = context.getAssetStateInSourceEnvironment(id).asset;
 
-            const assetInEnv = context.getAssetStateInSourceEnvironment(assetId).asset;
-
-            if (!assetInEnv) {
-                throw Error(`Failed to get asset with id '${assetId}'`);
-            }
-
-            return figureTag.replaceAll(
-                `${richTextHelper.attributes.data.dataAssetIdAttributeName}="${assetId}"`,
-                `${richTextHelper.attributes.rteCodenames.rteAssetCodenameAttribute}="${assetInEnv.codename}"`
-            );
+        if (!assetInEnv) {
+            throw Error(`Failed to get asset with id '${id}'`);
         }
 
-        return figureTag;
-    });
+        return {
+            codename: assetInEnv.codename
+        };
+    }).html;
 
     return richTextHtml;
 }

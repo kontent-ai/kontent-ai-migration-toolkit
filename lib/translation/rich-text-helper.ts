@@ -1,9 +1,22 @@
+type CodenameReplaceFunc = (codename: string) => { external_id?: string; id?: string };
+type IdReplaceFunc = (id: string) => { codename: string };
+
+interface IProcessCodenamesResult {
+    codenames: string[];
+    html: string;
+}
+
+interface IProcessIdsResult {
+    ids: string[];
+    html: string;
+}
+
 export function getRichTextHelper(): RichTextHelper {
     return new RichTextHelper();
 }
 
 export class RichTextHelper {
-    public readonly attributes = {
+    private readonly attributes = {
         rteCodenames: {
             rteItemCodenameAttribute: 'migration-toolkit-item-codename',
             rteLinkItemCodenameAttribute: 'migration-toolkit-link-item-codename',
@@ -20,7 +33,7 @@ export class RichTextHelper {
         }
     } as const;
 
-    public readonly rteRegexes = {
+    private readonly rteRegexes = {
         tags: {
             objectTagRegex: new RegExp(`<object(.+?)</object>`, 'g'),
             imgTagRegex: new RegExp(`<img(.+?)</img>`, 'g'),
@@ -46,51 +59,84 @@ export class RichTextHelper {
 
     constructor() {}
 
-    extractDataIdsFromManagementRte(richTextHtml: string | undefined): string[] {
+    processDataIds(richTextHtml: string, replaceFunc?: IdReplaceFunc): IProcessIdsResult {
         if (!richTextHtml) {
-            return [];
+            return {
+                html: richTextHtml,
+                ids: []
+            };
         }
 
         const itemIds: string[] = [];
 
-        richTextHtml.replaceAll(this.rteRegexes.tags.objectTagRegex, (objectTag) => {
+        richTextHtml = richTextHtml.replaceAll(this.rteRegexes.tags.objectTagRegex, (objectTag) => {
             const itemIdMatch = objectTag.match(this.rteRegexes.attrs.dataIdAttrRegex);
             if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
                 const itemId = itemIdMatch[1];
 
                 itemIds.push(itemId);
+
+                if (replaceFunc) {
+                    const { codename } = replaceFunc(itemId);
+
+                    return objectTag.replaceAll(
+                        `${this.attributes.data.dataIdAttributeName}="${itemId}"`,
+                        `${this.attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`
+                    );
+                }
             }
 
             return objectTag;
         });
 
-        return itemIds;
+        return {
+            html: richTextHtml,
+            ids: itemIds
+        };
     }
 
-    extractAssetIdsFromManagementRte(richTextHtml: string | undefined): string[] {
+    processAssetIds(richTextHtml: string, replaceFunc?: IdReplaceFunc): IProcessIdsResult {
         if (!richTextHtml) {
-            return [];
+            return {
+                html: richTextHtml,
+                ids: []
+            };
         }
 
         const assetIds: string[] = [];
 
-        richTextHtml.replaceAll(this.rteRegexes.tags.figureTagRegex, (figureTag) => {
+        richTextHtml = richTextHtml.replaceAll(this.rteRegexes.tags.figureTagRegex, (figureTag) => {
             const assetIdMatch = figureTag.match(this.rteRegexes.attrs.dataAssetIdAttrRegex);
             if (assetIdMatch && (assetIdMatch?.length ?? 0) >= 2) {
                 const assetId = assetIdMatch[1];
 
                 assetIds.push(assetId);
+
+                if (replaceFunc) {
+                    const { codename } = replaceFunc(assetId);
+
+                    return figureTag.replaceAll(
+                        `${this.attributes.data.dataAssetIdAttributeName}="${assetId}"`,
+                        `${this.attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`
+                    );
+                }
             }
 
             return figureTag;
         });
 
-        return assetIds;
+        return {
+            html: richTextHtml,
+            ids: assetIds
+        };
     }
 
-    extracLinkItemIdsFromManagementRte(richTextHtml: string | undefined): string[] {
+    processLinkItemIds(richTextHtml: string, replaceFunc?: IdReplaceFunc): IProcessIdsResult {
         if (!richTextHtml) {
-            return [];
+            return {
+                html: richTextHtml,
+                ids: []
+            };
         }
 
         const linkItemIds: string[] = [];
@@ -100,74 +146,155 @@ export class RichTextHelper {
             if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
                 const itemId = itemIdMatch[1];
                 linkItemIds.push(itemId);
+
+                if (replaceFunc) {
+                    const { codename } = replaceFunc(itemId);
+
+                    return linkTag.replaceAll(
+                        `${this.attributes.data.dataItemIdAttributeName}="${itemId}"`,
+                        `${this.attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`
+                    );
+                }
             }
 
             return linkTag;
         });
 
-        return linkItemIds;
+        return {
+            html: richTextHtml,
+            ids: linkItemIds
+        };
     }
 
-    extractRteItemCodenames(richTextHtml: string | undefined): string[] {
+    processRteItemCodenames(richTextHtml: string, replaceFunc?: CodenameReplaceFunc): IProcessCodenamesResult {
         if (!richTextHtml) {
-            return [];
+            return {
+                codenames: [],
+                html: richTextHtml
+            };
         }
 
         const itemCodenames: string[] = [];
 
-        richTextHtml.replaceAll(this.rteRegexes.tags.objectTagRegex, (objectTag) => {
+        richTextHtml = richTextHtml.replaceAll(this.rteRegexes.tags.objectTagRegex, (objectTag) => {
             const codenameMatch = objectTag.match(this.rteRegexes.rteCodenames.rteItemCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
                 itemCodenames.push(codename);
+
+                if (replaceFunc) {
+                    const { external_id, id } = replaceFunc(codename);
+
+                    if (id) {
+                        return objectTag.replaceAll(
+                            `${this.attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`,
+                            `${this.attributes.data.dataIdAttributeName}="${id}"`
+                        );
+                    }
+                    if (external_id) {
+                        return objectTag.replaceAll(
+                            `${this.attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`,
+                            `${this.attributes.data.dataExternalIdAttributeName}="${external_id}"`
+                        );
+                    }
+                }
             }
 
             return objectTag;
         });
 
-        return itemCodenames;
+        return {
+            codenames: itemCodenames,
+            html: richTextHtml
+        };
     }
 
-    extractRteLinkItemCodenames(richTextHtml: string | undefined): string[] {
+    processRteLinkItemCodenames(richTextHtml: string, replaceFunc?: CodenameReplaceFunc): IProcessCodenamesResult {
         if (!richTextHtml) {
-            return [];
+            return {
+                codenames: [],
+                html: richTextHtml
+            };
         }
 
         const itemCodenames: string[] = [];
 
-        richTextHtml.replaceAll(this.rteRegexes.tags.linkTagRegex, (linkTag) => {
+        richTextHtml = richTextHtml.replaceAll(this.rteRegexes.tags.linkTagRegex, (linkTag) => {
             const codenameMatch = linkTag.match(this.rteRegexes.rteCodenames.rteLinkItemCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
                 itemCodenames.push(codename);
+
+                if (replaceFunc) {
+                    const { external_id, id } = replaceFunc(codename);
+
+                    if (id) {
+                        return linkTag.replaceAll(
+                            `${this.attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`,
+                            `${this.attributes.data.dataItemIdAttributeName}="${id}"`
+                        );
+                    }
+                    if (external_id) {
+                        return linkTag.replaceAll(
+                            `${this.attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`,
+                            `${this.attributes.data.dataItemExternalIdAttributeName}="${external_id}"`
+                        );
+                    }
+                }
             }
 
             return linkTag;
         });
 
-        return itemCodenames;
+        return {
+            codenames: itemCodenames,
+            html: richTextHtml
+        };
     }
 
-    extractRteAssetCodenames(richTextHtml: string | undefined): string[] {
+    processRteAssetCodenames(richTextHtml: string, replaceFunc?: CodenameReplaceFunc): IProcessCodenamesResult {
         if (!richTextHtml) {
-            return [];
+            return {
+                codenames: [],
+                html: richTextHtml
+            };
         }
 
         const assetCodenames: string[] = [];
 
-        richTextHtml.replaceAll(this.rteRegexes.tags.figureTagRegex, (figureTag) => {
+        richTextHtml = richTextHtml.replaceAll(this.rteRegexes.tags.figureTagRegex, (figureTag) => {
             const codenameMatch = figureTag.match(this.rteRegexes.rteCodenames.rteAssetCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
                 assetCodenames.push(codename);
+
+                if (replaceFunc) {
+                    const { external_id, id } = replaceFunc(codename);
+
+                    if (id) {
+                        return figureTag.replaceAll(
+                            `${this.attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`,
+                            `${this.attributes.data.dataAssetIdAttributeName}="${id}"`
+                        );
+                    }
+                    if (external_id) {
+                        return figureTag.replaceAll(
+                            `${this.attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`,
+                            `${this.attributes.data.dataExternalAssetIdAttributeName}="${external_id}"`
+                        );
+                    }
+                }
             }
 
             return figureTag;
         });
 
-        return assetCodenames;
+        return {
+            codenames: assetCodenames,
+            html: richTextHtml
+        };
     }
 }

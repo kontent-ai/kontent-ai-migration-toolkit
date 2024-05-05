@@ -42,7 +42,7 @@ const run = async () => {
             title: 'My file',
             // assetExternalId is optional, but highly recommended as if you would run the import multiple times this prevents
             // upload / creation of duplicate assets
-            assetExternalId: 'uniqueFileId',
+            externalId: 'uniqueFileId',
             // and this is the actual binary data of the asset you want to upload
             binaryData: Buffer.from('myFile', 'utf8')
         }

@@ -83,7 +83,7 @@ export class ImportAssetsHelper {
                             },
                             codename: asset.codename,
                             title: asset.title,
-                            external_id: asset.assetExternalId,
+                            external_id: asset.externalId,
                             collection: asset.collection
                                 ? {
                                       reference: asset.collection
@@ -143,12 +143,12 @@ export class ImportAssetsHelper {
                     }
                 }
 
-                if (asset.assetExternalId) {
+                if (asset.externalId) {
                     try {
                         // check if asset with given external id was already created
                         existingAsset = await data.managementClient
                             .viewAsset()
-                            .byAssetExternalId(asset.assetExternalId)
+                            .byAssetExternalId(asset.externalId)
                             .toPromise()
                             .then((m) => m.data);
                     } catch (error) {

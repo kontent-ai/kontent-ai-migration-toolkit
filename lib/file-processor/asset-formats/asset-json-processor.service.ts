@@ -13,7 +13,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
 
         for (const exportAsset of data.assets) {
             assetRecords.push({
-                assetExternalId: exportAsset.assetExternalId,
+                externalId: exportAsset.externalId,
                 _zipFilename: exportAsset._zipFilename,
                 filename: exportAsset.filename,
                 title: exportAsset.title,

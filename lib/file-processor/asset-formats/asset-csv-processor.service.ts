@@ -56,7 +56,7 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
                 const parsedAsset: IMigrationAsset = {
                     _zipFilename: '',
                     filename: '',
-                    assetExternalId: undefined,
+                    externalId: undefined,
                     title: '',
                     codename: undefined,
                     binaryData: undefined,

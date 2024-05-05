@@ -17,7 +17,8 @@ import {
     IExportContext,
     IFlattenedContentTypeElement,
     extractErrorData,
-    processInChunksAsync
+    processInChunksAsync,
+    getAssetExternalIdForCodename
 } from '../../../core/index.js';
 import { ExportContextHelper, getExportContextHelper } from './helpers/export-context-helper.js';
 import { exportTransforms } from '../../../translation/index.js';
@@ -186,7 +187,7 @@ export class KontentAiExportAdapter implements IExportAdapter {
                     _zipFilename: asset.codename,
                     filename: asset.fileName,
                     title: asset.title ?? '',
-                    assetExternalId: asset.externalId,
+                    externalId: asset.externalId ?? getAssetExternalIdForCodename(asset.codename),
                     codename: asset.codename,
                     binaryData: (await this.getBinaryDataFromUrlAsync(asset.url)).data
                 };

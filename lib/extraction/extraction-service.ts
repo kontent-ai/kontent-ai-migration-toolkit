@@ -35,11 +35,11 @@ export class ExtractionService {
 
                     itemIds.push(
                         ...[
-                            ...this.richTextHelper.extractDataIdsFromManagementRte(rteValue),
-                            ...this.richTextHelper.extracLinkItemIdsFromManagementRte(rteValue)
+                            ...this.richTextHelper.processDataIds(rteValue ?? '').ids,
+                            ...this.richTextHelper.processLinkItemIds(rteValue ?? '').ids
                         ]
                     );
-                    assetIds.push(...this.richTextHelper.extractAssetIdsFromManagementRte(rteValue));
+                    assetIds.push(...this.richTextHelper.processAssetIds(rteValue ?? '').ids);
                 } else if (typeElement.type === 'modular_content' || typeElement.type === 'subpages') {
                     if (itemElement.value && Array.isArray(itemElement.value)) {
                         for (const arrayVal of itemElement.value) {
@@ -79,11 +79,11 @@ export class ExtractionService {
 
                     itemCodenames.push(
                         ...[
-                            ...this.richTextHelper.extractRteItemCodenames(richTextHtml),
-                            ...this.richTextHelper.extractRteLinkItemCodenames(richTextHtml)
+                            ...this.richTextHelper.processRteItemCodenames(richTextHtml ?? '').codenames,
+                            ...this.richTextHelper.processRteLinkItemCodenames(richTextHtml ?? '').codenames
                         ]
                     );
-                    assetCodenames.push(...this.richTextHelper.extractRteAssetCodenames(richTextHtml));
+                    assetCodenames.push(...this.richTextHelper.processRteAssetCodenames(richTextHtml ?? '').codenames);
                 } else if (element.type === 'modular_content' || element.type === 'subpages') {
                     itemCodenames.push(...parseArrayValue(element.value));
                 } else if (element.type === 'asset') {

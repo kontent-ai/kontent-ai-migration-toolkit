@@ -177,76 +177,49 @@ async function processImportRichTextHtmlValueAsync(
     }
 
     // replace item codenames with id or external_id
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.objectTagRegex, (objectTag) => {
-        const codenameMatch = objectTag.match(richTextHelper.rteRegexes.rteCodenames.rteItemCodenameRegex);
-        if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
-            const codename = codenameMatch[1];
+    richTextHtml = richTextHelper.processRteItemCodenames(richTextHtml, (codename) => {
+        const itemState = importContext.getItemStateInTargetEnvironment(codename);
 
-            const itemState = importContext.getItemStateInTargetEnvironment(codename);
-
-            if (itemState.state === 'exists' && itemState.item) {
-                return objectTag.replaceAll(
-                    `${richTextHelper.attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.attributes.data.dataIdAttributeName}="${itemState.item.id}"`
-                );
-            } else {
-                return objectTag.replaceAll(
-                    `${richTextHelper.attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.attributes.data.dataExternalIdAttributeName}="${itemState.externalIdToUse}"`
-                );
-            }
+        if (itemState.state === 'exists' && itemState.item) {
+            return {
+                id: itemState.item.id
+            };
+        } else {
+            return {
+                external_id: itemState.externalIdToUse
+            };
         }
-
-        return objectTag;
-    });
+    }).html;
 
     // replace link item codenames with id or external_id
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.linkTagRegex, (linkTag) => {
-        const codenameMatch = linkTag.match(richTextHelper.rteRegexes.rteCodenames.rteLinkItemCodenameRegex);
-        if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
-            const codename = codenameMatch[1];
+    richTextHtml = richTextHelper.processRteLinkItemCodenames(richTextHtml, (codename) => {
+        const itemState = importContext.getItemStateInTargetEnvironment(codename);
 
-            const itemState = importContext.getItemStateInTargetEnvironment(codename);
-
-            if (itemState.state === 'exists' && itemState.item) {
-                return linkTag.replaceAll(
-                    `${richTextHelper.attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.attributes.data.dataItemIdAttributeName}="${itemState.item.id}"`
-                );
-            } else {
-                return linkTag.replaceAll(
-                    `${richTextHelper.attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.attributes.data.dataItemExternalIdAttributeName}="${itemState.externalIdToUse}"`
-                );
-            }
+        if (itemState.state === 'exists' && itemState.item) {
+            return {
+                id: itemState.item.id
+            };
+        } else {
+            return {
+                external_id: itemState.externalIdToUse
+            };
         }
-
-        return linkTag;
-    });
+    }).html;
 
     // replace asset codenames with id or external_id
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.figureTagRegex, (figureTag) => {
-        const codenameMatch = figureTag.match(richTextHelper.rteRegexes.rteCodenames.rteAssetCodenameRegex);
-        if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
-            const codename = codenameMatch[1];
+    richTextHtml = richTextHelper.processRteAssetCodenames(richTextHtml, (codename) => {
+        const assetState = importContext.getAssetStateInTargetEnvironment(codename);
 
-            const assetState = importContext.getAssetStateInTargetEnvironment(codename);
-
-            if (assetState.state === 'exists' && assetState.asset) {
-                return figureTag.replaceAll(
-                    `${richTextHelper.attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.attributes.data.dataAssetIdAttributeName}="${assetState.asset.id}"`
-                );
-            } else {
-                return figureTag.replaceAll(
-                    `${richTextHelper.attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.attributes.data.dataExternalAssetIdAttributeName}="${assetState.externalIdToUse}"`
-                );
-            }
+        if (assetState.state === 'exists' && assetState.asset) {
+            return {
+                id: assetState.asset.id
+            };
+        } else {
+            return {
+                external_id: assetState.externalIdToUse
+            };
         }
-
-        return figureTag;
-    });
+    }).html;
 
     return richTextHtml;
 }

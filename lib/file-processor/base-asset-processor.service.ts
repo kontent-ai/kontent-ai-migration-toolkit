@@ -7,6 +7,6 @@ export abstract class BaseAssetProcessorService implements IAssetFormatService {
     abstract parseAssetsAsync(data: AssetsParseData): Promise<IMigrationAsset[]>;
 
     protected getSystemAssetFields(): string[] {
-        return ['codename', 'filename', 'extension', 'url', 'assetExternalId', 'title', 'folder', 'collection'];
+        return ['codename', 'filename', 'extension', 'url', 'externalId', 'title', 'folder', 'collection'];
     }
 }
