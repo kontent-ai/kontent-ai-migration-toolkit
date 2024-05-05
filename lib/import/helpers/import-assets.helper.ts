@@ -27,9 +27,6 @@ export class ImportAssetsHelper {
             managementClient: data.managementClient
         });
 
-        // add existing assets to imported data
-        data.importContext.imported.assets.push(...filteredAssets.existingAssets);
-
         if (filteredAssets.existingAssets.length) {
             this.log.console({
                 type: 'skip',
@@ -76,7 +73,7 @@ export class ImportAssetsHelper {
                     message: asset.title
                 });
 
-                const createdAsset = await data.managementClient
+                await data.managementClient
                     .addAsset()
                     .withData((builder) => {
                         return {
@@ -97,11 +94,6 @@ export class ImportAssetsHelper {
                     })
                     .toPromise()
                     .then((m) => m.data);
-
-                data.importContext.imported.assets.push({
-                    imported: createdAsset,
-                    original: asset
-                });
             }
         });
     }

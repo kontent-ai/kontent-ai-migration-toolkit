@@ -14,7 +14,6 @@ import {
 } from './core.models.js';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
 import prompts from 'prompts';
-import { DeliveryError } from '@kontent-ai/delivery-sdk';
 import {
     AssetCsvProcessorService,
     AssetJsonProcessorService,
@@ -75,9 +74,6 @@ export function extractErrorData(error: any): IErrorData {
         for (const validationError of error.validationErrors) {
             message += ` ${validationError.message}`;
         }
-    } else if (error instanceof DeliveryError) {
-        isUnknownError = false;
-        message = error.message;
     } else if (error instanceof Error) {
         isUnknownError = false;
         message = error.message;

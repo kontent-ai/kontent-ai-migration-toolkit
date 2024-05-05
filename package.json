@@ -51,7 +51,6 @@
     "license": "MIT",
     "dependencies": {
         "@kontent-ai-consulting/tools-analytics": "0.0.6",
-        "@kontent-ai/delivery-sdk": "14.9.0",
         "@kontent-ai/management-sdk": "6.2.0",
         "bytes": "3.1.2",
         "colors": "1.4.0",
@@ -77,7 +76,7 @@
         "@typescript-eslint/parser": "7.8.0",
         "eslint": "8.57.0",
         "standard-version": "9.5.0",
-        "tsx": "4.8.2",
+        "tsx": "4.9.1",
         "tsconfig-paths": "^4.2.0",
         "tslib": "2.6.2",
         "typescript": "5.4.5"

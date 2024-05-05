@@ -151,7 +151,7 @@ export class ImportLanguageVariantHelper {
             );
         }
 
-        const upsertedLanguageVariant = await data.managementClient
+        await data.managementClient
             .upsertLanguageVariant()
             .byItemCodename(data.preparedContentItem.codename)
             .byLanguageCodename(data.importContentItem.system.language)
@@ -170,11 +170,6 @@ export class ImportLanguageVariantHelper {
             })
             .toPromise()
             .then((m) => m.data);
-
-        data.importContext.imported.languageVariants.push({
-            original: data.importContentItem,
-            imported: upsertedLanguageVariant
-        });
 
         // set workflow of language variant
         await this.importWorkflowHelper.setWorkflowOfLanguageVariantAsync(

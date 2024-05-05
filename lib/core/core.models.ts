@@ -5,13 +5,12 @@ import {
     ContentTypeElements,
     ElementContracts,
     LanguageModels,
-    LanguageVariantModels,
     SharedModels,
     TaxonomyModels,
     WorkflowModels
 } from '@kontent-ai/management-sdk';
 import { IAssetFormatService, IItemFormatService, ProcessingFormat } from '../file-processor/index.js';
-import { IMigrationItem, IMigrationAsset, MigrationElementType } from './migration-models.js';
+import { IMigrationItem, MigrationElementType } from './migration-models.js';
 import { IKontentAiPreparedExportItem } from 'lib/export/export.models.js';
 
 export interface ICliFileConfig {
@@ -95,20 +94,6 @@ export interface IReferencedDataInLanguageVariants {
 }
 
 export interface IImportContext {
-    imported: {
-        assets: {
-            original: IMigrationAsset;
-            imported: AssetModels.Asset;
-        }[];
-        contentItems: {
-            original: IMigrationItem;
-            imported: ContentItemModels.ContentItem;
-        }[];
-        languageVariants: {
-            original: IMigrationItem;
-            imported: LanguageVariantModels.ContentItemLanguageVariant;
-        }[];
-    };
     componentItems: IMigrationItem[];
     contentItems: IMigrationItem[];
     referencedData: IReferencedDataInMigrationItems;

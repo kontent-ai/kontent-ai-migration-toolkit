@@ -25,9 +25,7 @@ export class ImportContentItemHelper {
 
         this.log.console({
             type: 'info',
-            message: `Importing '${colors.yellow(
-                data.importContext.imported.contentItems.length.toString()
-            )}' content items`
+            message: `Importing '${colors.yellow(data.importContext.contentItems.length.toString())}' content items`
         });
 
         for (const parsedItem of data.importContext.contentItems) {
@@ -73,11 +71,6 @@ export class ImportContentItemHelper {
             data.importContentItem,
             data.importContext
         );
-
-        data.importContext.imported.contentItems.push({
-            original: data.importContentItem,
-            imported: preparedContentItemResult.contentItem
-        });
 
         // check if name should be updated, no other changes are supported
         if (preparedContentItemResult.status === 'itemAlreadyExists') {

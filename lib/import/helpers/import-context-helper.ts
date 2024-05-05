@@ -44,11 +44,6 @@ export class ImportContextHelper {
         );
 
         const importContext: IImportContext = {
-            imported: {
-                assets: [],
-                contentItems: [],
-                languageVariants: []
-            },
             // if content item does not have a workflow step it means it is used as a component within Rich text element
             // such items are procesed within element transform
             componentItems: dataToImport.items.filter((m) => !m.system.workflow?.length),

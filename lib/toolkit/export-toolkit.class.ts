@@ -51,12 +51,7 @@ export class ExportToolkit {
                 const data = await this.config.adapter.exportAsync();
 
                 const itemsZipFile = await this.fileProcessorService.createItemsZipAsync(data, {
-                    itemFormatService: getItemsFormatService(this.config.items.formatService),
-                    transformConfig: {
-                        richTextConfig: {
-                            replaceInvalidLinks: true
-                        }
-                    }
+                    itemFormatService: getItemsFormatService(this.config.items.formatService)
                 });
 
                 await this.fileService.writeFileAsync(this.config.items.filename, itemsZipFile);
