@@ -177,8 +177,8 @@ async function processImportRichTextHtmlValueAsync(
     }
 
     // replace item codenames with id or external_id
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.objectRegex, (objectTag) => {
-        const codenameMatch = objectTag.match(richTextHelper.rteRegexes.rteItemCodenameRegex);
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.objectTagRegex, (objectTag) => {
+        const codenameMatch = objectTag.match(richTextHelper.rteRegexes.rteCodenames.rteItemCodenameRegex);
         if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
             const codename = codenameMatch[1];
 
@@ -186,13 +186,13 @@ async function processImportRichTextHtmlValueAsync(
 
             if (itemState.state === 'exists' && itemState.item) {
                 return objectTag.replaceAll(
-                    `${richTextHelper.rteItemCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.dataIdAttributeName}="${itemState.item.id}"`
+                    `${richTextHelper.attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.attributes.data.dataIdAttributeName}="${itemState.item.id}"`
                 );
             } else {
                 return objectTag.replaceAll(
-                    `${richTextHelper.rteItemCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.dataExternalIdAttributeName}="${itemState.externalIdToUse}"`
+                    `${richTextHelper.attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.attributes.data.dataExternalIdAttributeName}="${itemState.externalIdToUse}"`
                 );
             }
         }
@@ -201,8 +201,8 @@ async function processImportRichTextHtmlValueAsync(
     });
 
     // replace link item codenames with id or external_id
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.linkRegex, (linkTag) => {
-        const codenameMatch = linkTag.match(richTextHelper.rteRegexes.rteLinkItemCodenameRegex);
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.linkTagRegex, (linkTag) => {
+        const codenameMatch = linkTag.match(richTextHelper.rteRegexes.rteCodenames.rteLinkItemCodenameRegex);
         if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
             const codename = codenameMatch[1];
 
@@ -210,14 +210,13 @@ async function processImportRichTextHtmlValueAsync(
 
             if (itemState.state === 'exists' && itemState.item) {
                 return linkTag.replaceAll(
-                    `${richTextHelper.rteLinkItemCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.dataItemIdAttributeName}="${itemState.item.id}"`
+                    `${richTextHelper.attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.attributes.data.dataItemIdAttributeName}="${itemState.item.id}"`
                 );
             } else {
-              
                 return linkTag.replaceAll(
-                    `${richTextHelper.rteLinkItemCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.dataItemExternalIdAttributeName}="${itemState.externalIdToUse}"`
+                    `${richTextHelper.attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.attributes.data.dataItemExternalIdAttributeName}="${itemState.externalIdToUse}"`
                 );
             }
         }
@@ -226,8 +225,8 @@ async function processImportRichTextHtmlValueAsync(
     });
 
     // replace asset codenames with id or external_id
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.figureRegex, (figureTag) => {
-        const codenameMatch = figureTag.match(richTextHelper.rteRegexes.rteAssetCodenameRegex);
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.figureTagRegex, (figureTag) => {
+        const codenameMatch = figureTag.match(richTextHelper.rteRegexes.rteCodenames.rteAssetCodenameRegex);
         if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
             const codename = codenameMatch[1];
 
@@ -235,13 +234,13 @@ async function processImportRichTextHtmlValueAsync(
 
             if (assetState.state === 'exists' && assetState.asset) {
                 return figureTag.replaceAll(
-                    `${richTextHelper.rteAssetCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.dataAssetIdAttributeName}="${assetState.asset.id}"`
+                    `${richTextHelper.attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.attributes.data.dataAssetIdAttributeName}="${assetState.asset.id}"`
                 );
             } else {
                 return figureTag.replaceAll(
-                    `${richTextHelper.rteAssetCodenameAttribute}="${codename}"`,
-                    `${richTextHelper.dataExternalAssetIdAttributeName}="${assetState.externalIdToUse}"`
+                    `${richTextHelper.attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.attributes.data.dataExternalAssetIdAttributeName}="${assetState.externalIdToUse}"`
                 );
             }
         }

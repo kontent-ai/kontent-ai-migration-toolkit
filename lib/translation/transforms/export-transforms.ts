@@ -195,8 +195,8 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
     }
 
     // replace item ids with codenames
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.objectRegex, (objectTag) => {
-        const itemIdMatch = objectTag.match(richTextHelper.rteRegexes.dataIdRegex);
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.objectTagRegex, (objectTag) => {
+        const itemIdMatch = objectTag.match(richTextHelper.rteRegexes.attrs.dataIdAttrRegex);
         if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
             const itemId = itemIdMatch[1];
 
@@ -207,8 +207,8 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
             }
 
             return objectTag.replaceAll(
-                `${richTextHelper.dataIdAttributeName}="${itemId}"`,
-                `${richTextHelper.rteItemCodenameAttribute}="${itemInEnv.codename}"`
+                `${richTextHelper.attributes.data.dataIdAttributeName}="${itemId}"`,
+                `${richTextHelper.attributes.rteCodenames.rteItemCodenameAttribute}="${itemInEnv.codename}"`
             );
         }
 
@@ -216,8 +216,8 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
     });
 
     // replace link item ids with codenames
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.linkRegex, (linkTag) => {
-        const itemIdMatch = linkTag.match(richTextHelper.rteRegexes.dataItemIdRegex);
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.linkTagRegex, (linkTag) => {
+        const itemIdMatch = linkTag.match(richTextHelper.rteRegexes.attrs.dataItemIdAttrRegex);
         if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
             const itemId = itemIdMatch[1];
 
@@ -228,8 +228,8 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
             }
 
             return linkTag.replaceAll(
-                `${richTextHelper.dataItemIdAttributeName}="${itemId}"`,
-                `${richTextHelper.rteLinkItemCodenameAttribute}="${itemInEnv.codename}"`
+                `${richTextHelper.attributes.data.dataItemIdAttributeName}="${itemId}"`,
+                `${richTextHelper.attributes.rteCodenames.rteLinkItemCodenameAttribute}="${itemInEnv.codename}"`
             );
         }
 
@@ -237,8 +237,8 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
     });
 
     // replace asset ids with codenames
-    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.figureRegex, (figureTag) => {
-        const assetIdMatch = figureTag.match(richTextHelper.rteRegexes.dataAssetIdRegex);
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.tags.figureTagRegex, (figureTag) => {
+        const assetIdMatch = figureTag.match(richTextHelper.rteRegexes.attrs.dataAssetIdAttrRegex);
         if (assetIdMatch && (assetIdMatch?.length ?? 0) >= 2) {
             const assetId = assetIdMatch[1];
 
@@ -249,8 +249,8 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
             }
 
             return figureTag.replaceAll(
-                `${richTextHelper.dataAssetIdAttributeName}="${assetId}"`,
-                `${richTextHelper.rteAssetCodenameAttribute}="${assetInEnv.codename}"`
+                `${richTextHelper.attributes.data.dataAssetIdAttributeName}="${assetId}"`,
+                `${richTextHelper.attributes.rteCodenames.rteAssetCodenameAttribute}="${assetInEnv.codename}"`
             );
         }
 
