@@ -13,12 +13,13 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
 
         for (const exportAsset of data.assets) {
             assetRecords.push({
-                assetId: exportAsset.assetId,
                 assetExternalId: exportAsset.assetExternalId,
                 _zipFilename: exportAsset._zipFilename,
                 filename: exportAsset.filename,
                 title: exportAsset.title,
-                codename: exportAsset.codename
+                codename: exportAsset.codename,
+                collection: exportAsset.collection,
+                folder: exportAsset.folder
             });
 
             await data.zip.addFile(exportAsset.filename, exportAsset.binaryData);

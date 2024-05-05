@@ -18,7 +18,7 @@ export class RichTextHelper {
             dataExternalIdAttributeName: 'data-external-id',
             dataExternalAssetIdAttributeName: 'data-asset-external-id'
         }
-    };
+    } as const;
 
     public readonly rteRegexes = {
         tags: {

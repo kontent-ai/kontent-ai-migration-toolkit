@@ -1,5 +1,4 @@
-import { IImportContentTypeElement } from '../../../import/index.js';
-import { IMigrationElement, IMigrationItem } from '../../../core/index.js';
+import { IFlattenedContentTypeElement, IMigrationElement, IMigrationItem } from '../../../core/index.js';
 
 export interface IJsonElements {
     [elementCodename: string]: string | string[] | undefined;
@@ -47,7 +46,7 @@ export function mapToJsonItem(item: IMigrationItem): IJsonItem {
 
 export function parseJsonItem(
     item: IJsonItem,
-    getElement: (typeCodename: string, elementCodename: string) => IImportContentTypeElement
+    getElement: (typeCodename: string, elementCodename: string) => IFlattenedContentTypeElement
 ): IMigrationItem {
     const elements: IMigrationElement[] = [];
 

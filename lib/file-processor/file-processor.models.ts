@@ -1,5 +1,4 @@
-import { IMigrationAsset, IMigrationItem } from '../core/index.js';
-import { IImportContentType } from '../import/index.js';
+import { IFlattenedContentType, IMigrationAsset, IMigrationItem } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
 /**
@@ -20,7 +19,7 @@ export type ItemsTransformData = {
 
 export type ItemsParseData = {
     readonly zip: ZipPackage;
-    readonly types: IImportContentType[];
+    readonly types: IFlattenedContentType[];
 };
 
 export interface IItemFormatService {

@@ -1,6 +1,5 @@
-import { IImportContentType, IImportContentTypeElement } from '../import/index.js';
 import { IItemFormatService, ItemsTransformData, ItemsParseData, FileBinaryData } from './file-processor.models.js';
-import { IMigrationItem, logErrorAndExit } from '../core/index.js';
+import { IFlattenedContentType, IFlattenedContentTypeElement, IMigrationItem, logErrorAndExit } from '../core/index.js';
 import colors from 'colors';
 
 export abstract class BaseItemProcessorService implements IItemFormatService {
@@ -13,10 +12,10 @@ export abstract class BaseItemProcessorService implements IItemFormatService {
     }
 
     protected getElement(
-        types: IImportContentType[],
+        types: IFlattenedContentType[],
         contentItemType: string,
         elementCodename: string
-    ): IImportContentTypeElement {
+    ): IFlattenedContentTypeElement {
         const type = types.find((m) => m.contentTypeCodename.toLowerCase() === contentItemType.toLowerCase());
 
         if (!type) {

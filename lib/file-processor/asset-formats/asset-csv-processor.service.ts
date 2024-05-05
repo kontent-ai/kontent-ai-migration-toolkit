@@ -54,13 +54,14 @@ export class AssetCsvProcessorService extends BaseAssetProcessorService {
             } else {
                 // process data row
                 const parsedAsset: IMigrationAsset = {
-                    assetId: undefined,
                     _zipFilename: '',
                     filename: '',
                     assetExternalId: undefined,
                     title: '',
                     codename: undefined,
-                    binaryData: undefined
+                    binaryData: undefined,
+                    collection: undefined,
+                    folder: undefined
                 };
 
                 let fieldIndex: number = 0;
