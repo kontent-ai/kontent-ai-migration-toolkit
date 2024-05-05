@@ -6,6 +6,7 @@ import { Log, withDefaultLogAsync } from './log-helper.js';
 import { HttpService } from '@kontent-ai/core-sdk';
 import {
     AssetsFormatConfig,
+    FetchItemType,
     IChunk,
     IErrorData,
     IProcessInChunksItemInfo,
@@ -123,6 +124,13 @@ export function handleError(error: any): void {
     }
 
     console.error(`${colors.red('Error:')} ${errorData.message}`);
+}
+
+export function logFetchedItems(data: { count: number; itemType: FetchItemType; log: Log }): void {
+    data.log.console({
+        type: 'info',
+        message: `Fetched '${colors.yellow(data.count.toString())}' ${data.itemType}`
+    });
 }
 
 export function getAssetUrlPath(url: string): string {

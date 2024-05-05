@@ -7,22 +7,26 @@ import {
 import { IFlattenedContentType, IFlattenedContentTypeElement } from './core.models.js';
 import { Log, logErrorAndExit } from './log-helper.js';
 import colors from 'colors';
+import { logFetchedItems } from './global-helper.js';
 
 export async function getFlattenedContentTypesAsync(
     managementClient: ManagementClient,
     log: Log
 ): Promise<IFlattenedContentType[]> {
     const contentTypes = (await managementClient.listContentTypes().toAllPromise()).data.items;
-    const contentTypeSnippets = (await managementClient.listContentTypeSnippets().toAllPromise()).data.items;
 
-    log.console({
-        type: 'info',
-        message: `Fetched '${colors.yellow(contentTypes.length.toString())}' content types`
+    logFetchedItems({
+        count: contentTypes.length,
+        itemType: 'content types',
+        log: log
     });
 
-    log.console({
-        type: 'info',
-        message: `Fetched '${colors.yellow(contentTypeSnippets.length.toString())}' content type snippets`
+    const contentTypeSnippets = (await managementClient.listContentTypeSnippets().toAllPromise()).data.items;
+
+    logFetchedItems({
+        count: contentTypeSnippets.length,
+        itemType: 'content type snippets',
+        log: log
     });
 
     return [

@@ -68,6 +68,14 @@ export type ActionType =
     | 'extractBinaryData'
     | 'update';
 
+export type FetchItemType =
+    | 'content types'
+    | 'content type snippets'
+    | 'languages'
+    | 'workflows'
+    | 'collections'
+    | 'taxonomies';
+
 export interface IErrorData {
     message: string;
     requestData?: string;

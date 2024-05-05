@@ -11,6 +11,7 @@ import {
     Log,
     getFlattenedContentTypesAsync,
     is404Error,
+    logFetchedItems,
     processInChunksAsync,
     uniqueStringFilter
 } from '../../../../core/index.js';
@@ -220,26 +221,43 @@ export class ExportContextHelper {
     }
 
     private async getAllLanguagesAsync(): Promise<LanguageModels.LanguageModel[]> {
-        this.log.console({ type: 'info', message: `Loading languages` });
         const response = await this.managementClient.listLanguages().toAllPromise();
+
+        logFetchedItems({
+            count: response.data.items.length,
+            itemType: 'languages',
+            log: this.log
+        });
         return response.data.items;
     }
 
     private async getAllCollectionsAsync(): Promise<CollectionModels.Collection[]> {
-        this.log.console({ type: 'info', message: `Loading collections` });
         const response = await this.managementClient.listCollections().toPromise();
+           logFetchedItems({
+               count: response.data.collections.length,
+               itemType: 'collections',
+               log: this.log
+           });
         return response.data.collections;
     }
 
     private async getAllWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
-        this.log.console({ type: 'info', message: `Loading workflows` });
         const response = await this.managementClient.listWorkflows().toPromise();
+           logFetchedItems({
+               count: response.data.length,
+               itemType: 'workflows',
+               log: this.log
+           });
         return response.data;
     }
 
     private async getAllTaxonomiesAsync(): Promise<TaxonomyModels.Taxonomy[]> {
-        this.log.console({ type: 'info', message: `Loading taxonomies` });
         const response = await this.managementClient.listTaxonomies().toAllPromise();
+           logFetchedItems({
+               count: response.data.items.length,
+               itemType: 'taxonomies',
+               log: this.log
+           });
         return response.data.items;
     }
 
