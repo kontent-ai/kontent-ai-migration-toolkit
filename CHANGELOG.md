@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-0](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v0.1.8...v1.0.0-0) (2024-05-05)
+
+
+### Features
+
+* Adds support for importing linkedItems element that reference non-existent items (via external_id) ([607cb3f](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/commit/607cb3fea1a3383e6856b1069355a90de128f6c5))
+* Adds support for referencing non-existent items via external id in RTE, removes fetchMode config ([b84d823](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/commit/b84d82316827544d2d595f448fa243e50403104d))
+
 ### [0.1.8](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v0.1.7...v0.1.8) (2024-04-03)
 
 
