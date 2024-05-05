@@ -13,11 +13,11 @@ import {
 import { ExtractionService, getExtractionService } from '../../extraction/extraction-service.js';
 import { AssetModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 
-export function getImportContextHelper(log: Log, managementClient: ManagementClient): ImportContextHelper {
-    return new ImportContextHelper(log, managementClient);
+export function getImportContextService(log: Log, managementClient: ManagementClient): ImportContextService {
+    return new ImportContextService(log, managementClient);
 }
 
-export class ImportContextHelper {
+export class ImportContextService {
     private readonly extractionService: ExtractionService;
 
     constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {

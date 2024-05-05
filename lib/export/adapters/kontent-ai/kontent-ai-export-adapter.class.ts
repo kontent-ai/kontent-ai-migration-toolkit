@@ -20,18 +20,18 @@ import {
     processInChunksAsync,
     getAssetExternalIdForCodename
 } from '../../../core/index.js';
-import { ExportContextHelper, getExportContextHelper } from './helpers/export-context-helper.js';
+import { ExportContextService, getExportContextService } from './context/export-context.service.js';
 import { exportTransforms } from '../../../translation/index.js';
 
 export class KontentAiExportAdapter implements IExportAdapter {
     private readonly httpService: HttpService = new HttpService();
     public readonly name: string = 'kontentAi';
     private readonly managementClient: ManagementClient;
-    private readonly exportContextHelper: ExportContextHelper;
+    private readonly exportContextService: ExportContextService;
 
     constructor(private config: IKontentAiExportAdapterConfig) {
         this.managementClient = this.getManagementClient(config);
-        this.exportContextHelper = getExportContextHelper(this.config.log, this.managementClient);
+        this.exportContextService = getExportContextService(this.config.log, this.managementClient);
     }
 
     async exportAsync(): Promise<IExportAdapterResult> {
@@ -51,7 +51,7 @@ export class KontentAiExportAdapter implements IExportAdapter {
             )} in project ${colors.cyan(sourceEnvironment.name)}`
         });
 
-        const exportContext = await this.exportContextHelper.getExportContextAsync({
+        const exportContext = await this.exportContextService.getExportContextAsync({
             exportItems: this.config.exportItems
         });
 

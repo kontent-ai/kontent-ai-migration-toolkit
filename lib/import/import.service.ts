@@ -14,22 +14,22 @@ import {
     executeWithTrackingAsync
 } from '../core/index.js';
 import { IImportConfig, IImportSource } from './import.models.js';
-import { ImportAssetsHelper, getImportAssetsHelper } from './helpers/import-assets.helper.js';
-import { ImportContentItemHelper, getImportContentItemHelper } from './helpers/import-content-item.helper.js';
+import { ImportAssetsService, getImportAssetsService } from './helper-services/import-assets.service.js';
+import { ImportContentItemHelper, getImportContentItemService } from './helper-services/import-content-item.service.js';
 import {
-    ImportLanguageVariantHelper,
-    getImportLanguageVariantstemHelper
-} from './helpers/import-language-variant.helper.js';
+    ImportLanguageVariantServices,
+    getImportLanguageVariantstemService
+} from './helper-services/import-language-variant.service.js';
 import colors from 'colors';
 import { libMetadata } from '../metadata.js';
-import { ImportContextHelper, getImportContextHelper } from './helpers/import-context-helper.js';
+import { ImportContextService, getImportContextService } from './context/import-context.service.js';
 
 export class ImportService {
     public readonly managementClient: ManagementClient;
-    private readonly importAssetsHelper: ImportAssetsHelper;
-    private readonly importContentItemHelper: ImportContentItemHelper;
-    private readonly importLanguageVariantHelper: ImportLanguageVariantHelper;
-    private readonly importContextHelper: ImportContextHelper;
+    private readonly importAssetsService: ImportAssetsService;
+    private readonly importContentItemService: ImportContentItemHelper;
+    private readonly importLanguageVariantService: ImportLanguageVariantServices;
+    private readonly importContextService: ImportContextService;
 
     constructor(private config: IImportConfig) {
         this.managementClient = createManagementClient({
@@ -40,16 +40,18 @@ export class ImportService {
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
         });
 
-        this.importAssetsHelper = getImportAssetsHelper(config.log);
-        this.importContentItemHelper = getImportContentItemHelper({
+        this.importAssetsService = getImportAssetsService(config.log, this.managementClient);
+        this.importContentItemService = getImportContentItemService({
+            managementClient: this.managementClient,
             log: config.log,
             skipFailedItems: config.skipFailedItems
         });
-        this.importLanguageVariantHelper = getImportLanguageVariantstemHelper({
+        this.importLanguageVariantService = getImportLanguageVariantstemService({
+            managementClient: this.managementClient,
             log: config.log,
             skipFailedItems: config.skipFailedItems
         });
-        this.importContextHelper = getImportContextHelper(config.log, this.managementClient);
+        this.importContextService = getImportContextService(config.log, this.managementClient);
     }
 
     async importAsync(sourceData: IImportSource): Promise<IImportContext> {
@@ -72,13 +74,12 @@ export class ImportService {
                 // this is an optional step where users can exclude certain objects from being imported
                 const dataToImport = this.getDataToImport(sourceData);
 
-                const importContext = await this.importContextHelper.getImportContextAsync(dataToImport.importData);
+                const importContext = await this.importContextService.getImportContextAsync(dataToImport.importData);
 
                 // import order matters
                 // #1 Assets
                 if (dataToImport.importData.assets.length) {
-                    await this.importAssetsHelper.importAssetsAsync({
-                        managementClient: this.managementClient,
+                    await this.importAssetsService.importAssetsAsync({
                         assets: dataToImport.importData.assets,
                         importContext: importContext
                     });
@@ -172,15 +173,13 @@ export class ImportService {
 
         // first prepare content items
         const preparedContentItems: ContentItemModels.ContentItem[] =
-            await this.importContentItemHelper.importContentItemsAsync({
-                managementClient: this.managementClient,
+            await this.importContentItemService.importContentItemsAsync({
                 collections: collections,
                 importContext: importContext
             });
 
         // then process language variants
-        await this.importLanguageVariantHelper.importLanguageVariantsAsync({
-            managementClient: this.managementClient,
+        await this.importLanguageVariantService.importLanguageVariantsAsync({
             importContentItems: migrationContentItems,
             importContext: importContext,
             preparedContentItems: preparedContentItems,

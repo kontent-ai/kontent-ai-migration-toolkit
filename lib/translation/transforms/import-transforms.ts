@@ -6,10 +6,10 @@ import {
     MigrationElementType,
     IImportContext
 } from '../../core/index.js';
-import { RichTextHelper, getRichTextHelper } from '../rich-text-helper.js';
+import { RichTextService, getRichTextService } from '../rich-text.service.js';
 
 const elementsBuilder = new LanguageVariantElementsBuilder();
-const richTextHelper: RichTextHelper = getRichTextHelper();
+const richTextService: RichTextService = getRichTextService();
 
 /**
  * General import transforms used to prepare parsed element values for Management API
@@ -177,7 +177,7 @@ async function processImportRichTextHtmlValueAsync(
     }
 
     // replace item codenames with id or external_id
-    richTextHtml = richTextHelper.processRteItemCodenames(richTextHtml, (codename) => {
+    richTextHtml = richTextService.processRteItemCodenames(richTextHtml, (codename) => {
         const itemState = importContext.getItemStateInTargetEnvironment(codename);
 
         if (itemState.state === 'exists' && itemState.item) {
@@ -192,7 +192,7 @@ async function processImportRichTextHtmlValueAsync(
     }).html;
 
     // replace link item codenames with id or external_id
-    richTextHtml = richTextHelper.processRteLinkItemCodenames(richTextHtml, (codename) => {
+    richTextHtml = richTextService.processRteLinkItemCodenames(richTextHtml, (codename) => {
         const itemState = importContext.getItemStateInTargetEnvironment(codename);
 
         if (itemState.state === 'exists' && itemState.item) {
@@ -207,7 +207,7 @@ async function processImportRichTextHtmlValueAsync(
     }).html;
 
     // replace asset codenames with id or external_id
-    richTextHtml = richTextHelper.processRteAssetCodenames(richTextHtml, (codename) => {
+    richTextHtml = richTextService.processRteAssetCodenames(richTextHtml, (codename) => {
         const assetState = importContext.getAssetStateInTargetEnvironment(codename);
 
         if (assetState.state === 'exists' && assetState.asset) {

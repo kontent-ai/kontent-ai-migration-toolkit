@@ -3,28 +3,24 @@ import { IImportContext, IMigrationAsset, Log, is404Error, processInChunksAsync 
 import mime from 'mime';
 import colors from 'colors';
 
-export function getImportAssetsHelper(log: Log): ImportAssetsHelper {
-    return new ImportAssetsHelper(log);
+export function getImportAssetsService(log: Log, managementClient: ManagementClient): ImportAssetsService {
+    return new ImportAssetsService(log, managementClient);
 }
 
-export class ImportAssetsHelper {
+export class ImportAssetsService {
     private readonly importAssetsChunkSize: number = 1;
     private readonly fetchAssetsChunkSize: number = 1;
 
-    constructor(private readonly log: Log) {}
+    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
 
-    async importAssetsAsync(data: {
-        managementClient: ManagementClient;
-        assets: IMigrationAsset[];
-        importContext: IImportContext;
-    }): Promise<void> {
+    async importAssetsAsync(data: { assets: IMigrationAsset[]; importContext: IImportContext }): Promise<void> {
         this.log.console({
             type: 'info',
             message: `Categorizing '${colors.yellow(data.assets.length.toString())}' assets`
         });
         const filteredAssets = await this.getAssetsToUploadAsync({
             assets: data.assets,
-            managementClient: data.managementClient
+            managementClient: this.managementClient
         });
 
         if (filteredAssets.existingAssets.length) {
@@ -59,7 +55,7 @@ export class ImportAssetsHelper {
                     message: asset.title
                 });
 
-                const uploadedBinaryFile = await data.managementClient
+                const uploadedBinaryFile = await this.managementClient
                     .uploadBinaryFile()
                     .withData({
                         binaryData: asset.binaryData,
@@ -73,7 +69,7 @@ export class ImportAssetsHelper {
                     message: asset.title
                 });
 
-                await data.managementClient
+                await this.managementClient
                     .addAsset()
                     .withData((builder) => {
                         return {

@@ -1,4 +1,4 @@
-import { RichTextHelper, getRichTextHelper } from '../translation/index.js';
+import { RichTextService, getRichTextService } from '../translation/index.js';
 import {
     IMigrationItem,
     IReferencedDataInLanguageVariants,
@@ -14,7 +14,7 @@ export function getExtractionService(log: Log): ExtractionService {
 }
 
 export class ExtractionService {
-    private readonly richTextHelper: RichTextHelper = getRichTextHelper();
+    private readonly richTextHelper: RichTextService = getRichTextService();
 
     constructor(log: Log) {}
 

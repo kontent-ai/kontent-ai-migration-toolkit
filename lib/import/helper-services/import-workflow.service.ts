@@ -12,11 +12,11 @@ interface IWorkflowAndStep {
     step: IWorkflowStep;
 }
 
-export function getImportWorkflowHelper(log: Log): ImportWorkflowHelper {
-    return new ImportWorkflowHelper(log);
+export function getImportWorkflowService(log: Log): ImportWorkflowService {
+    return new ImportWorkflowService(log);
 }
 
-export class ImportWorkflowHelper {
+export class ImportWorkflowService {
     constructor(private readonly log: Log) {}
 
     getWorkflowAndStep(data: {

@@ -11,11 +11,11 @@ interface IProcessIdsResult {
     html: string;
 }
 
-export function getRichTextHelper(): RichTextHelper {
-    return new RichTextHelper();
+export function getRichTextService(): RichTextService {
+    return new RichTextService();
 }
 
-export class RichTextHelper {
+export class RichTextService {
     private readonly attributes = {
         rteCodenames: {
             rteItemCodenameAttribute: 'migration-toolkit-item-codename',

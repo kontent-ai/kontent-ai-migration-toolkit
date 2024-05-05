@@ -1,8 +1,8 @@
 import { ExportTransformFunc, IExportContext, MigrationElementType } from '../../core/index.js';
 import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
-import { RichTextHelper, getRichTextHelper } from '../rich-text-helper.js';
+import { RichTextService, getRichTextService } from '../rich-text.service.js';
 
-const richTextHelper: RichTextHelper = getRichTextHelper();
+const richTextService: RichTextService = getRichTextService();
 
 /**
  * Elements transform used by Kontent.ai export adapter
@@ -195,7 +195,7 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
     }
 
     // replace item ids with codenames
-    richTextHtml = richTextHelper.processDataIds(richTextHtml, (id) => {
+    richTextHtml = richTextService.processDataIds(richTextHtml, (id) => {
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
         if (!itemInEnv) {
@@ -208,7 +208,7 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
     }).html;
 
     // replace link item ids with codenames
-    richTextHtml = richTextHelper.processLinkItemIds(richTextHtml, (id) => {
+    richTextHtml = richTextService.processLinkItemIds(richTextHtml, (id) => {
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
         if (!itemInEnv) {
@@ -221,7 +221,7 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
     }).html;
 
     // replace asset ids with codenames
-    richTextHtml = richTextHelper.processAssetIds(richTextHtml, (id) => {
+    richTextHtml = richTextService.processAssetIds(richTextHtml, (id) => {
         const assetInEnv = context.getAssetStateInSourceEnvironment(id).asset;
 
         if (!assetInEnv) {

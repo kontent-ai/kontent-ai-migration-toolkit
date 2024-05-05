@@ -16,39 +16,39 @@ import {
     IMigrationElement,
     Log
 } from '../../core/index.js';
-import { ImportWorkflowHelper, getImportWorkflowHelper } from './import-workflow.helper.js';
+import { ImportWorkflowService, getImportWorkflowService } from './import-workflow.service.js';
 import colors from 'colors';
 import { importTransforms } from '../../translation/index.js';
 
-export function getImportLanguageVariantstemHelper(config: {
+export function getImportLanguageVariantstemService(config: {
+    managementClient: ManagementClient;
     log: Log;
     skipFailedItems: boolean;
-}): ImportLanguageVariantHelper {
-    return new ImportLanguageVariantHelper(config.log, config.skipFailedItems);
+}): ImportLanguageVariantServices {
+    return new ImportLanguageVariantServices(config);
 }
 
-export class ImportLanguageVariantHelper {
+export class ImportLanguageVariantServices {
     private readonly importContentItemChunkSize: number = 1;
-    private readonly importWorkflowHelper: ImportWorkflowHelper;
+    private readonly importWorkflowService: ImportWorkflowService;
 
-    constructor(private readonly log: Log, private readonly skipFailedItems: boolean) {
-        this.importWorkflowHelper = getImportWorkflowHelper(log);
+    constructor(private readonly config: { managementClient: ManagementClient; log: Log; skipFailedItems: boolean }) {
+        this.importWorkflowService = getImportWorkflowService(config.log);
     }
 
     async importLanguageVariantsAsync(data: {
-        managementClient: ManagementClient;
         importContentItems: IMigrationItem[];
         workflows: WorkflowModels.Workflow[];
         preparedContentItems: ContentItemModels.ContentItem[];
         importContext: IImportContext;
     }): Promise<void> {
-        this.log.console({
+        this.config.log.console({
             type: 'info',
             message: `Importing '${colors.yellow(data.importContentItems.length.toString())}' language variants`
         });
 
         await processInChunksAsync<IMigrationItem, void>({
-            log: this.log,
+            log: this.config.log,
             type: 'languageVariant',
             chunkSize: this.importContentItemChunkSize,
             items: data.importContentItems,
@@ -76,14 +76,14 @@ export class ImportLanguageVariantHelper {
                     await this.importLanguageVariantAsync({
                         importContentItem,
                         preparedContentItem,
-                        managementClient: data.managementClient,
+                        managementClient: this.config.managementClient,
                         importContentItems: data.importContentItems,
                         workflows: data.workflows,
                         importContext: data.importContext
                     });
                 } catch (error) {
-                    if (this.skipFailedItems) {
-                        this.log.console({
+                    if (this.config.skipFailedItems) {
+                        this.config.log.console({
                             type: 'error',
                             message: `Failed to import language variant '${colors.red(
                                 importContentItem.system.name
@@ -116,7 +116,7 @@ export class ImportLanguageVariantHelper {
         const workflowStepCodename = data.importContentItem.system.workflow_step;
         const workflowCodename = data.importContentItem.system.workflow;
 
-        this.log.spinner?.text?.({
+        this.config.log.spinner?.text?.({
             type: 'upsert',
             message: `${data.preparedContentItem.name}`
         });
@@ -136,7 +136,7 @@ export class ImportLanguageVariantHelper {
         }
 
         // validate workflow
-        const { workflow } = this.importWorkflowHelper.getWorkflowAndStep({
+        const { workflow } = this.importWorkflowService.getWorkflowAndStep({
             workflowCodename: workflowCodename,
             workflowStepCodename: workflowStepCodename,
             workflows: data.workflows
@@ -172,7 +172,7 @@ export class ImportLanguageVariantHelper {
             .then((m) => m.data);
 
         // set workflow of language variant
-        await this.importWorkflowHelper.setWorkflowOfLanguageVariantAsync(
+        await this.importWorkflowService.setWorkflowOfLanguageVariantAsync(
             data.managementClient,
             workflowCodename,
             workflowStepCodename,
@@ -202,14 +202,14 @@ export class ImportLanguageVariantHelper {
             );
         }
 
-        const { workflow } = this.importWorkflowHelper.getWorkflowAndStep({
+        const { workflow } = this.importWorkflowService.getWorkflowAndStep({
             workflows: data.workflows,
             workflowCodename: workflowCodename,
             workflowStepCodename: workflowStepCodename
         });
 
         try {
-            this.log.spinner?.text?.({
+            this.config.log.spinner?.text?.({
                 type: 'fetch',
                 message: `${data.importContentItem.system.name}`
             });
@@ -240,7 +240,7 @@ export class ImportLanguageVariantHelper {
             // language variant exists
             // check if variant is published or archived
             if (this.isLanguageVariantPublished(languageVariantOfContentItem, data.workflows)) {
-                this.log.spinner?.text?.({
+                this.config.log.spinner?.text?.({
                     type: 'createNewVersion',
                     message: `${data.importContentItem.system.name}`
                 });
@@ -253,7 +253,7 @@ export class ImportLanguageVariantHelper {
                     .toPromise();
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, data.workflows)) {
                 // change workflow step to draft
-                this.log.spinner?.text?.({
+                this.config.log.spinner?.text?.({
                     type: 'unArchive',
                     message: `${data.importContentItem.system.name}`
                 });

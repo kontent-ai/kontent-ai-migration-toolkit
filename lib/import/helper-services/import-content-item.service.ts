@@ -9,21 +9,24 @@ import {
 } from '../../core/index.js';
 import colors from 'colors';
 
-export function getImportContentItemHelper(config: { log: Log; skipFailedItems: boolean }): ImportContentItemHelper {
-    return new ImportContentItemHelper(config.log, config.skipFailedItems);
+export function getImportContentItemService(config: {
+    log: Log;
+    skipFailedItems: boolean;
+    managementClient: ManagementClient;
+}): ImportContentItemHelper {
+    return new ImportContentItemHelper(config);
 }
 
 export class ImportContentItemHelper {
-    constructor(private readonly log: Log, private readonly skipFailedItems: boolean) {}
+    constructor(private readonly config: { log: Log; skipFailedItems: boolean; managementClient: ManagementClient }) {}
 
     async importContentItemsAsync(data: {
-        managementClient: ManagementClient;
         collections: CollectionModels.Collection[];
         importContext: IImportContext;
     }): Promise<ContentItemModels.ContentItem[]> {
         const preparedItems: ContentItemModels.ContentItem[] = [];
 
-        this.log.console({
+        this.config.log.console({
             type: 'info',
             message: `Importing '${colors.yellow(data.importContext.contentItems.length.toString())}' content items`
         });
@@ -36,7 +39,7 @@ export class ImportContentItemHelper {
 
             try {
                 const contentItem = await this.importContentItemAsync({
-                    managementClient: data.managementClient,
+                    managementClient: this.config.managementClient,
                     collections: data.collections,
                     importContentItem: parsedItem,
                     importContext: data.importContext
@@ -44,8 +47,8 @@ export class ImportContentItemHelper {
 
                 preparedItems.push(contentItem);
             } catch (error) {
-                if (this.skipFailedItems) {
-                    this.log.console({
+                if (this.config.skipFailedItems) {
+                    this.config.log.console({
                         type: 'error',
                         message: `Failed to import content item '${parsedItem.system.name}'. ${
                             extractErrorData(error).message
@@ -81,7 +84,7 @@ export class ImportContentItemHelper {
                     data.collections
                 )
             ) {
-                this.log.spinner?.text?.({
+                this.config.log.spinner?.text?.({
                     type: 'upsert',
                     message: `${data.importContentItem.system.name}`
                 });
