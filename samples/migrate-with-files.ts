@@ -1,6 +1,11 @@
-import { ImportToolkit, ExportToolkit } from '../lib/toolkit/index.js';
-import { IMigrationAsset, IMigrationItem, getDefaultLog } from '../lib/core/index.js';
-import { IExportAdapter } from '../lib/export/index.js';
+import {
+    ImportToolkit,
+    IMigrationAsset,
+    IMigrationItem,
+    getDefaultLog,
+    IExportAdapter,
+    ExportToolkit
+} from '../lib/index.js';
 
 const customExportAdapter: IExportAdapter = {
     name: 'customExportAdapter',

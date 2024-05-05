@@ -1,20 +1,16 @@
-import { getDefaultLog } from '../lib/core/index.js';
-import { KontentAiDeliveryExportAdapter } from '../lib/export/index.js';
-import { ExportToolkit } from '../lib/toolkit/index.js';
+import { getDefaultLog, KontentAiExportAdapter, ExportToolkit } from '../lib/index.js';
 
 const run = async () => {
-    const adapter = new KontentAiDeliveryExportAdapter({
+    const adapter = new KontentAiExportAdapter({
         environmentId: '<id>',
         managementApiKey: '<apiKey>',
-        isPreview: false,
-        isSecure: false,
-        // optional filter to customize what items are exported
-        customItemsExport: async (client) => {
-            // return only the items you want to export by applying filters, parameters etc..
-            const response = await client.items().equalsFilter('elements.category', 'scifi').toAllPromise();
-            return response.data.items;
-        },
-        log: getDefaultLog()
+        log: getDefaultLog(),
+        exportItems: [
+            {
+                itemCodename: '<itemCodename>',
+                languageCodename: '<languageCodename>'
+            }
+        ]
     });
 
     const exportToolkit = new ExportToolkit({

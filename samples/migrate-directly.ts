@@ -1,5 +1,4 @@
-import { ImportToolkit } from '../lib/toolkit/index.js';
-import { IMigrationAsset, IMigrationItem, getDefaultLog } from '../lib/core/index.js';
+import { ImportToolkit, IMigrationAsset, IMigrationItem, getDefaultLog } from '../lib/index.js';
 
 const run = async () => {
     const migrationItems: IMigrationItem[] = [

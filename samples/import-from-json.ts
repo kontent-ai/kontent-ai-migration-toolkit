@@ -1,5 +1,4 @@
-import { ImportToolkit } from '../lib/toolkit/index.js';
-import { getDefaultLog } from '../lib/core/index.js';
+import { ImportToolkit, getDefaultLog } from '../lib/index.js';
 
 const run = async () => {
     const importToolkit = new ImportToolkit({
