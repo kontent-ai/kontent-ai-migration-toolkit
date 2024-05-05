@@ -200,6 +200,31 @@ async function processImportRichTextHtmlValueAsync(
         return objectTag;
     });
 
+    // replace link item codenames with id or external_id
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.linkRegex, (linkTag) => {
+        const codenameMatch = linkTag.match(richTextHelper.rteRegexes.rteLinkItemCodenameRegex);
+        if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
+            const codename = codenameMatch[1];
+
+            const itemState = importContext.getItemStateInTargetEnvironment(codename);
+
+            if (itemState.state === 'exists' && itemState.item) {
+                return linkTag.replaceAll(
+                    `${richTextHelper.rteLinkItemCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.dataItemIdAttributeName}="${itemState.item.id}"`
+                );
+            } else {
+              
+                return linkTag.replaceAll(
+                    `${richTextHelper.rteLinkItemCodenameAttribute}="${codename}"`,
+                    `${richTextHelper.dataItemExternalIdAttributeName}="${itemState.externalIdToUse}"`
+                );
+            }
+        }
+
+        return linkTag;
+    });
+
     // replace asset codenames with id or external_id
     richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.figureRegex, (figureTag) => {
         const codenameMatch = figureTag.match(richTextHelper.rteRegexes.rteAssetCodenameRegex);

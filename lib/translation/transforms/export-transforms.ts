@@ -215,6 +215,27 @@ function transformRichTextValue(richTextHtml: string | undefined, context: IExpo
         return objectTag;
     });
 
+    // replace link item ids with codenames
+    richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.linkRegex, (linkTag) => {
+        const itemIdMatch = linkTag.match(richTextHelper.rteRegexes.dataItemIdRegex);
+        if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
+            const itemId = itemIdMatch[1];
+
+            const itemInEnv = context.getItemStateInSourceEnvironment(itemId).item;
+
+            if (!itemInEnv) {
+                throw Error(`Failed to get item with id '${itemId}'`);
+            }
+
+            return linkTag.replaceAll(
+                `${richTextHelper.dataItemIdAttributeName}="${itemId}"`,
+                `${richTextHelper.rteLinkItemCodenameAttribute}="${itemInEnv.codename}"`
+            );
+        }
+
+        return linkTag;
+    });
+
     // replace asset ids with codenames
     richTextHtml = richTextHtml.replaceAll(richTextHelper.rteRegexes.figureRegex, (figureTag) => {
         const assetIdMatch = figureTag.match(richTextHelper.rteRegexes.dataAssetIdRegex);

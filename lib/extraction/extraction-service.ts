@@ -33,7 +33,12 @@ export class ExtractionService {
                 if (typeElement.type === 'rich_text') {
                     const rteValue = itemElement.value?.toString();
 
-                    itemIds.push(...this.richTextHelper.extractDataIdsFromManagementRte(rteValue));
+                    itemIds.push(
+                        ...[
+                            ...this.richTextHelper.extractDataIdsFromManagementRte(rteValue),
+                            ...this.richTextHelper.extracLinkItemIdsFromManagementRte(rteValue)
+                        ]
+                    );
                     assetIds.push(...this.richTextHelper.extractAssetIdsFromManagementRte(rteValue));
                 } else if (typeElement.type === 'modular_content' || typeElement.type === 'subpages') {
                     if (itemElement.value && Array.isArray(itemElement.value)) {
@@ -72,8 +77,13 @@ export class ExtractionService {
                 if (element.type === 'rich_text') {
                     const richTextHtml = element.value?.toString();
 
-                    itemCodenames.push(... this.richTextHelper.extractRteItemCodenamesFromRte(richTextHtml));
-                    assetCodenames.push(...this.richTextHelper.extractRteAssetCodenamesFromRte(richTextHtml));
+                    itemCodenames.push(
+                        ...[
+                            ...this.richTextHelper.extractRteItemCodenames(richTextHtml),
+                            ...this.richTextHelper.extractRteLinkItemCodenames(richTextHtml)
+                        ]
+                    );
+                    assetCodenames.push(...this.richTextHelper.extractRteAssetCodenames(richTextHtml));
                 } else if (element.type === 'modular_content' || element.type === 'subpages') {
                     itemCodenames.push(...parseArrayValue(element.value));
                 } else if (element.type === 'asset') {
