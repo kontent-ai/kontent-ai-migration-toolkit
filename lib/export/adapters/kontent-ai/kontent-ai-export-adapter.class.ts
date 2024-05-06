@@ -7,7 +7,7 @@ import {
     throwErrorForItemRequest
 } from '../../export.models.js';
 import colors from 'colors';
-import { AssetModels, ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
+import { AssetModels, CollectionModels, ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
 import {
     defaultRetryStrategy,
     IMigrationAsset,
@@ -151,7 +151,7 @@ export class KontentAiExportAdapter implements IExportAdapter {
             }
         }
 
-        return await this.getMigrationAssetsWithBinaryDataAsync(assets);
+        return await this.getMigrationAssetsWithBinaryDataAsync(assets, context);
     }
 
     private getManagementClient(config: IKontentAiExportAdapterConfig): ManagementClient {
@@ -165,7 +165,10 @@ export class KontentAiExportAdapter implements IExportAdapter {
         });
     }
 
-    private async getMigrationAssetsWithBinaryDataAsync(assets: AssetModels.Asset[]): Promise<IMigrationAsset[]> {
+    private async getMigrationAssetsWithBinaryDataAsync(
+        assets: AssetModels.Asset[],
+        context: IExportContext
+    ): Promise<IMigrationAsset[]> {
         this.config.log.console({
             type: 'info',
             message: `Preparing to download '${colors.yellow(assets.length.toString())}' assets`
@@ -183,13 +186,17 @@ export class KontentAiExportAdapter implements IExportAdapter {
             },
             items: assets,
             processFunc: async (asset) => {
+                const assetCollection: CollectionModels.Collection | undefined =
+                    context.environmentData.collections.find((m) => m.id === asset.collection?.reference?.id);
+
                 const migrationAsset: IMigrationAsset = {
                     _zipFilename: asset.codename,
                     filename: asset.fileName,
                     title: asset.title ?? '',
                     externalId: asset.externalId ?? getAssetExternalIdForCodename(asset.codename),
                     codename: asset.codename,
-                    binaryData: (await this.getBinaryDataFromUrlAsync(asset.url)).data
+                    binaryData: (await this.getBinaryDataFromUrlAsync(asset.url)).data,
+                    collection: assetCollection ? { codename: assetCollection.codename } : undefined
                 };
 
                 return migrationAsset;
