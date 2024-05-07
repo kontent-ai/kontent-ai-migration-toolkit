@@ -30,12 +30,12 @@ type Args = { [key: string]: string | unknown };
 
 const argv = yargs(process.argv.slice(2))
     .example(
-        'kontent-ai-migration-toolkit --action=export --format=csv|json --apiKey=xxx --environmentId=xxx',
-        'Creates zip export of Kontent.ai content data'
+        'kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --format=json --itemsFilename=items.zip --assetsFilename=assets.zip',
+        'Imports data into target environment'
     )
     .example(
-        'kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --filename=exportFile',
-        'Read given zip file and recreates data in Kontent.ai environment'
+        'kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json --language=default --items=itemA,itemB',
+        'Exports data from the environment'
     )
     .alias('a', 'action')
     .describe('a', 'Type of action to execute')
@@ -45,16 +45,12 @@ const argv = yargs(process.argv.slice(2))
     .describe('e', 'environmentId')
     .alias('mapi', 'apiKey')
     .describe('mapi', 'Management API Key')
-    .alias('sapi', 'secureApiKey')
-    .describe('sapi', 'API Key required when Delivery API has secure access enabled')
-    .alias('papi', 'previewApiKey')
-    .describe('papi', 'Use if you want to export data using Preview API')
-    .alias('ip', 'isPreview')
-    .describe('ip', 'Disables / enables use of preview API for export')
-    .alias('is', 'isSecure')
-    .describe('is', 'Disables / enables use of Secure API for export')
     .alias('a', 'action')
     .describe('a', 'Action to perform. One of: "export" | "import"')
+    .alias('i', 'items')
+    .describe('i', 'Comma separated item codenames to export')
+    .alias('l', 'language')
+    .describe('l', 'Language codename of items to export')
     .alias('if', 'itemsFilename')
     .describe('if', 'Name of items file to export / import')
     .alias('af', 'assetsFilename')
@@ -65,18 +61,6 @@ const argv = yargs(process.argv.slice(2))
     .describe('b', 'Custom base URL for Management API calls.')
     .alias('sfi', 'skipFailedItems')
     .describe('sfi', 'Indicates whether import should skip items that fail to import and cotinue with next item')
-    .alias('ril', 'replaceInvalidLinks')
-    .describe('ril', 'Instructs import to replace invalid links')
-    .alias('et', 'exportTypes')
-    .describe(
-        'et',
-        'CSV of content type codenames of which content items will be exported. If not provided, all content items of all types are exported'
-    )
-    .alias('el', 'exportLanguages')
-    .describe(
-        'el',
-        'CSV of language codenames of which content items will be exported. If not provided, all content items of all types are exported'
-    )
     .help('h')
     .alias('h', 'help').argv;
 
@@ -93,13 +77,27 @@ const exportAsync = async (config: ICliFileConfig) => {
         if (config.adapter === 'kontentAi') {
             if (!config.environmentId) {
                 logErrorAndExit({
-                    message: `Invalid 'environmentId'`
+                    message: `Invalid 'environmentId' parameter`
                 });
             }
 
             if (!config.managementApiKey) {
                 logErrorAndExit({
-                    message: `Invalid 'managementApiKey'`
+                    message: `Invalid 'managementApiKey' parameter`
+                });
+            }
+
+            const language = config.language;
+
+            if (!language) {
+                logErrorAndExit({
+                    message: `Invalid 'language' parameter`
+                });
+            }
+
+            if (!config.items) {
+                logErrorAndExit({
+                    message: `Invalid 'items' parameter`
                 });
             }
 
@@ -108,7 +106,12 @@ const exportAsync = async (config: ICliFileConfig) => {
                 environmentId: config.environmentId,
                 managementApiKey: config.managementApiKey,
                 baseUrl: config.baseUrl,
-                exportItems: []
+                exportItems: config.items.map((m) => {
+                    return {
+                        itemCodename: m,
+                        languageCodename: language
+                    };
+                })
             });
         } else {
             logErrorAndExit({
@@ -279,19 +282,15 @@ const getConfig = async () => {
         itemsFilename: getOptionalArgumentValue(resolvedArgs, 'itemsFilename'),
         assetsFilename: getOptionalArgumentValue(resolvedArgs, 'assetsFilename'),
         baseUrl: getOptionalArgumentValue(resolvedArgs, 'baseUrl'),
-        exportTypes:
-            getOptionalArgumentValue(resolvedArgs, 'exportTypes')
+        items:
+            getOptionalArgumentValue(resolvedArgs, 'items')
                 ?.split(',')
                 .map((m) => m.trim()) ?? [],
         skipFailedItems: getBooleanArgumentvalue(resolvedArgs, 'skipFailedItems', false),
-        secureApiKey: getOptionalArgumentValue(resolvedArgs, 'secureApiKey'),
-        previewApiKey: getOptionalArgumentValue(resolvedArgs, 'previewApiKey'),
-        isPreview: getBooleanArgumentvalue(resolvedArgs, 'isPreview', false),
-        isSecure: getBooleanArgumentvalue(resolvedArgs, 'isSecure', false),
-        replaceInvalidLinks: getBooleanArgumentvalue(resolvedArgs, 'replaceInvalidLinks', false),
         force: getBooleanArgumentvalue(resolvedArgs, 'force', false),
         adapter: mappedAdapter,
-        format: mappedFormat
+        format: mappedFormat,
+        language: getOptionalArgumentValue(resolvedArgs, 'language')
     };
 
     return config;

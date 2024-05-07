@@ -16,20 +16,15 @@ import { IKontentAiPreparedExportItem } from 'lib/export/export.models.js';
 export interface ICliFileConfig {
     adapter?: ExportAdapter;
     environmentId?: string;
-    previewApiKey?: string;
-    secureApiKey?: string;
     managementApiKey?: string;
     format: ProcessingFormat;
-    isPreview: boolean;
-    isSecure: boolean;
+    language?: string;
+    items?: string[];
     skipFailedItems: boolean;
-    replaceInvalidLinks: boolean;
     action: CliAction;
     itemsFilename?: string;
     assetsFilename?: string;
     baseUrl?: string;
-    exportTypes?: string[];
-    exportLanguages?: string[];
     force: boolean;
 }
 
