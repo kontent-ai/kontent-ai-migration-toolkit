@@ -33,15 +33,15 @@ export interface IImportFromFilesData {
 export class ImportToolkit {
     private readonly fileProcessorService: FileProcessorService;
     private readonly fileService: FileService;
+    private readonly importService: ImportService;
 
     constructor(private config: IImportToolkitConfig) {
         this.fileProcessorService = getFileProcessorService(config.log);
         this.fileService = getFileService(config.log);
+        this.importService = new ImportService(this.config);
     }
 
     async importAsync(data: IImportData): Promise<void> {
-        const importService = new ImportService(this.config);
-
         const importSourceData: IImportSource = {
             importData: {
                 items: data.items,
@@ -49,15 +49,14 @@ export class ImportToolkit {
             }
         };
 
-        await importService.importAsync(importSourceData);
+        await this.importService.importAsync(importSourceData);
     }
 
     async importFromFilesAsync(data: IImportFromFilesData): Promise<void> {
-        const importService = new ImportService(this.config);
         let importSourceData: IImportSource;
 
         // prepare content types
-        const contentTypes = await getFlattenedContentTypesAsync(importService.managementClient, this.config.log);
+        const contentTypes = await getFlattenedContentTypesAsync(this.importService.managementClient, this.config.log);
 
         switch (this.config.sourceType) {
             case 'zip': {
@@ -79,7 +78,7 @@ export class ImportToolkit {
             }
         }
 
-        await importService.importAsync(importSourceData);
+        await this.importService.importAsync(importSourceData);
     }
 
     private async getImportDataFromNonZipFileAsync(
