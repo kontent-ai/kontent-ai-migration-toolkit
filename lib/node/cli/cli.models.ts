@@ -1,11 +1,8 @@
-import { ExportAdapter, CliAction } from '../../core/index.js';
-import { ProcessingFormat } from '../../zip/zip.models.js';
+import { CliAction } from '../../core/index.js';
 
 export interface ICliFileConfig {
-    adapter?: ExportAdapter;
     environmentId?: string;
     managementApiKey?: string;
-    format: ProcessingFormat;
     language?: string;
     items?: string[];
     skipFailedItems: boolean;
@@ -17,4 +14,3 @@ export interface ICliFileConfig {
 }
 
 export type Args = { [key: string]: string | unknown };
-

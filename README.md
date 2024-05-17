@@ -4,10 +4,9 @@ The purpose of this tool is to facilitate migration to & from [Kontent.ai](https
 developer friendly abstraction layer.
 
 > [!TIP]  
-> This library uses intermediate `json` and `csv` formats (`csv` being experimental) to `export` from a Kontent.ai
-> environment and `import` to another. This can be done via CLI or via code. This library takes care of preparing
-> content items, language variants, moving items through workflow, publishing, archiving, downloading binary data,
-> uploading assets, id-codename translation and more.
+> This library aim to streamline the migration to / from Kontent.ai environment by providing a simple to use abstraction
+> layer and simplifies management of content items, language variants, moving items through workflow, publishing,
+> archiving, downloading binary data, uploading assets, `id` to `codename` translation and more.
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
 
@@ -34,15 +33,16 @@ kontent-ai-migration-toolkit --help
 > should first create a testing environment and run the script there to make sure everything works as you intended to.
 
 > [!NOTE]  
-> When importing it is essential that the target project structure (e.g. `Content types`, `Taxonomies`, `Collections`,
-> `Workflows`...) are consistent with the ones defined in source environment. Any inconsistency in data such as
-> referencing inexistent taxonomy term, incorrect element type and other inconsistencies may cause import to fail.
+> When importing it is essential that the target project structure (i.e. `Content types`, `Taxonomies`, `Collections`,
+> `Workflows`, `languages`...) are consistent with the ones defined in source environment. Any inconsistency in data
+> such as referencing inexistent taxonomy term, incorrect element type and other inconsistencies may cause import to
+> fail.
 
 ## How are content items & language variants imported?
 
 The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
-project (based on item's `codename`) the item will be updated instead. The workflow of imported language variant will be
-set according to `workflow_step` and `workflow` fields.
+project (based on item's `codename`) the item will be updated. The workflow will be set according to `workflow_step` and
+`workflow` fields.
 
 You can run `kontent-ai-migration-toolkit` many times over without being worried that identical content items will be
 created multiple times.
@@ -59,9 +59,8 @@ all. Otherwise the asset will be created in target environment.
 | **action**        | Action. Available options: `import` & `export` **(required)**                                                                                           |
 | **environmentId** | Id of Kontent.ai project **(required)**                                                                                                                 |
 | **apiKey**        | Management API key **(required)**                                                                                                                       |
-| **format**        | Format used to export data. Available options: `csv`, `json` or custom implementation **(required)**                                                    |
 | **itemsFilename** | Name of the items file that will be used to parse items **(required)**                                                                                  |
-| assetsFilename    | Name of the items file that will be used to parse assets (only zip supported)                                                                           |
+| assetsFilename    | Name of the items file that will be used to parse assets                                                                                                |
 | baseUrl           | Custom base URL for Kontent.ai API calls                                                                                                                |
 | skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
 | force             | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
@@ -78,7 +77,6 @@ kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --
 Examples of importing in code can be found at:
 
 1. [Import from json](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-from-json.ts)
-1. [Import from csv](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-from-csv.ts)
 1. [Import from zip](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-from-zip-sample.ts)
 1. [Direct import without files](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-directly.ts)
 
@@ -94,8 +92,6 @@ However, when migration from 3rd party system you typically only use the `import
 | **action**           | Action. Available options: `import` & `export` **(required)**                                                                    |
 | **environmentId**    | Id of Kontent.ai environment **(required)**                                                                                      |
 | **managementApiKey** | Management API key of Kontent.ai environment **(required)**                                                                      |
-| **adapter**          | Adapter used to export data into known format that can be used for importing data. Available options: `kontentAi` **(required)** |
-| **format**           | Format used to export data. Available options: `csv`, `json` **(required)**                                                      |
 | **language**         | Codename of language that items will be exported in **(required)**                                                               |
 | **items**            | Comma separated list of items that will be exported **(required)**                                                               |
 | itemsFilename        | Name of the items file that will be created in folder where script is run                                                        |
@@ -160,15 +156,14 @@ this library in code rather then via command line.
 
 ## Output / Input formats
 
-This library provides `csv` and `json` formats out of the box. However, you can create your own format by implementing
+This library provides `json` format out of the box. However, you can create your own format by implementing
 `IFormatService` and supplying that to import / export functions. This is useful if you need to extend the existing
-format, change how it's processing or just support new formats such as `xliff`, `xlxs`, `xml` or other.
+format, change how it's processing or just support new formats such as `xliff`, `xlxs`, `xml`, `csv` or other.
 
 Following is a list of `built-in` format services:
 
 | Type   | Service                     | Link                                                                                                                                                  |
 | ------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `csv`  | `ItemCsvProcessorService `  | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts         |
 | `json` | `ItemJsonProcessorService ` | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-joined-processor.service.ts |
 
 ## FAQ

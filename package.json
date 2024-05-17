@@ -45,8 +45,8 @@
         "Kontent.ai import",
         "Kontent.ai import toolkit",
         "Kontent.ai migration tool",
-        "Kontent.ai CSV export & import",
-        "Kontent.ai JSON export & import"
+        "Kontent.ai migrations",
+        "Kontent.ai data migrations"
     ],
     "license": "MIT",
     "dependencies": {
@@ -54,8 +54,6 @@
         "@kontent-ai/management-sdk": "6.3.0",
         "bytes": "3.1.2",
         "colors": "1.4.0",
-        "csv-parse": "5.5.6",
-        "json2csv": "5.0.7",
         "jszip": "3.10.1",
         "mime": "4.0.3",
         "uuid": "9.0.1",
@@ -67,7 +65,6 @@
     "devDependencies": {
         "@types/prompts": "2.4.9",
         "@types/bytes": "3.1.4",
-        "@types/json2csv": "5.0.7",
         "@types/jszip": "3.4.1",
         "@types/node": "20.12.12",
         "@types/uuid": "9.0.8",

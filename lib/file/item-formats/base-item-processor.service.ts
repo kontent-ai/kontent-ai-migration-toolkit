@@ -12,10 +12,6 @@ export abstract class BaseItemProcessorService implements IItemFormatService {
     abstract transformContentItemsAsync(data: ItemsTransformData): Promise<FileBinaryData>;
     abstract parseContentItemsAsync(data: ItemsParseData): Promise<IMigrationItem[]>;
 
-    protected getSystemContentItemFields(): string[] {
-        return ['type', 'codename', 'name', 'language', 'collection', 'last_modified', 'workflow_step'];
-    }
-
     protected getElement(
         types: IFlattenedContentType[],
         contentItemType: string,

@@ -8,7 +8,7 @@ export type ZipContext = 'node.js' | 'browser';
 
 export type FileBinaryData = Blob | Buffer;
 
-export type ProcessingFormat = 'csv' | 'json';
+export type ProcessingFormat = 'json';
 
 export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -22,7 +22,7 @@ export type ItemsParseData = {
     readonly types: IFlattenedContentType[];
 };
 
-export type ItemsFormatConfig = IItemFormatService | 'json' | 'csv';
+export type ItemsFormatConfig = IItemFormatService | 'json';
 
 export interface IItemFormatService {
     name: string;
@@ -39,7 +39,7 @@ export type AssetsParseData = {
     readonly zip: ZipPackage;
 };
 
-export type AssetsFormatConfig = IAssetFormatService | 'json' | 'csv';
+export type AssetsFormatConfig = IAssetFormatService | 'json';
 
 export interface IAssetFormatService {
     name: string;

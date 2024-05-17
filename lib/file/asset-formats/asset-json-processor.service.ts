@@ -19,7 +19,6 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
                 title: exportAsset.title,
                 codename: exportAsset.codename,
                 collection: exportAsset.collection,
-                folder: exportAsset.folder,
                 descriptions: exportAsset.descriptions
             });
 

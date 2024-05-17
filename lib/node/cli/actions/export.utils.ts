@@ -1,64 +1,50 @@
-import colors from 'colors';
 import { logErrorAndExit, withDefaultLogAsync } from '../../../core/index.js';
 import { ExportToolkit } from '../../../toolkit/index.js';
-import { IExportAdapter, KontentAiExportAdapter } from '../../../export/index.js';
+import { KontentAiExportAdapter } from '../../../export/index.js';
 import { ICliFileConfig } from '../cli.models.js';
-import { getAssetFormatService, getDefaultExportFilename, getItemFormatService } from '../utils/cli.utils.js';
+import { getDefaultExportFilename } from '../utils/cli.utils.js';
+import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 
 export async function exportAsync(config: ICliFileConfig): Promise<void> {
     await withDefaultLogAsync(async (log) => {
-        if (!config.adapter) {
+        if (!config.environmentId) {
             logErrorAndExit({
-                message: `Missing 'adapter' config`
+                message: `Invalid 'environmentId' parameter`
             });
         }
 
-        let adapter: IExportAdapter | undefined;
-
-        if (config.adapter === 'kontentAi') {
-            if (!config.environmentId) {
-                logErrorAndExit({
-                    message: `Invalid 'environmentId' parameter`
-                });
-            }
-
-            if (!config.managementApiKey) {
-                logErrorAndExit({
-                    message: `Invalid 'managementApiKey' parameter`
-                });
-            }
-
-            const language = config.language;
-
-            if (!language) {
-                logErrorAndExit({
-                    message: `Invalid 'language' parameter`
-                });
-            }
-
-            if (!config.items) {
-                logErrorAndExit({
-                    message: `Invalid 'items' parameter`
-                });
-            }
-
-            adapter = new KontentAiExportAdapter({
-                log: log,
-                environmentId: config.environmentId,
-                managementApiKey: config.managementApiKey,
-                baseUrl: config.baseUrl,
-                exportItems: config.items.map((m) => {
-                    return {
-                        itemCodename: m,
-                        languageCodename: language
-                    };
-                })
-            });
-        } else {
+        if (!config.managementApiKey) {
             logErrorAndExit({
-                message: `Missing adapter '${colors.red(config.adapter)}'`
+                message: `Invalid 'managementApiKey' parameter`
             });
         }
+
+        const language = config.language;
+
+        if (!language) {
+            logErrorAndExit({
+                message: `Invalid 'language' parameter`
+            });
+        }
+
+        if (!config.items) {
+            logErrorAndExit({
+                message: `Invalid 'items' parameter`
+            });
+        }
+
+        const adapter = new KontentAiExportAdapter({
+            log: log,
+            environmentId: config.environmentId,
+            managementApiKey: config.managementApiKey,
+            baseUrl: config.baseUrl,
+            exportItems: config.items.map((m) => {
+                return {
+                    itemCodename: m,
+                    languageCodename: language
+                };
+            })
+        });
 
         const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
         const assetsFilename = config.assetsFilename ?? getDefaultExportFilename('assets');
@@ -68,12 +54,12 @@ export async function exportAsync(config: ICliFileConfig): Promise<void> {
             adapter,
             items: {
                 filename: itemsFilename,
-                formatService: getItemFormatService(config.format)
+                formatService: new ItemJsonProcessorService()
             },
             assets: assetsFilename
                 ? {
                       filename: assetsFilename,
-                      formatService: getAssetFormatService(config.format)
+                      formatService: new AssetJsonProcessorService()
                   }
                 : undefined
         });

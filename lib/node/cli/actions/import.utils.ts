@@ -2,8 +2,8 @@ import colors from 'colors';
 import { getExtension, logErrorAndExit, confirmImportAsync, withDefaultLogAsync } from '../../../core/index.js';
 import { IImportToolkitConfig, ImportToolkit } from '../../../toolkit/index.js';
 import { ICliFileConfig } from '../cli.models.js';
-import { getAssetFormatService, getItemFormatService } from '../utils/cli.utils.js';
 import { ImportSourceType } from '../../../import/index.js';
+import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 
 export async function importAsync(config: ICliFileConfig): Promise<void> {
     const managementApiKey = config.managementApiKey;
@@ -36,8 +36,6 @@ export async function importAsync(config: ICliFileConfig): Promise<void> {
 
         if (itemsFileExtension?.endsWith('zip'.toLowerCase())) {
             sourceType = 'zip';
-        } else if (itemsFileExtension?.endsWith('csv'.toLowerCase())) {
-            sourceType = 'file';
         } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
             sourceType = 'file';
         } else {
@@ -69,13 +67,13 @@ export async function importAsync(config: ICliFileConfig): Promise<void> {
             items: itemsFilename
                 ? {
                       filename: itemsFilename,
-                      formatService: getItemFormatService(config.format)
+                      formatService: new ItemJsonProcessorService()
                   }
                 : undefined,
             assets: assetsFilename
                 ? {
                       filename: assetsFilename,
-                      formatService: getAssetFormatService(config.format)
+                      formatService: new AssetJsonProcessorService()
                   }
                 : undefined
         });
