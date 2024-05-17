@@ -6,7 +6,7 @@ import { richTextHelper } from '../helpers/rich-text.helper.js';
 const elementsBuilder = new LanguageVariantElementsBuilder();
 
 /**
- * General import transforms used to prepare parsed element values for Management API
+ * Import transforms for import (K.ai Management API) format
  */
 export const importTransforms: Readonly<Record<MigrationElementType, ImportTransformFunc>> = {
     guidelines: async (data) => {
@@ -39,7 +39,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(assetCodename);
 
             if (assetStateInTargetEnv.state === 'exists' && assetStateInTargetEnv.asset) {
-                // asset exists, use its id as reference
+                // asset exists, use its id as a reference
                 assetReferences.push({
                     id: assetStateInTargetEnv.asset.id
                 });

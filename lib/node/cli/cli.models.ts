@@ -15,3 +15,6 @@ export interface ICliFileConfig {
     baseUrl?: string;
     force: boolean;
 }
+
+export type Args = { [key: string]: string | unknown };
+

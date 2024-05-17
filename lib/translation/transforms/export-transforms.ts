@@ -4,7 +4,7 @@ import { ExportTransformFunc, IExportContext } from '../../export/index.js';
 import { richTextHelper } from '../helpers/rich-text.helper.js';
 
 /**
- * Elements transform used by Kontent.ai export adapter
+ * Element transforms used by Kontent.ai export adapter
  */
 export const exportTransforms: Readonly<Record<MigrationElementType, ExportTransformFunc>> = {
     text: (data) => data.value?.toString(),

@@ -51,8 +51,6 @@ export class ImportToolkit {
 
     async importFromFilesAsync(data: IImportFromFilesData): Promise<void> {
         let importSourceData: IImportSource;
-
-        // prepare content types
         const contentTypes = await getFlattenedContentTypesAsync(
             this.importService.getManagementClient(),
             this.config.log
@@ -86,7 +84,6 @@ export class ImportToolkit {
             contentTypes: IFlattenedContentType[];
         }
     ): Promise<IImportSource> {
-        // parse data from files
         const importSourceData = await this.fileProcessorService.parseFileAsync({
             items: data.items
                 ? {
@@ -109,7 +106,6 @@ export class ImportToolkit {
     private async getImportDataFromZipAsync(
         data: IImportFromFilesData & { contentTypes: IFlattenedContentType[] }
     ): Promise<IImportSource> {
-        // parse data from zip
         const importSourceData = await this.fileProcessorService.parseZipAsync({
             items: data.items
                 ? {
