@@ -1,8 +1,8 @@
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
 import { Readable } from 'stream';
-import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../file-processor.models.js';
-import { BaseItemProcessorService } from '../base-item-processor.service.js';
+import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../../zip/zip.models.js';
+import { BaseItemProcessorService } from './base-item-processor.service.js';
 import { IMigrationItem } from '../../core/index.js';
 
 interface ICsvItem {

@@ -1,15 +1,9 @@
 import { libMetadata } from '../metadata.js';
-import {
-    AssetsFormatConfig,
-    ItemsFormatConfig,
-    Log,
-    executeWithTrackingAsync,
-    getAssetsFormatService,
-    getItemsFormatService
-} from '../core/index.js';
+import { Log, executeWithTrackingAsync } from '../core/index.js';
 import { IExportAdapter, IExportAdapterResult } from '../export/index.js';
-import { FileProcessorService, getFileProcessorService } from '../file-processor/index.js';
-import { FileService, getFileService } from '../node/index.js';
+import { getAssetsFormatService, getItemsFormatService } from './helpers/toolkits-helper.js';
+import { AssetsFormatConfig, ItemsFormatConfig, ZipService, getZipService } from '../zip/index.js';
+import { FileService, getFileService } from '../file/index.js';
 
 export interface IExporToolkitConfig {
     log: Log;
@@ -25,12 +19,12 @@ export interface IExporToolkitConfig {
 }
 
 export class ExportToolkit {
-    private readonly fileProcessorService: FileProcessorService;
+    private readonly fileProcessorService: ZipService;
     private readonly fileService: FileService;
 
     constructor(private readonly config: IExporToolkitConfig) {
         this.fileService = getFileService(config.log);
-        this.fileProcessorService = getFileProcessorService(config.log);
+        this.fileProcessorService = getZipService(config.log);
     }
 
     async exportAsync(): Promise<IExportAdapterResult> {

@@ -1,22 +1,21 @@
-import { RichTextService, getRichTextService } from '../translation/index.js';
+import { RichTextService, getRichTextService } from './index.js';
 import {
     IMigrationItem,
     IReferencedDataInLanguageVariants,
     IReferencedDataInMigrationItems,
-    Log,
     parseArrayValue,
     uniqueStringFilter
 } from '../core/index.js';
 import { IKontentAiPreparedExportItem } from '../export/export.models.js';
 
-export function getExtractionService(log: Log): ExtractionService {
-    return new ExtractionService(log);
+export function getItemsExtractionService(): ItemsExtractionService {
+    return new ItemsExtractionService();
 }
 
-export class ExtractionService {
+export class ItemsExtractionService {
     private readonly richTextHelper: RichTextService = getRichTextService();
 
-    constructor(log: Log) {}
+    constructor() {}
 
     extractReferencedDataFromExportItems(items: IKontentAiPreparedExportItem[]): IReferencedDataInLanguageVariants {
         const itemIds: string[] = [];

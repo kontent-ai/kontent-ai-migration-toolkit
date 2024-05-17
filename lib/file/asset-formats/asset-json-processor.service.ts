@@ -1,6 +1,6 @@
 import { IMigrationAsset } from '../../core/index.js';
-import { AssetsParseData, AssetsTransformData, FileBinaryData } from '../file-processor.models.js';
-import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
+import { AssetsParseData, AssetsTransformData, FileBinaryData } from '../../zip/zip.models.js';
+import { BaseAssetProcessorService } from './base-asset-processor.service.js';
 
 type AssetRecord = Omit<IMigrationAsset, 'binaryData'>;
 

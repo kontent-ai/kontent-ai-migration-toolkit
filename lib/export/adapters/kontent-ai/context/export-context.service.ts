@@ -1,12 +1,12 @@
 import {
+    IExportContext,
+    IExportContextEnvironmentData,
     IKontentAiExportRequestItem,
     IKontentAiPreparedExportItem,
     throwErrorForItemRequest
 } from '../../../export.models.js';
 import {
     IAssetStateInSourceEnvironmentById,
-    IExportContext,
-    IExportContextEnvironmentData,
     IItemStateInSourceEnvironmentById,
     Log,
     getFlattenedContentTypesAsync,
@@ -15,7 +15,7 @@ import {
     processInChunksAsync,
     uniqueStringFilter
 } from '../../../../core/index.js';
-import { ExtractionService, getExtractionService } from '../../../../extraction/extraction-service.js';
+import { ItemsExtractionService, getItemsExtractionService } from '../../../../translation/items-extraction.service.js';
 import {
     AssetModels,
     CollectionModels,
@@ -33,15 +33,13 @@ export function getExportContextService(log: Log, managementClient: ManagementCl
 }
 
 export class ExportContextService {
-    private readonly extractionService: ExtractionService;
+    private readonly extractionService: ItemsExtractionService;
 
     constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {
-        this.extractionService = getExtractionService(log);
+        this.extractionService = getItemsExtractionService();
     }
 
-    async getExportContextAsync(data: {
-        exportItems: IKontentAiExportRequestItem[];
-    }): Promise<IExportContext> {
+    async getExportContextAsync(data: { exportItems: IKontentAiExportRequestItem[] }): Promise<IExportContext> {
         const environmentData: IExportContextEnvironmentData = {
             collections: await this.getAllCollectionsAsync(),
             contentTypes: await getFlattenedContentTypesAsync(this.managementClient, this.log),

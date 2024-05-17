@@ -1,8 +1,32 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
-import { IMigrationItem, IMigrationAsset, Log } from '../core/index.js';
+import {
+    IMigrationItem,
+    IMigrationAsset,
+    Log,
+    IAssetStateInTargetEnvironmentByCodename,
+    IItemStateInTargetEnvironmentByCodename,
+    IReferencedDataInMigrationItems
+} from '../core/index.js';
+import { ElementContracts } from '@kontent-ai/management-sdk';
 
 export type ImportSourceType = 'zip' | 'file';
+
+export interface IImportContext {
+    componentItems: IMigrationItem[];
+    contentItems: IMigrationItem[];
+    referencedData: IReferencedDataInMigrationItems;
+    itemsInTargetEnvironment: IItemStateInTargetEnvironmentByCodename[];
+    getItemStateInTargetEnvironment: (codename: string) => IItemStateInTargetEnvironmentByCodename;
+    getAssetStateInTargetEnvironment: (codename: string) => IAssetStateInTargetEnvironmentByCodename;
+}
+
+export type ImportTransformFunc = (data: {
+    value: string | string[] | undefined;
+    elementCodename: string;
+    importContext: IImportContext;
+    sourceItems: IMigrationItem[];
+}) => Promise<ElementContracts.IContentItemElementContract>;
 
 export interface IImportConfig {
     log: Log;

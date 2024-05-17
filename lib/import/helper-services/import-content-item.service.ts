@@ -1,6 +1,5 @@
 import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 import {
-    IImportContext,
     extractErrorData,
     logErrorAndExit,
     IMigrationItem,
@@ -8,6 +7,7 @@ import {
     getItemExternalIdForCodename
 } from '../../core/index.js';
 import colors from 'colors';
+import { IImportContext } from '../import.models.js';
 
 export function getImportContentItemService(config: {
     log: Log;

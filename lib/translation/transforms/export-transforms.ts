@@ -1,6 +1,7 @@
-import { ExportTransformFunc, IExportContext, MigrationElementType } from '../../core/index.js';
+import { MigrationElementType } from '../../core/index.js';
 import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
 import { RichTextService, getRichTextService } from '../rich-text.service.js';
+import { ExportTransformFunc, IExportContext } from '../../export/index.js';
 
 const richTextService: RichTextService = getRichTextService();
 

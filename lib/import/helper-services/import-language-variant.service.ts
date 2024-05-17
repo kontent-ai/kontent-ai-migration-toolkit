@@ -7,7 +7,6 @@ import {
     LanguageVariantElements
 } from '@kontent-ai/management-sdk';
 import {
-    IImportContext,
     extractErrorData,
     is404Error,
     logErrorAndExit,
@@ -19,6 +18,7 @@ import {
 import { ImportWorkflowService, getImportWorkflowService } from './import-workflow.service.js';
 import colors from 'colors';
 import { importTransforms } from '../../translation/index.js';
+import { IImportContext } from '../import.models.js';
 
 export function getImportLanguageVariantstemService(config: {
     managementClient: ManagementClient;

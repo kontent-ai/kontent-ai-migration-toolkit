@@ -1,8 +1,8 @@
 import { parse } from 'csv-parse';
 import { AsyncParser, FieldInfo } from 'json2csv';
 import { Readable } from 'stream';
-import { AssetsParseData, AssetsTransformData, FileBinaryData } from '../file-processor.models.js';
-import { BaseAssetProcessorService } from '../base-asset-processor.service.js';
+import { AssetsParseData, AssetsTransformData, FileBinaryData } from '../../zip/zip.models.js';
+import { BaseAssetProcessorService } from './base-asset-processor.service.js';
 import { IMigrationAsset } from '../../core/index.js';
 
 export class AssetCsvProcessorService extends BaseAssetProcessorService {

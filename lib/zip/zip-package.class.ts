@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import colors from 'colors';
 import { Log, formatBytes, logErrorAndExit } from '../core/index.js';
-import { FileBinaryData, ZipCompressionLevel, ZipContext } from './file-processor.models.js';
+import { FileBinaryData, ZipCompressionLevel, ZipContext } from './zip.models.js';
 
 interface IFileResult<T> {
     data: T;

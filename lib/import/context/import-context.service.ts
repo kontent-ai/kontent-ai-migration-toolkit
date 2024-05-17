@@ -1,7 +1,6 @@
 import { IImportData } from '../../toolkit/index.js';
 import {
     IAssetStateInTargetEnvironmentByCodename,
-    IImportContext,
     IItemStateInTargetEnvironmentByCodename,
     Log,
     getAssetExternalIdForCodename,
@@ -10,18 +9,19 @@ import {
     processInChunksAsync,
     uniqueStringFilter
 } from '../../core/index.js';
-import { ExtractionService, getExtractionService } from '../../extraction/extraction-service.js';
+import { ItemsExtractionService, getItemsExtractionService } from '../../translation/items-extraction.service.js';
 import { AssetModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
+import { IImportContext } from '../import.models.js';
 
 export function getImportContextService(log: Log, managementClient: ManagementClient): ImportContextService {
     return new ImportContextService(log, managementClient);
 }
 
 export class ImportContextService {
-    private readonly extractionService: ExtractionService;
+    private readonly extractionService: ItemsExtractionService;
 
     constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {
-        this.extractionService = getExtractionService(log);
+        this.extractionService = getItemsExtractionService();
     }
 
     async getImportContextAsync(dataToImport: IImportData): Promise<IImportContext> {

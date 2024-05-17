@@ -4,7 +4,7 @@ import {
     ContentTypeElements,
     ManagementClient
 } from '@kontent-ai/management-sdk';
-import { IFlattenedContentType, IFlattenedContentTypeElement } from './core.models.js';
+import { IFlattenedContentType, IFlattenedContentTypeElement } from '../models/core.models.js';
 import { Log, logErrorAndExit, logFetchedItems } from './log-helper.js';
 import colors from 'colors';
 

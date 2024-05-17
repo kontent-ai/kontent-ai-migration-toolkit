@@ -8,15 +8,15 @@ import {
     ZipCompressionLevel,
     IAssetFormatService,
     FileBinaryData
-} from './file-processor.models.js';
+} from './zip.models.js';
 import { IMigrationItem, IMigrationAsset, Log, IFlattenedContentType } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
-export function getFileProcessorService(log: Log): FileProcessorService {
-    return new FileProcessorService(log);
+export function getZipService(log: Log): ZipService {
+    return new ZipService(log);
 }
 
-export class FileProcessorService {
+export class ZipService {
     constructor(private readonly log: Log) {}
 
     async parseZipAsync(data: {

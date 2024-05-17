@@ -2,6 +2,7 @@ import { HttpService } from '@kontent-ai/core-sdk';
 import {
     IExportAdapter,
     IExportAdapterResult,
+    IExportContext,
     IKontentAiExportAdapterConfig,
     IKontentAiPreparedExportItem,
     throwErrorForItemRequest
@@ -14,7 +15,6 @@ import {
     IMigrationElement,
     IMigrationItem,
     defaultHttpService,
-    IExportContext,
     IFlattenedContentTypeElement,
     extractErrorData,
     processInChunksAsync,

@@ -1,5 +1,5 @@
-import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../file-processor.models.js';
-import { BaseItemProcessorService } from '../base-item-processor.service.js';
+import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../../zip/zip.models.js';
+import { BaseItemProcessorService } from './base-item-processor.service.js';
 import { IJsonItem, mapToJsonItem, parseJsonItem } from './helpers/json-item.helper.js';
 import { IMigrationItem } from '../../core/index.js';
 

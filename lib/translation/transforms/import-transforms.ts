@@ -1,12 +1,7 @@
 import { SharedContracts, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
-import {
-    ImportTransformFunc,
-    parseArrayValue,
-    logErrorAndExit,
-    MigrationElementType,
-    IImportContext
-} from '../../core/index.js';
+import { parseArrayValue, logErrorAndExit, MigrationElementType } from '../../core/index.js';
 import { RichTextService, getRichTextService } from '../rich-text.service.js';
+import { IImportContext, ImportTransformFunc } from '../../import/index.js';
 
 const elementsBuilder = new LanguageVariantElementsBuilder();
 const richTextService: RichTextService = getRichTextService();

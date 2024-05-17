@@ -1,16 +1,13 @@
+import { AssetsFormatConfig, ItemsFormatConfig, ZipService, getZipService } from '../zip/index.js';
 import {
-    AssetsFormatConfig,
     IFlattenedContentType,
     IMigrationAsset,
     IMigrationItem,
-    ItemsFormatConfig,
-    getAssetsFormatService,
-    getFlattenedContentTypesAsync,
-    getItemsFormatService
+    getFlattenedContentTypesAsync
 } from '../core/index.js';
-import { FileProcessorService, getFileProcessorService } from '../file-processor/index.js';
 import { IImportConfig, IImportSource, ImportService } from '../import/index.js';
-import { FileService, getFileService } from '../node/index.js';
+import { getAssetsFormatService, getItemsFormatService } from './helpers/toolkits-helper.js';
+import { FileService, getFileService } from '../file/index.js';
 
 export interface IImportToolkitConfig extends IImportConfig {}
 
@@ -31,12 +28,12 @@ export interface IImportFromFilesData {
 }
 
 export class ImportToolkit {
-    private readonly fileProcessorService: FileProcessorService;
+    private readonly fileProcessorService: ZipService;
     private readonly fileService: FileService;
     private readonly importService: ImportService;
 
     constructor(private config: IImportToolkitConfig) {
-        this.fileProcessorService = getFileProcessorService(config.log);
+        this.fileProcessorService = getZipService(config.log);
         this.fileService = getFileService(config.log);
         this.importService = new ImportService(this.config);
     }

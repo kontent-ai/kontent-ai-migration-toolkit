@@ -6,14 +6,8 @@ import {
     createManagementClient
 } from '@kontent-ai/management-sdk';
 
-import {
-    IImportContext,
-    defaultRetryStrategy,
-    defaultHttpService,
-    IMigrationItem,
-    executeWithTrackingAsync
-} from '../core/index.js';
-import { IImportConfig, IImportSource } from './import.models.js';
+import { defaultRetryStrategy, defaultHttpService, IMigrationItem, executeWithTrackingAsync } from '../core/index.js';
+import { IImportConfig, IImportContext, IImportSource } from './import.models.js';
 import { ImportAssetsService, getImportAssetsService } from './helper-services/import-assets.service.js';
 import { ImportContentItemHelper, getImportContentItemService } from './helper-services/import-content-item.service.js';
 import {

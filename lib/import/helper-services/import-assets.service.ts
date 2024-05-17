@@ -1,7 +1,8 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportContext, IMigrationAsset, Log, is404Error, processInChunksAsync } from '../../core/index.js';
+import { IMigrationAsset, Log, is404Error, processInChunksAsync } from '../../core/index.js';
 import mime from 'mime';
 import colors from 'colors';
+import { IImportContext } from '../import.models.js';
 
 export function getImportAssetsService(log: Log, managementClient: ManagementClient): ImportAssetsService {
     return new ImportAssetsService(log, managementClient);

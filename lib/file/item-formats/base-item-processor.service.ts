@@ -1,5 +1,10 @@
-import { IItemFormatService, ItemsTransformData, ItemsParseData, FileBinaryData } from './file-processor.models.js';
-import { IFlattenedContentType, IFlattenedContentTypeElement, IMigrationItem, logErrorAndExit } from '../core/index.js';
+import { IItemFormatService, ItemsTransformData, ItemsParseData, FileBinaryData } from '../../zip/zip.models.js';
+import {
+    IFlattenedContentType,
+    IFlattenedContentTypeElement,
+    IMigrationItem,
+    logErrorAndExit
+} from '../../core/index.js';
 import colors from 'colors';
 
 export abstract class BaseItemProcessorService implements IItemFormatService {

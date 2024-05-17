@@ -22,6 +22,8 @@ export type ItemsParseData = {
     readonly types: IFlattenedContentType[];
 };
 
+export type ItemsFormatConfig = IItemFormatService | 'json' | 'csv';
+
 export interface IItemFormatService {
     name: string;
     transformContentItemsAsync(data: ItemsTransformData): Promise<FileBinaryData>;
@@ -36,6 +38,8 @@ export type AssetsTransformData = {
 export type AssetsParseData = {
     readonly zip: ZipPackage;
 };
+
+export type AssetsFormatConfig = IAssetFormatService | 'json' | 'csv';
 
 export interface IAssetFormatService {
     name: string;

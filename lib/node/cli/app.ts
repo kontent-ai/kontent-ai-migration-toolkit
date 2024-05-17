@@ -4,7 +4,6 @@ import colors from 'colors';
 import yargs from 'yargs';
 
 import {
-    ICliFileConfig,
     CliAction,
     getExtension,
     ExportAdapter,
@@ -13,18 +12,18 @@ import {
     confirmImportAsync,
     withDefaultLogAsync
 } from '../../core/index.js';
-import {
-    ItemCsvProcessorService,
-    ProcessingFormat,
-    IItemFormatService,
-    ItemJsonProcessorService,
-    IAssetFormatService,
-    AssetCsvProcessorService,
-    AssetJsonProcessorService
-} from '../../file-processor/index.js';
+
 import { ExportToolkit, IImportToolkitConfig, ImportToolkit } from '../../toolkit/index.js';
 import { IExportAdapter, KontentAiExportAdapter } from '../../export/index.js';
 import { ImportSourceType } from '../../import/index.js';
+import { IAssetFormatService, IItemFormatService, ProcessingFormat } from '../../zip/index.js';
+import {
+    AssetCsvProcessorService,
+    AssetJsonProcessorService,
+    ItemCsvProcessorService,
+    ItemJsonProcessorService
+} from '../../file/index.js';
+import { ICliFileConfig } from './cli.config.js';
 
 type Args = { [key: string]: string | unknown };
 
