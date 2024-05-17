@@ -41,20 +41,9 @@ export class KontentAiExportAdapter implements IExportAdapter {
     }
 
     async exportAsync(): Promise<IExportAdapterResult> {
-        const sourceEnvironment = (
-            await createManagementClient({
-                apiKey: this.config.managementApiKey,
-                environmentId: this.config.environmentId
-            })
-                .environmentInformation()
-                .toPromise()
-        ).data.project;
-
         this.config.log.console({
             type: 'info',
-            message: `Preparing export from environment ${colors.yellow(
-                sourceEnvironment.environment
-            )} in project ${colors.cyan(sourceEnvironment.name)}`
+            message: `Preparing to export data`
         });
 
         const exportContext = await this.exportContextService.getExportContextAsync({

@@ -1,4 +1,4 @@
-import { getDefaultLog, logErrorAndExit } from '../../../core/index.js';
+import { confirmActionAsync, getDefaultLog, logErrorAndExit } from '../../../core/index.js';
 import { ExportToolkit } from '../../../toolkit/index.js';
 import { KontentAiExportAdapter } from '../../../export/index.js';
 import { ICliFileConfig } from '../cli.models.js';
@@ -15,9 +15,9 @@ export async function exportAsync(config: ICliFileConfig): Promise<void> {
         });
     }
 
-    if (!config.managementApiKey) {
+    if (!config.apiKey) {
         logErrorAndExit({
-            message: `Invalid 'managementApiKey' parameter`
+            message: `Invalid 'apiKey' parameter`
         });
     }
 
@@ -33,10 +33,18 @@ export async function exportAsync(config: ICliFileConfig): Promise<void> {
         });
     }
 
+    await confirmActionAsync({
+        action: 'export',
+        force: config.force,
+        apiKey: config.apiKey,
+        environmentId: config.environmentId,
+        log: log
+    });
+
     const adapter = new KontentAiExportAdapter({
         log: log,
         environmentId: config.environmentId,
-        managementApiKey: config.managementApiKey,
+        managementApiKey: config.apiKey,
         baseUrl: config.baseUrl,
         exportItems: config.items.map((m) => {
             return {

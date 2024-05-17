@@ -1,5 +1,5 @@
 import colors from 'colors';
-import { getExtension, logErrorAndExit, confirmImportAsync, getDefaultLog } from '../../../core/index.js';
+import { getExtension, logErrorAndExit, confirmActionAsync, getDefaultLog } from '../../../core/index.js';
 import { IImportToolkitConfig, ImportToolkit } from '../../../toolkit/index.js';
 import { ICliFileConfig } from '../cli.models.js';
 import { ImportSourceType } from '../../../import/index.js';
@@ -7,12 +7,12 @@ import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../fi
 
 export async function importAsync(config: ICliFileConfig): Promise<void> {
     const log = getDefaultLog();
-    const managementApiKey = config.managementApiKey;
+    const apiKey = config.apiKey;
     const environmentId = config.environmentId;
 
-    if (!managementApiKey) {
+    if (!apiKey) {
         logErrorAndExit({
-            message: `Missing 'managementApiKey' configuration option`
+            message: `Missing 'apiKey' configuration option`
         });
     }
     if (!environmentId) {
@@ -21,9 +21,10 @@ export async function importAsync(config: ICliFileConfig): Promise<void> {
         });
     }
 
-    await confirmImportAsync({
+    await confirmActionAsync({
+        action: 'import',
         force: config.force,
-        apiKey: managementApiKey,
+        apiKey: apiKey,
         environmentId: environmentId,
         log: log
     });
@@ -51,7 +52,7 @@ export async function importAsync(config: ICliFileConfig): Promise<void> {
         skipFailedItems: config.skipFailedItems,
         baseUrl: config.baseUrl,
         environmentId: environmentId,
-        managementApiKey: managementApiKey,
+        managementApiKey: apiKey,
         canImport: {
             contentItem: (item) => {
                 return true;

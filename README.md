@@ -87,16 +87,16 @@ However, when migration from 3rd party system you typically only use the `import
 
 ## Export from Kontent.ai Configuration
 
-| Config               | Value                                                                                                                            |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **action**           | Action. Available options: `import` & `export` **(required)**                                                                    |
-| **environmentId**    | Id of Kontent.ai environment **(required)**                                                                                      |
-| **managementApiKey** | Management API key of Kontent.ai environment **(required)**                                                                      |
-| **language**         | Codename of language that items will be exported in **(required)**                                                               |
-| **items**            | Comma separated list of items that will be exported **(required)**                                                               |
-| itemsFilename        | Name of the items file that will be created in folder where script is run                                                        |
-| assetsFilename       | Name of the assets file that will be created in folder where script is run. Only zip is supported.                               |
-| baseUrl              | Custom base URL for Kontent.ai API calls                                                                                         |
+| Config            | Value                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| **action**        | Action. Available options: `import` & `export` **(required)**                                      |
+| **environmentId** | Id of Kontent.ai environment **(required)**                                                        |
+| **apiKey**        | Management API key of Kontent.ai environment **(required)**                                        |
+| **language**      | Codename of language that items will be exported in **(required)**                                 |
+| **items**         | Comma separated list of items that will be exported **(required)**                                 |
+| itemsFilename     | Name of the items file that will be created in folder where script is run                          |
+| assetsFilename    | Name of the assets file that will be created in folder where script is run. Only zip is supported. |
+| baseUrl           | Custom base URL for Kontent.ai API calls                                                           |
 
 ## Export CLI samples
 
@@ -138,7 +138,7 @@ Create a `json` configuration file in the folder where you are attempting to run
 ```json
 {
     "environmentId": "x",
-    "secureApiKey": "y"
+    "apiKey": "y"
     // other props
 }
 ```

@@ -2,7 +2,7 @@ import { CliAction } from '../../core/index.js';
 
 export interface ICliFileConfig {
     environmentId?: string;
-    managementApiKey?: string;
+    apiKey?: string;
     language?: string;
     items?: string[];
     skipFailedItems: boolean;

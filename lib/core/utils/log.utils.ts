@@ -2,7 +2,7 @@ import colors from 'colors';
 import prompts from 'prompts';
 import ora from 'ora';
 import { ManagementClient } from '@kontent-ai/management-sdk';
-import { ActionType, FetchItemType, ItemType } from '../models/core.models.js';
+import { ActionType, CliAction, FetchItemType, ItemType } from '../models/core.models.js';
 import { exitProcess } from './global.utils.js';
 
 interface ILogCount {
@@ -99,7 +99,8 @@ export function getLogDataMessage(data: ILogData): string {
     return `${typeColor(data.type)}: ${data.message}`;
 }
 
-export async function confirmImportAsync(data: {
+export async function confirmActionAsync(data: {
+    action: CliAction;
     force: boolean;
     environmentId: string;
     apiKey: string;
@@ -120,12 +121,18 @@ export async function confirmImportAsync(data: {
             message: `Skipping confirmation prompt due to the use of force param`
         });
     } else {
+        const text: string =
+            data.action === 'export'
+                ? `Are you sure to export data from ${colors.yellow(targetEnvironment.name)} -> ${colors.yellow(
+                      targetEnvironment.environment
+                  )}?`
+                : `Are you sure to import data into ${colors.yellow(targetEnvironment.name)} -> ${colors.yellow(
+                      targetEnvironment.environment
+                  )}?`;
         const confirmed = await prompts({
             type: 'confirm',
             name: 'confirm',
-            message: `Are you sure to import data into ${colors.yellow(
-                targetEnvironment.environment
-            )} environment of project ${colors.cyan(targetEnvironment.name)}?`
+            message: `${colors.cyan(data.action)}: ${text}`
         });
 
         if (!confirmed.confirm) {

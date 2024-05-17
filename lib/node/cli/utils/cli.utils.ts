@@ -18,7 +18,7 @@ export async function getCliConfigAsync(cliArgs: CliArgs): Promise<ICliFileConfi
 
     const config: ICliFileConfig = {
         action: action,
-        managementApiKey: getOptionalArgumentValue(resolvedArgs, 'managementApiKey'),
+        apiKey: getOptionalArgumentValue(resolvedArgs, 'apiKey'),
         environmentId: getRequiredArgumentValue(resolvedArgs, 'environmentId'),
         itemsFilename: getOptionalArgumentValue(resolvedArgs, 'itemsFilename'),
         assetsFilename: getOptionalArgumentValue(resolvedArgs, 'assetsFilename'),
