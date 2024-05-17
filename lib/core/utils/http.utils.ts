@@ -1,5 +1,4 @@
-import { HttpService } from '@kontent-ai/core-sdk';
-import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
+import { HttpService, IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 const rateExceededErrorCode: number = 10000;
 

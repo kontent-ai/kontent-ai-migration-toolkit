@@ -1,10 +1,9 @@
 import { SharedContracts, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
 import { parseArrayValue, logErrorAndExit, MigrationElementType } from '../../core/index.js';
-import { RichTextService, getRichTextService } from '../rich-text.service.js';
 import { IImportContext, ImportTransformFunc } from '../../import/index.js';
+import { richTextHelper } from '../helpers/rich-text.helper.js';
 
 const elementsBuilder = new LanguageVariantElementsBuilder();
-const richTextService: RichTextService = getRichTextService();
 
 /**
  * General import transforms used to prepare parsed element values for Management API
@@ -172,7 +171,7 @@ async function processImportRichTextHtmlValueAsync(
     }
 
     // replace item codenames with id or external_id
-    richTextHtml = richTextService.processRteItemCodenames(richTextHtml, (codename) => {
+    richTextHtml = richTextHelper.processRteItemCodenames(richTextHtml, (codename) => {
         const itemState = importContext.getItemStateInTargetEnvironment(codename);
 
         if (itemState.state === 'exists' && itemState.item) {
@@ -187,7 +186,7 @@ async function processImportRichTextHtmlValueAsync(
     }).html;
 
     // replace link item codenames with id or external_id
-    richTextHtml = richTextService.processRteLinkItemCodenames(richTextHtml, (codename) => {
+    richTextHtml = richTextHelper.processRteLinkItemCodenames(richTextHtml, (codename) => {
         const itemState = importContext.getItemStateInTargetEnvironment(codename);
 
         if (itemState.state === 'exists' && itemState.item) {
@@ -202,7 +201,7 @@ async function processImportRichTextHtmlValueAsync(
     }).html;
 
     // replace asset codenames with id or external_id
-    richTextHtml = richTextService.processRteAssetCodenames(richTextHtml, (codename) => {
+    richTextHtml = richTextHelper.processRteAssetCodenames(richTextHtml, (codename) => {
         const assetState = importContext.getAssetStateInTargetEnvironment(codename);
 
         if (assetState.state === 'exists' && assetState.asset) {

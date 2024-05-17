@@ -9,23 +9,20 @@ import {
     processInChunksAsync,
     uniqueStringFilter
 } from '../../core/index.js';
-import { ItemsExtractionService, getItemsExtractionService } from '../../translation/items-extraction.service.js';
+
 import { AssetModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 import { IImportContext } from '../import.models.js';
+import { itemsExtractionHelper } from '../../translation/index.js';
 
 export function getImportContextService(log: Log, managementClient: ManagementClient): ImportContextService {
     return new ImportContextService(log, managementClient);
 }
 
 export class ImportContextService {
-    private readonly extractionService: ItemsExtractionService;
-
-    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {
-        this.extractionService = getItemsExtractionService();
-    }
+    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
 
     async getImportContextAsync(dataToImport: IImportData): Promise<IImportContext> {
-        const referencedData = this.extractionService.extractReferencedItemsFromMigrationItems(dataToImport.items);
+        const referencedData = itemsExtractionHelper.extractReferencedItemsFromMigrationItems(dataToImport.items);
         const contentItems = dataToImport.items.filter((m) => m.system.workflow);
 
         const itemCodenamesToCheckInTargetEnv: string[] = [

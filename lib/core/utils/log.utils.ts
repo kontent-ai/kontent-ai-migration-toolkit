@@ -1,10 +1,9 @@
 import colors from 'colors';
-
-import { ActionType, FetchItemType, ItemType } from '../models/core.models.js';
+import prompts from 'prompts';
 import ora from 'ora';
 import { ManagementClient } from '@kontent-ai/management-sdk';
-import prompts from 'prompts';
-import { exitProcess } from './global-helper.js';
+import { ActionType, FetchItemType, ItemType } from '../models/core.models.js';
+import { exitProcess } from './global.utils.js';
 
 interface ILogCount {
     index: number;

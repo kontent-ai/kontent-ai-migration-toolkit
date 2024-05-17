@@ -18,8 +18,12 @@ import colors from 'colors';
 import { libMetadata } from '../metadata.js';
 import { ImportContextService, getImportContextService } from './context/import-context.service.js';
 
+export function getImportService(config: IImportConfig): ImportService {
+    return new ImportService(config);
+}
+
 export class ImportService {
-    public readonly managementClient: ManagementClient;
+    private readonly managementClient: ManagementClient;
     private readonly importAssetsService: ImportAssetsService;
     private readonly importContentItemService: ImportContentItemHelper;
     private readonly importLanguageVariantService: ImportLanguageVariantServices;
@@ -46,6 +50,10 @@ export class ImportService {
             skipFailedItems: config.skipFailedItems
         });
         this.importContextService = getImportContextService(config.log, this.managementClient);
+    }
+
+    getManagementClient(): ManagementClient {
+        return this.managementClient;
     }
 
     async importAsync(sourceData: IImportSource): Promise<IImportContext> {
@@ -165,7 +173,7 @@ export class ImportService {
         const workflows = await this.getWorkflowsAsync();
         const collections = await this.getCollectionsAsync();
 
-        // first prepare content items
+        // first prepare all content items
         const preparedContentItems: ContentItemModels.ContentItem[] =
             await this.importContentItemService.importContentItemsAsync({
                 collections: collections,

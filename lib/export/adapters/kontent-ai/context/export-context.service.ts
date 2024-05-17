@@ -15,7 +15,6 @@ import {
     processInChunksAsync,
     uniqueStringFilter
 } from '../../../../core/index.js';
-import { ItemsExtractionService, getItemsExtractionService } from '../../../../translation/items-extraction.service.js';
 import {
     AssetModels,
     CollectionModels,
@@ -27,17 +26,14 @@ import {
     WorkflowModels
 } from '@kontent-ai/management-sdk';
 import colors from 'colors';
+import { itemsExtractionHelper } from '../../../../translation/index.js';
 
 export function getExportContextService(log: Log, managementClient: ManagementClient): ExportContextService {
     return new ExportContextService(log, managementClient);
 }
 
 export class ExportContextService {
-    private readonly extractionService: ItemsExtractionService;
-
-    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {
-        this.extractionService = getItemsExtractionService();
-    }
+    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
 
     async getExportContextAsync(data: { exportItems: IKontentAiExportRequestItem[] }): Promise<IExportContext> {
         const environmentData: IExportContextEnvironmentData = {
@@ -62,7 +58,7 @@ export class ExportContextService {
             message: `Extracting referenced items from content`
         });
 
-        const referencedData = this.extractionService.extractReferencedDataFromExportItems(preparedItems);
+        const referencedData = itemsExtractionHelper.extractReferencedDataFromExportItems(preparedItems);
 
         // fetch both referenced items and items that are set to be exported
         const itemIdsToCheckInTargetEnv: string[] = [

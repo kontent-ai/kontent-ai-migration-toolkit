@@ -5,8 +5,8 @@ import {
     IMigrationItem,
     getFlattenedContentTypesAsync
 } from '../core/index.js';
-import { IImportConfig, IImportSource, ImportService } from '../import/index.js';
-import { getAssetsFormatService, getItemsFormatService } from './helpers/toolkits-helper.js';
+import { IImportConfig, IImportSource, ImportService, getImportService } from '../import/index.js';
+import { getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
 import { FileService, getFileService } from '../file/index.js';
 
 export interface IImportToolkitConfig extends IImportConfig {}
@@ -35,7 +35,7 @@ export class ImportToolkit {
     constructor(private config: IImportToolkitConfig) {
         this.fileProcessorService = getZipService(config.log);
         this.fileService = getFileService(config.log);
-        this.importService = new ImportService(this.config);
+        this.importService = getImportService(this.config);
     }
 
     async importAsync(data: IImportData): Promise<void> {
@@ -53,7 +53,10 @@ export class ImportToolkit {
         let importSourceData: IImportSource;
 
         // prepare content types
-        const contentTypes = await getFlattenedContentTypesAsync(this.importService.managementClient, this.config.log);
+        const contentTypes = await getFlattenedContentTypesAsync(
+            this.importService.getManagementClient(),
+            this.config.log
+        );
 
         switch (this.config.sourceType) {
             case 'zip': {

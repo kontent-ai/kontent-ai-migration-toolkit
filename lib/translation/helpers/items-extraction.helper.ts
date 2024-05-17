@@ -1,20 +1,14 @@
-import { RichTextService, getRichTextService } from './index.js';
+import { richTextHelper } from '../index.js';
 import {
     IMigrationItem,
     IReferencedDataInLanguageVariants,
     IReferencedDataInMigrationItems,
     parseArrayValue,
     uniqueStringFilter
-} from '../core/index.js';
-import { IKontentAiPreparedExportItem } from '../export/export.models.js';
+} from '../../core/index.js';
+import { IKontentAiPreparedExportItem } from '../../export/export.models.js';
 
-export function getItemsExtractionService(): ItemsExtractionService {
-    return new ItemsExtractionService();
-}
-
-export class ItemsExtractionService {
-    private readonly richTextHelper: RichTextService = getRichTextService();
-
+class ItemsExtractionHelper {
     constructor() {}
 
     extractReferencedDataFromExportItems(items: IKontentAiPreparedExportItem[]): IReferencedDataInLanguageVariants {
@@ -34,11 +28,11 @@ export class ItemsExtractionService {
 
                     itemIds.push(
                         ...[
-                            ...this.richTextHelper.processDataIds(rteValue ?? '').ids,
-                            ...this.richTextHelper.processLinkItemIds(rteValue ?? '').ids
+                            ...richTextHelper.processDataIds(rteValue ?? '').ids,
+                            ...richTextHelper.processLinkItemIds(rteValue ?? '').ids
                         ]
                     );
-                    assetIds.push(...this.richTextHelper.processAssetIds(rteValue ?? '').ids);
+                    assetIds.push(...richTextHelper.processAssetIds(rteValue ?? '').ids);
                 } else if (typeElement.type === 'modular_content' || typeElement.type === 'subpages') {
                     if (itemElement.value && Array.isArray(itemElement.value)) {
                         for (const arrayVal of itemElement.value) {
@@ -78,11 +72,11 @@ export class ItemsExtractionService {
 
                     itemCodenames.push(
                         ...[
-                            ...this.richTextHelper.processRteItemCodenames(richTextHtml ?? '').codenames,
-                            ...this.richTextHelper.processRteLinkItemCodenames(richTextHtml ?? '').codenames
+                            ...richTextHelper.processRteItemCodenames(richTextHtml ?? '').codenames,
+                            ...richTextHelper.processRteLinkItemCodenames(richTextHtml ?? '').codenames
                         ]
                     );
-                    assetCodenames.push(...this.richTextHelper.processRteAssetCodenames(richTextHtml ?? '').codenames);
+                    assetCodenames.push(...richTextHelper.processRteAssetCodenames(richTextHtml ?? '').codenames);
                 } else if (element.type === 'modular_content' || element.type === 'subpages') {
                     itemCodenames.push(...parseArrayValue(element.value));
                 } else if (element.type === 'asset') {
@@ -99,3 +93,5 @@ export class ItemsExtractionService {
         return data;
     }
 }
+
+export const itemsExtractionHelper = new ItemsExtractionHelper();

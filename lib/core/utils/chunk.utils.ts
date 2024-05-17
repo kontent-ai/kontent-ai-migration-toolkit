@@ -1,5 +1,5 @@
 import { ItemType } from '../models/core.models.js';
-import { Log } from './log-helper.js';
+import { Log } from './log.utils.js';
 
 export interface IChunk<T> {
     items: T[];

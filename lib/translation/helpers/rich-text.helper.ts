@@ -11,11 +11,7 @@ interface IProcessIdsResult {
     html: string;
 }
 
-export function getRichTextService(): RichTextService {
-    return new RichTextService();
-}
-
-export class RichTextService {
+class RichTextHelper {
     private readonly attributes = {
         rteCodenames: {
             rteItemCodenameAttribute: 'migration-toolkit-item-codename',
@@ -298,3 +294,5 @@ export class RichTextService {
         };
     }
 }
+
+export const richTextHelper = new RichTextHelper();

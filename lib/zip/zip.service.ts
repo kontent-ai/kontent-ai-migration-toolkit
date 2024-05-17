@@ -3,14 +3,9 @@ import JSZip from 'jszip';
 
 import { IExportAdapterResult } from '../export/index.js';
 import { IImportSource } from '../import/index.js';
-import {
-    IItemFormatService,
-    ZipCompressionLevel,
-    IAssetFormatService,
-    FileBinaryData
-} from './zip.models.js';
-import { IMigrationItem, IMigrationAsset, Log, IFlattenedContentType } from '../core/index.js';
+import { IItemFormatService, ZipCompressionLevel, IAssetFormatService, FileBinaryData } from './zip.models.js';
 import { ZipPackage } from './zip-package.class.js';
+import { IFlattenedContentType, IMigrationAsset, IMigrationItem, Log } from '../core/index.js';
 
 export function getZipService(log: Log): ZipService {
     return new ZipService(log);

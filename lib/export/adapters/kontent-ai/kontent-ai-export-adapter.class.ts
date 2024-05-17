@@ -8,7 +8,13 @@ import {
     throwErrorForItemRequest
 } from '../../export.models.js';
 import colors from 'colors';
-import { AssetModels, CollectionModels, ManagementClient, SharedModels } from '@kontent-ai/management-sdk';
+import {
+    AssetModels,
+    CollectionModels,
+    ManagementClient,
+    SharedModels,
+    createManagementClient
+} from '@kontent-ai/management-sdk';
 import {
     defaultRetryStrategy,
     IMigrationAsset,
@@ -36,7 +42,7 @@ export class KontentAiExportAdapter implements IExportAdapter {
 
     async exportAsync(): Promise<IExportAdapterResult> {
         const sourceEnvironment = (
-            await new ManagementClient({
+            await createManagementClient({
                 apiKey: this.config.managementApiKey,
                 environmentId: this.config.environmentId
             })
@@ -157,7 +163,7 @@ export class KontentAiExportAdapter implements IExportAdapter {
     private getManagementClient(config: IKontentAiExportAdapterConfig): ManagementClient {
         const retryStrategy = config.retryStrategy ?? defaultRetryStrategy;
 
-        return new ManagementClient({
+        return createManagementClient({
             environmentId: config.environmentId,
             retryStrategy: retryStrategy,
             httpService: defaultHttpService,
