@@ -73,7 +73,7 @@ export class ImportAssetsService {
                 await this.managementClient
                     .addAsset()
                     .withData((builder) => {
-                        return {
+                        const data: AssetModels.IAddAssetRequestData = {
                             file_reference: {
                                 id: uploadedBinaryFile.data.id,
                                 type: 'internal'
@@ -83,11 +83,32 @@ export class ImportAssetsService {
                             external_id: asset.externalId,
                             collection: asset.collection
                                 ? {
-                                      reference: asset.collection
+                                      reference: {
+                                          codename: asset.collection.codename
+                                      }
                                   }
                                 : undefined,
-                            folder: asset.folder
+                            // referencing by codename not currently supported by MAPI
+                            // folder: asset.folder
+                            //     ? {
+                            //           id: asset.folder.codename
+                            //       }
+                            //     : undefined,
+                            descriptions: asset.descriptions
+                                ? asset.descriptions.map((m) => {
+                                      const assetDescription: AssetModels.IAssetFileDescription = {
+                                          description: m.description ?? '',
+                                          language: {
+                                              codename: m.language.codename
+                                          }
+                                      };
+
+                                      return assetDescription;
+                                  })
+                                : []
                         };
+
+                        return data;
                     })
                     .toPromise()
                     .then((m) => m.data);

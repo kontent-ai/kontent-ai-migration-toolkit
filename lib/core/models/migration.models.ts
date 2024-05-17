@@ -34,9 +34,12 @@ export interface IMigrationItem {
 }
 
 export interface IMigrationReference {
-    id?: string;
-    codename?: string;
-    external_id?: string;
+    codename: string;
+}
+
+export interface IMigrationAssetDescription {
+    language: IMigrationReference;
+    description: string | undefined;
 }
 
 export interface IMigrationAsset {
@@ -48,5 +51,6 @@ export interface IMigrationAsset {
     externalId?: string;
     codename?: string;
     collection?: IMigrationReference;
-    folder?: IMigrationReference;
+    descriptions?: IMigrationAssetDescription[];
+    folder?: never; // not possible to reference folder by codename by MAPI currently
 }

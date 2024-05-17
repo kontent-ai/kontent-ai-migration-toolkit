@@ -19,7 +19,8 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
                 title: exportAsset.title,
                 codename: exportAsset.codename,
                 collection: exportAsset.collection,
-                folder: exportAsset.folder
+                folder: exportAsset.folder,
+                descriptions: exportAsset.descriptions
             });
 
             await data.zip.addFile(exportAsset.filename, exportAsset.binaryData);

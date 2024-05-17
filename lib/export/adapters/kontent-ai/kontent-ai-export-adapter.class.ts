@@ -202,7 +202,26 @@ export class KontentAiExportAdapter implements IExportAdapter {
                     externalId: asset.externalId ?? getAssetExternalIdForCodename(asset.codename),
                     codename: asset.codename,
                     binaryData: (await this.getBinaryDataFromUrlAsync(asset.url)).data,
-                    collection: assetCollection ? { codename: assetCollection.codename } : undefined
+                    collection: assetCollection ? { codename: assetCollection.codename } : undefined,
+                    folder: undefined,
+                    descriptions: asset.descriptions.map((description) => {
+                        const language = context.environmentData.languages.find(
+                            (m) => m.id === description.language.id
+                        );
+
+                        if (!language) {
+                            throw Error(
+                                `Could not find language with id '${description.language.id}' requested by asset '${asset.codename}'`
+                            );
+                        }
+
+                        return {
+                            description: description.description ?? undefined,
+                            language: {
+                                codename: language.codename
+                            }
+                        };
+                    })
                 };
 
                 return migrationAsset;
