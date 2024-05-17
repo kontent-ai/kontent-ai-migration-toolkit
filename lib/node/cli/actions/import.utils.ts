@@ -1,11 +1,12 @@
 import colors from 'colors';
-import { getExtension, logErrorAndExit, confirmImportAsync, withDefaultLogAsync } from '../../../core/index.js';
+import { getExtension, logErrorAndExit, confirmImportAsync, getDefaultLog } from '../../../core/index.js';
 import { IImportToolkitConfig, ImportToolkit } from '../../../toolkit/index.js';
 import { ICliFileConfig } from '../cli.models.js';
 import { ImportSourceType } from '../../../import/index.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 
 export async function importAsync(config: ICliFileConfig): Promise<void> {
+    const log = getDefaultLog();
     const managementApiKey = config.managementApiKey;
     const environmentId = config.environmentId;
 
@@ -23,61 +24,60 @@ export async function importAsync(config: ICliFileConfig): Promise<void> {
     await confirmImportAsync({
         force: config.force,
         apiKey: managementApiKey,
-        environmentId: environmentId
+        environmentId: environmentId,
+        log: log
     });
 
-    await withDefaultLogAsync(async (log) => {
-        const itemsFilename: string | undefined = config.itemsFilename;
-        const assetsFilename: string | undefined = config.assetsFilename;
+    const itemsFilename: string | undefined = config.itemsFilename;
+    const assetsFilename: string | undefined = config.assetsFilename;
 
-        const itemsFileExtension = getExtension(itemsFilename ?? '')?.toLowerCase();
+    const itemsFileExtension = getExtension(itemsFilename ?? '')?.toLowerCase();
 
-        let sourceType: ImportSourceType;
+    let sourceType: ImportSourceType;
 
-        if (itemsFileExtension?.endsWith('zip'.toLowerCase())) {
-            sourceType = 'zip';
-        } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
-            sourceType = 'file';
-        } else {
-            logErrorAndExit({
-                message: `Unsupported file type '${colors.red(itemsFileExtension?.toString() ?? '')}'`
-            });
-        }
-
-        const importToolkitConfig: IImportToolkitConfig = {
-            log: log,
-            sourceType: sourceType,
-            skipFailedItems: config.skipFailedItems,
-            baseUrl: config.baseUrl,
-            environmentId: environmentId,
-            managementApiKey: managementApiKey,
-            canImport: {
-                contentItem: (item) => {
-                    return true;
-                },
-                asset: (asset) => {
-                    return true;
-                }
-            }
-        };
-
-        const importToolkit = new ImportToolkit(importToolkitConfig);
-
-        await importToolkit.importFromFilesAsync({
-            items: itemsFilename
-                ? {
-                      filename: itemsFilename,
-                      formatService: new ItemJsonProcessorService()
-                  }
-                : undefined,
-            assets: assetsFilename
-                ? {
-                      filename: assetsFilename,
-                      formatService: new AssetJsonProcessorService()
-                  }
-                : undefined
+    if (itemsFileExtension?.endsWith('zip'.toLowerCase())) {
+        sourceType = 'zip';
+    } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
+        sourceType = 'file';
+    } else {
+        logErrorAndExit({
+            message: `Unsupported file type '${colors.red(itemsFileExtension?.toString() ?? '')}'`
         });
+    }
 
-        log.console({ type: 'completed', message: `Import has been successful` });
+    const importToolkitConfig: IImportToolkitConfig = {
+        log: log,
+        sourceType: sourceType,
+        skipFailedItems: config.skipFailedItems,
+        baseUrl: config.baseUrl,
+        environmentId: environmentId,
+        managementApiKey: managementApiKey,
+        canImport: {
+            contentItem: (item) => {
+                return true;
+            },
+            asset: (asset) => {
+                return true;
+            }
+        }
+    };
+
+    const importToolkit = new ImportToolkit(importToolkitConfig);
+
+    await importToolkit.importFromFilesAsync({
+        items: itemsFilename
+            ? {
+                  filename: itemsFilename,
+                  formatService: new ItemJsonProcessorService()
+              }
+            : undefined,
+        assets: assetsFilename
+            ? {
+                  filename: assetsFilename,
+                  formatService: new AssetJsonProcessorService()
+              }
+            : undefined
     });
+
+    log.console({ type: 'completed', message: `Import has been successful` });
 }
