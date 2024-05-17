@@ -51,7 +51,7 @@
     "license": "MIT",
     "dependencies": {
         "@kontent-ai-consulting/tools-analytics": "0.0.6",
-        "@kontent-ai/management-sdk": "6.2.1",
+        "@kontent-ai/management-sdk": "6.3.0",
         "bytes": "3.1.2",
         "colors": "1.4.0",
         "csv-parse": "5.5.6",

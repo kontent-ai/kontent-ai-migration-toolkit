@@ -36,7 +36,7 @@ kontent-ai-migration-toolkit --help
 > [!NOTE]  
 > When importing it is essential that the target project structure (e.g. `Content types`, `Taxonomies`, `Collections`,
 > `Workflows`...) are consistent with the ones defined in source environment. Any inconsistency in data such as
-> referencing inexistent taxonomy term, incorrect element type and other problems will cause import to fail.
+> referencing inexistent taxonomy term, incorrect element type and other inconsistencies may cause import to fail.
 
 ## How are content items & language variants imported?
 
@@ -45,12 +45,12 @@ project (based on item's `codename`) the item will be updated instead. The workf
 set according to `workflow_step` and `workflow` fields.
 
 You can run `kontent-ai-migration-toolkit` many times over without being worried that identical content items will be
-created multiple times. Same goes for assets if you use `assetExternalId` when migrating assets over.
+created multiple times.
 
 ## How are assets imported?
 
 If asset exists in target project (based on asset's `codename`), the asset upload will be skipped and not uploaded at
-all. If the asset doesn't exist, it will be extracted from zip folder and uploaded.
+all. Otherwise the asset will be created in target environment.
 
 ## Import Configuration
 
@@ -117,6 +117,16 @@ You may use this library outside of CLI:
 1. [Custom export with files](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-with-files.ts)
 1. [Custom export and direct import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-directly.ts)
 
+# Limitations
+
+1. Asset folder assignments are not preserved during migration because folders can be referenced only by id's and not
+   codenames.
+2. Assets element values are not preserved during migration because elements can be referenced only by id's and not
+   codenames.
+3. Components embedded within Rich text elements are not migrated
+4. Language variants in `Scheduled` workflow step do not preserve their workflow status because it the API does not
+   provide an information about scheduled times
+
 ## CLI help
 
 To see available commands use:
@@ -160,11 +170,6 @@ Following is a list of `built-in` format services:
 | ------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `csv`  | `ItemCsvProcessorService `  | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-csv-processor.service.ts         |
 | `json` | `ItemJsonProcessorService ` | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-joined-processor.service.ts |
-
-## Limitations
-
--   Language variants in `Scheduled` workflow step exported with built-in Kontent.ai export adapter are not imported
-    with this state as the information about scheduled time is missing in API response.
 
 ## FAQ
 

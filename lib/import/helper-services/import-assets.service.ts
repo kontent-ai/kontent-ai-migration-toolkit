@@ -88,12 +88,6 @@ export class ImportAssetsService {
                                       }
                                   }
                                 : undefined,
-                            // referencing by codename not currently supported by MAPI
-                            // folder: asset.folder
-                            //     ? {
-                            //           id: asset.folder.codename
-                            //       }
-                            //     : undefined,
                             descriptions: asset.descriptions
                                 ? asset.descriptions.map((m) => {
                                       const assetDescription: AssetModels.IAssetFileDescription = {
@@ -107,7 +101,6 @@ export class ImportAssetsService {
                                   })
                                 : []
                         };
-
                         return data;
                     })
                     .toPromise()

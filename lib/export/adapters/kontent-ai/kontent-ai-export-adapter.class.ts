@@ -203,7 +203,6 @@ export class KontentAiExportAdapter implements IExportAdapter {
                     codename: asset.codename,
                     binaryData: (await this.getBinaryDataFromUrlAsync(asset.url)).data,
                     collection: assetCollection ? { codename: assetCollection.codename } : undefined,
-                    folder: undefined,
                     descriptions: asset.descriptions.map((description) => {
                         const language = context.environmentData.languages.find(
                             (m) => m.id === description.language.id
