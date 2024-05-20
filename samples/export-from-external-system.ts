@@ -1,16 +1,9 @@
-import {
-    ImportToolkit,
-    IMigrationAsset,
-    IMigrationItem,
-    getDefaultLog,
-    IExportAdapter,
-    ExportToolkit
-} from '../lib/index.js';
+import { IMigrationAsset, IMigrationItem, getDefaultLog, IExportAdapter, ExportToolkit } from '../lib/index.js';
 
-const customExportAdapter: IExportAdapter = {
+/* Typically you query your external system to create the migration items & assets */
+const exportAdapter: IExportAdapter = {
     name: 'customExportAdapter',
     exportAsync: async () => {
-        // Typically you query your external system to create the migration items & assets
         const migrationItems: IMigrationItem[] = [
             {
                 system: {
@@ -44,16 +37,30 @@ const customExportAdapter: IExportAdapter = {
         const migrationAssets: IMigrationAsset[] = [
             {
                 // _zipFilename is a name of the file within the export .zip package. It is used only for identifying the file within export
-                _zipFilename: 'filename.txt',
+                _zipFilename: 'my_file.txt',
+                // codename of the asset - also used for validating whether asset exists in target env
+                codename: 'my_file',
                 // filename will be used in K.ai asset as a filename
                 filename: 'filename.txt',
                 // title will be used in K.ai asset as a title
                 title: 'My file',
-                // assetExternalId is optional, but highly recommended as if you would run the import multiple times this prevents
-                // upload / creation of duplicate assets
+                // external id of the asset (optional)
                 externalId: 'uniqueFileId',
-                // and this is the actual binary data of the asset you want to upload
-                binaryData: Buffer.from('myFile', 'utf8')
+                // binary data of the asset you want to upload
+                binaryData: Buffer.from('myFile', 'utf8'),
+                // collection assignment
+                collection: {
+                    codename: 'collectionCodename'
+                },
+                // description of asset in project languages
+                descriptions: [
+                    {
+                        description: 'description of asset',
+                        language: {
+                            codename: 'default'
+                        }
+                    }
+                ]
             }
         ];
 
@@ -64,44 +71,21 @@ const customExportAdapter: IExportAdapter = {
     }
 };
 
-const run = async () => {
-    const exportToolkit = new ExportToolkit({
-        items: {
-            filename: 'items.json',
-            formatService: 'json'
-        },
-        assets: {
-            filename: 'assets.zip',
-            formatService: 'json'
-        },
-        log: getDefaultLog(),
-        adapter: customExportAdapter
-    });
+const exportToolkit = new ExportToolkit({
+    items: {
+        filename: 'items.json',
+        formatService: 'json'
+    },
+    assets: {
+        filename: 'assets.zip',
+        formatService: 'json'
+    },
+    log: getDefaultLog(),
+    adapter: exportAdapter
+});
 
-    /*
-    1) This will create items.json & assets.zip files within current folder
-    2) Once exported, you can use import CLI (or importToolkit in code) to import data to a specified Kontent.ai environment
-    */
-    await exportToolkit.exportAsync();
-
-    const importToolkit = new ImportToolkit({
-        environmentId: 'x',
-        managementApiKey: 'y',
-        skipFailedItems: false,
-        sourceType: 'file',
-        log: getDefaultLog()
-    });
-
-    await importToolkit.importFromFilesAsync({
-        items: {
-            filename: 'items.json',
-            formatService: 'json'
-        },
-        assets: {
-            filename: 'assets.zip',
-            formatService: 'json'
-        }
-    });
-};
-
-run();
+/*
+This will create items.json & assets.zip files within current folder
+Once exported, you can use import CLI (or importToolkit in code) to import data to a specified Kontent.ai environment
+*/
+await exportToolkit.exportAsync();

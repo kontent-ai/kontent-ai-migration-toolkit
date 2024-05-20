@@ -24,13 +24,11 @@ npm i @kontent-ai-consulting/migration-toolkit -g
 kontent-ai-migration-toolkit --help
 ```
 
-# Migrating data from external / 3rd party systems
-
 # Import
 
 > [!CAUTION]  
-> **We do not recommended importing into a production environment directly** (without proper testing). Instead you
-> should first create a testing environment and run the script there to make sure everything works as you intended to.
+> **We do not recommended importing into a production environment directly without testing**. Instead you should first
+> create a testing environment and run the script there to make sure everything works as you intended to.
 
 > [!NOTE]  
 > When importing it is essential that the target project structure (i.e. `Content types`, `Taxonomies`, `Collections`,
@@ -38,21 +36,7 @@ kontent-ai-migration-toolkit --help
 > such as referencing inexistent taxonomy term, incorrect element type and other inconsistencies may cause import to
 > fail.
 
-## How are content items & language variants imported?
-
-The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
-project (based on item's `codename`) the item will be updated. The workflow will be set according to `workflow_step` and
-`workflow` fields.
-
-You can run `kontent-ai-migration-toolkit` many times over without being worried that identical content items will be
-created multiple times.
-
-## How are assets imported?
-
-If asset exists in target project (based on asset's `codename`), the asset upload will be skipped and not uploaded at
-all. Otherwise the asset will be created in target environment.
-
-## Import Configuration
+## Configuration
 
 | Config            | Value                                                                                                                                                   |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -65,6 +49,20 @@ all. Otherwise the asset will be created in target environment.
 | skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
 | force             | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
 
+### How are content items imported?
+
+The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
+project (based on item's `codename`) the item will be updated. The workflow will be set according to `workflow_step` and
+`workflow` fields.
+
+You can run `kontent-ai-migration-toolkit` many times over without being worried that identical content items will be
+created multiple times.
+
+### How are assets imported?
+
+If asset exists in target project (based on asset's `codename`), the asset upload will be skipped and not uploaded at
+all. Otherwise the asset will be created in target environment.
+
 ## Import CLI samples
 
 ```bash
@@ -72,20 +70,12 @@ all. Otherwise the asset will be created in target environment.
 kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --format=json --itemsFilename=items.zip --assetsFilename=assets.zip
 ```
 
-## Importing in code
-
-Examples of importing in code can be found at:
-
-1. [Import from json](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-from-json.ts)
-1. [Import from zip](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-from-zip-sample.ts)
-1. [Direct import without files](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-directly.ts)
-
 # Export from Kontent.ai
 
 There is a built-in `kontentAi` adapter that can be used to export content items & assets from Kontent.ai environments.
 However, when migration from 3rd party system you typically only use the `import` capabilities of this repository.
 
-## Export from Kontent.ai Configuration
+## Configuration
 
 | Config            | Value                                                                                              |
 | ----------------- | -------------------------------------------------------------------------------------------------- |
@@ -98,30 +88,28 @@ However, when migration from 3rd party system you typically only use the `import
 | assetsFilename    | Name of the assets file that will be created in folder where script is run. Only zip is supported. |
 | baseUrl           | Custom base URL for Kontent.ai API calls                                                           |
 
-## Export CLI samples
+## Export CLI
 
 ```bash
 # Export from Kontent.ai environment
 kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json --language=default --items=itemA,itemB
 ```
 
-## Exporting in code
-
-You may use this library outside of CLI:
-
-1. [Export from Kontent.ai environment](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-kontent-ai.ts)
-1. [Custom export with files](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-with-files.ts)
-1. [Custom export and direct import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-directly.ts)
-
-# Limitations
+## Limitations
 
 1. Asset folder assignments are not preserved during migration because folders can be referenced only by id's and not
    codenames.
 2. Assets element values are not preserved during migration because elements can be referenced only by id's and not
    codenames.
-3. Components embedded within Rich text elements are not migrated
+3. Components embedded within Rich text elements are not exported
 4. Language variants in `Scheduled` workflow step do not preserve their workflow status because it the API does not
    provide an information about scheduled times
+
+## Code examples
+
+1. [Import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-toolkit-sample.ts)
+2. [Export](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-toolkit-sample.ts)
+3. [Export from external system](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-from-external-system.ts)
 
 ## CLI help
 
@@ -157,10 +145,10 @@ this library in code rather then via command line.
 ## Output / Input formats
 
 This library provides `json` format out of the box. However, you can create your own format by implementing
-`IFormatService` and supplying that to import / export functions. This is useful if you need to extend the existing
-format, change how it's processing or just support new formats such as `xliff`, `xlxs`, `xml`, `csv` or other.
+`IFormatService`. This is useful if you need to support additional formats such as `xliff`, `xlxs`, `xml`, `csv` or
+others.
 
-Following is a list of `built-in` format services:
+Default formatting services:
 
 | Type   | Service                     | Link                                                                                                                                                  |
 | ------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |

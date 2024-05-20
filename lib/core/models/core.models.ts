@@ -1,6 +1,7 @@
 import { AssetModels, ContentItemModels, ContentTypeElements } from '@kontent-ai/management-sdk';
 import { MigrationElementType } from './migration.models.js';
 
+export type TargetItemState = 'exists' | 'doesNotExists';
 export type CliAction = 'export' | 'import';
 export type ExportAdapter = 'kontentAi';
 export type ItemType =
@@ -60,8 +61,6 @@ export interface IReferencedDataInLanguageVariants {
     itemIds: string[];
     assetIds: string[];
 }
-
-export type TargetItemState = 'exists' | 'doesNotExists';
 
 export interface IItemStateInSourceEnvironmentById {
     state: TargetItemState;
