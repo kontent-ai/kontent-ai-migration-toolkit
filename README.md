@@ -111,14 +111,6 @@ kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId
 2. [Export](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-toolkit-sample.ts)
 3. [Export from external system](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-from-external-system.ts)
 
-## CLI help
-
-To see available commands use:
-
-```bash
-kontent-ai-migration-toolkit --help
-```
-
 ## Use with config file
 
 Create a `json` configuration file in the folder where you are attempting to run script. (e.g. `export-config.json`)
