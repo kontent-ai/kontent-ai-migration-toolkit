@@ -140,17 +140,15 @@ export class ImportAssetsService {
                 // check if asset with given codename already exists
                 let existingAsset: AssetModels.Asset | undefined;
 
-                if (asset.codename) {
-                    try {
-                        existingAsset = await data.managementClient
-                            .viewAsset()
-                            .byAssetCodename(asset.codename)
-                            .toPromise()
-                            .then((m) => m.data);
-                    } catch (error) {
-                        if (!is404Error(error)) {
-                            throw error;
-                        }
+                try {
+                    existingAsset = await data.managementClient
+                        .viewAsset()
+                        .byAssetCodename(asset.codename)
+                        .toPromise()
+                        .then((m) => m.data);
+                } catch (error) {
+                    if (!is404Error(error)) {
+                        throw error;
                     }
                 }
 

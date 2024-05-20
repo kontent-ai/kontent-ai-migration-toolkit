@@ -44,12 +44,12 @@ export interface IMigrationAssetDescription {
 
 export interface IMigrationAsset {
     _zipFilename: string;
+    codename: string;
     binaryData: Buffer | Blob | undefined;
     filename: string;
     title: string;
 
     externalId?: string;
-    codename?: string;
     collection?: IMigrationReference;
     descriptions?: IMigrationAssetDescription[];
 }
