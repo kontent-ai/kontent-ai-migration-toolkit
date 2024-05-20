@@ -1,36 +1,30 @@
 import colors from 'colors';
-import { getExtension, logErrorAndExit, confirmActionAsync, getDefaultLog } from '../../../core/index.js';
+import { getExtension, logErrorAndExit, confirmImportAsync, getDefaultLog } from '../../../core/index.js';
 import { IImportToolkitConfig, ImportToolkit } from '../../../toolkit/index.js';
-import { ICliFileConfig } from '../cli.models.js';
 import { ImportSourceType } from '../../../import/index.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
+import { CliArgs } from '../args/cli-args.class.js';
+import { getDefaultExportFilename } from '../utils/cli.utils.js';
 
-export async function importAsync(config: ICliFileConfig): Promise<void> {
+export async function importAsync(cliArgs: CliArgs): Promise<void> {
     const log = getDefaultLog();
-    const apiKey = config.apiKey;
-    const environmentId = config.environmentId;
 
-    if (!apiKey) {
-        logErrorAndExit({
-            message: `Missing 'apiKey' configuration option`
-        });
-    }
-    if (!environmentId) {
-        logErrorAndExit({
-            message: `Missing 'environmentId' configuration option`
-        });
-    }
+    const environmentId = await cliArgs.getRequiredArgumentValueAsync('targetEnvironmentId');
+    const apiKey = await cliArgs.getRequiredArgumentValueAsync('targetApiKey');
+    const baseUrl = await cliArgs.getOptionalArgumentValueAsync('baseUrl');
+    const force = await cliArgs.getBooleanArgumentValueAsync('force', false);
+    const skipFailedItems = await cliArgs.getBooleanArgumentValueAsync('skipFailedItems', false);
+    const itemsFilename =
+        (await cliArgs.getOptionalArgumentValueAsync('itemsFilename')) ?? getDefaultExportFilename('items');
+    const assetsFilename =
+        (await cliArgs.getOptionalArgumentValueAsync('assetsFilename')) ?? getDefaultExportFilename('assets');
 
-    await confirmActionAsync({
-        action: 'import',
-        force: config.force,
+    await confirmImportAsync({
+        force: force,
         apiKey: apiKey,
         environmentId: environmentId,
         log: log
     });
-
-    const itemsFilename: string | undefined = config.itemsFilename;
-    const assetsFilename: string | undefined = config.assetsFilename;
 
     const itemsFileExtension = getExtension(itemsFilename ?? '')?.toLowerCase();
 
@@ -48,9 +42,8 @@ export async function importAsync(config: ICliFileConfig): Promise<void> {
 
     const importToolkitConfig: IImportToolkitConfig = {
         log: log,
-        sourceType: sourceType,
-        skipFailedItems: config.skipFailedItems,
-        baseUrl: config.baseUrl,
+        skipFailedItems: skipFailedItems,
+        baseUrl: baseUrl,
         environmentId: environmentId,
         managementApiKey: apiKey,
         canImport: {

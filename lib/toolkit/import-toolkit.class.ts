@@ -40,10 +40,8 @@ export class ImportToolkit {
 
     async importAsync(data: IImportData): Promise<void> {
         const importSourceData: IImportSource = {
-            importData: {
-                items: data.items,
-                assets: data.assets
-            }
+            items: data.items,
+            assets: data.assets
         };
 
         await this.importService.importAsync(importSourceData);
@@ -56,24 +54,16 @@ export class ImportToolkit {
             this.config.log
         );
 
-        switch (this.config.sourceType) {
-            case 'zip': {
-                importSourceData = await this.getImportDataFromZipAsync({
-                    ...data,
-                    contentTypes: contentTypes
-                });
-                break;
-            }
-            case 'file': {
-                importSourceData = await this.getImportDataFromNonZipFileAsync({
-                    ...data,
-                    contentTypes: contentTypes
-                });
-                break;
-            }
-            default: {
-                throw Error(`Unsupported import type '${this.config.sourceType}'`);
-            }
+        if (data?.items?.filename?.toLowerCase()?.endsWith('.zip')) {
+            importSourceData = await this.getImportDataFromZipAsync({
+                ...data,
+                contentTypes: contentTypes
+            });
+        } else {
+            importSourceData = await this.getImportDataFromNonZipFileAsync({
+                ...data,
+                contentTypes: contentTypes
+            });
         }
 
         await this.importService.importAsync(importSourceData);

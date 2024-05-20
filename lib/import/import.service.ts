@@ -68,21 +68,21 @@ export class ImportService {
                 relatedEnvironmentId: this.config.environmentId,
                 details: {
                     skipFailedItems: this.config.skipFailedItems,
-                    itemsCount: sourceData.importData.items.length,
-                    assetsCount: sourceData.importData.assets.length
+                    itemsCount: sourceData.items.length,
+                    assetsCount: sourceData.assets.length
                 }
             },
             func: async () => {
                 // this is an optional step where users can exclude certain objects from being imported
                 const dataToImport = this.getDataToImport(sourceData);
 
-                const importContext = await this.importContextService.getImportContextAsync(dataToImport.importData);
+                const importContext = await this.importContextService.getImportContextAsync(dataToImport);
 
                 // import order matters
                 // #1 Assets
-                if (dataToImport.importData.assets.length) {
+                if (dataToImport.assets.length) {
                     await this.importAssetsService.importAssetsAsync({
-                        assets: dataToImport.importData.assets,
+                        assets: dataToImport.assets,
                         importContext: importContext
                     });
                 } else {
@@ -93,8 +93,8 @@ export class ImportService {
                 }
 
                 // #2 Content items
-                if (dataToImport.importData.items.length) {
-                    await this.importMigrationItemsAsync(dataToImport.importData.items, importContext);
+                if (dataToImport.items.length) {
+                    await this.importMigrationItemsAsync(dataToImport.items, importContext);
                 } else {
                     this.config.log.console({
                         type: 'info',
@@ -114,39 +114,37 @@ export class ImportService {
 
     private getDataToImport(source: IImportSource): IImportSource {
         const dataToImport: IImportSource = {
-            importData: {
-                assets: [],
-                items: []
-            }
+            assets: [],
+            items: []
         };
 
         let removedAssets: number = 0;
         let removedContentItems: number = 0;
 
         if (this.config?.canImport?.asset) {
-            for (const asset of source.importData.assets) {
+            for (const asset of source.assets) {
                 const canImport = this.config.canImport.asset(asset);
                 if (canImport) {
-                    dataToImport.importData.assets.push(asset);
+                    dataToImport.assets.push(asset);
                 } else {
                     removedAssets++;
                 }
             }
         } else {
-            dataToImport.importData.assets = source.importData.assets;
+            dataToImport.assets = source.assets;
         }
 
         if (this.config?.canImport?.contentItem) {
-            for (const item of source.importData.items) {
+            for (const item of source.items) {
                 const canImport = this.config.canImport.contentItem(item);
                 if (canImport) {
-                    dataToImport.importData.items.push(item);
+                    dataToImport.items.push(item);
                 } else {
                     removedContentItems++;
                 }
             }
         } else {
-            dataToImport.importData.items = source.importData.items;
+            dataToImport.items = source.items;
         }
 
         if (removedAssets > 0) {

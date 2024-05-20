@@ -1,14 +1,12 @@
-# Custom
-.editorconfig
-
 # See http://help.github.com/ignore-files/ for more about ignoring files.
+.editorconfig
+.env.local
 
 # compiled output
 /dist
 /tmp
 /coverage
 /out-tsc
-/test
 /output
 
 # dependencies

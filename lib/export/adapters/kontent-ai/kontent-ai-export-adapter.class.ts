@@ -156,7 +156,7 @@ export class KontentAiExportAdapter implements IExportAdapter {
             environmentId: config.environmentId,
             retryStrategy: retryStrategy,
             httpService: defaultHttpService,
-            apiKey: config.managementApiKey
+            apiKey: config.apiKey
         });
     }
 

@@ -62,7 +62,7 @@ export interface IKontentAiExportRequestItem {
 export interface IKontentAiExportAdapterConfig {
     log: Log;
     environmentId: string;
-    managementApiKey: string;
+    apiKey: string;
     baseUrl?: string;
     exportItems: IKontentAiExportRequestItem[];
     retryStrategy?: IRetryStrategyOptions;

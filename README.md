@@ -1,7 +1,8 @@
 # Kontent.ai Migration Toolkit
 
-The purpose of this tool is to facilitate migration to & from [Kontent.ai](https://kontent.ai) environments using a
-developer friendly abstraction layer.
+The purpose of this tool is to facilitate _content migration_ to & from [Kontent.ai](https://kontent.ai) environments.
+It can be used to simplify migration from external systems and also provides a built-in migration between kontent.ai
+environments.
 
 > [!TIP]  
 > This library aim to streamline the migration to / from Kontent.ai environment by providing a simple to use abstraction
@@ -24,6 +25,25 @@ npm i @kontent-ai-consulting/migration-toolkit -g
 kontent-ai-migration-toolkit --help
 ```
 
+# Migrate between Kontent.ai environments
+
+You may migrate content (items & asset) between Kontent.ai environments. For migrating _Data model / structure_ see
+[Data Ops](https://github.com/kontent-ai/data-ops) instead.
+
+## Configuration
+
+| Config                  | Value                                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **action**              | `migrate` **(required)**                                                                                                                                |
+| **sourceEnvironmentId** | Id of source environment **(required)**                                                                                                                 |
+| **sourceApiKey**        | Management API key of source environment **(required)**                                                                                                 |
+| **targetEnvironmentId** | Id of target environment **(required)**                                                                                                                 |
+| **targetApiKey**        | Management API key of target environment **(required)**                                                                                                 |
+| **language**            | Codename of language that items will be exported in **(required)**                                                                                      |
+| **items**               | Comma separated list of items that will be exported **(required)**                                                                                      |
+| skipFailedItems         | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
+| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
+
 # Import
 
 > [!CAUTION]  
@@ -38,16 +58,16 @@ kontent-ai-migration-toolkit --help
 
 ## Configuration
 
-| Config            | Value                                                                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **action**        | Action. Available options: `import` & `export` **(required)**                                                                                           |
-| **environmentId** | Id of Kontent.ai project **(required)**                                                                                                                 |
-| **apiKey**        | Management API key **(required)**                                                                                                                       |
-| **itemsFilename** | Name of the items file that will be used to parse items **(required)**                                                                                  |
-| assetsFilename    | Name of the items file that will be used to parse assets                                                                                                |
-| baseUrl           | Custom base URL for Kontent.ai API calls                                                                                                                |
-| skipFailedItems   | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
-| force             | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
+| Config                  | Value                                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **action**              | `import` **(required)**                                                                                                                                 |
+| **targetEnvironmentId** | Id of Kontent.ai environment **(required)**                                                                                                             |
+| **targetApiKey**        | Management API key **(required)**                                                                                                                       |
+| **itemsFilename**       | Name of the items file that will be used to parse items **(required)**                                                                                  |
+| assetsFilename          | Name of the items file that will be used to parse assets                                                                                                |
+| baseUrl                 | Custom base URL for Kontent.ai API calls                                                                                                                |
+| skipFailedItems         | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
+| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
 
 ### How are content items imported?
 
@@ -77,16 +97,16 @@ However, when migration from 3rd party system you typically only use the `import
 
 ## Configuration
 
-| Config            | Value                                                                                              |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| **action**        | Action. Available options: `import` & `export` **(required)**                                      |
-| **environmentId** | Id of Kontent.ai environment **(required)**                                                        |
-| **apiKey**        | Management API key of Kontent.ai environment **(required)**                                        |
-| **language**      | Codename of language that items will be exported in **(required)**                                 |
-| **items**         | Comma separated list of items that will be exported **(required)**                                 |
-| itemsFilename     | Name of the items file that will be created in folder where script is run                          |
-| assetsFilename    | Name of the assets file that will be created in folder where script is run. Only zip is supported. |
-| baseUrl           | Custom base URL for Kontent.ai API calls                                                           |
+| Config                  | Value                                                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| **action**              | `export` **(required)**                                                                            |
+| **sourceEnvironmentId** | Id of Kontent.ai environment **(required)**                                                        |
+| **sourceApiKey**        | Management API key of Kontent.ai environment **(required)**                                        |
+| **language**            | Codename of language that items will be exported in **(required)**                                 |
+| **items**               | Comma separated list of items that will be exported **(required)**                                 |
+| itemsFilename           | Name of the items file that will be created in folder where script is run                          |
+| assetsFilename          | Name of the assets file that will be created in folder where script is run. Only zip is supported. |
+| baseUrl                 | Custom base URL for Kontent.ai API calls                                                           |
 
 ## Export CLI
 
@@ -110,18 +130,7 @@ kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId
 1. [Import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-toolkit-sample.ts)
 2. [Export](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-toolkit-sample.ts)
 3. [Export from external system](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-from-external-system.ts)
-
-## Use with config file
-
-Create a `json` configuration file in the folder where you are attempting to run script. (e.g. `export-config.json`)
-
-```json
-{
-    "environmentId": "x",
-    "apiKey": "y"
-    // other props
-}
-```
+4. [Migrate between Kontent.ai environments](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-between-kontent-ai-environments.ts)
 
 To execute your action run:
 

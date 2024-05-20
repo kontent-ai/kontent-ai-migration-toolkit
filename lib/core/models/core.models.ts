@@ -2,7 +2,7 @@ import { AssetModels, ContentItemModels, ContentTypeElements } from '@kontent-ai
 import { MigrationElementType } from './migration.models.js';
 
 export type TargetItemState = 'exists' | 'doesNotExists';
-export type CliAction = 'export' | 'import';
+export type CliAction = 'export' | 'import' | 'migrate';
 export type ExportAdapter = 'kontentAi';
 export type ItemType =
     | 'component'

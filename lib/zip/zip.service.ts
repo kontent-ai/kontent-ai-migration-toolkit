@@ -26,10 +26,8 @@ export class ZipService {
         types: IFlattenedContentType[];
     }): Promise<IImportSource> {
         const result: IImportSource = {
-            importData: {
-                items: [],
-                assets: []
-            }
+            items: [],
+            assets: []
         };
 
         if (data.items) {
@@ -44,7 +42,7 @@ export class ZipService {
                 message: 'Parsing items zip data'
             });
 
-            result.importData.items.push(
+            result.items.push(
                 ...(await data.items.formatService.parseContentItemsAsync({
                     zip: new ZipPackage(itemsZipFile, this.log),
                     types: data.types
@@ -64,7 +62,7 @@ export class ZipService {
                 message: 'Parsing assets zip data'
             });
 
-            result.importData.assets.push(
+            result.assets.push(
                 ...(await data.assets.formatService.parseAssetsAsync({
                     zip: new ZipPackage(assetsZipFile, this.log)
                 }))
@@ -74,8 +72,8 @@ export class ZipService {
         this.log.console({
             type: 'info',
             message: `Parsing completed. Parsed '${colors.yellow(
-                result.importData.items.length.toString()
-            )}' items and '${colors.yellow(result.importData.assets.length.toString())}' assets`
+                result.items.length.toString()
+            )}' items and '${colors.yellow(result.assets.length.toString())}' assets`
         });
 
         return result;
@@ -121,17 +119,15 @@ export class ZipService {
         }
 
         const result: IImportSource = {
-            importData: {
-                items: parsedItems,
-                assets: parsedAssets
-            }
+            items: parsedItems,
+            assets: parsedAssets
         };
 
         this.log.console({
             type: 'info',
             message: `Parsing completed. Parsed '${colors.yellow(
-                result.importData.items.length.toString()
-            )}' items and '${colors.yellow(result.importData.assets.length.toString())}' assets`
+                result.items.length.toString()
+            )}' items and '${colors.yellow(result.assets.length.toString())}' assets`
         });
 
         return result;

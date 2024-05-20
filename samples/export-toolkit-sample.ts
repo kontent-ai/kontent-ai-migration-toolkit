@@ -2,7 +2,7 @@ import { getDefaultLog, KontentAiExportAdapter, ExportToolkit } from '../lib/ind
 
 const adapter = new KontentAiExportAdapter({
     environmentId: '<id>',
-    managementApiKey: '<apiKey>',
+    apiKey: '<apiKey>',
     log: getDefaultLog(),
     exportItems: [
         {

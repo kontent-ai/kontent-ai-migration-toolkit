@@ -1,8 +1,8 @@
 import colors from 'colors';
 import prompts from 'prompts';
 import ora from 'ora';
-import { ManagementClient } from '@kontent-ai/management-sdk';
-import { ActionType, CliAction, FetchItemType, ItemType } from '../models/core.models.js';
+import { createManagementClient } from '@kontent-ai/management-sdk';
+import { ActionType, FetchItemType, ItemType } from '../models/core.models.js';
 import { exitProcess } from './global.utils.js';
 
 interface ILogCount {
@@ -99,40 +99,17 @@ export function getLogDataMessage(data: ILogData): string {
     return `${typeColor(data.type)}: ${data.message}`;
 }
 
-export async function confirmActionAsync(data: {
-    action: CliAction;
-    force: boolean;
-    environmentId: string;
-    apiKey: string;
-    log: Log;
-}): Promise<void> {
-    const targetEnvironment = (
-        await new ManagementClient({
-            apiKey: data.apiKey,
-            environmentId: data.environmentId
-        })
-            .environmentInformation()
-            .toPromise()
-    ).data.project;
-
+export async function confirmAsync(data: { action: string; message: string; force: boolean; log: Log }): Promise<void> {
     if (data.force) {
         data.log.console({
             type: 'info',
-            message: `Skipping confirmation prompt due to the use of force param`
+            message: `Skipping confirmation prompt due to the use of 'force' param`
         });
     } else {
-        const text: string =
-            data.action === 'export'
-                ? `Are you sure to export data from ${colors.yellow(targetEnvironment.name)} -> ${colors.yellow(
-                      targetEnvironment.environment
-                  )}?`
-                : `Are you sure to import data into ${colors.yellow(targetEnvironment.name)} -> ${colors.yellow(
-                      targetEnvironment.environment
-                  )}?`;
         const confirmed = await prompts({
             type: 'confirm',
             name: 'confirm',
-            message: `${colors.cyan(data.action)}: ${text}`
+            message: `${colors.cyan(data.action)}: ${data.message}`
         });
 
         if (!confirmed.confirm) {
@@ -143,4 +120,99 @@ export async function confirmActionAsync(data: {
             exitProcess();
         }
     }
+}
+
+export async function confirmExportAsync(data: {
+    force: boolean;
+    environmentId: string;
+    apiKey: string;
+    log: Log;
+}): Promise<void> {
+    const environment = (
+        await createManagementClient({
+            apiKey: data.apiKey,
+            environmentId: data.environmentId
+        })
+            .environmentInformation()
+            .toPromise()
+    ).data.project;
+
+    const text: string = `Are you sure to export data from ${colors.yellow(environment.name)} -> ${colors.yellow(
+        environment.environment
+    )}?`;
+
+    await confirmAsync({
+        force: data.force,
+        log: data.log,
+        action: 'Export',
+        message: text
+    });
+}
+
+export async function confirmMigrateAsync(data: {
+    force: boolean;
+    sourceEnvironment: {
+        environmentId: string;
+        apiKey: string;
+    };
+    targetEnvironment: {
+        environmentId: string;
+        apiKey: string;
+    };
+    log: Log;
+}): Promise<void> {
+    const sourceEnvironment = (
+        await createManagementClient({
+            apiKey: data.sourceEnvironment.apiKey,
+            environmentId: data.sourceEnvironment.environmentId
+        })
+            .environmentInformation()
+            .toPromise()
+    ).data.project;
+    const targetEnvironment = (
+        await createManagementClient({
+            apiKey: data.targetEnvironment.apiKey,
+            environmentId: data.targetEnvironment.environmentId
+        })
+            .environmentInformation()
+            .toPromise()
+    ).data.project;
+
+    const text: string = `Are you sure to migrate data from ${colors.yellow(sourceEnvironment.name)} -> ${colors.yellow(
+        sourceEnvironment.environment
+    )} to environment ${colors.yellow(targetEnvironment.name)} -> ${colors.yellow(targetEnvironment.environment)}?`;
+
+    await confirmAsync({
+        force: data.force,
+        log: data.log,
+        action: 'Migrate',
+        message: text
+    });
+}
+
+export async function confirmImportAsync(data: {
+    force: boolean;
+    environmentId: string;
+    apiKey: string;
+    log: Log;
+}): Promise<void> {
+    const environment = (
+        await createManagementClient({
+            apiKey: data.apiKey,
+            environmentId: data.environmentId
+        })
+            .environmentInformation()
+            .toPromise()
+    ).data.project;
+
+    const text: string = `Are you sure to import data into ${colors.yellow(environment.name)} -> ${colors.yellow(
+        environment.environment
+    )}?`;
+
+    await confirmAsync({
+        force: data.force,
+        log: data.log,
+        action: 'Import',
+        message: text
+    });
 }

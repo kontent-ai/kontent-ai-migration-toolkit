@@ -1,61 +1,42 @@
-import { confirmActionAsync, getDefaultLog, logErrorAndExit } from '../../../core/index.js';
+import { confirmExportAsync, getDefaultLog } from '../../../core/index.js';
 import { ExportToolkit } from '../../../toolkit/index.js';
 import { KontentAiExportAdapter } from '../../../export/index.js';
-import { ICliFileConfig } from '../cli.models.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
+import { CliArgs } from '../args/cli-args.class.js';
 
-export async function exportAsync(config: ICliFileConfig): Promise<void> {
+export async function exportAsync(cliArgs: CliArgs): Promise<void> {
     const log = getDefaultLog();
-    const language = config.language;
+    const language = await cliArgs.getRequiredArgumentValueAsync('language');
+    const environmentId = await cliArgs.getRequiredArgumentValueAsync('sourceEnvironmentId');
+    const apiKey = await cliArgs.getRequiredArgumentValueAsync('sourceApiKey');
+    const items = (await cliArgs.getRequiredArgumentValueAsync('items')).split(',');
+    const baseUrl = await cliArgs.getOptionalArgumentValueAsync('baseUrl');
+    const force = await cliArgs.getBooleanArgumentValueAsync('force', false);
+    const itemsFilename =
+        (await cliArgs.getOptionalArgumentValueAsync('itemsFilename')) ?? getDefaultExportFilename('items');
+    const assetsFilename =
+        (await cliArgs.getOptionalArgumentValueAsync('assetsFilename')) ?? getDefaultExportFilename('assets');
 
-    if (!config.environmentId) {
-        logErrorAndExit({
-            message: `Invalid 'environmentId' parameter`
-        });
-    }
-
-    if (!config.apiKey) {
-        logErrorAndExit({
-            message: `Invalid 'apiKey' parameter`
-        });
-    }
-
-    if (!language) {
-        logErrorAndExit({
-            message: `Invalid 'language' parameter`
-        });
-    }
-
-    if (!config.items) {
-        logErrorAndExit({
-            message: `Invalid 'items' parameter`
-        });
-    }
-
-    await confirmActionAsync({
-        action: 'export',
-        force: config.force,
-        apiKey: config.apiKey,
-        environmentId: config.environmentId,
+    await confirmExportAsync({
+        force: force,
+        apiKey: apiKey,
+        environmentId: environmentId,
         log: log
     });
 
     const adapter = new KontentAiExportAdapter({
         log: log,
-        environmentId: config.environmentId,
-        managementApiKey: config.apiKey,
-        baseUrl: config.baseUrl,
-        exportItems: config.items.map((m) => {
+        environmentId: environmentId,
+        apiKey: apiKey,
+        baseUrl: baseUrl,
+        exportItems: items.map((m) => {
             return {
                 itemCodename: m,
                 languageCodename: language
             };
         })
     });
-
-    const itemsFilename = config.itemsFilename ?? getDefaultExportFilename('items');
-    const assetsFilename = config.assetsFilename ?? getDefaultExportFilename('assets');
 
     const exportToolkit = new ExportToolkit({
         log: log,

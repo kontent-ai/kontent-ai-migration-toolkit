@@ -30,7 +30,6 @@ export type ImportTransformFunc = (data: {
 
 export interface IImportConfig {
     log: Log;
-    sourceType: ImportSourceType;
     managementApiKey: string;
     skipFailedItems: boolean;
     retryStrategy?: IRetryStrategyOptions;
@@ -50,10 +49,8 @@ export interface IImportAllResult {
 }
 
 export interface IImportSource {
-    importData: {
-        items: IMigrationItem[];
-        assets: IMigrationAsset[];
-    };
+    items: IMigrationItem[];
+    assets: IMigrationAsset[];
 }
 
 export interface IFlattenedFolder {

@@ -23,8 +23,26 @@ export const cliArgs = getCliArgs()
     })
     .withCommand({
         alias: `k`,
-        name: `apiKey`,
+        name: `sourceApiKey`,
         description: `Api key used for request authorization`,
+        type: 'string'
+    })
+    .withCommand({
+        alias: `k`,
+        name: `sourceEnvironmentId`,
+        description: `Environment id`,
+        type: 'string'
+    })
+    .withCommand({
+        alias: `k`,
+        name: `targetApiKey`,
+        description: `Api key used for request authorization`,
+        type: 'string'
+    })
+    .withCommand({
+        alias: `k`,
+        name: `targetEnvironmentId`,
+        description: `Environment id`,
         type: 'string'
     })
     .withCommand({
