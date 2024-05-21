@@ -129,7 +129,7 @@ kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId
 2. Assets element values are not preserved during migration because elements can be referenced only by id's and not
    codenames.
 3. Components embedded within Rich text elements are not exported
-4. Language variants in `Scheduled` workflow step do not preserve their workflow status because it the API does not
+4. Language variants in `Scheduled` workflow step do not preserve their workflow status because the API does not
    provide an information about scheduled times
 
 ## Output / Input formats
