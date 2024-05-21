@@ -25,6 +25,13 @@ npm i @kontent-ai-consulting/migration-toolkit -g
 kontent-ai-migration-toolkit --help
 ```
 
+## Code examples
+
+1. [Import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-toolkit-sample.ts)
+2. [Export](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-toolkit-sample.ts)
+3. [Export from external system](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-from-external-system.ts)
+4. [Migrate between Kontent.ai environments](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-between-kontent-ai-environments.ts)
+
 # Migrate between Kontent.ai environments
 
 You may migrate content (items & asset) between Kontent.ai environments. For migrating _Data model / structure_ see
@@ -124,19 +131,6 @@ kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId
 3. Components embedded within Rich text elements are not exported
 4. Language variants in `Scheduled` workflow step do not preserve their workflow status because it the API does not
    provide an information about scheduled times
-
-## Code examples
-
-1. [Import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-toolkit-sample.ts)
-2. [Export](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-toolkit-sample.ts)
-3. [Export from external system](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-from-external-system.ts)
-4. [Migrate between Kontent.ai environments](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-between-kontent-ai-environments.ts)
-
-To execute your action run:
-
-```bash
-kontent-ai-migration-toolkit --config=export-config.json
-```
 
 ## Code samples for import & export
 
