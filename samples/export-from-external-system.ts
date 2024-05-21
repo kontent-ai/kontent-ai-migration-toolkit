@@ -1,4 +1,4 @@
-import { IMigrationAsset, IMigrationItem, getDefaultLog, IExportAdapter, ExportToolkit } from '../lib/index.js';
+import { IMigrationAsset, IMigrationItem, getDefaultLog, IExportAdapter, exportAsync } from '../lib/index.js';
 
 /* Typically you query your external system to create the migration items & assets */
 const exportAdapter: IExportAdapter = {
@@ -71,7 +71,11 @@ const exportAdapter: IExportAdapter = {
     }
 };
 
-const exportToolkit = new ExportToolkit({
+/*
+This will create items.json & assets.zip files within current folder
+Once exported, you can use import CLI (or importToolkit in code) to import data to a specified Kontent.ai environment
+*/
+await exportAsync({
     items: {
         filename: 'items.json',
         formatService: 'json'
@@ -83,9 +87,3 @@ const exportToolkit = new ExportToolkit({
     log: getDefaultLog(),
     adapter: exportAdapter
 });
-
-/*
-This will create items.json & assets.zip files within current folder
-Once exported, you can use import CLI (or importToolkit in code) to import data to a specified Kontent.ai environment
-*/
-await exportToolkit.exportAsync();

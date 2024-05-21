@@ -41,7 +41,7 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
         skipFailedItems: skipFailedItems,
         baseUrl: baseUrl,
         environmentId: environmentId,
-        managementApiKey: apiKey,
+        apiKey: apiKey,
         canImport: {
             contentItem: (item) => {
                 return true;

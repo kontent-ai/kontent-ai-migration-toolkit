@@ -21,7 +21,7 @@ const run = async () => {
     await importFromFilesAsync({
         log: log,
         environmentId: environmentId,
-        managementApiKey: apiKey,
+        apiKey: apiKey,
         skipFailedItems: false,
         items: {
             filename: getDefaultExportFilename('items'),

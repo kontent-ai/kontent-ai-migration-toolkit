@@ -30,7 +30,7 @@ export type ImportTransformFunc = (data: {
 
 export interface IImportConfig {
     log: Log;
-    managementApiKey: string;
+    apiKey: string;
     skipFailedItems: boolean;
     retryStrategy?: IRetryStrategyOptions;
     baseUrl?: string;

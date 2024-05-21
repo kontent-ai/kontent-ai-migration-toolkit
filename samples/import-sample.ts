@@ -1,16 +1,11 @@
-import { ImportToolkit, getDefaultLog } from '../lib/index.js';
-
-const importToolkit = new ImportToolkit({
-    sourceType: 'file', // or zip
-    log: getDefaultLog(),
-    environmentId: '<id>',
-    managementApiKey: '<mapiKey>',
-    skipFailedItems: false
-});
-
+import { importAsync, importFromFilesAsync, getDefaultLog } from '../lib/index.js';
 
 /* Import from previously exported files */
-await importToolkit.importFromFilesAsync({
+await importFromFilesAsync({
+    log: getDefaultLog(),
+    environmentId: '<id>',
+    apiKey: '<mapiKey>',
+    skipFailedItems: false,
     items: {
         filename: 'items-export.json', // or zip
         formatService: 'json'
@@ -22,7 +17,11 @@ await importToolkit.importFromFilesAsync({
 });
 
 /* Import migration items directly */
-await importToolkit.importAsync({
+await importAsync({
+    log: getDefaultLog(),
+    environmentId: '<id>',
+    apiKey: '<mapiKey>',
+    skipFailedItems: false,
     assets: [], // array of `IMigrationAsset` objects
     items: [] // array of `IMigrationItem` objects
 });

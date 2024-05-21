@@ -1,6 +1,6 @@
-import { getDefaultLog, MigrationToolkit } from '../lib/index.js';
+import { getDefaultLog, migrateAsync } from '../lib/index.js';
 
-const migrationToolkit = new MigrationToolkit({
+await migrateAsync({
     log: getDefaultLog(),
     sourceEnvironment: {
         apiKey: '<key>',
@@ -17,5 +17,3 @@ const migrationToolkit = new MigrationToolkit({
         id: '<id>'
     }
 });
-
-await migrationToolkit.migrateAsync();

@@ -1,4 +1,4 @@
-import { getDefaultLog, KontentAiExportAdapter, ExportToolkit } from '../lib/index.js';
+import { getDefaultLog, KontentAiExportAdapter, exportAsync } from '../lib/index.js';
 
 const adapter = new KontentAiExportAdapter({
     environmentId: '<id>',
@@ -12,7 +12,7 @@ const adapter = new KontentAiExportAdapter({
     ]
 });
 
-const exportToolkit = new ExportToolkit({
+await exportAsync({
     adapter,
     log: getDefaultLog(),
     items: {
@@ -25,5 +25,3 @@ const exportToolkit = new ExportToolkit({
         formatService: 'json' // or different one, see readme.md
     }
 });
-
-await exportToolkit.exportAsync();

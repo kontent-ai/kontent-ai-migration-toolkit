@@ -34,7 +34,7 @@ export async function migrateAsync(config: IMigrationConfig): Promise<void> {
     const importService = getImportService({
         log: config.log,
         environmentId: config.targetEnvironment.id,
-        managementApiKey: config.targetEnvironment.apiKey,
+        apiKey: config.targetEnvironment.apiKey,
         skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
         retryStrategy: defaultRetryStrategy
     });

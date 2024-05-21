@@ -31,7 +31,7 @@ export class ImportService {
 
     constructor(private config: IImportConfig) {
         this.managementClient = createManagementClient({
-            apiKey: config.managementApiKey,
+            apiKey: config.apiKey,
             baseUrl: config.baseUrl,
             environmentId: config.environmentId,
             httpService: defaultHttpService,
