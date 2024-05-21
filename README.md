@@ -5,8 +5,8 @@ It can be used to simplify migration from external systems and also provides a b
 environments.
 
 > [!TIP]  
-> This library aim to streamline the migration to / from Kontent.ai environment by providing a simple to use abstraction
-> layer and simplifies management of content items, language variants, moving items through workflow, publishing,
+> This library aims to streamline the migration to / from Kontent.ai environments by providing an abstraction
+> layer which handles creation / updates of content items, language variants, moving items through workflow, publishing,
 > archiving, downloading binary data, uploading assets, `id` to `codename` translation and more.
 
 This library can only be used in `node.js`. Use in Browsers is not supported.
@@ -30,7 +30,7 @@ kontent-ai-migration-toolkit --help
 1. [Import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-toolkit-sample.ts)
 2. [Export](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-toolkit-sample.ts)
 3. [Export from external system](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-from-external-system.ts)
-4. [Migrate between Kontent.ai environments](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-between-kontent-ai-environments.ts)
+4. [Migrate content between Kontent.ai environments](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-between-kontent-ai-environments.ts)
 
 # Migrate between Kontent.ai environments
 
@@ -131,11 +131,6 @@ kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId
 3. Components embedded within Rich text elements are not exported
 4. Language variants in `Scheduled` workflow step do not preserve their workflow status because it the API does not
    provide an information about scheduled times
-
-## Code samples for import & export
-
-See https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/tree/main/samples for examples of how to run
-this library in code rather then via command line.
 
 ## Output / Input formats
 
