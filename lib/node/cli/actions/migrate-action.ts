@@ -1,8 +1,8 @@
-import { MigrationToolkit } from '../../../toolkit/index.js';
+import { migrateAsync } from '../../../toolkit/index.js';
 import { confirmMigrateAsync, getDefaultLog } from '../../../core/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 
-export async function migrateAsync(cliArgs: CliArgs): Promise<void> {
+export async function migrateActionAsync(cliArgs: CliArgs): Promise<void> {
     const log = getDefaultLog();
     const sourceEnvironmentId = await cliArgs.getRequiredArgumentValueAsync('sourceEnvironmentId');
     const sourceApiKey = await cliArgs.getRequiredArgumentValueAsync('sourceApiKey');
@@ -26,7 +26,7 @@ export async function migrateAsync(cliArgs: CliArgs): Promise<void> {
         log: log
     });
 
-    const migrationToolkit = new MigrationToolkit({
+    await migrateAsync({
         log: log,
         sourceEnvironment: {
             id: sourceEnvironmentId,
@@ -44,8 +44,6 @@ export async function migrateAsync(cliArgs: CliArgs): Promise<void> {
             skipFailedItems: skipFailedItems
         }
     });
-
-    await migrationToolkit.migrateAsync();
 
     log.console({ type: 'completed', message: `Migration has been successful` });
 }

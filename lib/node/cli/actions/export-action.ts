@@ -1,11 +1,11 @@
 import { confirmExportAsync, getDefaultLog } from '../../../core/index.js';
-import { ExportToolkit } from '../../../toolkit/index.js';
+import { exportAsync } from '../../../toolkit/index.js';
 import { KontentAiExportAdapter } from '../../../export/index.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 
-export async function exportAsync(cliArgs: CliArgs): Promise<void> {
+export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
     const log = getDefaultLog();
     const language = await cliArgs.getRequiredArgumentValueAsync('language');
     const environmentId = await cliArgs.getRequiredArgumentValueAsync('sourceEnvironmentId');
@@ -38,22 +38,18 @@ export async function exportAsync(cliArgs: CliArgs): Promise<void> {
         })
     });
 
-    const exportToolkit = new ExportToolkit({
+    await exportAsync({
         log: log,
         adapter,
         items: {
             filename: itemsFilename,
             formatService: new ItemJsonProcessorService()
         },
-        assets: assetsFilename
-            ? {
-                  filename: assetsFilename,
-                  formatService: new AssetJsonProcessorService()
-              }
-            : undefined
+        assets: {
+            filename: assetsFilename,
+            formatService: new AssetJsonProcessorService()
+        }
     });
-
-    await exportToolkit.exportAsync();
 
     log.console({ type: 'completed', message: `Export has been successful` });
 }

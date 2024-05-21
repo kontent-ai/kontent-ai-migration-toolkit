@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { MigrationToolkit, confirmMigrateAsync, getDefaultLog, getEnvironmentRequiredValue } from '../lib/index.js';
+import { migrateAsync, confirmMigrateAsync, getDefaultLog, getEnvironmentRequiredValue } from '../lib/index.js';
 
 const run = async () => {
     dotenv.config({
@@ -25,7 +25,7 @@ const run = async () => {
         log: log
     });
 
-    const migrationToolkit = new MigrationToolkit({
+    await migrateAsync({
         log: log,
         sourceEnvironment: {
             id: sourceEnvironmentId,
@@ -43,8 +43,6 @@ const run = async () => {
             skipFailedItems: false
         }
     });
-
-    await migrationToolkit.migrateAsync();
 };
 
 run();

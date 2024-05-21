@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { ImportToolkit, confirmImportAsync, getDefaultLog, getEnvironmentRequiredValue } from '../lib/index.js';
+import { confirmImportAsync, getDefaultLog, getEnvironmentRequiredValue, importFromFilesAsync } from '../lib/index.js';
 import { getDefaultExportFilename } from 'lib/node/cli/utils/cli.utils.js';
 
 const run = async () => {
@@ -18,14 +18,11 @@ const run = async () => {
         log: log
     });
 
-    const importToolkit = new ImportToolkit({
+    await importFromFilesAsync({
         log: log,
         environmentId: environmentId,
         managementApiKey: apiKey,
-        skipFailedItems: false
-    });
-
-    await importToolkit.importFromFilesAsync({
+        skipFailedItems: false,
         items: {
             filename: getDefaultExportFilename('items'),
             formatService: 'json'

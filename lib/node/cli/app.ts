@@ -3,19 +3,19 @@ import colors from 'colors';
 
 import { handleError, logErrorAndExit } from '../../core/index.js';
 import { cliArgs } from './commands.js';
-import { exportAsync } from './actions/export.utils.js';
-import { importAsync } from './actions/import.utils.js';
-import { migrateAsync } from './actions/migrate.utils.js';
+import { exportActionAsync } from './actions/export-action.js';
+import { importActionAsync } from './actions/import-action.js';
+import { migrateActionAsync } from './actions/migrate-action.js';
 
 const run = async () => {
     const action = await cliArgs.getRequiredArgumentValueAsync('action');
 
     if (action === 'export') {
-        await exportAsync(cliArgs);
+        await exportActionAsync(cliArgs);
     } else if (action === 'import') {
-        await importAsync(cliArgs);
+        await importActionAsync(cliArgs);
     } else if (action === 'migrate') {
-        await migrateAsync(cliArgs);
+        await migrateActionAsync(cliArgs);
     } else {
         logErrorAndExit({
             message: `Invalid action '${colors.red(action)}'`

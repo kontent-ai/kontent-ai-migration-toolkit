@@ -1,12 +1,10 @@
-import colors from 'colors';
-import { getExtension, logErrorAndExit, confirmImportAsync, getDefaultLog } from '../../../core/index.js';
-import { IImportToolkitConfig, ImportToolkit } from '../../../toolkit/index.js';
-import { ImportSourceType } from '../../../import/index.js';
+import { confirmImportAsync, getDefaultLog } from '../../../core/index.js';
+import { importFromFilesAsync } from '../../../toolkit/index.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
 
-export async function importAsync(cliArgs: CliArgs): Promise<void> {
+export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     const log = getDefaultLog();
 
     const environmentId = await cliArgs.getRequiredArgumentValueAsync('targetEnvironmentId');
@@ -26,21 +24,19 @@ export async function importAsync(cliArgs: CliArgs): Promise<void> {
         log: log
     });
 
-    const itemsFileExtension = getExtension(itemsFilename ?? '')?.toLowerCase();
-
-    let sourceType: ImportSourceType;
-
-    if (itemsFileExtension?.endsWith('zip'.toLowerCase())) {
-        sourceType = 'zip';
-    } else if (itemsFileExtension?.endsWith('json'.toLowerCase())) {
-        sourceType = 'file';
-    } else {
-        logErrorAndExit({
-            message: `Unsupported file type '${colors.red(itemsFileExtension?.toString() ?? '')}'`
-        });
-    }
-
-    const importToolkitConfig: IImportToolkitConfig = {
+    await importFromFilesAsync({
+        items: itemsFilename
+            ? {
+                  filename: itemsFilename,
+                  formatService: new ItemJsonProcessorService()
+              }
+            : undefined,
+        assets: assetsFilename
+            ? {
+                  filename: assetsFilename,
+                  formatService: new AssetJsonProcessorService()
+              }
+            : undefined,
         log: log,
         skipFailedItems: skipFailedItems,
         baseUrl: baseUrl,
@@ -54,23 +50,6 @@ export async function importAsync(cliArgs: CliArgs): Promise<void> {
                 return true;
             }
         }
-    };
-
-    const importToolkit = new ImportToolkit(importToolkitConfig);
-
-    await importToolkit.importFromFilesAsync({
-        items: itemsFilename
-            ? {
-                  filename: itemsFilename,
-                  formatService: new ItemJsonProcessorService()
-              }
-            : undefined,
-        assets: assetsFilename
-            ? {
-                  filename: assetsFilename,
-                  formatService: new AssetJsonProcessorService()
-              }
-            : undefined
     });
 
     log.console({ type: 'completed', message: `Import has been successful` });

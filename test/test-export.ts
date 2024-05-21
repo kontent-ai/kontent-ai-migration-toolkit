@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 import {
-    ExportToolkit,
     KontentAiExportAdapter,
     confirmExportAsync,
+    exportAsync,
     getDefaultLog,
     getEnvironmentRequiredValue
 } from '../lib/index.js';
@@ -35,7 +35,7 @@ const run = async () => {
         ]
     });
 
-    const exportToolkit = new ExportToolkit({
+    await exportAsync({
         log: log,
         adapter,
         items: {
@@ -47,8 +47,6 @@ const run = async () => {
             formatService: 'json'
         }
     });
-
-    await exportToolkit.exportAsync();
 };
 
 run();
