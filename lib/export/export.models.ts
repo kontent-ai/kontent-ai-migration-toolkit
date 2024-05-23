@@ -1,4 +1,3 @@
-import colors from 'colors';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import {
@@ -77,12 +76,4 @@ export interface IKontentAiPreparedExportItem {
     workflowStepCodename: string;
     requestItem: IKontentAiExportRequestItem;
     contentType: IFlattenedContentType;
-}
-
-export function throwErrorForItemRequest(itemRequest: IKontentAiExportRequestItem, message: string): never {
-    throw Error(
-        `Export failed for item '${colors.yellow(itemRequest.itemCodename)}' in language '${colors.cyan(
-            itemRequest.languageCodename
-        )}'. Reason: ${message}`
-    );
 }

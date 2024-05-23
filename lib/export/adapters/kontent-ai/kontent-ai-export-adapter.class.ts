@@ -4,8 +4,7 @@ import {
     IExportAdapterResult,
     IExportContext,
     IKontentAiExportAdapterConfig,
-    IKontentAiPreparedExportItem,
-    throwErrorForItemRequest
+    IKontentAiPreparedExportItem
 } from '../../export.models.js';
 import colors from 'colors';
 import {
@@ -28,6 +27,7 @@ import {
 } from '../../../core/index.js';
 import { ExportContextService, getExportContextService } from './context/export-context.service.js';
 import { exportTransforms } from '../../../translation/index.js';
+import { throwErrorForItemRequest } from '../../utils/export.utils.js';
 
 export class KontentAiExportAdapter implements IExportAdapter {
     private readonly httpService: HttpService = new HttpService();

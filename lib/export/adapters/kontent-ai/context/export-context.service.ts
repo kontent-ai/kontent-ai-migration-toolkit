@@ -2,8 +2,7 @@ import {
     IExportContext,
     IExportContextEnvironmentData,
     IKontentAiExportRequestItem,
-    IKontentAiPreparedExportItem,
-    throwErrorForItemRequest
+    IKontentAiPreparedExportItem
 } from '../../../export.models.js';
 import {
     IAssetStateInSourceEnvironmentById,
@@ -27,6 +26,7 @@ import {
 } from '@kontent-ai/management-sdk';
 import colors from 'colors';
 import { itemsExtractionHelper } from '../../../../translation/index.js';
+import { throwErrorForItemRequest } from '../../../utils/export.utils.js';
 
 export function getExportContextService(log: Log, managementClient: ManagementClient): ExportContextService {
     return new ExportContextService(log, managementClient);
