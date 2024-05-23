@@ -2,7 +2,7 @@ import { libMetadata } from '../metadata.js';
 import { Log, executeWithTrackingAsync, getDefaultLog } from '../core/index.js';
 import { IKontentAiExportRequestItem, DefaultExportAdapter } from '../export/index.js';
 import { defaultRetryStrategy } from '@kontent-ai-consulting/tools-analytics';
-import { DefaultImportAdapter } from 'lib/import/index.js';
+import { DefaultImportAdapter } from '../import/index.js';
 
 export interface IMigrationEnv {
     id: string;
