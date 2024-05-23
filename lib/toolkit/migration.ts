@@ -51,7 +51,9 @@ export async function migrateAsync(config: IMigrationConfig): Promise<void> {
             },
             action: 'migrate',
             relatedEnvironmentId: undefined,
-            details: {}
+            details: {
+                itemsCount: config.sourceEnvironment.items.length
+            }
         },
         func: async () => {
             const exportData = await exportAdapter.exportAsync();
