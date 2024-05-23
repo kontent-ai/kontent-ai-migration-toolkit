@@ -5,6 +5,7 @@ await migrateAsync({
     sourceEnvironment: {
         apiKey: '<key>',
         id: '<id>',
+        // array of items to migrate from one environment to another
         items: [
             {
                 itemCodename: '<itemCodename>',

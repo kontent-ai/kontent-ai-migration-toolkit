@@ -1,4 +1,3 @@
-import { IImportData } from '../../toolkit/index.js';
 import {
     IAssetStateInTargetEnvironmentByCodename,
     IItemStateInTargetEnvironmentByCodename,
@@ -8,11 +7,11 @@ import {
     is404Error,
     processInChunksAsync,
     uniqueStringFilter
-} from '../../core/index.js';
+} from '../../../core/index.js';
 
 import { AssetModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportContext } from '../import.models.js';
-import { itemsExtractionHelper } from '../../translation/index.js';
+import { IImportContext, IImportData } from '../../import.models.js';
+import { itemsExtractionHelper } from '../../../translation/index.js';
 
 export function getImportContextService(log: Log, managementClient: ManagementClient): ImportContextService {
     return new ImportContextService(log, managementClient);

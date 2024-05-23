@@ -6,58 +6,63 @@ import {
     createManagementClient
 } from '@kontent-ai/management-sdk';
 
-import { defaultRetryStrategy, defaultHttpService, IMigrationItem, executeWithTrackingAsync } from '../core/index.js';
-import { IImportConfig, IImportContext, IImportSource } from './import.models.js';
-import { ImportAssetsService, getImportAssetsService } from './helper-services/import-assets.service.js';
-import { ImportContentItemHelper, getImportContentItemService } from './helper-services/import-content-item.service.js';
+import {
+    defaultRetryStrategy,
+    defaultHttpService,
+    IMigrationItem,
+    executeWithTrackingAsync
+} from '../../core/index.js';
+import { IImportAdapter, IKontentAiImportConfig, IImportContext, IImportData } from '../import.models.js';
+import { ImportAssetsService, getImportAssetsService } from '../helper-services/import-assets.service.js';
+import {
+    ImportContentItemHelper,
+    getImportContentItemService
+} from '../helper-services/import-content-item.service.js';
 import {
     ImportLanguageVariantServices,
     getImportLanguageVariantstemService
-} from './helper-services/import-language-variant.service.js';
+} from '../helper-services/import-language-variant.service.js';
 import colors from 'colors';
-import { libMetadata } from '../metadata.js';
+import { libMetadata } from '../../metadata.js';
 import { ImportContextService, getImportContextService } from './context/import-context.service.js';
 
-export function getImportService(config: IImportConfig): ImportService {
-    return new ImportService(config);
-}
+export class KontentAiImportAdapter implements IImportAdapter {
+    public readonly name: string = 'kontentAiImportAdapter';
+    public readonly client: ManagementClient;
 
-export class ImportService {
-    private readonly managementClient: ManagementClient;
     private readonly importAssetsService: ImportAssetsService;
     private readonly importContentItemService: ImportContentItemHelper;
     private readonly importLanguageVariantService: ImportLanguageVariantServices;
     private readonly importContextService: ImportContextService;
 
-    constructor(private config: IImportConfig) {
-        this.managementClient = createManagementClient({
+    constructor(private config: IKontentAiImportConfig) {
+        this.client = createManagementClient({
             apiKey: config.apiKey,
             baseUrl: config.baseUrl,
             environmentId: config.environmentId,
             httpService: defaultHttpService,
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
         });
-
-        this.importAssetsService = getImportAssetsService(config.log, this.managementClient);
+        this.importAssetsService = getImportAssetsService(config.log, this.client);
         this.importContentItemService = getImportContentItemService({
-            managementClient: this.managementClient,
+            managementClient: this.client,
             log: config.log,
             skipFailedItems: config.skipFailedItems
         });
         this.importLanguageVariantService = getImportLanguageVariantstemService({
-            managementClient: this.managementClient,
+            managementClient: this.client,
             log: config.log,
             skipFailedItems: config.skipFailedItems
         });
-        this.importContextService = getImportContextService(config.log, this.managementClient);
+        this.importContextService = getImportContextService(config.log, this.client);
     }
 
     getManagementClient(): ManagementClient {
-        return this.managementClient;
+        return this.client;
     }
 
-    async importAsync(sourceData: IImportSource): Promise<IImportContext> {
-        return await executeWithTrackingAsync({
+    async importAsync(sourceData: IImportData): Promise<void> {
+        await executeWithTrackingAsync({
             event: {
                 tool: 'migrationToolkit',
                 package: {
@@ -73,9 +78,7 @@ export class ImportService {
                 }
             },
             func: async () => {
-                // this is an optional step where users can exclude certain objects from being imported
-                const dataToImport = this.getDataToImport(sourceData);
-
+                const dataToImport = this.filterDataToImport(sourceData);
                 const importContext = await this.importContextService.getImportContextAsync(dataToImport);
 
                 // import order matters
@@ -106,14 +109,12 @@ export class ImportService {
                     type: 'info',
                     message: `Finished import`
                 });
-
-                return importContext;
             }
         });
     }
 
-    private getDataToImport(source: IImportSource): IImportSource {
-        const dataToImport: IImportSource = {
+    private filterDataToImport(source: IImportData): IImportData {
+        const dataToImport: IImportData = {
             assets: [],
             items: []
         };
@@ -188,14 +189,14 @@ export class ImportService {
     }
 
     private async getWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
-        return await this.managementClient
+        return await this.client
             .listWorkflows()
             .toPromise()
             .then((m) => m.data);
     }
 
     private async getCollectionsAsync(): Promise<CollectionModels.Collection[]> {
-        return await this.managementClient
+        return await this.client
             .listCollections()
             .toPromise()
             .then((m) => m.data.collections);

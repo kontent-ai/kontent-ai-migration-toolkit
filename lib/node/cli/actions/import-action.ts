@@ -3,6 +3,7 @@ import { importFromFilesAsync } from '../../../toolkit/index.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
+import { KontentAiImportAdapter } from 'lib/import/index.js';
 
 export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     const log = getDefaultLog();
@@ -25,31 +26,30 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     });
 
     await importFromFilesAsync({
-        items: itemsFilename
-            ? {
-                  filename: itemsFilename,
-                  formatService: new ItemJsonProcessorService()
-              }
-            : undefined,
-        assets: assetsFilename
-            ? {
-                  filename: assetsFilename,
-                  formatService: new AssetJsonProcessorService()
-              }
-            : undefined,
+        items: {
+            filename: itemsFilename,
+            formatService: new ItemJsonProcessorService()
+        },
+        assets: {
+            filename: assetsFilename,
+            formatService: new AssetJsonProcessorService()
+        },
         log: log,
-        skipFailedItems: skipFailedItems,
-        baseUrl: baseUrl,
-        environmentId: environmentId,
-        apiKey: apiKey,
-        canImport: {
-            contentItem: (item) => {
-                return true;
-            },
-            asset: (asset) => {
-                return true;
+        adapter: new KontentAiImportAdapter({
+            log: log,
+            skipFailedItems: skipFailedItems,
+            baseUrl: baseUrl,
+            environmentId: environmentId,
+            apiKey: apiKey,
+            canImport: {
+                contentItem: (item) => {
+                    return true;
+                },
+                asset: (asset) => {
+                    return true;
+                }
             }
-        }
+        })
     });
 
     log.console({ type: 'completed', message: `Import has been successful` });

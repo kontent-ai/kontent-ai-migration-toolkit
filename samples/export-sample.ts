@@ -1,20 +1,20 @@
 import { getDefaultLog, KontentAiExportAdapter, exportAsync } from '../lib/index.js';
 
-const adapter = new KontentAiExportAdapter({
-    environmentId: '<id>',
-    apiKey: '<apiKey>',
-    log: getDefaultLog(),
-    exportItems: [
-        {
-            itemCodename: '<itemCodename>',
-            languageCodename: '<languageCodename>'
-        }
-    ]
-});
+const log = getDefaultLog();
 
 await exportAsync({
-    adapter,
-    log: getDefaultLog(),
+    adapter: new KontentAiExportAdapter({
+        environmentId: '<id>',
+        apiKey: '<apiKey>',
+        log: log,
+        exportItems: [
+            {
+                itemCodename: '<itemCodename>',
+                languageCodename: '<languageCodename>'
+            }
+        ]
+    }),
+    log: log,
     items: {
         filename: 'items-export.zip',
         formatService: 'json' // or different one, see readme.md

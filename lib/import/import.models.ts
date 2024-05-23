@@ -8,9 +8,20 @@ import {
     IItemStateInTargetEnvironmentByCodename,
     IReferencedDataInMigrationItems
 } from '../core/index.js';
-import { ElementContracts } from '@kontent-ai/management-sdk';
+import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 
 export type ImportSourceType = 'zip' | 'file';
+
+export interface IImportData {
+    items: IMigrationItem[];
+    assets: IMigrationAsset[];
+}
+
+export interface IImportAdapter {
+    readonly name: string;
+    readonly client: ManagementClient;
+    importAsync(data: IImportData): Promise<void>;
+}
 
 export interface IImportContext {
     componentItems: IMigrationItem[];
@@ -28,7 +39,7 @@ export type ImportTransformFunc = (data: {
     sourceItems: IMigrationItem[];
 }) => Promise<ElementContracts.IContentItemElementContract>;
 
-export interface IImportConfig {
+export interface IKontentAiImportConfig {
     log: Log;
     apiKey: string;
     skipFailedItems: boolean;
@@ -46,11 +57,6 @@ export interface IImportAllResult {
         timestamp: Date;
         environmentId: string;
     };
-}
-
-export interface IImportSource {
-    items: IMigrationItem[];
-    assets: IMigrationAsset[];
 }
 
 export interface IFlattenedFolder {

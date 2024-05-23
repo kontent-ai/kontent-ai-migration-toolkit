@@ -2,10 +2,10 @@ import colors from 'colors';
 import JSZip from 'jszip';
 
 import { IExportAdapterResult } from '../export/index.js';
-import { IImportSource } from '../import/index.js';
 import { IItemFormatService, ZipCompressionLevel, IAssetFormatService, FileBinaryData } from './zip.models.js';
 import { ZipPackage } from './zip-package.class.js';
 import { IFlattenedContentType, IMigrationAsset, IMigrationItem, Log } from '../core/index.js';
+import { IImportData } from '../import/import.models.js';
 
 export function getZipService(log: Log): ZipService {
     return new ZipService(log);
@@ -24,8 +24,8 @@ export class ZipService {
             formatService: IAssetFormatService;
         };
         types: IFlattenedContentType[];
-    }): Promise<IImportSource> {
-        const result: IImportSource = {
+    }): Promise<IImportData> {
+        const result: IImportData = {
             items: [],
             assets: []
         };
@@ -89,7 +89,7 @@ export class ZipService {
             formatService: IAssetFormatService;
         };
         types: IFlattenedContentType[];
-    }): Promise<IImportSource> {
+    }): Promise<IImportData> {
         let parsedItems: IMigrationItem[] = [];
         let parsedAssets: IMigrationAsset[] = [];
 
@@ -118,7 +118,7 @@ export class ZipService {
             });
         }
 
-        const result: IImportSource = {
+        const result: IImportData = {
             items: parsedItems,
             assets: parsedAssets
         };

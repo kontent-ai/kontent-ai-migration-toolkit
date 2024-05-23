@@ -1,11 +1,17 @@
-import { importAsync, importFromFilesAsync, getDefaultLog } from '../lib/index.js';
+import { importAsync, importFromFilesAsync, getDefaultLog, KontentAiImportAdapter } from '../lib/index.js';
 
-/* Import from previously exported files */
-await importFromFilesAsync({
-    log: getDefaultLog(),
+const log = getDefaultLog();
+const adapter = new KontentAiImportAdapter({
     environmentId: '<id>',
     apiKey: '<mapiKey>',
     skipFailedItems: false,
+    log: log
+});
+
+/* Import from previously exported files */
+await importFromFilesAsync({
+    adapter: adapter,
+    log: log,
     items: {
         filename: 'items-export.json', // or zip
         formatService: 'json'
@@ -18,10 +24,7 @@ await importFromFilesAsync({
 
 /* Import migration items directly */
 await importAsync({
-    log: getDefaultLog(),
-    environmentId: '<id>',
-    apiKey: '<mapiKey>',
-    skipFailedItems: false,
+    adapter: adapter,
     assets: [], // array of `IMigrationAsset` objects
     items: [] // array of `IMigrationItem` objects
 });

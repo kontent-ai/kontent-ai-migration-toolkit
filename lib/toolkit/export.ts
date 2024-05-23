@@ -1,12 +1,12 @@
 import { libMetadata } from '../metadata.js';
-import { Log, executeWithTrackingAsync } from '../core/index.js';
+import { Log, executeWithTrackingAsync, getDefaultLog } from '../core/index.js';
 import { IExportAdapter, IExportAdapterResult } from '../export/index.js';
 import { getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
 import { AssetsFormatConfig, ItemsFormatConfig, getZipService } from '../zip/index.js';
 import { getFileService } from '../file/index.js';
 
 export interface IExportConfig {
-    log: Log;
+    log?: Log;
     adapter: IExportAdapter;
     items: {
         filename: string;
@@ -19,8 +19,9 @@ export interface IExportConfig {
 }
 
 export async function exportAsync(config: IExportConfig): Promise<IExportAdapterResult> {
-    const fileService = getFileService(config.log);
-    const fileProcessorService = getZipService(config.log);
+    const log = config.log ?? getDefaultLog();
+    const fileService = getFileService(log);
+    const fileProcessorService = getZipService(log);
 
     return await executeWithTrackingAsync({
         event: {
