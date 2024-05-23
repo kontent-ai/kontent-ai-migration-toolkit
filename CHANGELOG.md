@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-3](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v1.0.0-2...v1.0.0-3) (2024-05-23)
+
+
+### Bug Fixes
+
+* use relative import path ([ce055ec](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/commit/ce055ecdf8bc31e3c1b1e0320bdcb7bd09c25976))
+
 ## [1.0.0-2](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v1.0.0-1...v1.0.0-2) (2024-05-23)
 
 
