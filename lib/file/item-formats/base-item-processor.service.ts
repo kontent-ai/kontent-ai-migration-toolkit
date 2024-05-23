@@ -8,7 +8,7 @@ import {
 import colors from 'colors';
 
 export abstract class BaseItemProcessorService implements IItemFormatService {
-    abstract name: string;
+    abstract readonly name: string;
     abstract transformContentItemsAsync(data: ItemsTransformData): Promise<FileBinaryData>;
     abstract parseContentItemsAsync(data: ItemsParseData): Promise<IMigrationItem[]>;
 

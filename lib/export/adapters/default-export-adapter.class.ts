@@ -30,8 +30,9 @@ import { exportTransforms } from '../../translation/index.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
 
 export class DefaultExportAdapter implements IExportAdapter {
-    private readonly httpService: HttpService = new HttpService();
     public readonly name: string = 'Kontent.ai export adapter';
+
+    private readonly httpService: HttpService = new HttpService();
     private readonly managementClient: ManagementClient;
     private readonly exportContextService: ExportContextService;
 
