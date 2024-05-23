@@ -28,21 +28,20 @@ export async function importAsync(config: IImportConfig): Promise<void> {
 }
 
 export async function importFromFilesAsync(config: IImportFromFilesConfig): Promise<void> {
-    const data = await getSourceDataAsync(config);
-
-    await config.adapter.importAsync(data);
+    await config.adapter.importAsync(await getSourceDataAsync(config));
 }
 
-async function getSourceDataAsync(data: IImportFromFilesConfig): Promise<IImportData> {
-    if (data?.items?.filename?.toLowerCase()?.endsWith('.zip')) {
-        return await getImportDataFromZipAsync(data);
+async function getSourceDataAsync(config: IImportFromFilesConfig): Promise<IImportData> {
+    const log = config.log ?? getDefaultLog();
+
+    if (config?.items?.filename?.toLowerCase()?.endsWith('.zip')) {
+        return await getImportDataFromZipAsync(config, log);
     }
 
-    return await getImportDataFromNonZipFileAsync(data);
+    return await getImportDataFromNonZipFileAsync(config, log);
 }
 
-async function getImportDataFromZipAsync(config: IImportFromFilesConfig): Promise<IImportData> {
-    const log = config.log ?? getDefaultLog();
+async function getImportDataFromZipAsync(config: IImportFromFilesConfig, log: Log): Promise<IImportData> {
     const fileService = getFileService(log);
     const fileProcessorService = getZipService(log);
 
@@ -65,9 +64,7 @@ async function getImportDataFromZipAsync(config: IImportFromFilesConfig): Promis
     return importSourceData;
 }
 
-async function getImportDataFromNonZipFileAsync(config: IImportFromFilesConfig): Promise<IImportData> {
-    const log = config.log ?? getDefaultLog();
-
+async function getImportDataFromNonZipFileAsync(config: IImportFromFilesConfig, log: Log): Promise<IImportData> {
     const fileService = getFileService(log);
     const fileProcessorService = getZipService(log);
     const importSourceData = await fileProcessorService.parseFileAsync({
