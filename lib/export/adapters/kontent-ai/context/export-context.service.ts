@@ -36,13 +36,7 @@ export class ExportContextService {
     constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
 
     async getExportContextAsync(data: { exportItems: IKontentAiExportRequestItem[] }): Promise<IExportContext> {
-        const environmentData: IExportContextEnvironmentData = {
-            collections: await this.getAllCollectionsAsync(),
-            contentTypes: await getFlattenedContentTypesAsync(this.managementClient, this.log),
-            languages: await this.getAllLanguagesAsync(),
-            workflows: await this.getAllWorkflowsAsync(),
-            taxonomies: await this.getAllTaxonomiesAsync()
-        };
+        const environmentData = await this.getEnvironmentDataAsync();
 
         this.log.console({
             type: 'info',
@@ -212,6 +206,18 @@ export class ExportContextService {
         }
 
         return undefined;
+    }
+
+    private async getEnvironmentDataAsync(): Promise<IExportContextEnvironmentData> {
+        const environmentData: IExportContextEnvironmentData = {
+            collections: await this.getAllCollectionsAsync(),
+            contentTypes: await getFlattenedContentTypesAsync(this.managementClient, this.log),
+            languages: await this.getAllLanguagesAsync(),
+            workflows: await this.getAllWorkflowsAsync(),
+            taxonomies: await this.getAllTaxonomiesAsync()
+        };
+
+        return environmentData;
     }
 
     private async getAllLanguagesAsync(): Promise<LanguageModels.LanguageModel[]> {
