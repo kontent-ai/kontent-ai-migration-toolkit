@@ -3,7 +3,7 @@ import {
     IExportContextEnvironmentData,
     IKontentAiExportRequestItem,
     IKontentAiPreparedExportItem
-} from '../../../export.models.js';
+} from '../../export.models.js';
 import {
     IAssetStateInSourceEnvironmentById,
     IItemStateInSourceEnvironmentById,
@@ -13,7 +13,7 @@ import {
     logFetchedItems,
     processInChunksAsync,
     uniqueStringFilter
-} from '../../../../core/index.js';
+} from '../../../core/index.js';
 import {
     AssetModels,
     CollectionModels,
@@ -25,8 +25,8 @@ import {
     WorkflowModels
 } from '@kontent-ai/management-sdk';
 import colors from 'colors';
-import { itemsExtractionHelper } from '../../../../translation/index.js';
-import { throwErrorForItemRequest } from '../../../utils/export.utils.js';
+import { itemsExtractionHelper } from '../../../translation/index.js';
+import { throwErrorForItemRequest } from '../../utils/export.utils.js';
 
 export function getExportContextService(log: Log, managementClient: ManagementClient): ExportContextService {
     return new ExportContextService(log, managementClient);

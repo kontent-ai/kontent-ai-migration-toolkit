@@ -1,6 +1,6 @@
 import { confirmExportAsync, getDefaultLog } from '../../../core/index.js';
 import { exportAsync } from '../../../toolkit/index.js';
-import { KontentAiExportAdapter } from '../../../export/index.js';
+import { DefaultExportAdapter } from '../../../export/index.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
@@ -25,22 +25,20 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
         log: log
     });
 
-    const adapter = new KontentAiExportAdapter({
-        log: log,
-        environmentId: environmentId,
-        apiKey: apiKey,
-        baseUrl: baseUrl,
-        exportItems: items.map((m) => {
-            return {
-                itemCodename: m,
-                languageCodename: language
-            };
-        })
-    });
-
     await exportAsync({
         log: log,
-        adapter,
+        adapter: new DefaultExportAdapter({
+            log: log,
+            environmentId: environmentId,
+            apiKey: apiKey,
+            baseUrl: baseUrl,
+            exportItems: items.map((m) => {
+                return {
+                    itemCodename: m,
+                    languageCodename: language
+                };
+            })
+        }),
         items: {
             filename: itemsFilename,
             formatService: new ItemJsonProcessorService()

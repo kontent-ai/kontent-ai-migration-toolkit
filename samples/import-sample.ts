@@ -1,7 +1,7 @@
-import { importAsync, importFromFilesAsync, getDefaultLog, KontentAiImportAdapter } from '../lib/index.js';
+import { importAsync, importFromFilesAsync, getDefaultLog, DefaultImportAdapter } from '../lib/index.js';
 
 const log = getDefaultLog();
-const adapter = new KontentAiImportAdapter({
+const adapter = new DefaultImportAdapter({
     environmentId: '<id>',
     apiKey: '<mapiKey>',
     skipFailedItems: false,

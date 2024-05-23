@@ -1,9 +1,9 @@
-import { getDefaultLog, KontentAiExportAdapter, exportAsync } from '../lib/index.js';
+import { getDefaultLog, DefaultExportAdapter, exportAsync } from '../lib/index.js';
 
 const log = getDefaultLog();
 
 await exportAsync({
-    adapter: new KontentAiExportAdapter({
+    adapter: new DefaultExportAdapter({
         environmentId: '<id>',
         apiKey: '<apiKey>',
         log: log,

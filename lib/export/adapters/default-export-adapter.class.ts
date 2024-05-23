@@ -5,7 +5,7 @@ import {
     IExportContext,
     IKontentAiExportAdapterConfig,
     IKontentAiPreparedExportItem
-} from '../../export.models.js';
+} from '../export.models.js';
 import colors from 'colors';
 import {
     AssetModels,
@@ -24,14 +24,14 @@ import {
     extractErrorData,
     processInChunksAsync,
     getAssetExternalIdForCodename
-} from '../../../core/index.js';
+} from '../../core/index.js';
 import { ExportContextService, getExportContextService } from './context/export-context.service.js';
-import { exportTransforms } from '../../../translation/index.js';
-import { throwErrorForItemRequest } from '../../utils/export.utils.js';
+import { exportTransforms } from '../../translation/index.js';
+import { throwErrorForItemRequest } from '../utils/export.utils.js';
 
-export class KontentAiExportAdapter implements IExportAdapter {
+export class DefaultExportAdapter implements IExportAdapter {
     private readonly httpService: HttpService = new HttpService();
-    public readonly name: string = 'kontentAi';
+    public readonly name: string = 'Kontent.ai export adapter';
     private readonly managementClient: ManagementClient;
     private readonly exportContextService: ExportContextService;
 

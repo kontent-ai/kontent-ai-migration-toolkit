@@ -26,8 +26,8 @@ import colors from 'colors';
 import { libMetadata } from '../../metadata.js';
 import { ImportContextService, getImportContextService } from './context/import-context.service.js';
 
-export class KontentAiImportAdapter implements IImportAdapter {
-    public readonly name: string = 'kontentAiImportAdapter';
+export class DefaultImportAdapter implements IImportAdapter {
+    public readonly name: string = 'Kontent.ai import adapter';
     public readonly client: ManagementClient;
 
     private readonly importAssetsService: ImportAssetsService;

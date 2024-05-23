@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
 import {
-    KontentAiExportAdapter,
+    DefaultExportAdapter,
     confirmExportAsync,
     exportAsync,
     getDefaultLog,
@@ -23,7 +23,7 @@ const run = async () => {
         log: log
     });
 
-    const adapter = new KontentAiExportAdapter({
+    const adapter = new DefaultExportAdapter({
         environmentId: environmentId,
         apiKey: apiKey,
         log: log,

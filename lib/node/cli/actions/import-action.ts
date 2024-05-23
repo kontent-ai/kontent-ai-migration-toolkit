@@ -3,7 +3,7 @@ import { importFromFilesAsync } from '../../../toolkit/index.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
-import { KontentAiImportAdapter } from 'lib/import/index.js';
+import { DefaultImportAdapter } from 'lib/import/index.js';
 
 export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     const log = getDefaultLog();
@@ -35,7 +35,7 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
             formatService: new AssetJsonProcessorService()
         },
         log: log,
-        adapter: new KontentAiImportAdapter({
+        adapter: new DefaultImportAdapter({
             log: log,
             skipFailedItems: skipFailedItems,
             baseUrl: baseUrl,

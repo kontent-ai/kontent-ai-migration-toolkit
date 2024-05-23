@@ -1,8 +1,8 @@
 import { libMetadata } from '../metadata.js';
 import { Log, executeWithTrackingAsync, getDefaultLog } from '../core/index.js';
-import { IKontentAiExportRequestItem, KontentAiExportAdapter } from '../export/index.js';
+import { IKontentAiExportRequestItem, DefaultExportAdapter } from '../export/index.js';
 import { defaultRetryStrategy } from '@kontent-ai-consulting/tools-analytics';
-import { KontentAiImportAdapter } from 'lib/import/index.js';
+import { DefaultImportAdapter } from 'lib/import/index.js';
 
 export interface IMigrationEnv {
     id: string;
@@ -26,7 +26,7 @@ export interface IMigrationConfig {
 export async function migrateAsync(config: IMigrationConfig): Promise<void> {
     const log = config.log ?? getDefaultLog();
 
-    const exportAdapter = new KontentAiExportAdapter({
+    const exportAdapter = new DefaultExportAdapter({
         environmentId: config.sourceEnvironment.id,
         apiKey: config.sourceEnvironment.apiKey,
         exportItems: config.sourceEnvironment.items,
@@ -34,7 +34,7 @@ export async function migrateAsync(config: IMigrationConfig): Promise<void> {
         retryStrategy: defaultRetryStrategy
     });
 
-    const importAdapter = new KontentAiImportAdapter({
+    const importAdapter = new DefaultImportAdapter({
         log: log,
         environmentId: config.targetEnvironment.id,
         apiKey: config.targetEnvironment.apiKey,
