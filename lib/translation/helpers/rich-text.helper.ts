@@ -22,6 +22,7 @@ class RichTextHelper {
             dataNewWindowAttributeName: 'data-new-window',
             dataAssetIdAttributeName: 'data-asset-id',
             dataItemIdAttributeName: 'data-item-id',
+            dataCodenameAttributeName: 'data-codename',
             dataItemExternalIdAttributeName: 'data-item-external-id',
             dataIdAttributeName: 'data-id',
             dataExternalIdAttributeName: 'data-external-id',
@@ -38,7 +39,7 @@ class RichTextHelper {
         },
 
         attrs: {
-            dataCodenameAttrRegex: new RegExp(`data-codename=\\"(.+?)\\"`),
+            dataCodenameAttrRegex: new RegExp(`${this.attributes.data.dataCodenameAttributeName}=\\"(.+?)\\"`),
             dataItemIdAttrRegex: new RegExp(`${this.attributes.data.dataItemIdAttributeName}=\\"(.+?)\\"`),
             dataAssetIdAttrRegex: new RegExp(`${this.attributes.data.dataAssetIdAttributeName}=\\"(.+?)\\"`),
             dataIdAttrRegex: new RegExp(`${this.attributes.data.dataIdAttributeName}=\\"(.+?)\\"`)
