@@ -8,7 +8,7 @@ import { importActionAsync } from './actions/import-action.js';
 import { migrateActionAsync } from './actions/migrate-action.js';
 
 const run = async () => {
-    const action = await cliArgs.getRequiredArgumentValueAsync('action');
+    const action = await cliArgs.getCliActionAsync();
 
     if (action === 'export') {
         await exportActionAsync(cliArgs);

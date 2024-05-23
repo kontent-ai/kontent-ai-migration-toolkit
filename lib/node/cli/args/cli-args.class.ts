@@ -1,9 +1,11 @@
 import yargs, { Argv } from 'yargs';
+import { hideBin } from 'yargs/helpers';
 import colors from 'colors';
-import { logErrorAndExit } from '../../../core/index.js';
+import { CliAction, logErrorAndExit } from '../../../core/index.js';
+import { ICommand, ICommandOption } from '../cli.models.js';
 
 export function getCliArgs(): CliArgs {
-    const argv = yargs(process.argv.slice(2));
+    const argv = yargs(hideBin(process.argv));
 
     return new CliArgs(argv);
 }
@@ -11,24 +13,51 @@ export function getCliArgs(): CliArgs {
 export class CliArgs {
     constructor(private readonly argv: Argv) {}
 
-    withExample(config: { example: string; command: string }): CliArgs {
-        this.argv.example(config.command, config.example);
-        return this;
-    }
+    withCommand(command: ICommand): CliArgs {
+        this.argv.command(command.name, command.description, (yargs) => {
+            for (const example of command.examples) {
+                yargs.example(command.name, example);
+            }
 
-    withCommand(config: {
-        name: string;
-        alias?: string;
-        description?: string;
-        type?: 'boolean' | 'number' | 'string' | 'array';
-    }): CliArgs {
-        this.argv.option(config.name, {
-            alias: config.alias,
-            description: config.description,
-            type: config.type
+            for (const option of command.options) {
+                yargs.positional(option.name, {
+                    alias: option.alias,
+                    describe: option.description,
+                    type: option.type,
+                    demandOption: option.isRequired
+                });
+            }
         });
 
         return this;
+    }
+
+    withOption(option: ICommandOption): CliArgs {
+        this.argv.option(option.name, {
+            alias: option.alias,
+            description: option.description,
+            type: option.type,
+            demandOption: option.isRequired
+        });
+
+        return this;
+    }
+
+    async getCliActionAsync(): Promise<CliAction> {
+        const resolvedArgv = await this.argv.argv;
+        const command = resolvedArgv._?.[0]?.toString()?.toLowerCase();
+
+        if (command === <CliAction>'export') {
+            return 'export';
+        }
+        if (command === <CliAction>'import') {
+            return 'import';
+        }
+        if (command === <CliAction>'migrate') {
+            return 'migrate';
+        }
+
+        throw Error(`Unsupported command '${colors.yellow(command)}'`);
     }
 
     async getOptionalArgumentValueAsync(argName: string): Promise<string | undefined> {
@@ -40,7 +69,7 @@ export class CliArgs {
 
         if (!value) {
             logErrorAndExit({
-                message: `Missing '${colors.red(argName)}' argument value`
+                message: `Missing '${colors.yellow(argName)}' argument value`
             });
         }
 

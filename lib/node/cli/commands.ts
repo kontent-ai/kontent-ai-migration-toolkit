@@ -1,92 +1,173 @@
 import { getCliArgs } from './args/cli-args.class.js';
 
 export const cliArgs = getCliArgs()
-    .withExample({
-        command: 'action',
-        example: `kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --format=json --itemsFilename=items.zip --assetsFilename=assets.zip`
-    })
-    .withExample({
-        command: 'action',
-        example: `kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json --language=default --items=itemA,itemB`
-    })
     .withCommand({
-        alias: `a`,
-        name: `action`,
-        description: `Type of action to execute`,
-        type: 'string'
+        name: 'export',
+        description: 'Exports content (items & assets) from Kontent.ai environment',
+        examples: [
+            `kontent-ai-migration-toolkit export --sourceEnvironmentId=x --sourceApiKey=x --language=default --items=itemA,itemB`
+        ],
+        options: [
+            {
+                name: `sourceApiKey`,
+                description: `Api key used for request authorization`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `sourceEnvironmentId`,
+                description: `Environment id of the source environment`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `language`,
+                description: `Language codename of items to export`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `items`,
+                description: `Comma separated item codenames to export`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `itemsFilename`,
+                description: `Name of items file to export / import`,
+                type: 'string',
+                isRequired: false
+            },
+            {
+                name: `assetsFilename`,
+                description: `Name of assets file to export / import`,
+                type: 'string',
+                isRequired: false
+            },
+            {
+                name: `baseUrl`,
+                description: `Custom base URL`,
+                type: 'string',
+                isRequired: false
+            }
+        ]
     })
+
     .withCommand({
-        alias: `d`,
-        name: `adapter`,
-        description: `Adapter used to export data`,
-        type: 'string'
+        name: 'import',
+        description: 'Imports content (items & assets) into Kontent.ai environment',
+        examples: [
+            `kontent-ai-migration-toolkit import --targetEnvironmentId=x --targetApiKey=x --itemsFilename=items.zip --assetsFilename=assets.zip`
+        ],
+        options: [
+            {
+                name: `targetApiKey`,
+                description: `Api key used for request authorization`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `targetEnvironmentId`,
+                description: `Environment id of the target environment`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `itemsFilename`,
+                description: `Name of items file to export / import`,
+                type: 'string',
+                isRequired: false
+            },
+            {
+                name: `assetsFilename`,
+                description: `Name of assets file to export / import`,
+                type: 'string',
+                isRequired: false
+            },
+            {
+                name: `skipFailedItems`,
+                description: `Indicates whether the import should continue even if some item fails to import`,
+                type: 'string',
+                isRequired: false
+            },
+            {
+                name: `baseUrl`,
+                description: `Custom base URL`,
+                type: 'string',
+                isRequired: false
+            }
+        ]
     })
+
     .withCommand({
-        alias: `k`,
-        name: `sourceApiKey`,
-        description: `Api key used for request authorization`,
-        type: 'string'
+        name: 'migrate',
+        description:
+            'Migrates content (items & assets) from one Kontent.ai environment into another Kontent.ai environment',
+        examples: [
+            `kontent-ai-migration-toolkit migrate --targetEnvironmentId=x --targetApiKey=x --sourceEnvironmentId=x --sourceApiKey=x --language=default --items=itemA,itemB`
+        ],
+        options: [
+            {
+                name: `sourceApiKey`,
+                description: `Api key used for request authorization`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `sourceEnvironmentId`,
+                description: `Environment id of the source environment`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `language`,
+                description: `Language codename of items to export`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `items`,
+                description: `Comma separated item codenames to export`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `targetApiKey`,
+                description: `Api key used for request authorization`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `targetEnvironmentId`,
+                description: `Environment id of the target environment`,
+                type: 'string',
+                isRequired: true
+            },
+            {
+                name: `skipFailedItems`,
+                description: `Indicates whether the import should continue even if some item fails to import`,
+                type: 'string',
+                isRequired: false
+            },
+            {
+                name: `baseUrl`,
+                description: `Custom base URL`,
+                type: 'string',
+                isRequired: false
+            }
+        ]
     })
-    .withCommand({
-        alias: `k`,
-        name: `sourceEnvironmentId`,
-        description: `Environment id`,
-        type: 'string'
-    })
-    .withCommand({
-        alias: `k`,
-        name: `targetApiKey`,
-        description: `Api key used for request authorization`,
-        type: 'string'
-    })
-    .withCommand({
-        alias: `k`,
-        name: `targetEnvironmentId`,
-        description: `Environment id`,
-        type: 'string'
-    })
-    .withCommand({
-        alias: `i`,
-        name: `items`,
-        description: `Comma separated item codenames to export`,
-        type: 'array'
-    })
-    .withCommand({
-        alias: `l`,
-        name: `language`,
-        description: `Language codename of items to export`,
-        type: 'string'
-    })
-    .withCommand({
-        name: `itemsFilename`,
-        description: `Name of items file to export / import`,
-        type: 'string'
-    })
-    .withCommand({
-        name: `assetsFilename`,
-        description: `Name of assets file to export / import`,
-        type: 'string'
-    })
-    .withCommand({
+
+    .withOption({
         alias: `f`,
-        name: `format`,
-        description: `Format of the export / import`,
-        type: 'string'
+        name: `force`,
+        description: `When enabled, confirmation is not required`,
+        type: 'boolean',
+        isRequired: false
     })
-    .withCommand({
-        alias: `b`,
-        name: `baseUrl`,
-        description: `Custom base URL`,
-        type: 'string'
-    })
-    .withCommand({
-        alias: `s`,
-        name: `skipFailedItems`,
-        description: `Indicates whether import should skip items that fail to import and cotinue with next item`,
-        type: 'boolean'
-    })
-    .withCommand({
+    .withOption({
         alias: `h`,
         name: `help`,
-        description: `Show help`
+        description: `Show help`,
+        isRequired: false
     });

@@ -13,4 +13,19 @@ export interface ICliFileConfig {
     force: boolean;
 }
 
+export interface ICommand {
+    name: string;
+    description: string;
+    options: ICommandOption[];
+    examples: string[];
+}
+
+export interface ICommandOption {
+    name: string;
+    isRequired: boolean;
+    alias?: string;
+    description?: string;
+    type?: 'boolean' | 'number' | 'string';
+}
+
 export type Args = { [key: string]: string | unknown };

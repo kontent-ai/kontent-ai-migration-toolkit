@@ -23,6 +23,9 @@ npm i @kontent-ai-consulting/migration-toolkit -g
 
 # with the package installed, you can call the tool as follows
 kontent-ai-migration-toolkit --help
+
+# or check details of particular command
+kontent-ai-migration-toolkit migrate --help
 ```
 
 ## Code examples
@@ -41,7 +44,6 @@ You may migrate content (items & asset) between Kontent.ai environments. For mig
 
 | Config                  | Value                                                                                                                                                   |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **action**              | `migrate` **(required)**                                                                                                                                |
 | **sourceEnvironmentId** | Id of source environment **(required)**                                                                                                                 |
 | **sourceApiKey**        | Management API key of source environment **(required)**                                                                                                 |
 | **targetEnvironmentId** | Id of target environment **(required)**                                                                                                                 |
@@ -50,6 +52,13 @@ You may migrate content (items & asset) between Kontent.ai environments. For mig
 | **items**               | Comma separated list of items that will be exported **(required)**                                                                                      |
 | skipFailedItems         | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
 | force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
+
+## Migrate CLI
+
+```bash
+# Migrate from Kontent.ai environment into another Kontent.ai environment
+kontent-ai-migration-toolkit migrate --targetEnvironmentId=x --targetApiKey=x --sourceEnvironmentId=x --sourceApiKey=x --language=default --items=itemA,itemB
+```
 
 # Import
 
@@ -67,7 +76,6 @@ You may migrate content (items & asset) between Kontent.ai environments. For mig
 
 | Config                  | Value                                                                                                                                                   |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **action**              | `import` **(required)**                                                                                                                                 |
 | **targetEnvironmentId** | Id of Kontent.ai environment **(required)**                                                                                                             |
 | **targetApiKey**        | Management API key **(required)**                                                                                                                       |
 | **itemsFilename**       | Name of the items file that will be used to parse items **(required)**                                                                                  |
@@ -90,11 +98,11 @@ created multiple times.
 If asset exists in target project (based on asset's `codename`), the asset upload will be skipped and not uploaded at
 all. Otherwise the asset will be created in target environment.
 
-## Import CLI samples
+## Import CLI
 
 ```bash
-# Import to target environment
-kontent-ai-migration-toolkit --action=import --apiKey=xxx --environmentId=xxx --format=json --itemsFilename=items.zip --assetsFilename=assets.zip
+# Import into target environment
+kontent-ai-migration-toolkit import --targetEnvironmentId=x --targetApiKey=x --itemsFilename=items.zip --assetsFilename=assets.zip
 ```
 
 # Export from Kontent.ai
@@ -106,7 +114,6 @@ However, when migration from 3rd party system you typically only use the `import
 
 | Config                  | Value                                                                                              |
 | ----------------------- | -------------------------------------------------------------------------------------------------- |
-| **action**              | `export` **(required)**                                                                            |
 | **sourceEnvironmentId** | Id of Kontent.ai environment **(required)**                                                        |
 | **sourceApiKey**        | Management API key of Kontent.ai environment **(required)**                                        |
 | **language**            | Codename of language that items will be exported in **(required)**                                 |
@@ -119,7 +126,7 @@ However, when migration from 3rd party system you typically only use the `import
 
 ```bash
 # Export from Kontent.ai environment
-kontent-ai-migration-toolkit --action=export --adapter=kontentAi --environmentId=xxx --format=json --language=default --items=itemA,itemB
+kontent-ai-migration-toolkit export --sourceEnvironmentId=x --sourceApiKey=x --language=default --items=itemA,itemB
 ```
 
 ## Limitations
