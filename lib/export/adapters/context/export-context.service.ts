@@ -40,7 +40,7 @@ export class ExportContextService {
 
         this.log.console({
             type: 'info',
-            message: `Preparing items for export`
+            message: `Preparing '${colors.yellow(data.exportItems.length.toString())}' items for export`
         });
         const preparedItems = await this.prepareExportItemsAsync({
             environmentData: environmentData,

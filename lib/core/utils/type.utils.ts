@@ -2,11 +2,14 @@ import {
     ContentTypeModels,
     ContentTypeSnippetModels,
     ContentTypeElements,
-    ManagementClient
+    ManagementClient,
+    ElementModels
 } from '@kontent-ai/management-sdk';
 import { IFlattenedContentType, IFlattenedContentTypeElement } from '../models/core.models.js';
 import { Log, logErrorAndExit, logFetchedItems } from './log.utils.js';
 import colors from 'colors';
+
+const excludedFlattenedElements: ElementModels.ElementType[] = ['guidelines'];
 
 export async function getFlattenedContentTypesAsync(
     managementClient: ManagementClient,
@@ -51,14 +54,11 @@ function getContentTypeElements(
         if (!element.codename || !element.id) {
             continue;
         }
-        const importElement: IFlattenedContentTypeElement = {
-            codename: element.codename,
-            id: element.id,
-            type: element.type,
-            element: element
-        };
+        if (excludeElement(element)) {
+            continue;
+        }
 
-        if (importElement.type === 'snippet') {
+        if (element.type === 'snippet') {
             const snippetElement = element as ContentTypeElements.ISnippetElement;
 
             // replace snippet element with actual elements
@@ -78,18 +78,34 @@ function getContentTypeElements(
                 if (!snippetElement.codename || !snippetElement.id) {
                     continue;
                 }
+                if (excludeElement(snippetElement)) {
+                    continue;
+                }
 
-                elements.push({
+                const flattenedElement: IFlattenedContentTypeElement = {
                     codename: snippetElement.codename,
                     type: snippetElement.type,
                     id: snippetElement.id,
                     element: element
-                });
+                };
+
+                elements.push(flattenedElement);
             }
         } else {
-            elements.push(importElement);
+            const flattenedElement: IFlattenedContentTypeElement = {
+                codename: element.codename,
+                id: element.id,
+                type: element.type,
+                element: element
+            };
+
+            elements.push(flattenedElement);
         }
     }
 
     return elements;
+}
+
+function excludeElement(element: ContentTypeElements.ContentTypeElementModel): boolean {
+    return excludedFlattenedElements.includes(element.type);
 }
