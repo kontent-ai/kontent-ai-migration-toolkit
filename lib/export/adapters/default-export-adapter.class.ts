@@ -3,7 +3,7 @@ import {
     IExportAdapter,
     IExportAdapterResult,
     IExportContext,
-    IKontentAiExportAdapterConfig,
+    IDefaultExportAdapterConfig,
     IKontentAiPreparedExportItem
 } from '../export.models.js';
 import colors from 'colors';
@@ -29,14 +29,18 @@ import { ExportContextService, getExportContextService } from './context/export-
 import { exportTransforms } from '../../translation/index.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
 
-export class DefaultExportAdapter implements IExportAdapter {
+export function getDefaultExportAdapter(config: IDefaultExportAdapterConfig): IExportAdapter {
+    return new DefaultExportAdapter(config);
+}
+
+class DefaultExportAdapter implements IExportAdapter {
     public readonly name: string = 'Kontent.ai export adapter';
 
     private readonly httpService: HttpService = new HttpService();
     private readonly managementClient: ManagementClient;
     private readonly exportContextService: ExportContextService;
 
-    constructor(private config: IKontentAiExportAdapterConfig) {
+    constructor(private config: IDefaultExportAdapterConfig) {
         this.managementClient = this.getManagementClient(config);
         this.exportContextService = getExportContextService(this.config.log, this.managementClient);
     }
@@ -150,7 +154,7 @@ export class DefaultExportAdapter implements IExportAdapter {
         return await this.getMigrationAssetsWithBinaryDataAsync(assets, context);
     }
 
-    private getManagementClient(config: IKontentAiExportAdapterConfig): ManagementClient {
+    private getManagementClient(config: IDefaultExportAdapterConfig): ManagementClient {
         const retryStrategy = config.retryStrategy ?? defaultRetryStrategy;
 
         return createManagementClient({

@@ -58,7 +58,7 @@ export interface IKontentAiExportRequestItem {
     languageCodename: string;
 }
 
-export interface IKontentAiExportAdapterConfig {
+export interface IDefaultExportAdapterConfig {
     log: Log;
     environmentId: string;
     apiKey: string;

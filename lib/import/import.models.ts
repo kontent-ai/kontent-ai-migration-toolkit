@@ -39,7 +39,7 @@ export type ImportTransformFunc = (data: {
     sourceItems: IMigrationItem[];
 }) => Promise<ElementContracts.IContentItemElementContract>;
 
-export interface IKontentAiImportConfig {
+export interface IDefaultImportAdapterConfig {
     log: Log;
     apiKey: string;
     skipFailedItems: boolean;

@@ -1,9 +1,8 @@
 import { confirmImportAsync, getDefaultLog } from '../../../core/index.js';
 import { importFromFilesAsync } from '../../../toolkit/index.js';
-import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
-import { DefaultImportAdapter } from 'lib/import/index.js';
+import { getDefaultImportAdapter } from 'lib/import/index.js';
 
 export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     const log = getDefaultLog();
@@ -28,14 +27,14 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     await importFromFilesAsync({
         items: {
             filename: itemsFilename,
-            formatService: new ItemJsonProcessorService()
+            formatService: 'json'
         },
         assets: {
             filename: assetsFilename,
-            formatService: new AssetJsonProcessorService()
+            formatService: 'json'
         },
         log: log,
-        adapter: new DefaultImportAdapter({
+        adapter: getDefaultImportAdapter({
             log: log,
             skipFailedItems: skipFailedItems,
             baseUrl: baseUrl,

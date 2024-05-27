@@ -1,6 +1,6 @@
 import { confirmExportAsync, getDefaultLog } from '../../../core/index.js';
 import { exportAsync } from '../../../toolkit/index.js';
-import { DefaultExportAdapter } from '../../../export/index.js';
+import { getDefaultExportAdapter } from '../../../export/index.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
@@ -27,7 +27,7 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
 
     await exportAsync({
         log: log,
-        adapter: new DefaultExportAdapter({
+        adapter: getDefaultExportAdapter({
             log: log,
             environmentId: environmentId,
             apiKey: apiKey,

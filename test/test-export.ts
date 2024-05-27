@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 import {
-    DefaultExportAdapter,
     confirmExportAsync,
     exportAsync,
+    getDefaultExportAdapter,
     getDefaultLog,
     getEnvironmentRequiredValue
 } from '../lib/index.js';
@@ -23,7 +23,7 @@ const run = async () => {
         log: log
     });
 
-    const adapter = new DefaultExportAdapter({
+    const adapter = getDefaultExportAdapter({
         environmentId: environmentId,
         apiKey: apiKey,
         log: log,

@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import {
-    DefaultImportAdapter,
     confirmImportAsync,
+    getDefaultImportAdapter,
     getDefaultLog,
     getEnvironmentRequiredValue,
     importFromFilesAsync
@@ -26,7 +26,7 @@ const run = async () => {
 
     await importFromFilesAsync({
         log: log,
-        adapter: new DefaultImportAdapter({
+        adapter: getDefaultImportAdapter({
             environmentId: environmentId,
             apiKey: apiKey,
             skipFailedItems: false,

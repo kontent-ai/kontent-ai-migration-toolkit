@@ -12,7 +12,7 @@ import {
     IMigrationItem,
     executeWithTrackingAsync
 } from '../../core/index.js';
-import { IImportAdapter, IKontentAiImportConfig, IImportContext, IImportData } from '../import.models.js';
+import { IDefaultImportAdapterConfig, IImportAdapter, IImportContext, IImportData } from '../import.models.js';
 import { ImportAssetsService, getImportAssetsService } from '../helper-services/import-assets.service.js';
 import {
     ImportContentItemHelper,
@@ -26,7 +26,11 @@ import colors from 'colors';
 import { libMetadata } from '../../metadata.js';
 import { ImportContextService, getImportContextService } from './context/import-context.service.js';
 
-export class DefaultImportAdapter implements IImportAdapter {
+export function getDefaultImportAdapter(config: IDefaultImportAdapterConfig): IImportAdapter {
+    return new DefaultImportAdapter(config);
+}
+
+class DefaultImportAdapter implements IImportAdapter {
     public readonly name: string = 'Kontent.ai import adapter';
     public readonly client: ManagementClient;
 
@@ -35,7 +39,7 @@ export class DefaultImportAdapter implements IImportAdapter {
     private readonly importLanguageVariantService: ImportLanguageVariantServices;
     private readonly importContextService: ImportContextService;
 
-    constructor(private config: IKontentAiImportConfig) {
+    constructor(private config: IDefaultImportAdapterConfig) {
         this.client = createManagementClient({
             apiKey: config.apiKey,
             baseUrl: config.baseUrl,
