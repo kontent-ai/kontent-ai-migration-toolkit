@@ -2,7 +2,6 @@ import { confirmExportAsync, getDefaultLog } from '../../../core/index.js';
 import { exportAsync } from '../../../toolkit/index.js';
 import { getDefaultExportAdapter } from '../../../export/index.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
-import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../../file/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 
 export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
@@ -41,11 +40,11 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
         }),
         items: {
             filename: itemsFilename,
-            formatService: new ItemJsonProcessorService()
+            formatService: 'json'
         },
         assets: {
             filename: assetsFilename,
-            formatService: new AssetJsonProcessorService()
+            formatService: 'json'
         }
     });
 
