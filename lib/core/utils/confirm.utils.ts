@@ -1,7 +1,6 @@
 import { createManagementClient } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import prompts from 'prompts';
-import { exitProcess } from './global.utils.js';
 import { Log } from './log.utils.js';
 
 export async function confirmExportAsync(data: {
@@ -113,11 +112,7 @@ async function confirmAsync(data: { action: string; message: string; force: bool
         });
 
         if (!confirmed.confirm) {
-            data.log.console({
-                type: 'cancel',
-                message: `Confirmation refused. Exiting process.`
-            });
-            exitProcess();
+            throw Error(`Confirmation refused.`);
         }
     }
 }

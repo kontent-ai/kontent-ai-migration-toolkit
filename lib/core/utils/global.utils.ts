@@ -2,10 +2,6 @@ import { AssetModels } from '@kontent-ai/management-sdk';
 import { format } from 'bytes';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
 
-export function exitProcess(): never {
-    process.exit(1);
-}
-
 export function formatBytes(bytes: number): string {
     return format(bytes);
 }
