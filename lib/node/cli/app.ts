@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import colors from 'colors';
+import chalk from 'chalk';
 
 import { handleError, logErrorAndExit } from '../../core/index.js';
 import { cliArgs } from './commands.js';
@@ -18,7 +18,7 @@ const run = async () => {
         await migrateActionAsync(cliArgs);
     } else {
         logErrorAndExit({
-            message: `Invalid action '${colors.red(action)}'`
+            message: `Invalid action '${chalk.red(action)}'`
         });
     }
 };

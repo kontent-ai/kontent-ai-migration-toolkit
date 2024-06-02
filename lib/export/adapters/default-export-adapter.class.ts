@@ -6,7 +6,7 @@ import {
     IDefaultExportAdapterConfig,
     IKontentAiPreparedExportItem
 } from '../export.models.js';
-import colors from 'colors';
+import chalk from 'chalk';
 import {
     AssetModels,
     CollectionModels,
@@ -133,9 +133,9 @@ class DefaultExportAdapter implements IExportAdapter {
 
             throwErrorForItemRequest(
                 data.exportItem.requestItem,
-                `Failed to map value of element '${colors.yellow(data.typeElement.codename)}' of type '${colors.cyan(
+                `Failed to map value of element '${chalk.yellow(data.typeElement.codename)}' of type '${chalk.cyan(
                     data.typeElement.type
-                )}'. Value: ${colors.bgMagenta(jsonValue)}. Message: ${errorData.message}`
+                )}'. Value: ${chalk.bgMagenta(jsonValue)}. Message: ${errorData.message}`
             );
         }
     }
@@ -171,7 +171,7 @@ class DefaultExportAdapter implements IExportAdapter {
     ): Promise<IMigrationAsset[]> {
         this.config.log.console({
             type: 'info',
-            message: `Preparing to download '${colors.yellow(assets.length.toString())}' assets`
+            message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });
 
         const exportedAssets: IMigrationAsset[] = await processInChunksAsync<AssetModels.Asset, IMigrationAsset>({

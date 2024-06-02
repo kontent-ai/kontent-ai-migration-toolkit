@@ -6,7 +6,7 @@ import {
     Log,
     getItemExternalIdForCodename
 } from '../../core/index.js';
-import colors from 'colors';
+import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
 
 export function getImportContentItemService(config: {
@@ -28,7 +28,7 @@ export class ImportContentItemHelper {
 
         this.config.log.console({
             type: 'info',
-            message: `Importing '${colors.yellow(data.importContext.contentItems.length.toString())}' content items`
+            message: `Importing '${chalk.yellow(data.importContext.contentItems.length.toString())}' content items`
         });
 
         for (const parsedItem of data.importContext.contentItems) {

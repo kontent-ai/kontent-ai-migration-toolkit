@@ -1,4 +1,4 @@
-import colors from 'colors';
+import chalk from 'chalk';
 import JSZip from 'jszip';
 
 import { IExportAdapterResult } from '../export/index.js';
@@ -71,9 +71,9 @@ export class ZipService {
 
         this.log.console({
             type: 'info',
-            message: `Parsing completed. Parsed '${colors.yellow(
+            message: `Parsing completed. Parsed '${chalk.yellow(
                 result.items.length.toString()
-            )}' items and '${colors.yellow(result.assets.length.toString())}' assets`
+            )}' items and '${chalk.yellow(result.assets.length.toString())}' assets`
         });
 
         return result;
@@ -96,7 +96,7 @@ export class ZipService {
         if (data.items) {
             this.log.console({
                 type: 'info',
-                message: `Parsing items file with '${colors.yellow(data.items.formatService.name)}' `
+                message: `Parsing items file with '${chalk.yellow(data.items.formatService.name)}' `
             });
 
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
@@ -109,7 +109,7 @@ export class ZipService {
         if (data.assets) {
             this.log.console({
                 type: 'info',
-                message: `Parsing assets file with '${colors.yellow(data.assets.formatService.name)}' `
+                message: `Parsing assets file with '${chalk.yellow(data.assets.formatService.name)}' `
             });
 
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
@@ -125,9 +125,9 @@ export class ZipService {
 
         this.log.console({
             type: 'info',
-            message: `Parsing completed. Parsed '${colors.yellow(
+            message: `Parsing completed. Parsed '${chalk.yellow(
                 result.items.length.toString()
-            )}' items and '${colors.yellow(result.assets.length.toString())}' assets`
+            )}' items and '${chalk.yellow(result.assets.length.toString())}' assets`
         });
 
         return result;

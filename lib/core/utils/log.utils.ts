@@ -1,4 +1,4 @@
-import colors from 'colors';
+import chalk from 'chalk';
 import ora from 'ora';
 import { ActionType, FetchItemType, ItemType } from '../models/core.models.js';
 
@@ -42,7 +42,7 @@ export function logErrorAndExit(data: { message: string }): never {
 export function logFetchedItems(data: { count: number; itemType: FetchItemType; log: Log }): void {
     data.log.console({
         type: 'info',
-        message: `Fetched '${colors.yellow(data.count.toString())}' ${data.itemType}`
+        message: `Fetched '${chalk.yellow(data.count.toString())}' ${data.itemType}`
     });
 }
 
@@ -73,25 +73,25 @@ export function getDefaultLog(): Log {
 }
 
 export function getLogDataMessage(data: ILogData): string {
-    let typeColor = colors.yellow;
+    let typeColor = chalk.yellow;
 
     if (data.type === 'info') {
-        typeColor = colors.cyan;
+        typeColor = chalk.cyan;
     } else if (
         data.type === 'error' ||
         data.type === 'errorData' ||
         data.type === 'warning' ||
         data.type === 'cancel'
     ) {
-        typeColor = colors.red;
+        typeColor = chalk.red;
     } else if (data.type === 'completed') {
-        typeColor = colors.green;
+        typeColor = chalk.green;
     } else if (data.type === 'skip') {
-        typeColor = colors.gray;
+        typeColor = chalk.gray;
     }
 
     if (data.count) {
-        return `${typeColor(`${data.count.index}/${data.count.total}`)}: ${data.message} ${colors.cyan(data.type)} `;
+        return `${typeColor(`${data.count.index}/${data.count.total}`)}: ${data.message} ${chalk.cyan(data.type)} `;
     }
     return `${typeColor(data.type)}: ${data.message}`;
 }

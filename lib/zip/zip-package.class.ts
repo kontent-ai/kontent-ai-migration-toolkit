@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import colors from 'colors';
+import chalk from 'chalk';
 import { Log, formatBytes, logErrorAndExit } from '../core/index.js';
 import { FileBinaryData, ZipCompressionLevel, ZipContext } from './zip.models.js';
 
@@ -70,7 +70,7 @@ export class ZipPackage {
 
         this.log.console({
             type: 'info',
-            message: `Zip successfully generated (${colors.yellow(formatBytes(this.getZipSizeInBytes(result)))})`
+            message: `Zip successfully generated (${chalk.yellow(formatBytes(this.getZipSizeInBytes(result)))})`
         });
 
         return result;

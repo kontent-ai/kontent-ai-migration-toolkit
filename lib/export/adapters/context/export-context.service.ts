@@ -24,7 +24,7 @@ import {
     TaxonomyModels,
     WorkflowModels
 } from '@kontent-ai/management-sdk';
-import colors from 'colors';
+import chalk from 'chalk';
 import { itemsExtractionHelper } from '../../../translation/index.js';
 import { throwErrorForItemRequest } from '../../utils/export.utils.js';
 
@@ -40,7 +40,7 @@ export class ExportContextService {
 
         this.log.console({
             type: 'info',
-            message: `Preparing '${colors.yellow(data.exportItems.length.toString())}' items for export`
+            message: `Preparing '${chalk.yellow(data.exportItems.length.toString())}' items for export`
         });
         const preparedItems = await this.prepareExportItemsAsync({
             environmentData: environmentData,
@@ -127,14 +127,14 @@ export class ExportContextService {
             if (!collection) {
                 throwErrorForItemRequest(
                     exportItem,
-                    `Invalid collection '${colors.yellow(contentItem.collection.id ?? '')}'`
+                    `Invalid collection '${chalk.yellow(contentItem.collection.id ?? '')}'`
                 );
             }
 
             const contentType = data.environmentData.contentTypes.find((m) => m.contentTypeId === contentItem.type.id);
 
             if (!contentType) {
-                throwErrorForItemRequest(exportItem, `Invalid content type '${colors.yellow(contentItem.type.id)}'`);
+                throwErrorForItemRequest(exportItem, `Invalid content type '${chalk.yellow(contentItem.type.id)}'`);
             }
 
             const language = data.environmentData.languages.find((m) => m.id === languageVariant.language.id);
@@ -142,7 +142,7 @@ export class ExportContextService {
             if (!language) {
                 throwErrorForItemRequest(
                     exportItem,
-                    `Invalid language '${colors.yellow(languageVariant.language.id ?? '')}'`
+                    `Invalid language '${chalk.yellow(languageVariant.language.id ?? '')}'`
                 );
             }
 
@@ -153,7 +153,7 @@ export class ExportContextService {
             if (!workflow) {
                 throwErrorForItemRequest(
                     exportItem,
-                    `Invalid workflow '${colors.yellow(languageVariant.workflow.workflowIdentifier.id ?? '')}'`
+                    `Invalid workflow '${chalk.yellow(languageVariant.workflow.workflowIdentifier.id ?? '')}'`
                 );
             }
 
@@ -162,7 +162,7 @@ export class ExportContextService {
             if (!workflowStepCodename) {
                 throwErrorForItemRequest(
                     exportItem,
-                    `Invalid workflow step '${colors.yellow(languageVariant.workflow.stepIdentifier.id ?? '')}'`
+                    `Invalid workflow step '${chalk.yellow(languageVariant.workflow.stepIdentifier.id ?? '')}'`
                 );
             }
 

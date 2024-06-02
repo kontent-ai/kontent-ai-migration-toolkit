@@ -16,7 +16,7 @@ import {
     Log
 } from '../../core/index.js';
 import { ImportWorkflowService, getImportWorkflowService } from './import-workflow.service.js';
-import colors from 'colors';
+import chalk from 'chalk';
 import { importTransforms } from '../../translation/index.js';
 import { IImportContext } from '../import.models.js';
 
@@ -44,7 +44,7 @@ export class ImportLanguageVariantServices {
     }): Promise<void> {
         this.config.log.console({
             type: 'info',
-            message: `Importing '${colors.yellow(data.importContentItems.length.toString())}' language variants`
+            message: `Importing '${chalk.yellow(data.importContentItems.length.toString())}' language variants`
         });
 
         await processInChunksAsync<IMigrationItem, void>({
@@ -67,7 +67,7 @@ export class ImportLanguageVariantServices {
 
                     if (!preparedContentItem) {
                         logErrorAndExit({
-                            message: `Invalid content item for codename '${colors.red(
+                            message: `Invalid content item for codename '${chalk.red(
                                 importContentItem.system.codename
                             )}'`
                         });
@@ -85,9 +85,9 @@ export class ImportLanguageVariantServices {
                     if (this.config.skipFailedItems) {
                         this.config.log.console({
                             type: 'error',
-                            message: `Failed to import language variant '${colors.red(
+                            message: `Failed to import language variant '${chalk.red(
                                 importContentItem.system.name
-                            )}' in language '${colors.red(importContentItem.system.language)}'. Error: ${
+                            )}' in language '${chalk.red(importContentItem.system.language)}'. Error: ${
                                 extractErrorData(error).message
                             }`
                         });
@@ -123,13 +123,13 @@ export class ImportLanguageVariantServices {
 
         if (!workflowCodename) {
             throw Error(
-                `Content item '${colors.red(data.importContentItem.system.codename)}' does not have a workflow assigned`
+                `Content item '${chalk.red(data.importContentItem.system.codename)}' does not have a workflow assigned`
             );
         }
 
         if (!workflowStepCodename) {
             throw Error(
-                `Content item '${colors.red(
+                `Content item '${chalk.red(
                     data.importContentItem.system.codename
                 )}' does not have a workflow step assigned`
             );
@@ -223,9 +223,9 @@ export class ImportLanguageVariantServices {
 
             if (!languageVariantOfContentItem) {
                 logErrorAndExit({
-                    message: `Invalid langauge variant for item '${colors.red(
+                    message: `Invalid langauge variant for item '${chalk.red(
                         data.importContentItem.system.codename
-                    )}' of type '${colors.yellow(data.importContentItem.system.type)}' and language '${colors.yellow(
+                    )}' of type '${chalk.yellow(data.importContentItem.system.type)}' and language '${chalk.yellow(
                         data.importContentItem.system.language
                     )}'`
                 });
@@ -312,7 +312,7 @@ export class ImportLanguageVariantServices {
 
         if (!importContract) {
             logErrorAndExit({
-                message: `Missing import contract for element '${colors.red(element.codename)}' `
+                message: `Missing import contract for element '${chalk.red(element.codename)}' `
             });
         }
 

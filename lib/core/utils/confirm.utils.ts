@@ -1,5 +1,5 @@
 import { createManagementClient } from '@kontent-ai/management-sdk';
-import colors from 'colors';
+import chalk from 'chalk';
 import prompts from 'prompts';
 import { exitProcess } from './global.utils.js';
 import { Log } from './log.utils.js';
@@ -19,7 +19,7 @@ export async function confirmExportAsync(data: {
             .toPromise()
     ).data.project;
 
-    const text: string = `Are you sure to export data from ${colors.yellow(environment.name)} -> ${colors.yellow(
+    const text: string = `Are you sure to export data from ${chalk.yellow(environment.name)} -> ${chalk.yellow(
         environment.environment
     )}?`;
 
@@ -60,9 +60,9 @@ export async function confirmMigrateAsync(data: {
             .toPromise()
     ).data.project;
 
-    const text: string = `Are you sure to migrate data from ${colors.yellow(sourceEnvironment.name)} -> ${colors.yellow(
+    const text: string = `Are you sure to migrate data from ${chalk.yellow(sourceEnvironment.name)} -> ${chalk.yellow(
         sourceEnvironment.environment
-    )} to environment ${colors.yellow(targetEnvironment.name)} -> ${colors.yellow(targetEnvironment.environment)}?`;
+    )} to environment ${chalk.yellow(targetEnvironment.name)} -> ${chalk.yellow(targetEnvironment.environment)}?`;
 
     await confirmAsync({
         force: data.force,
@@ -87,7 +87,7 @@ export async function confirmImportAsync(data: {
             .toPromise()
     ).data.project;
 
-    const text: string = `Are you sure to import data into ${colors.yellow(environment.name)} -> ${colors.yellow(
+    const text: string = `Are you sure to import data into ${chalk.yellow(environment.name)} -> ${chalk.yellow(
         environment.environment
     )}?`;
 
@@ -109,7 +109,7 @@ async function confirmAsync(data: { action: string; message: string; force: bool
         const confirmed = await prompts({
             type: 'confirm',
             name: 'confirm',
-            message: `${colors.cyan(data.action)}: ${data.message}`
+            message: `${chalk.cyan(data.action)}: ${data.message}`
         });
 
         if (!confirmed.confirm) {

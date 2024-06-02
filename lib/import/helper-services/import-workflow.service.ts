@@ -1,6 +1,6 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
 import { IMigrationItem, Log } from '../../core/index.js';
-import colors from 'colors';
+import chalk from 'chalk';
 
 interface IWorkflowStep {
     codename: string;
@@ -28,9 +28,9 @@ export class ImportWorkflowService {
 
         if (!workflow) {
             const errorMessages: string[] = [
-                `Workflow with codename '${colors.red(data.workflowCodename)}' does not exist in target project`,
+                `Workflow with codename '${chalk.red(data.workflowCodename)}' does not exist in target project`,
                 `Available workflows are (${data.workflows.length}): ${data.workflows
-                    .map((m) => colors.cyan(m.codename))
+                    .map((m) => chalk.cyan(m.codename))
                     .join(', ')}`
             ];
 
@@ -41,9 +41,9 @@ export class ImportWorkflowService {
 
         if (!workflowStep) {
             throw Error(
-                `Workflow step with codename '${colors.red(
+                `Workflow step with codename '${chalk.red(
                     data.workflowStepCodename
-                )}' does not exist within worklflow '${colors.cyan(workflow.codename)}'`
+                )}' does not exist within worklflow '${chalk.cyan(workflow.codename)}'`
             );
         }
 
@@ -112,7 +112,7 @@ export class ImportWorkflowService {
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
             this.log.spinner?.text?.({
                 type: 'skip',
-                message: `Skipping scheduled workflow step for item '${colors.yellow(importContentItem.system.name)}'`
+                message: `Skipping scheduled workflow step for item '${chalk.yellow(importContentItem.system.name)}'`
             });
         } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
             // unpublish the language variant first if published

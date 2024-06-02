@@ -1,6 +1,6 @@
 import yargs, { Argv } from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import colors from 'colors';
+import chalk from 'chalk';
 import { CliAction, logErrorAndExit } from '../../../core/index.js';
 import { ICommand, ICommandOption } from '../cli.models.js';
 
@@ -57,7 +57,7 @@ export class CliArgs {
             return 'migrate';
         }
 
-        throw Error(`Unsupported command '${colors.yellow(command)}'`);
+        throw Error(`Unsupported command '${chalk.yellow(command)}'`);
     }
 
     async getOptionalArgumentValueAsync(argName: string): Promise<string | undefined> {
@@ -69,7 +69,7 @@ export class CliArgs {
 
         if (!value) {
             logErrorAndExit({
-                message: `Missing '${colors.yellow(argName)}' argument value`
+                message: `Missing '${chalk.yellow(argName)}' argument value`
             });
         }
 

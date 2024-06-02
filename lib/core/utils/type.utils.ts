@@ -7,7 +7,7 @@ import {
 } from '@kontent-ai/management-sdk';
 import { IFlattenedContentType, IFlattenedContentTypeElement } from '../models/core.models.js';
 import { Log, logErrorAndExit, logFetchedItems } from './log.utils.js';
-import colors from 'colors';
+import chalk from 'chalk';
 
 const excludedFlattenedElements: ElementModels.ElementType[] = ['guidelines'];
 
@@ -68,7 +68,7 @@ function getContentTypeElements(
 
             if (!contentTypeSnippet) {
                 logErrorAndExit({
-                    message: `Could not find content type snippet for element. This snippet is referenced in type '${colors.red(
+                    message: `Could not find content type snippet for element. This snippet is referenced in type '${chalk.red(
                         contentType.codename
                     )}'`
                 });

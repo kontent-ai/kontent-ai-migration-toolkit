@@ -22,7 +22,7 @@ import {
     ImportLanguageVariantServices,
     getImportLanguageVariantstemService
 } from '../helper-services/import-language-variant.service.js';
-import colors from 'colors';
+import chalk from 'chalk';
 import { libMetadata } from '../../metadata.js';
 import { ImportContextService, getImportContextService } from './context/import-context.service.js';
 
@@ -155,14 +155,14 @@ class DefaultImportAdapter implements IImportAdapter {
         if (removedAssets > 0) {
             this.config.log.console({
                 type: 'info',
-                message: `Removed '${colors.yellow(removedAssets.toString())}' assets from import`
+                message: `Removed '${chalk.yellow(removedAssets.toString())}' assets from import`
             });
         }
 
         if (removedContentItems) {
             this.config.log.console({
                 type: 'info',
-                message: `Removed '${colors.yellow(removedContentItems.toString())}' content items from import`
+                message: `Removed '${chalk.yellow(removedContentItems.toString())}' content items from import`
             });
         }
 

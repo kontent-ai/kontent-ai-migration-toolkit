@@ -1,5 +1,5 @@
 import { promises } from 'fs';
-import colors from 'colors';
+import chalk from 'chalk';
 import { Log } from '../core/index.js';
 
 export function getFileService(log: Log): FileService {
@@ -14,7 +14,7 @@ export class FileService {
 
         this.log.console({
             type: 'readFs',
-            message: `Reading file '${colors.yellow(filePath)}'`
+            message: `Reading file '${chalk.yellow(filePath)}'`
         });
 
         const file = await promises.readFile(filePath);
@@ -27,7 +27,7 @@ export class FileService {
 
         this.log.console({
             type: 'writeFs',
-            message: `Storing file '${colors.yellow(filePath)}'`
+            message: `Storing file '${chalk.yellow(filePath)}'`
         });
         await promises.writeFile(filePath, content);
     }

@@ -5,7 +5,7 @@ import {
     IMigrationItem,
     logErrorAndExit
 } from '../../core/index.js';
-import colors from 'colors';
+import chalk from 'chalk';
 
 export abstract class BaseItemProcessorService implements IItemFormatService {
     abstract readonly name: string;
@@ -21,7 +21,7 @@ export abstract class BaseItemProcessorService implements IItemFormatService {
 
         if (!type) {
             logErrorAndExit({
-                message: `Could not find content type '${colors.red(contentItemType)}'`
+                message: `Could not find content type '${chalk.red(contentItemType)}'`
             });
         }
 
@@ -29,9 +29,9 @@ export abstract class BaseItemProcessorService implements IItemFormatService {
 
         if (!element) {
             logErrorAndExit({
-                message: `Could not find element with codename '${colors.red(
+                message: `Could not find element with codename '${chalk.red(
                     elementCodename
-                )}' for type '${colors.yellow(type.contentTypeCodename)}'`
+                )}' for type '${chalk.yellow(type.contentTypeCodename)}'`
             });
         }
 

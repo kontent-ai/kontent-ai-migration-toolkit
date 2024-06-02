@@ -1,5 +1,5 @@
 import { SharedModels } from '@kontent-ai/management-sdk';
-import colors from 'colors';
+import chalk from 'chalk';
 import { IErrorData } from '../models/core.models.js';
 
 export function extractErrorData(error: any): IErrorData {
@@ -50,12 +50,12 @@ export function handleError(error: any): void {
     }
 
     if (errorData.requestData) {
-        console.log(`${colors.red('Request data')}: ${errorData.requestData}`);
+        console.log(`${chalk.red('Request data')}: ${errorData.requestData}`);
     }
 
     if (errorData.requestUrl) {
-        console.log(`${colors.red('Request url')}: ${errorData.requestUrl}`);
+        console.log(`${chalk.red('Request url')}: ${errorData.requestUrl}`);
     }
 
-    console.error(`${colors.red('Error:')} ${errorData.message}`);
+    console.error(`${chalk.red('Error:')} ${errorData.message}`);
 }

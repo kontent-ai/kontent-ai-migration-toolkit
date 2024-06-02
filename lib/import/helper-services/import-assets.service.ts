@@ -1,7 +1,7 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
 import { IMigrationAsset, Log, is404Error, processInChunksAsync } from '../../core/index.js';
 import mime from 'mime';
-import colors from 'colors';
+import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
 
 export function getImportAssetsService(log: Log, managementClient: ManagementClient): ImportAssetsService {
@@ -17,7 +17,7 @@ export class ImportAssetsService {
     async importAssetsAsync(data: { assets: IMigrationAsset[]; importContext: IImportContext }): Promise<void> {
         this.log.console({
             type: 'info',
-            message: `Categorizing '${colors.yellow(data.assets.length.toString())}' assets`
+            message: `Categorizing '${chalk.yellow(data.assets.length.toString())}' assets`
         });
         const filteredAssets = await this.getAssetsToUploadAsync({
             assets: data.assets,
@@ -27,7 +27,7 @@ export class ImportAssetsService {
         if (filteredAssets.existingAssets.length) {
             this.log.console({
                 type: 'skip',
-                message: `Skipping upload for '${colors.yellow(
+                message: `Skipping upload for '${chalk.yellow(
                     filteredAssets.existingAssets.length.toString()
                 )}' assets as they already exist`
             });
@@ -35,7 +35,7 @@ export class ImportAssetsService {
 
         this.log.console({
             type: 'upload',
-            message: `Uploading '${colors.yellow(filteredAssets.assetsToUpload.length.toString())}' assets`
+            message: `Uploading '${chalk.yellow(filteredAssets.assetsToUpload.length.toString())}' assets`
         });
 
         await processInChunksAsync<IMigrationAsset, void>({
