@@ -11,6 +11,7 @@ export interface IMigrationEnv {
 
 export interface IMigrationSource extends IMigrationEnv {
     items: IKontentAiExportRequestItem[];
+    skipFailedItems?: boolean;
 }
 
 export interface IMigrationTarget extends IMigrationEnv {
@@ -32,7 +33,8 @@ export async function migrateAsync(config: IMigrationConfig): Promise<void> {
         apiKey: config.sourceEnvironment.apiKey,
         exportItems: config.sourceEnvironment.items,
         log: log,
-        retryStrategy: config.retryStrategy
+        retryStrategy: config.retryStrategy,
+        skipFailedItems: config.sourceEnvironment.skipFailedItems ?? false
     });
 
     const importAdapter = getDefaultImportAdapter({
