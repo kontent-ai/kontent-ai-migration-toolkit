@@ -12,6 +12,7 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
     const items = (await cliArgs.getRequiredArgumentValueAsync('items')).split(',');
     const baseUrl = await cliArgs.getOptionalArgumentValueAsync('baseUrl');
     const force = await cliArgs.getBooleanArgumentValueAsync('force', false);
+    const skipFailedItems = await cliArgs.getBooleanArgumentValueAsync('skipFailedItems', false);
     const itemsFilename =
         (await cliArgs.getOptionalArgumentValueAsync('itemsFilename')) ?? getDefaultExportFilename('items');
     const assetsFilename =
@@ -31,6 +32,7 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
             environmentId: environmentId,
             apiKey: apiKey,
             baseUrl: baseUrl,
+            skipFailedItems: skipFailedItems,
             exportItems: items.map((m) => {
                 return {
                     itemCodename: m,

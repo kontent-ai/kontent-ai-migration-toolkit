@@ -49,6 +49,12 @@ export const cliArgs = getCliArgs()
                 description: `Custom base URL`,
                 type: 'string',
                 isRequired: false
+            },
+            {
+                name: `skipFailedItems`,
+                description: `Indicates export skips items that fail to export. `,
+                type: 'boolean',
+                isRequired: false
             }
         ]
     })
@@ -87,7 +93,7 @@ export const cliArgs = getCliArgs()
             {
                 name: `skipFailedItems`,
                 description: `Indicates whether the import should continue even if some item fails to import`,
-                type: 'string',
+                type: 'boolean',
                 isRequired: false
             },
             {

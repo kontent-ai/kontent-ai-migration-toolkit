@@ -64,6 +64,7 @@ export interface IDefaultExportAdapterConfig {
     apiKey: string;
     baseUrl?: string;
     exportItems: IKontentAiExportRequestItem[];
+    skipFailedItems?: boolean;
     retryStrategy?: IRetryStrategyOptions;
 }
 

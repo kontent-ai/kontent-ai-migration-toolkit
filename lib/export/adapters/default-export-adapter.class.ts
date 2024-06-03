@@ -56,27 +56,40 @@ class DefaultExportAdapter implements IExportAdapter {
         });
 
         return {
-            items: await this.mapPreparedItemToMigrationItemsAsync(exportContext),
+            items: await this.mapPreparedItemToMigrationItems(exportContext),
             assets: await this.exportAssetsAsync(exportContext)
         };
     }
 
-    private async mapPreparedItemToMigrationItemsAsync(context: IExportContext): Promise<IMigrationItem[]> {
+    private mapPreparedItemToMigrationItems(context: IExportContext): IMigrationItem[] {
         const migrationItems: IMigrationItem[] = [];
 
         for (const preparedItem of context.preparedExportItems) {
-            migrationItems.push({
-                system: {
-                    codename: preparedItem.contentItem.codename,
-                    collection: preparedItem.collection.codename,
-                    language: preparedItem.language.codename,
-                    name: preparedItem.contentItem.name,
-                    type: preparedItem.contentType.contentTypeCodename,
-                    workflow: preparedItem.workflow.codename,
-                    workflow_step: preparedItem.workflowStepCodename
-                },
-                elements: this.getMigrationElements(preparedItem, context)
-            });
+            try {
+                migrationItems.push({
+                    system: {
+                        codename: preparedItem.contentItem.codename,
+                        collection: preparedItem.collection.codename,
+                        language: preparedItem.language.codename,
+                        name: preparedItem.contentItem.name,
+                        type: preparedItem.contentType.contentTypeCodename,
+                        workflow: preparedItem.workflow.codename,
+                        workflow_step: preparedItem.workflowStepCodename
+                    },
+                    elements: this.getMigrationElements(preparedItem, context)
+                });
+            } catch (error) {
+                if (this.config.skipFailedItems) {
+                    this.config.log.console({
+                        type: 'warning',
+                        message: `Failed to export item '${chalk.yellow(
+                            preparedItem.requestItem.itemCodename
+                        )}' in language '${chalk.yellow(preparedItem.requestItem.languageCodename)}'`
+                    });
+                } else {
+                    throw error;
+                }
+            }
         }
 
         return migrationItems;

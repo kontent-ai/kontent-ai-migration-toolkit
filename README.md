@@ -113,15 +113,16 @@ However, when migration from 3rd party system you typically only use the `import
 
 ## Configuration
 
-| Config                  | Value                                                                                              |
-| ----------------------- | -------------------------------------------------------------------------------------------------- |
-| **sourceEnvironmentId** | Id of Kontent.ai environment **(required)**                                                        |
-| **sourceApiKey**        | Management API key of Kontent.ai environment **(required)**                                        |
-| **language**            | Codename of language that items will be exported in **(required)**                                 |
-| **items**               | Comma separated list of items that will be exported **(required)**                                 |
-| itemsFilename           | Name of the items file that will be created in folder where script is run                          |
-| assetsFilename          | Name of the assets file that will be created in folder where script is run. Only zip is supported. |
-| baseUrl                 | Custom base URL for Kontent.ai API calls                                                           |
+| Config                  | Value                                                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **sourceEnvironmentId** | Id of Kontent.ai environment **(required)**                                                                |
+| **sourceApiKey**        | Management API key of Kontent.ai environment **(required)**                                                |
+| **language**            | Codename of language that items will be exported in **(required)**                                         |
+| **items**               | Comma separated list of items that will be exported **(required)**                                         |
+| itemsFilename           | Name of the items file that will be created in folder where script is run                                  |
+| assetsFilename          | Name of the assets file that will be created in folder where script is run. Only zip is supported.         |
+| skipFailedItems         | Indicates export skips items that fail to export. Available options: `true` & `false`. Detaults to `false` |
+| baseUrl                 | Custom base URL for Kontent.ai API calls                                                                   |
 
 ## Export CLI
 
