@@ -5,11 +5,12 @@ It can be used to simplify migration from external systems and also provides a b
 environments.
 
 > [!TIP]  
-> This library aims to streamline the migration to / from Kontent.ai environments by providing an abstraction
-> layer which handles creation / updates of content items, language variants, moving items through workflow, publishing,
+> This library aims to streamline the migration to / from Kontent.ai environments by providing an abstraction layer
+> which handles creation / updates of content items, language variants, moving items through workflow, publishing,
 > archiving, downloading binary data, uploading assets, `id` to `codename` translation and more.
 
-This library can only be used in `node.js`. Use in Browsers is not supported.
+This library can only be used as a library both in `node.js` & `browser` or as a `CLI` utility. Use in Browsers is not
+supported.
 
 # Getting started
 
@@ -136,8 +137,8 @@ kontent-ai-migration-toolkit export --sourceEnvironmentId=x --sourceApiKey=x --l
 2. Assets element values are not preserved during migration because elements can be referenced only by id's and not
    codenames.
 3. Components embedded within Rich text elements are not exported
-4. Language variants in `Scheduled` workflow step do not preserve their workflow status because the API does not
-   provide an information about scheduled times
+4. Language variants in `Scheduled` workflow step do not preserve their workflow status because the API does not provide
+   an information about scheduled times
 
 ## Output / Input formats
 
