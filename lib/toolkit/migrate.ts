@@ -1,7 +1,7 @@
 import { libMetadata } from '../metadata.js';
+import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
 import { IKontentAiExportRequestItem, getDefaultExportAdapter } from '../export/index.js';
-import { defaultRetryStrategy } from '@kontent-ai-consulting/tools-analytics';
 import { getDefaultImportAdapter } from '../import/index.js';
 
 export interface IMigrationEnv {
@@ -18,20 +18,21 @@ export interface IMigrationTarget extends IMigrationEnv {
 }
 
 export interface IMigrationConfig {
+    retryStrategy?: IRetryStrategyOptions;
     log?: Log;
     sourceEnvironment: IMigrationSource;
     targetEnvironment: IMigrationTarget;
 }
 
 export async function migrateAsync(config: IMigrationConfig): Promise<void> {
-    const log = config.log ?? await getDefaultLogAsync();
+    const log = config.log ?? (await getDefaultLogAsync());
 
     const exportAdapter = getDefaultExportAdapter({
         environmentId: config.sourceEnvironment.id,
         apiKey: config.sourceEnvironment.apiKey,
         exportItems: config.sourceEnvironment.items,
         log: log,
-        retryStrategy: defaultRetryStrategy
+        retryStrategy: config.retryStrategy
     });
 
     const importAdapter = getDefaultImportAdapter({
@@ -39,7 +40,7 @@ export async function migrateAsync(config: IMigrationConfig): Promise<void> {
         environmentId: config.targetEnvironment.id,
         apiKey: config.targetEnvironment.apiKey,
         skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
-        retryStrategy: defaultRetryStrategy
+        retryStrategy: config.retryStrategy
     });
 
     return await executeWithTrackingAsync({
