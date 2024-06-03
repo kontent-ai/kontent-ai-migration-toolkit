@@ -1,6 +1,5 @@
 import { createManagementClient } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
-import prompts from 'prompts';
 import { Log } from './log.utils.js';
 
 export async function confirmExportAsync(data: {
@@ -99,13 +98,17 @@ export async function confirmImportAsync(data: {
 }
 
 async function confirmAsync(data: { action: string; message: string; force: boolean; log: Log }): Promise<void> {
+    // Prompts is imported dynamically because it's a node.js only module and would not work if user
+    // tried using this library in a browser
+    const prompts = await import('prompts');
+
     if (data.force) {
         data.log.console({
             type: 'info',
             message: `Skipping confirmation prompt due to the use of 'force' param`
         });
     } else {
-        const confirmed = await prompts({
+        const confirmed = await prompts.default({
             type: 'confirm',
             name: 'confirm',
             message: `${chalk.cyan(data.action)}: ${data.message}`
