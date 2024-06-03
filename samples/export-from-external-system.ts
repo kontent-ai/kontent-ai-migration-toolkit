@@ -1,4 +1,4 @@
-import { IMigrationAsset, IMigrationItem, getDefaultLog, IExportAdapter, exportAsync } from '../lib/index.js';
+import { IMigrationAsset, IMigrationItem, getDefaultLogAsync, IExportAdapter, exportAsync } from '../lib/index.js';
 
 /* Typically you query your external system to create the migration items & assets */
 const exportAdapter: IExportAdapter = {
@@ -84,6 +84,6 @@ await exportAsync({
         filename: 'assets.zip',
         formatService: 'json'
     },
-    log: getDefaultLog(),
+    log: await getDefaultLogAsync(),
     adapter: exportAdapter
 });

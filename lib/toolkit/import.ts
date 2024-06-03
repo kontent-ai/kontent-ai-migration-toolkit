@@ -1,5 +1,5 @@
 import { AssetsFormatConfig, ItemsFormatConfig, getZipService } from '../zip/index.js';
-import { IMigrationAsset, IMigrationItem, Log, getDefaultLog, getFlattenedContentTypesAsync } from '../core/index.js';
+import { IMigrationAsset, IMigrationItem, Log, getDefaultLogAsync, getFlattenedContentTypesAsync } from '../core/index.js';
 import { IImportAdapter, IImportData } from '../import/index.js';
 import { getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
 import { getFileService } from '../file/index.js';
@@ -32,7 +32,7 @@ export async function importFromFilesAsync(config: IImportFromFilesConfig): Prom
 }
 
 async function getSourceDataAsync(config: IImportFromFilesConfig): Promise<IImportData> {
-    const log = config.log ?? getDefaultLog();
+    const log = config.log ?? await getDefaultLogAsync();
 
     if (config?.items?.filename?.toLowerCase()?.endsWith('.zip')) {
         return await getImportDataFromZipAsync(config, log);

@@ -1,5 +1,5 @@
 import { libMetadata } from '../metadata.js';
-import { Log, executeWithTrackingAsync, getDefaultLog } from '../core/index.js';
+import { Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
 import { IExportAdapter, IExportAdapterResult } from '../export/index.js';
 import { getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
 import { AssetsFormatConfig, ItemsFormatConfig, getZipService } from '../zip/index.js';
@@ -19,7 +19,7 @@ export interface IExportConfig {
 }
 
 export async function exportAsync(config: IExportConfig): Promise<IExportAdapterResult> {
-    const log = config.log ?? getDefaultLog();
+    const log = config.log ?? await getDefaultLogAsync();
     const fileService = getFileService(log);
     const fileProcessorService = getZipService(log);
 

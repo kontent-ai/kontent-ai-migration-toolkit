@@ -1,5 +1,5 @@
 import { libMetadata } from '../metadata.js';
-import { Log, executeWithTrackingAsync, getDefaultLog } from '../core/index.js';
+import { Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
 import { IKontentAiExportRequestItem, getDefaultExportAdapter } from '../export/index.js';
 import { defaultRetryStrategy } from '@kontent-ai-consulting/tools-analytics';
 import { getDefaultImportAdapter } from '../import/index.js';
@@ -24,7 +24,7 @@ export interface IMigrationConfig {
 }
 
 export async function migrateAsync(config: IMigrationConfig): Promise<void> {
-    const log = config.log ?? getDefaultLog();
+    const log = config.log ?? await getDefaultLogAsync();
 
     const exportAdapter = getDefaultExportAdapter({
         environmentId: config.sourceEnvironment.id,

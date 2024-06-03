@@ -1,7 +1,7 @@
-import { getDefaultLog, migrateAsync } from '../lib/index.js';
+import { getDefaultLogAsync, migrateAsync } from '../lib/index.js';
 
 await migrateAsync({
-    log: getDefaultLog(),
+    log: await getDefaultLogAsync(),
     sourceEnvironment: {
         apiKey: '<key>',
         id: '<id>',

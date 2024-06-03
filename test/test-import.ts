@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import {
     confirmImportAsync,
     getDefaultImportAdapter,
-    getDefaultLog,
+    getDefaultLogAsync,
     getEnvironmentRequiredValue,
     importFromFilesAsync
 } from '../lib/index.js';
@@ -15,7 +15,7 @@ const run = async () => {
 
     const environmentId = getEnvironmentRequiredValue('targetEnvironmentId');
     const apiKey = getEnvironmentRequiredValue('targetApiKey');
-    const log = getDefaultLog();
+    const log = await getDefaultLogAsync();
 
     await confirmImportAsync({
         force: false,

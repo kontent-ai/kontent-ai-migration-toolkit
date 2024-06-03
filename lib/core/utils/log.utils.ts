@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import ora from 'ora';
 import { ActionType, FetchItemType, ItemType } from '../models/core.models.js';
 
 interface ILogCount {
@@ -46,8 +45,11 @@ export function logFetchedItems(data: { count: number; itemType: FetchItemType; 
     });
 }
 
-export function getDefaultLog(): Log {
-    const spinner = ora();
+export async function getDefaultLogAsync(): Promise<Log> {
+    // Ora is imported dynamically because it's a node.js only module and would not work if user
+    // tried using this library in a browser
+    const ora = await import('ora');
+    const spinner = ora.default();
     let previousCount: ILogCount | undefined = undefined;
 
     return {

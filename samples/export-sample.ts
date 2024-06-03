@@ -1,6 +1,6 @@
-import { getDefaultLog, DefaultExportAdapter, exportAsync } from '../lib/index.js';
+import { getDefaultLogAsync, DefaultExportAdapter, exportAsync } from '../lib/index.js';
 
-const log = getDefaultLog();
+const log = await getDefaultLogAsync();
 
 await exportAsync({
     adapter: new DefaultExportAdapter({

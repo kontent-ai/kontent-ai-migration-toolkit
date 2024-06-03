@@ -1,9 +1,9 @@
 import { migrateAsync } from '../../../toolkit/index.js';
-import { confirmMigrateAsync, getDefaultLog } from '../../../core/index.js';
+import { confirmMigrateAsync, getDefaultLogAsync } from '../../../core/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 
 export async function migrateActionAsync(cliArgs: CliArgs): Promise<void> {
-    const log = getDefaultLog();
+    const log = await getDefaultLogAsync();
     const sourceEnvironmentId = await cliArgs.getRequiredArgumentValueAsync('sourceEnvironmentId');
     const sourceApiKey = await cliArgs.getRequiredArgumentValueAsync('sourceApiKey');
     const targetEnvironmentId = await cliArgs.getRequiredArgumentValueAsync('targetEnvironmentId');

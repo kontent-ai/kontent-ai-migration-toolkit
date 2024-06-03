@@ -1,11 +1,11 @@
-import { confirmExportAsync, getDefaultLog } from '../../../core/index.js';
+import { confirmExportAsync, getDefaultLogAsync } from '../../../core/index.js';
 import { exportAsync } from '../../../toolkit/index.js';
 import { getDefaultExportAdapter } from '../../../export/index.js';
 import { getDefaultExportFilename } from '../utils/cli.utils.js';
 import { CliArgs } from '../args/cli-args.class.js';
 
 export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
-    const log = getDefaultLog();
+    const log = await getDefaultLogAsync();
     const language = await cliArgs.getRequiredArgumentValueAsync('language');
     const environmentId = await cliArgs.getRequiredArgumentValueAsync('sourceEnvironmentId');
     const apiKey = await cliArgs.getRequiredArgumentValueAsync('sourceApiKey');
