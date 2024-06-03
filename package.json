@@ -1,6 +1,6 @@
 {
     "name": "@kontent-ai-consulting/migration-toolkit",
-    "version": "1.0.0-11",
+    "version": "1.0.0-12",
     "description": "This program can be used to import content related data into Kontent.ai from various formats. Additionally, it can also be used to export Kontent.ai data using Delivery API.",
     "preferGlobal": true,
     "private": false,
