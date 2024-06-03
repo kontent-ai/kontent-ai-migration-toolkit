@@ -9,9 +9,15 @@ export const defaultHttpService: HttpService = new HttpService({
 export const defaultRetryStrategy: IRetryStrategyOptions = {
     addJitter: true,
     canRetryError: (err) => {
-        // do not retry failed request from Kontent.ai
         const errorCode = err?.response?.data?.error_code ?? -1;
-        if (errorCode >= 0 && errorCode !== rateExceededErrorCode) {
+
+        if (errorCode === rateExceededErrorCode) {
+            // retry rate exceeded error
+            return true;
+        }
+
+        // otherwise if error code is set, do not retry the request
+        if (errorCode >= 0) {
             return false;
         }
         return true;

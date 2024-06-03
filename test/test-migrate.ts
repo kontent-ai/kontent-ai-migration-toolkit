@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
-import { migrateAsync, confirmMigrateAsync, getDefaultLogAsync, getEnvironmentRequiredValue } from '../lib/index.js';
+import { migrateAsync, confirmMigrateAsync, getDefaultLogAsync } from '../lib/index.js';
+import { getEnvironmentRequiredValue } from './utils/environment.utils.js';
 
 const run = async () => {
     dotenv.config({
