@@ -113,7 +113,6 @@ export class ImportContextService {
 
         await processInChunksAsync<IMigrationItem, void>({
             log: this.log,
-            type: 'languageVariant',
             chunkSize: 1,
             items: migrationItems,
             itemInfo: (item) => {
@@ -134,10 +133,10 @@ export class ImportContextService {
                                     .byLanguageCodename(item.system.language)
                                     .toPromise()
                             ).data,
-                        action: 'viewByCodename',
+                        action: 'view',
                         type: 'languageVariant',
                         useSpinner: true,
-                        itemName: `${item.system.codename} (${item.system.language})`
+                        itemName: `byCodename -> ${item.system.codename} (${item.system.language})`
                     });
 
                     languageVariants.push({
@@ -160,7 +159,6 @@ export class ImportContextService {
 
         await processInChunksAsync<string, void>({
             log: this.log,
-            type: 'contentItem',
             chunkSize: 1,
             items: itemCodenames,
             itemInfo: (codename) => {
@@ -177,10 +175,10 @@ export class ImportContextService {
                             (
                                 await this.managementClient.viewContentItem().byItemCodename(codename).toPromise()
                             ).data,
-                        action: 'viewByCodename',
+                        action: 'view',
                         type: 'contentItem',
                         useSpinner: true,
-                        itemName: `${codename}`
+                        itemName: `codename -> ${codename}`
                     });
 
                     contentItems.push(contentItem);
@@ -200,7 +198,6 @@ export class ImportContextService {
 
         await processInChunksAsync<string, void>({
             log: this.log,
-            type: 'asset',
             chunkSize: 1,
             items: assetCodenames,
             itemInfo: (codename) => {
@@ -217,10 +214,10 @@ export class ImportContextService {
                             (
                                 await this.managementClient.viewAsset().byAssetCodename(codename).toPromise()
                             ).data,
-                        action: 'viewByCodename',
+                        action: 'view',
                         type: 'asset',
                         useSpinner: true,
-                        itemName: `${codename}`
+                        itemName: `codename -> ${codename}`
                     });
 
                     assets.push(asset);

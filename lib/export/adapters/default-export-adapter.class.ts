@@ -183,7 +183,6 @@ class DefaultExportAdapter implements IExportAdapter {
 
         const exportedAssets: IMigrationAsset[] = await processInChunksAsync<AssetModels.Asset, IMigrationAsset>({
             log: this.config.log,
-            type: 'asset',
             chunkSize: 5,
             itemInfo: (input) => {
                 return {
@@ -199,7 +198,7 @@ class DefaultExportAdapter implements IExportAdapter {
                 logSpinner(
                     {
                         type: 'download',
-                        message: `Loading '${chalk.yellow(asset.url)}'`
+                        message: `${asset.url}`
                     },
                     this.config.log
                 );

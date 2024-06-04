@@ -49,7 +49,6 @@ export class ImportLanguageVariantServices {
 
         await processInChunksAsync<IMigrationItem, void>({
             log: this.config.log,
-            type: 'languageVariant',
             chunkSize: this.importContentItemChunkSize,
             items: data.importContentItems,
             itemInfo: (input) => {

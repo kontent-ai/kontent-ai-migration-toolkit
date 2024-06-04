@@ -116,7 +116,6 @@ export class ExportContextService {
             IKontentAiPreparedExportItem
         >({
             log: this.log,
-            type: 'exportedItem',
             chunkSize: 1,
             itemInfo: (input) => {
                 return {
@@ -135,10 +134,10 @@ export class ExportContextService {
                                 .byItemCodename(exportItem.itemCodename)
                                 .toPromise()
                         ).data,
-                    action: 'viewByCodename',
+                    action: 'view',
                     type: 'contentItem',
                     useSpinner: true,
-                    itemName: `${exportItem.itemCodename} (${exportItem.languageCodename})`
+                    itemName: `codename -> ${exportItem.itemCodename} (${exportItem.languageCodename})`
                 });
 
                 const languageVariant = await runMapiRequestAsync({
@@ -151,10 +150,10 @@ export class ExportContextService {
                                 .byLanguageCodename(exportItem.languageCodename)
                                 .toPromise()
                         ).data,
-                    action: 'viewByCodename',
+                    action: 'view',
                     type: 'languageVariant',
                     useSpinner: true,
-                    itemName: `${exportItem.itemCodename} (${exportItem.languageCodename})`
+                    itemName: `codename -> ${exportItem.itemCodename} (${exportItem.languageCodename})`
                 });
 
                 const collection = data.environmentData.collections.find((m) => m.id === contentItem.collection.id);
@@ -305,7 +304,6 @@ export class ExportContextService {
 
         await processInChunksAsync<string, void>({
             log: this.log,
-            type: 'contentItem',
             chunkSize: 1,
             items: itemIds,
             itemInfo: (id) => {
@@ -319,10 +317,10 @@ export class ExportContextService {
                     const contentItem = await runMapiRequestAsync({
                         log: this.log,
                         func: async () => (await this.managementClient.viewContentItem().byItemId(id).toPromise()).data,
-                        action: 'viewById',
+                        action: 'view',
                         type: 'contentItem',
                         useSpinner: true,
-                        itemName: id
+                        itemName: `id -> ${id}`
                     });
 
                     contentItems.push(contentItem);
@@ -342,7 +340,6 @@ export class ExportContextService {
 
         await processInChunksAsync<string, void>({
             log: this.log,
-            type: 'asset',
             chunkSize: 1,
             items: itemIds,
             itemInfo: (id) => {
@@ -356,10 +353,10 @@ export class ExportContextService {
                     const asset = await runMapiRequestAsync({
                         log: this.log,
                         func: async () => (await this.managementClient.viewAsset().byAssetId(id).toPromise()).data,
-                        action: 'viewById',
+                        action: 'view',
                         type: 'asset',
                         useSpinner: true,
-                        itemName: id
+                        itemName: `id -> ${id}`
                     });
 
                     assets.push(asset);

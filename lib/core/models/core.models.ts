@@ -10,9 +10,7 @@ export type GeneralActionType = 'readFs' | 'skip' | 'writeFs' | 'download';
 export type MapiAction =
     | 'list'
     | 'view'
-    | 'viewById'
     | 'archive'
-    | 'viewByCodename'
     | 'unpublish'
     | 'changeWorkflowStep'
     | 'publish'

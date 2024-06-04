@@ -1,4 +1,4 @@
-import { IItemInfo, GeneralItemType, MapiType } from '../models/core.models.js';
+import { IItemInfo } from '../models/core.models.js';
 import { Log, logSpinner, startSpinner, stopSpinner } from './log.utils.js';
 
 export interface IChunk<T> {
@@ -7,7 +7,6 @@ export interface IChunk<T> {
 }
 
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
-    type: GeneralItemType | MapiType;
     log: Log;
     items: TInputItem[];
     chunkSize: number;
@@ -32,7 +31,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
                         logSpinner(
                             {
                                 message: itemInfo.title,
-                                type: data.type,
+                                type: 'process',
                                 count: {
                                     index: processingIndex,
                                     total: data.items.length

@@ -42,7 +42,6 @@ export class ImportAssetsService {
 
         await processInChunksAsync<IMigrationAsset, void>({
             log: this.log,
-            type: 'asset',
             chunkSize: this.importAssetsChunkSize,
             items: assetsToUpload,
             itemInfo: (input) => {
