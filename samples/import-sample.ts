@@ -1,7 +1,7 @@
-import { importAsync, importFromFilesAsync, getDefaultLogAsync, DefaultImportAdapter } from '../lib/index.js';
+import { importAsync, importFromFilesAsync, getDefaultLogAsync, getDefaultImportAdapter } from '../lib/index.js';
 
 const log = await getDefaultLogAsync();
-const adapter = new DefaultImportAdapter({
+const adapter = getDefaultImportAdapter({
     environmentId: '<id>',
     apiKey: '<mapiKey>',
     skipFailedItems: false,
