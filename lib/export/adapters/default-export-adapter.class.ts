@@ -23,7 +23,8 @@ import {
     IFlattenedContentTypeElement,
     extractErrorData,
     processInChunksAsync,
-    getAssetExternalIdForCodename
+    getAssetExternalIdForCodename,
+    logSpinner
 } from '../../core/index.js';
 import { ExportContextService, getExportContextService } from './context/export-context.service.js';
 import { exportTransforms } from '../../translation/index.js';
@@ -56,12 +57,12 @@ class DefaultExportAdapter implements IExportAdapter {
         });
 
         return {
-            items: await this.mapPreparedItemToMigrationItems(exportContext),
+            items: this.getMigrationItems(exportContext),
             assets: await this.exportAssetsAsync(exportContext)
         };
     }
 
-    private mapPreparedItemToMigrationItems(context: IExportContext): IMigrationItem[] {
+    private getMigrationItems(context: IExportContext): IMigrationItem[] {
         const migrationItems: IMigrationItem[] = [];
 
         for (const preparedItem of context.preparedExportItems) {
@@ -202,13 +203,23 @@ class DefaultExportAdapter implements IExportAdapter {
                 const assetCollection: CollectionModels.Collection | undefined =
                     context.environmentData.collections.find((m) => m.id === asset.collection?.reference?.id);
 
+                logSpinner(
+                    {
+                        type: 'download',
+                        message: `Loading '${chalk.yellow(asset.url)}'`
+                    },
+                    this.config.log
+                );
+
+                const binaryData = await this.getBinaryDataFromUrlAsync(asset.url);
+
                 const migrationAsset: IMigrationAsset = {
                     _zipFilename: asset.codename,
                     filename: asset.fileName,
                     title: asset.title ?? '',
                     externalId: asset.externalId ?? getAssetExternalIdForCodename(asset.codename),
                     codename: asset.codename,
-                    binaryData: (await this.getBinaryDataFromUrlAsync(asset.url)).data,
+                    binaryData: binaryData.data,
                     collection: assetCollection ? { codename: assetCollection.codename } : undefined,
                     descriptions: asset.descriptions.map((description) => {
                         const language = context.environmentData.languages.find(
