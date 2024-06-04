@@ -12,17 +12,21 @@ import {
 
 import { AssetModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 import { IImportContext, IImportData } from '../../import.models.js';
-import { itemsExtractionHelper } from '../../../translation/index.js';
+import { ItemsExtractionService, getItemsExtractionService } from '../../../translation/index.js';
 
 export function getImportContextService(log: Log, managementClient: ManagementClient): ImportContextService {
     return new ImportContextService(log, managementClient);
 }
 
 export class ImportContextService {
-    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
+    private readonly itemsExtractionService: ItemsExtractionService;
+
+    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {
+        this.itemsExtractionService = getItemsExtractionService(log);
+    }
 
     async getImportContextAsync(dataToImport: IImportData): Promise<IImportContext> {
-        const referencedData = itemsExtractionHelper.extractReferencedItemsFromMigrationItems(dataToImport.items);
+        const referencedData = this.itemsExtractionService.extractReferencedItemsFromMigrationItems(dataToImport.items);
         const contentItems = dataToImport.items.filter((m) => m.system.workflow);
 
         const itemCodenamesToCheckInTargetEnv: string[] = [

@@ -26,7 +26,7 @@ import {
     WorkflowModels
 } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
-import { itemsExtractionHelper } from '../../../translation/index.js';
+import { ItemsExtractionService, getItemsExtractionService } from '../../../translation/index.js';
 import { throwErrorForItemRequest } from '../../utils/export.utils.js';
 
 export function getExportContextService(log: Log, managementClient: ManagementClient): ExportContextService {
@@ -34,7 +34,11 @@ export function getExportContextService(log: Log, managementClient: ManagementCl
 }
 
 export class ExportContextService {
-    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
+    private readonly itemsExtractionService: ItemsExtractionService;
+
+    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {
+        this.itemsExtractionService = getItemsExtractionService(log);
+    }
 
     async getExportContextAsync(data: { exportItems: IKontentAiExportRequestItem[] }): Promise<IExportContext> {
         const environmentData = await this.getEnvironmentDataAsync();
@@ -53,7 +57,7 @@ export class ExportContextService {
             message: `Extracting referenced items from content`
         });
 
-        const referencedData = itemsExtractionHelper.extractReferencedDataFromExportItems(preparedItems);
+        const referencedData = this.itemsExtractionService.extractReferencedDataFromExportItems(preparedItems);
 
         // fetch both referenced items and items that are set to be exported
         const itemIdsToCheckInTargetEnv: string[] = [

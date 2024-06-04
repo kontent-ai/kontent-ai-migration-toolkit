@@ -11,6 +11,46 @@ export interface IProcessInChunksItemInfo {
     itemType: ItemType;
 }
 
+export function processWithSpinner<TInputItem, TOutputItem>(data: {
+    type: ItemType;
+    log: Log;
+    items: TInputItem[];
+    process: (item: TInputItem) => TOutputItem;
+    itemInfo?: (item: TInputItem) => IProcessInChunksItemInfo;
+}): TOutputItem[] {
+    const outputItems: TOutputItem[] = [];
+    let processingIndex: number = 0;
+
+    startSpinner(data.log);
+
+    try {
+        for (const item of data.items) {
+            processingIndex++;
+            if (data.itemInfo) {
+                const itemInfo = data.itemInfo(item);
+
+                logSpinner(
+                    {
+                        message: itemInfo.title,
+                        type: data.type,
+                        count: {
+                            index: processingIndex,
+                            total: data.items.length
+                        }
+                    },
+                    data.log
+                );
+            }
+
+            outputItems.push(data.process(item));
+        }
+
+        return outputItems;
+    } finally {
+        stopSpinner(data.log);
+    }
+}
+
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     type: ItemType;
     log: Log;

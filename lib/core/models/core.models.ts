@@ -8,6 +8,7 @@ export type ItemType =
     | 'component'
     | 'contentItem'
     | 'exportItem'
+    | 'extract'
     | 'listContentItems'
     | 'languageVariant'
     | 'asset'
