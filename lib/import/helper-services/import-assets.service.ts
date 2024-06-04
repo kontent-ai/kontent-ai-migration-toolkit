@@ -1,5 +1,5 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IMigrationAsset, Log, is404Error, logSpinner, processInChunksAsync } from '../../core/index.js';
+import { IMigrationAsset, Log, logSpinner, processInChunksAsync } from '../../core/index.js';
 import mime from 'mime';
 import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
@@ -10,7 +10,6 @@ export function getImportAssetsService(log: Log, managementClient: ManagementCli
 
 export class ImportAssetsService {
     private readonly importAssetsChunkSize: number = 1;
-    private readonly fetchAssetsChunkSize: number = 1;
 
     constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
 
@@ -19,30 +18,33 @@ export class ImportAssetsService {
             type: 'info',
             message: `Categorizing '${chalk.yellow(data.assets.length.toString())}' assets`
         });
-        const filteredAssets = await this.getAssetsToUploadAsync({
+        const assetsToUpload = this.getAssetsToUpload({
             assets: data.assets,
-            managementClient: this.managementClient
+            managementClient: this.managementClient,
+            importContext: data.importContext
         });
 
-        if (filteredAssets.existingAssets.length) {
+        const skippedAssetsCount = data.assets.length - assetsToUpload.length;
+
+        if (skippedAssetsCount) {
             this.log.logger({
                 type: 'skip',
                 message: `Skipping upload for '${chalk.yellow(
-                    filteredAssets.existingAssets.length.toString()
+                    skippedAssetsCount.toString()
                 )}' assets as they already exist`
             });
         }
 
         this.log.logger({
             type: 'upload',
-            message: `Uploading '${chalk.yellow(filteredAssets.assetsToUpload.length.toString())}' assets`
+            message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
         });
 
         await processInChunksAsync<IMigrationAsset, void>({
             log: this.log,
             type: 'asset',
             chunkSize: this.importAssetsChunkSize,
-            items: filteredAssets.assetsToUpload,
+            items: assetsToUpload,
             itemInfo: (input) => {
                 return {
                     itemType: 'asset',
@@ -51,11 +53,13 @@ export class ImportAssetsService {
             },
             processFunc: async (asset) => {
                 // only import asset if it didn't exist
-                logSpinner({
-                    type: 'upload',
-                    message: asset.title
-                }, this.log);
-
+                logSpinner(
+                    {
+                        type: 'upload',
+                        message: asset.title
+                    },
+                    this.log
+                );
                 const uploadedBinaryFile = await this.managementClient
                     .uploadBinaryFile()
                     .withData({
@@ -65,10 +69,13 @@ export class ImportAssetsService {
                     })
                     .toPromise();
 
-                logSpinner({
-                    type: 'create',
-                    message: asset.title
-                }, this.log);
+                logSpinner(
+                    {
+                        type: 'create',
+                        message: asset.title
+                    },
+                    this.log
+                );
 
                 await this.managementClient
                     .addAsset()
@@ -103,85 +110,18 @@ export class ImportAssetsService {
                         };
                         return data;
                     })
-                    .toPromise()
-                    .then((m) => m.data);
+                    .toPromise();
             }
         });
     }
 
-    private async getAssetsToUploadAsync(data: {
+    private getAssetsToUpload(data: {
         assets: IMigrationAsset[];
         managementClient: ManagementClient;
-    }): Promise<{
-        assetsToUpload: IMigrationAsset[];
-        existingAssets: {
-            original: IMigrationAsset;
-            imported: AssetModels.Asset;
-        }[];
-    }> {
-        const assetsToUpload: IMigrationAsset[] = [];
-        const existingAssets: {
-            original: IMigrationAsset;
-            imported: AssetModels.Asset;
-        }[] = [];
-
-        await processInChunksAsync<IMigrationAsset, void>({
-            log: this.log,
-            type: 'asset',
-            chunkSize: this.fetchAssetsChunkSize,
-            items: data.assets,
-            itemInfo: (input) => {
-                return {
-                    itemType: 'asset',
-                    title: input.title
-                };
-            },
-            processFunc: async (asset) => {
-                // check if asset with given codename already exists
-                let existingAsset: AssetModels.Asset | undefined;
-
-                try {
-                    existingAsset = await data.managementClient
-                        .viewAsset()
-                        .byAssetCodename(asset.codename)
-                        .toPromise()
-                        .then((m) => m.data);
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
-                    }
-                }
-
-                if (asset.externalId) {
-                    try {
-                        // check if asset with given external id was already created
-                        existingAsset = await data.managementClient
-                            .viewAsset()
-                            .byAssetExternalId(asset.externalId)
-                            .toPromise()
-                            .then((m) => m.data);
-                    } catch (error) {
-                        if (!is404Error(error)) {
-                            throw error;
-                        }
-                    }
-                }
-
-                if (!existingAsset) {
-                    // only import asset if it didn't exist
-                    assetsToUpload.push(asset);
-                } else {
-                    existingAssets.push({
-                        imported: existingAsset,
-                        original: asset
-                    });
-                }
-            }
+        importContext: IImportContext;
+    }): IMigrationAsset[] {
+        return data.assets.filter((asset) => {
+            return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
         });
-
-        return {
-            assetsToUpload: assetsToUpload,
-            existingAssets: existingAssets
-        };
     }
 }
