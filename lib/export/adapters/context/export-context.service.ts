@@ -108,76 +108,109 @@ export class ExportContextService {
         environmentData: IExportContextEnvironmentData;
         exportItems: IKontentAiExportRequestItem[];
     }): Promise<IKontentAiPreparedExportItem[]> {
-        const items: IKontentAiPreparedExportItem[] = [];
-
-        for (const exportItem of data.exportItems) {
-            const contentItem = (
-                await this.managementClient.viewContentItem().byItemCodename(exportItem.itemCodename).toPromise()
-            ).data;
-
-            const languageVariant = (
-                await this.managementClient
-                    .viewLanguageVariant()
-                    .byItemCodename(exportItem.itemCodename)
-                    .byLanguageCodename(exportItem.languageCodename)
-                    .toPromise()
-            ).data;
-
-            const collection = data.environmentData.collections.find((m) => m.id === contentItem.collection.id);
-
-            if (!collection) {
-                throwErrorForItemRequest(
-                    exportItem,
-                    `Invalid collection '${chalk.yellow(contentItem.collection.id ?? '')}'`
+        const items: IKontentAiPreparedExportItem[] = await processInChunksAsync<
+            IKontentAiExportRequestItem,
+            IKontentAiPreparedExportItem
+        >({
+            log: this.log,
+            type: 'exportItem',
+            chunkSize: 1,
+            itemInfo: (input) => {
+                return {
+                    title: `${input.itemCodename} (${input.languageCodename})`,
+                    itemType: 'exportItem'
+                };
+            },
+            items: data.exportItems,
+            processFunc: async (exportItem) => {
+                logSpinner(
+                    {
+                        type: 'viewContentItemByCodename',
+                        message: `${exportItem.itemCodename}`
+                    },
+                    this.log
                 );
-            }
 
-            const contentType = data.environmentData.contentTypes.find((m) => m.contentTypeId === contentItem.type.id);
+                const contentItem = (
+                    await this.managementClient.viewContentItem().byItemCodename(exportItem.itemCodename).toPromise()
+                ).data;
 
-            if (!contentType) {
-                throwErrorForItemRequest(exportItem, `Invalid content type '${chalk.yellow(contentItem.type.id)}'`);
-            }
-
-            const language = data.environmentData.languages.find((m) => m.id === languageVariant.language.id);
-
-            if (!language) {
-                throwErrorForItemRequest(
-                    exportItem,
-                    `Invalid language '${chalk.yellow(languageVariant.language.id ?? '')}'`
+                logSpinner(
+                    {
+                        type: 'viewLanguageVariant',
+                        message: `${exportItem.itemCodename} (${exportItem.languageCodename})`
+                    },
+                    this.log
                 );
-            }
 
-            const workflow = data.environmentData.workflows.find(
-                (m) => m.id === languageVariant.workflow.workflowIdentifier.id
-            );
+                const languageVariant = (
+                    await this.managementClient
+                        .viewLanguageVariant()
+                        .byItemCodename(exportItem.itemCodename)
+                        .byLanguageCodename(exportItem.languageCodename)
+                        .toPromise()
+                ).data;
 
-            if (!workflow) {
-                throwErrorForItemRequest(
-                    exportItem,
-                    `Invalid workflow '${chalk.yellow(languageVariant.workflow.workflowIdentifier.id ?? '')}'`
+                const collection = data.environmentData.collections.find((m) => m.id === contentItem.collection.id);
+
+                if (!collection) {
+                    throwErrorForItemRequest(
+                        exportItem,
+                        `Invalid collection '${chalk.yellow(contentItem.collection.id ?? '')}'`
+                    );
+                }
+
+                const contentType = data.environmentData.contentTypes.find(
+                    (m) => m.contentTypeId === contentItem.type.id
                 );
-            }
 
-            const workflowStepCodename = this.getWorkflowStepCodename(workflow, languageVariant);
+                if (!contentType) {
+                    throwErrorForItemRequest(exportItem, `Invalid content type '${chalk.yellow(contentItem.type.id)}'`);
+                }
 
-            if (!workflowStepCodename) {
-                throwErrorForItemRequest(
-                    exportItem,
-                    `Invalid workflow step '${chalk.yellow(languageVariant.workflow.stepIdentifier.id ?? '')}'`
+                const language = data.environmentData.languages.find((m) => m.id === languageVariant.language.id);
+
+                if (!language) {
+                    throwErrorForItemRequest(
+                        exportItem,
+                        `Invalid language '${chalk.yellow(languageVariant.language.id ?? '')}'`
+                    );
+                }
+
+                const workflow = data.environmentData.workflows.find(
+                    (m) => m.id === languageVariant.workflow.workflowIdentifier.id
                 );
-            }
 
-            items.push({
-                contentItem: contentItem,
-                languageVariant: languageVariant,
-                contentType: contentType,
-                requestItem: exportItem,
-                workflow: workflow,
-                workflowStepCodename: workflowStepCodename,
-                collection: collection,
-                language: language
-            });
-        }
+                if (!workflow) {
+                    throwErrorForItemRequest(
+                        exportItem,
+                        `Invalid workflow '${chalk.yellow(languageVariant.workflow.workflowIdentifier.id ?? '')}'`
+                    );
+                }
+
+                const workflowStepCodename = this.getWorkflowStepCodename(workflow, languageVariant);
+
+                if (!workflowStepCodename) {
+                    throwErrorForItemRequest(
+                        exportItem,
+                        `Invalid workflow step '${chalk.yellow(languageVariant.workflow.stepIdentifier.id ?? '')}'`
+                    );
+                }
+
+                const preparedItem: IKontentAiPreparedExportItem = {
+                    contentItem: contentItem,
+                    languageVariant: languageVariant,
+                    contentType: contentType,
+                    requestItem: exportItem,
+                    workflow: workflow,
+                    workflowStepCodename: workflowStepCodename,
+                    collection: collection,
+                    language: language
+                };
+
+                return preparedItem;
+            }
+        });
 
         return items;
     }

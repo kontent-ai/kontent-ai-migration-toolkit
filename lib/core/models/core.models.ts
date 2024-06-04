@@ -7,6 +7,7 @@ export type ExportAdapter = 'kontentAi';
 export type ItemType =
     | 'component'
     | 'contentItem'
+    | 'exportItem'
     | 'listContentItems'
     | 'languageVariant'
     | 'asset'
