@@ -50,9 +50,9 @@ async function getSourceDataAsync(config: IImportFromFilesConfig): Promise<IImpo
 
 async function getImportDataFromZipAsync(config: IImportFromFilesConfig, log: Log): Promise<IImportData> {
     const fileService = getFileService(log);
-    const fileProcessorService = getZipService(log, config.zipContext ?? 'node.js');
+    const zipService = getZipService(log, config.zipContext ?? 'node.js');
 
-    const importSourceData = await fileProcessorService.parseZipAsync({
+    const importData = await zipService.parseZipAsync({
         items: config.items
             ? {
                   file: await fileService.loadFileAsync(config.items.filename),
@@ -68,13 +68,14 @@ async function getImportDataFromZipAsync(config: IImportFromFilesConfig, log: Lo
         types: await getFlattenedContentTypesAsync(config.adapter.client, log)
     });
 
-    return importSourceData;
+    return importData;
 }
 
 async function getImportDataFromNonZipFileAsync(config: IImportFromFilesConfig, log: Log): Promise<IImportData> {
     const fileService = getFileService(log);
-    const fileProcessorService = getZipService(log, config.zipContext ?? 'node.js');
-    const importSourceData = await fileProcessorService.parseFileAsync({
+    const zipServiceService = getZipService(log, config.zipContext ?? 'node.js');
+
+    const importData = await zipServiceService.parseFileAsync({
         items: config.items
             ? {
                   file: await fileService.loadFileAsync(config.items.filename),
@@ -90,5 +91,5 @@ async function getImportDataFromNonZipFileAsync(config: IImportFromFilesConfig, 
         types: await getFlattenedContentTypesAsync(config.adapter.client, log)
     });
 
-    return importSourceData;
+    return importData;
 }

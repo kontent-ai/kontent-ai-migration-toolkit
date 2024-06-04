@@ -22,7 +22,7 @@ export interface IExportConfig {
 export async function exportAsync(config: IExportConfig): Promise<IExportAdapterResult> {
     const log = config.log ?? (await getDefaultLogAsync());
     const fileService = getFileService(log);
-    const fileProcessorService = getZipService(log, config.zipContext ?? 'node.js');
+    const zipService = getZipService(log, config.zipContext ?? 'node.js');
 
     return await executeWithTrackingAsync({
         event: {
@@ -40,14 +40,14 @@ export async function exportAsync(config: IExportConfig): Promise<IExportAdapter
         func: async () => {
             const data = await config.adapter.exportAsync();
 
-            const itemsZipFile = await fileProcessorService.createItemsZipAsync(data, {
+            const itemsZipFile = await zipService.createItemsZipAsync(data, {
                 itemFormatService: getItemsFormatService(config.items.formatService)
             });
 
             await fileService.writeFileAsync(config.items.filename, itemsZipFile);
 
             if (config.assets) {
-                const assetsZipFile = await fileProcessorService.createAssetsZipAsync(data, {
+                const assetsZipFile = await zipService.createAssetsZipAsync(data, {
                     assetFormatService: getAssetsFormatService(config.assets.formatService)
                 });
 
