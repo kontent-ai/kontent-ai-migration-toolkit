@@ -152,7 +152,7 @@ export const cliArgs = getCliArgs()
             {
                 name: `skipFailedItems`,
                 description: `Indicates whether the import should continue even if some item fails to import`,
-                type: 'string',
+                type: 'boolean',
                 isRequired: false
             },
             {
