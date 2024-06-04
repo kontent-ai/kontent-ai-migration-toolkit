@@ -13,7 +13,7 @@ import {
     IMigrationItem,
     IMigrationElement,
     Log,
-    logSpinner
+    runMapiRequestAsync
 } from '../../core/index.js';
 import { ImportWorkflowService, getImportWorkflowService } from './import-workflow.service.js';
 import chalk from 'chalk';
@@ -74,7 +74,7 @@ export class ImportLanguageVariantServices {
                     }
 
                     await this.importLanguageVariantAsync({
-                        importContentItem,
+                        migrationItem: importContentItem,
                         preparedContentItem,
                         managementClient: this.config.managementClient,
                         importContentItems: data.importContentItems,
@@ -100,7 +100,7 @@ export class ImportLanguageVariantServices {
     }
 
     private async importLanguageVariantAsync(data: {
-        importContentItem: IMigrationItem;
+        migrationItem: IMigrationItem;
         preparedContentItem: ContentItemModels.ContentItem;
         managementClient: ManagementClient;
         importContentItems: IMigrationItem[];
@@ -108,26 +108,24 @@ export class ImportLanguageVariantServices {
         importContext: IImportContext;
     }): Promise<void> {
         await this.prepareLanguageVariantForImportAsync({
-            importContentItem: data.importContentItem,
+            migrationItem: data.migrationItem,
             workflows: data.workflows,
             importContext: data.importContext,
             managementClient: data.managementClient
         });
 
-        const workflowStepCodename = data.importContentItem.system.workflow_step;
-        const workflowCodename = data.importContentItem.system.workflow;
+        const workflowStepCodename = data.migrationItem.system.workflow_step;
+        const workflowCodename = data.migrationItem.system.workflow;
 
         if (!workflowCodename) {
             throw Error(
-                `Content item '${chalk.red(data.importContentItem.system.codename)}' does not have a workflow assigned`
+                `Content item '${chalk.red(data.migrationItem.system.codename)}' does not have a workflow assigned`
             );
         }
 
         if (!workflowStepCodename) {
             throw Error(
-                `Content item '${chalk.red(
-                    data.importContentItem.system.codename
-                )}' does not have a workflow step assigned`
+                `Content item '${chalk.red(data.migrationItem.system.codename)}' does not have a workflow step assigned`
             );
         }
 
@@ -141,62 +139,65 @@ export class ImportLanguageVariantServices {
         // prepare & map elements
         const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] = [];
 
-        for (const element of data.importContentItem.elements) {
+        for (const element of data.migrationItem.elements) {
             mappedElements.push(
                 await this.getElementContractAsync(data.importContentItems, element, data.importContext)
             );
         }
 
-        logSpinner(
-            {
-                type: 'upsert',
-                message: `${data.preparedContentItem.name}`
-            },
-            this.config.log
-        );
-        await data.managementClient
-            .upsertLanguageVariant()
-            .byItemCodename(data.preparedContentItem.codename)
-            .byLanguageCodename(data.importContentItem.system.language)
-            .withData((builder) => {
-                return {
-                    elements: mappedElements,
-                    workflow: {
-                        workflow_identifier: {
-                            codename: workflow.codename
-                        },
-                        step_identifier: {
-                            codename: workflow.steps[0].codename // use always first step
-                        }
-                    }
-                };
-            })
-            .toPromise()
-            .then((m) => m.data);
+        // upsert language variant
+        await runMapiRequestAsync({
+            log: this.config.log,
+            func: async () =>
+                (
+                    await data.managementClient
+                        .upsertLanguageVariant()
+                        .byItemCodename(data.preparedContentItem.codename)
+                        .byLanguageCodename(data.migrationItem.system.language)
+                        .withData((builder) => {
+                            return {
+                                elements: mappedElements,
+                                workflow: {
+                                    workflow_identifier: {
+                                        codename: workflow.codename
+                                    },
+                                    step_identifier: {
+                                        codename: workflow.steps[0].codename // use always first step
+                                    }
+                                }
+                            };
+                        })
+                        .toPromise()
+                ).data,
+            action: 'upsert',
+            type: 'languageVariant',
+            useSpinner: true,
+            itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language})`
+        });
 
         // set workflow of language variant
         await this.importWorkflowService.setWorkflowOfLanguageVariantAsync(
             data.managementClient,
             workflowCodename,
             workflowStepCodename,
-            data.importContentItem,
+            data.migrationItem,
             data.workflows
         );
     }
 
     private async prepareLanguageVariantForImportAsync(data: {
-        importContentItem: IMigrationItem;
+        migrationItem: IMigrationItem;
         managementClient: ManagementClient;
         workflows: WorkflowModels.Workflow[];
         importContext: IImportContext;
     }): Promise<void> {
         const languageVariantState = data.importContext.getLanguageVariantStateInTargetEnvironment(
-            data.importContentItem.system.codename,
-            data.importContentItem.system.language
+            data.migrationItem.system.codename,
+            data.migrationItem.system.language
         );
 
-        const workflowCodename = data.importContentItem.system.workflow;
-        const workflowStepCodename = data.importContentItem.system.workflow_step;
+        const workflowCodename = data.migrationItem.system.workflow;
+        const workflowStepCodename = data.migrationItem.system.workflow_step;
         const languageVariant = languageVariantState.languageVariant;
 
         if (!languageVariant) {
@@ -206,13 +207,13 @@ export class ImportLanguageVariantServices {
 
         if (!workflowCodename) {
             throw Error(
-                `Item with codename '${data.importContentItem.system.codename}' does not have workflow property assigned`
+                `Item with codename '${data.migrationItem.system.codename}' does not have workflow property assigned`
             );
         }
 
         if (!workflowStepCodename) {
             throw Error(
-                `Item with codename '${data.importContentItem.system.codename}' does not have workflow step assigned`
+                `Item with codename '${data.migrationItem.system.codename}' does not have workflow step assigned`
             );
         }
 
@@ -224,39 +225,43 @@ export class ImportLanguageVariantServices {
 
         // check if variant is published or archived
         if (this.isLanguageVariantPublished(languageVariant, data.workflows)) {
-            logSpinner(
-                {
-                    type: 'createNewVersion',
-                    message: `${data.importContentItem.system.name}`
-                },
-                this.config.log
-            );
-
             // create new version
-            await data.managementClient
-                .createNewVersionOfLanguageVariant()
-                .byItemCodename(data.importContentItem.system.codename)
-                .byLanguageCodename(data.importContentItem.system.language)
-                .toPromise();
+            await runMapiRequestAsync({
+                log: this.config.log,
+                func: async () =>
+                    (
+                        await data.managementClient
+                            .createNewVersionOfLanguageVariant()
+                            .byItemCodename(data.migrationItem.system.codename)
+                            .byLanguageCodename(data.migrationItem.system.language)
+                            .toPromise()
+                    ).data,
+                action: 'createNewVersion',
+                type: 'languageVariant',
+                useSpinner: true,
+                itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language})`
+            });
         } else if (this.isLanguageVariantArchived(languageVariant, data.workflows)) {
             // change workflow step to draft
-            logSpinner(
-                {
-                    type: 'unArchive',
-                    message: `${data.importContentItem.system.name}`
-                },
-                this.config.log
-            );
-
             const firstWorkflowStep = workflow.steps?.[0];
 
             if (firstWorkflowStep) {
-                await data.managementClient
-                    .changeWorkflowStepOfLanguageVariant()
-                    .byItemCodename(data.importContentItem.system.codename)
-                    .byLanguageCodename(data.importContentItem.system.language)
-                    .byWorkflowStepCodename(firstWorkflowStep.codename)
-                    .toPromise();
+                await runMapiRequestAsync({
+                    log: this.config.log,
+                    func: async () =>
+                        (
+                            await data.managementClient
+                                .changeWorkflowStepOfLanguageVariant()
+                                .byItemCodename(data.migrationItem.system.codename)
+                                .byLanguageCodename(data.migrationItem.system.language)
+                                .byWorkflowStepCodename(firstWorkflowStep.codename)
+                                .toPromise()
+                        ).data,
+                    action: 'changeWorkflowStep',
+                    type: 'languageVariant',
+                    useSpinner: true,
+                    itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language}) -> ${firstWorkflowStep.codename}`
+                });
             }
         }
     }

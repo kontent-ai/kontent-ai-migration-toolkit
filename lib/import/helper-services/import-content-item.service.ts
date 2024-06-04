@@ -5,7 +5,7 @@ import {
     IMigrationItem,
     Log,
     getItemExternalIdForCodename,
-    logSpinner
+    runMapiRequestAsync
 } from '../../core/index.js';
 import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
@@ -42,7 +42,7 @@ export class ImportContentItemHelper {
                 const contentItem = await this.importContentItemAsync({
                     managementClient: this.config.managementClient,
                     collections: data.collections,
-                    importContentItem: parsedItem,
+                    migrationItem: parsedItem,
                     importContext: data.importContext
                 });
 
@@ -65,14 +65,14 @@ export class ImportContentItemHelper {
     }
 
     private async importContentItemAsync(data: {
-        importContentItem: IMigrationItem;
+        migrationItem: IMigrationItem;
         managementClient: ManagementClient;
         collections: CollectionModels.Collection[];
         importContext: IImportContext;
     }): Promise<ContentItemModels.ContentItem> {
         const preparedContentItemResult = await this.prepareContentItemAsync(
             data.managementClient,
-            data.importContentItem,
+            data.migrationItem,
             data.importContext
         );
 
@@ -80,27 +80,31 @@ export class ImportContentItemHelper {
         if (preparedContentItemResult.status === 'itemAlreadyExists') {
             if (
                 this.shouldUpdateContentItem(
-                    data.importContentItem,
+                    data.migrationItem,
                     preparedContentItemResult.contentItem,
                     data.collections
                 )
             ) {
-                logSpinner({
-                    type: 'upsert',
-                    message: `${data.importContentItem.system.name}`
-                }, this.config.log);
-
-                await data.managementClient
-                    .upsertContentItem()
-                    .byItemCodename(data.importContentItem.system.codename)
-                    .withData({
-                        name: data.importContentItem.system.name,
-                        collection: {
-                            codename: data.importContentItem.system.collection
-                        }
-                    })
-                    .toPromise()
-                    .then((m) => m.data);
+                await runMapiRequestAsync({
+                    log: this.config.log,
+                    func: async () =>
+                        (
+                            await data.managementClient
+                                .upsertContentItem()
+                                .byItemCodename(data.migrationItem.system.codename)
+                                .withData({
+                                    name: data.migrationItem.system.name,
+                                    collection: {
+                                        codename: data.migrationItem.system.collection
+                                    }
+                                })
+                                .toPromise()
+                        ).data,
+                    action: 'upsert',
+                    type: 'contentItem',
+                    useSpinner: true,
+                    itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language})`
+                });
             }
         }
 
@@ -138,21 +142,31 @@ export class ImportContentItemHelper {
                 status: 'itemAlreadyExists'
             };
         }
-        const createdContentItem = await managementClient
-            .addContentItem()
-            .withData({
-                name: migrationContentItem.system.name,
-                type: {
-                    codename: migrationContentItem.system.type
-                },
-                external_id: getItemExternalIdForCodename(migrationContentItem.system.codename),
-                codename: migrationContentItem.system.codename,
-                collection: {
-                    codename: migrationContentItem.system.collection
-                }
-            })
-            .toPromise()
-            .then((m) => m.data);
+
+        const createdContentItem = await runMapiRequestAsync({
+            log: this.config.log,
+            func: async () =>
+                (
+                    await managementClient
+                        .addContentItem()
+                        .withData({
+                            name: migrationContentItem.system.name,
+                            type: {
+                                codename: migrationContentItem.system.type
+                            },
+                            external_id: getItemExternalIdForCodename(migrationContentItem.system.codename),
+                            codename: migrationContentItem.system.codename,
+                            collection: {
+                                codename: migrationContentItem.system.collection
+                            }
+                        })
+                        .toPromise()
+                ).data,
+            action: 'create',
+            type: 'contentItem',
+            useSpinner: true,
+            itemName: `${migrationContentItem.system.codename} (${migrationContentItem.system.language})`
+        });
 
         return {
             contentItem: createdContentItem,

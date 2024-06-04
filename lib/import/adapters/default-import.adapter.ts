@@ -10,7 +10,8 @@ import {
     defaultRetryStrategy,
     defaultHttpService,
     IMigrationItem,
-    executeWithTrackingAsync
+    executeWithTrackingAsync,
+    runMapiRequestAsync
 } from '../../core/index.js';
 import { IDefaultImportAdapterConfig, IImportAdapter, IImportContext, IImportData } from '../import.models.js';
 import { ImportAssetsService, getImportAssetsService } from '../helper-services/import-assets.service.js';
@@ -193,16 +194,22 @@ class DefaultImportAdapter implements IImportAdapter {
     }
 
     private async getWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
-        return await this.client
-            .listWorkflows()
-            .toPromise()
-            .then((m) => m.data);
+        return await runMapiRequestAsync({
+            log: this.config.log,
+            func: async () => (await this.client.listWorkflows().toPromise()).data,
+            action: 'list',
+            type: 'workflow',
+            useSpinner: false
+        });
     }
 
     private async getCollectionsAsync(): Promise<CollectionModels.Collection[]> {
-        return await this.client
-            .listCollections()
-            .toPromise()
-            .then((m) => m.data.collections);
+        return await runMapiRequestAsync({
+            log: this.config.log,
+            func: async () => (await this.client.listCollections().toPromise()).data.collections,
+            action: 'list',
+            type: 'collection',
+            useSpinner: false
+        });
     }
 }

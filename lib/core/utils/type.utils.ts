@@ -6,8 +6,9 @@ import {
     ElementModels
 } from '@kontent-ai/management-sdk';
 import { IFlattenedContentType, IFlattenedContentTypeElement } from '../models/core.models.js';
-import { Log, logErrorAndExit, logFetchedItems } from './log.utils.js';
+import { Log, logErrorAndExit } from './log.utils.js';
 import chalk from 'chalk';
+import { runMapiRequestAsync } from './run-utils.js';
 
 const excludedFlattenedElements: ElementModels.ElementType[] = ['guidelines'];
 
@@ -15,20 +16,20 @@ export async function getFlattenedContentTypesAsync(
     managementClient: ManagementClient,
     log: Log
 ): Promise<IFlattenedContentType[]> {
-    const contentTypes = (await managementClient.listContentTypes().toAllPromise()).data.items;
-
-    logFetchedItems({
-        count: contentTypes.length,
-        itemType: 'content types',
-        log: log
+    const contentTypes = await runMapiRequestAsync({
+        log: log,
+        func: async () => (await managementClient.listContentTypes().toAllPromise()).data.items,
+        action: 'list',
+        type: 'contentType',
+        useSpinner: false
     });
 
-    const contentTypeSnippets = (await managementClient.listContentTypeSnippets().toAllPromise()).data.items;
-
-    logFetchedItems({
-        count: contentTypeSnippets.length,
-        itemType: 'content type snippets',
-        log: log
+    const contentTypeSnippets = await runMapiRequestAsync({
+        log: log,
+        func: async () => (await managementClient.listContentTypeSnippets().toAllPromise()).data.items,
+        action: 'list',
+        type: 'contentTypeSnippet',
+        useSpinner: false
     });
 
     return [

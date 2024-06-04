@@ -1,5 +1,5 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IMigrationAsset, Log, logSpinner, processInChunksAsync } from '../../core/index.js';
+import { IMigrationAsset, Log, processInChunksAsync, runMapiRequestAsync } from '../../core/index.js';
 import mime from 'mime';
 import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
@@ -52,65 +52,69 @@ export class ImportAssetsService {
                 };
             },
             processFunc: async (asset) => {
-                // only import asset if it didn't exist
-                logSpinner(
-                    {
-                        type: 'upload',
-                        message: asset.title
-                    },
-                    this.log
-                );
-                const uploadedBinaryFile = await this.managementClient
-                    .uploadBinaryFile()
-                    .withData({
-                        binaryData: asset.binaryData,
-                        contentType: mime.getType(asset.filename) ?? '',
-                        filename: asset.filename
-                    })
-                    .toPromise();
+                const uploadedBinaryFile = await runMapiRequestAsync({
+                    log: this.log,
+                    func: async () =>
+                        (
+                            await this.managementClient
+                                .uploadBinaryFile()
+                                .withData({
+                                    binaryData: asset.binaryData,
+                                    contentType: mime.getType(asset.filename) ?? '',
+                                    filename: asset.filename
+                                })
+                                .toPromise()
+                        ).data,
+                    action: 'upload',
+                    type: 'binaryFile',
+                    useSpinner: true,
+                    itemName: `${asset.title ?? asset.filename}`
+                });
 
-                logSpinner(
-                    {
-                        type: 'create',
-                        message: asset.title
-                    },
-                    this.log
-                );
+                await runMapiRequestAsync({
+                    log: this.log,
+                    func: async () =>
+                        (
+                            await this.managementClient
+                                .addAsset()
+                                .withData((builder) => {
+                                    const data: AssetModels.IAddAssetRequestData = {
+                                        file_reference: {
+                                            id: uploadedBinaryFile.id,
+                                            type: 'internal'
+                                        },
+                                        codename: asset.codename,
+                                        title: asset.title,
+                                        external_id: asset.externalId,
+                                        collection: asset.collection
+                                            ? {
+                                                  reference: {
+                                                      codename: asset.collection.codename
+                                                  }
+                                              }
+                                            : undefined,
+                                        descriptions: asset.descriptions
+                                            ? asset.descriptions.map((m) => {
+                                                  const assetDescription: AssetModels.IAssetFileDescription = {
+                                                      description: m.description ?? '',
+                                                      language: {
+                                                          codename: m.language.codename
+                                                      }
+                                                  };
 
-                await this.managementClient
-                    .addAsset()
-                    .withData((builder) => {
-                        const data: AssetModels.IAddAssetRequestData = {
-                            file_reference: {
-                                id: uploadedBinaryFile.data.id,
-                                type: 'internal'
-                            },
-                            codename: asset.codename,
-                            title: asset.title,
-                            external_id: asset.externalId,
-                            collection: asset.collection
-                                ? {
-                                      reference: {
-                                          codename: asset.collection.codename
-                                      }
-                                  }
-                                : undefined,
-                            descriptions: asset.descriptions
-                                ? asset.descriptions.map((m) => {
-                                      const assetDescription: AssetModels.IAssetFileDescription = {
-                                          description: m.description ?? '',
-                                          language: {
-                                              codename: m.language.codename
-                                          }
-                                      };
-
-                                      return assetDescription;
-                                  })
-                                : []
-                        };
-                        return data;
-                    })
-                    .toPromise();
+                                                  return assetDescription;
+                                              })
+                                            : []
+                                    };
+                                    return data;
+                                })
+                                .toPromise()
+                        ).data,
+                    action: 'create',
+                    type: 'asset',
+                    useSpinner: true,
+                    itemName: `${asset.title ?? asset.filename}`
+                });
             }
         });
     }

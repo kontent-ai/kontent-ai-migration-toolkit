@@ -41,7 +41,12 @@ class DefaultExportAdapter implements IExportAdapter {
     private readonly exportContextService: ExportContextService;
 
     constructor(private config: IDefaultExportAdapterConfig) {
-        this.managementClient = this.getManagementClient(config);
+        this.managementClient = createManagementClient({
+            environmentId: config.environmentId,
+            retryStrategy: config.retryStrategy ?? defaultRetryStrategy,
+            httpService: defaultHttpService,
+            apiKey: config.apiKey
+        });
         this.exportContextService = getExportContextService(this.config.log, this.managementClient);
     }
 
@@ -165,17 +170,6 @@ class DefaultExportAdapter implements IExportAdapter {
         }
 
         return await this.getMigrationAssetsWithBinaryDataAsync(assets, context);
-    }
-
-    private getManagementClient(config: IDefaultExportAdapterConfig): ManagementClient {
-        const retryStrategy = config.retryStrategy ?? defaultRetryStrategy;
-
-        return createManagementClient({
-            environmentId: config.environmentId,
-            retryStrategy: retryStrategy,
-            httpService: defaultHttpService,
-            apiKey: config.apiKey
-        });
     }
 
     private async getMigrationAssetsWithBinaryDataAsync(

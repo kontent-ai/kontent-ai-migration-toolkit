@@ -5,7 +5,7 @@ import {
     IReferencedDataInMigrationItems,
     Log,
     parseArrayValue,
-    processWithSpinner,
+    runWithSpinner,
     uniqueStringFilter
 } from '../../core/index.js';
 import { IKontentAiPreparedExportItem } from '../../export/export.models.js';
@@ -21,13 +21,13 @@ export class ItemsExtractionService {
         const itemIds: string[] = [];
         const assetIds: string[] = [];
 
-        processWithSpinner<IKontentAiPreparedExportItem, void>({
+        runWithSpinner<IKontentAiPreparedExportItem, void>({
             log: this.log,
-            type: 'extract',
+            type: 'exportedItem',
             itemInfo: (input) => {
                 return {
                     title: input.requestItem.itemCodename,
-                    itemType: 'extract'
+                    itemType: 'exportedItem'
                 };
             },
             items: items,
@@ -82,13 +82,13 @@ export class ItemsExtractionService {
         const itemCodenames: string[] = [];
         const assetCodenames: string[] = [];
 
-        processWithSpinner<IMigrationItem, void>({
+        runWithSpinner<IMigrationItem, void>({
             log: this.log,
-            type: 'extract',
+            type: 'migrationItem',
             itemInfo: (input) => {
                 return {
                     title: input.system.codename,
-                    itemType: 'extract'
+                    itemType: 'migrationItem'
                 };
             },
             items: items,

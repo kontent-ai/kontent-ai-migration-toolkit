@@ -4,52 +4,39 @@ import { MigrationElementType } from './migration.models.js';
 export type TargetItemState = 'exists' | 'doesNotExists';
 export type CliAction = 'export' | 'import' | 'migrate';
 export type ExportAdapter = 'kontentAi';
-export type ItemType =
-    | 'component'
-    | 'contentItem'
-    | 'exportItem'
-    | 'extract'
-    | 'listContentItems'
-    | 'languageVariant'
-    | 'asset'
-    | 'binaryFile'
-    | 'zipFile'
-    | 'count';
+export type GeneralItemType = 'exportedItem' | 'migrationItem';
+export type GeneralActionType = 'readFs' | 'skip' | 'writeFs' | 'download';
 
-export type ActionType =
-    | 'skip'
-    | 'save'
-    | 'unpublish'
-    | 'readFs'
-    | 'writeFs'
-    | 'download'
-    | 'zip'
-    | 'read'
+export type MapiAction =
+    | 'list'
+    | 'view'
+    | 'viewById'
     | 'archive'
-    | 'viewAssetById'
-    | 'viewAssetByCodename'
-    | 'viewContentItemById'
-    | 'viewContentItemByCodename'
-    | 'upsert'
-    | 'upload'
-    | 'viewLanguageVariant'
-    | 'publish'
+    | 'viewByCodename'
+    | 'unpublish'
     | 'changeWorkflowStep'
-    | 'createNewVersion'
-    | 'getById'
-    | 'create'
     | 'publish'
-    | 'unArchive'
-    | 'extractBinaryData'
-    | 'update';
+    | 'upload'
+    | 'create'
+    | 'upsert'
+    | 'createNewVersion';
 
-export type FetchItemType =
-    | 'content types'
-    | 'content type snippets'
-    | 'languages'
-    | 'workflows'
-    | 'collections'
-    | 'taxonomies';
+export type MapiType =
+    | 'contentType'
+    | 'asset'
+    | 'contentTypeSnippet'
+    | 'contentItem'
+    | 'languageVariant'
+    | 'language'
+    | 'collection'
+    | 'taxonomy'
+    | 'binaryFile'
+    | 'workflow';
+
+export interface IItemInfo {
+    title: string;
+    itemType: GeneralItemType | MapiType;
+}
 
 export interface IErrorData {
     message: string;

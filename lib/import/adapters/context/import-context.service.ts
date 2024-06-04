@@ -7,8 +7,8 @@ import {
     getAssetExternalIdForCodename,
     getItemExternalIdForCodename,
     is404Error,
-    logSpinner,
     processInChunksAsync,
+    runMapiRequestAsync,
     uniqueStringFilter
 } from '../../../core/index.js';
 
@@ -122,20 +122,21 @@ export class ImportContextService {
             },
             processFunc: async (item) => {
                 try {
-                    logSpinner(
-                        {
-                            type: 'viewLanguageVariant',
-                            message: `${item.system.codename} (${item.system.language})`
-                        },
-                        this.log
-                    );
-
-                    const variant = await this.managementClient
-                        .viewLanguageVariant()
-                        .byItemCodename(item.system.codename)
-                        .byLanguageCodename(item.system.language)
-                        .toPromise()
-                        .then((m) => m.data);
+                    const variant = await runMapiRequestAsync({
+                        log: this.log,
+                        func: async () =>
+                            (
+                                await this.managementClient
+                                    .viewLanguageVariant()
+                                    .byItemCodename(item.system.codename)
+                                    .byLanguageCodename(item.system.language)
+                                    .toPromise()
+                            ).data,
+                        action: 'viewByCodename',
+                        type: 'languageVariant',
+                        useSpinner: true,
+                        itemName: `${item.system.codename} (${item.system.language})`
+                    });
 
                     languageVariants.push({
                         languageVariant: variant,
@@ -168,19 +169,17 @@ export class ImportContextService {
             },
             processFunc: async (codename) => {
                 try {
-                    logSpinner(
-                        {
-                            type: 'viewContentItemByCodename',
-                            message: `${codename}`
-                        },
-                        this.log
-                    );
-
-                    const contentItem = await this.managementClient
-                        .viewContentItem()
-                        .byItemCodename(codename)
-                        .toPromise()
-                        .then((m) => m.data);
+                    const contentItem = await runMapiRequestAsync({
+                        log: this.log,
+                        func: async () =>
+                            (
+                                await this.managementClient.viewContentItem().byItemCodename(codename).toPromise()
+                            ).data,
+                        action: 'viewByCodename',
+                        type: 'contentItem',
+                        useSpinner: true,
+                        itemName: `${codename}`
+                    });
 
                     contentItems.push(contentItem);
                 } catch (error) {
@@ -210,19 +209,17 @@ export class ImportContextService {
             },
             processFunc: async (codename) => {
                 try {
-                    logSpinner(
-                        {
-                            type: 'viewAssetByCodename',
-                            message: `${codename}`
-                        },
-                        this.log
-                    );
-
-                    const asset = await this.managementClient
-                        .viewAsset()
-                        .byAssetCodename(codename)
-                        .toPromise()
-                        .then((m) => m.data);
+                    const asset = await runMapiRequestAsync({
+                        log: this.log,
+                        func: async () =>
+                            (
+                                await this.managementClient.viewAsset().byAssetCodename(codename).toPromise()
+                            ).data,
+                        action: 'viewByCodename',
+                        type: 'asset',
+                        useSpinner: true,
+                        itemName: `${codename}`
+                    });
 
                     assets.push(asset);
                 } catch (error) {

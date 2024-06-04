@@ -1,5 +1,5 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { IMigrationItem, Log, logSpinner } from '../../core/index.js';
+import { IMigrationItem, Log, logSpinner, runMapiRequestAsync } from '../../core/index.js';
 import chalk from 'chalk';
 
 interface IWorkflowStep {
@@ -88,7 +88,7 @@ export class ImportWorkflowService {
         managementClient: ManagementClient,
         workflowCodename: string,
         workflowStepCodename: string,
-        importContentItem: IMigrationItem,
+        migrationItem: IMigrationItem,
         workflows: WorkflowModels.Workflow[]
     ): Promise<void> {
         const { workflow, step } = this.getWorkflowAndStep({
@@ -98,104 +98,115 @@ export class ImportWorkflowService {
         });
 
         if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
-           logSpinner({
-                type: 'publish',
-                message: `${importContentItem.system.name}`
-            }, this.log);
-
-            await managementClient
-                .publishLanguageVariant()
-                .byItemCodename(importContentItem.system.codename)
-                .byLanguageCodename(importContentItem.system.language)
-                .withoutData()
-                .toPromise();
+            await runMapiRequestAsync({
+                log: this.log,
+                func: async () =>
+                    (
+                        await managementClient
+                            .publishLanguageVariant()
+                            .byItemCodename(migrationItem.system.codename)
+                            .byLanguageCodename(migrationItem.system.language)
+                            .withoutData()
+                            .toPromise()
+                    ).data,
+                action: 'publish',
+                type: 'languageVariant',
+                useSpinner: true,
+                itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
+            });
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
-           logSpinner(
-               {
-                   type: 'skip',
-                   message: `Skipping scheduled workflow step for item '${chalk.yellow(importContentItem.system.name)}'`
-               },
-               this.log
-           );
+            logSpinner(
+                {
+                    type: 'skip',
+                    message: `Skipping scheduled workflow step for item '${chalk.yellow(migrationItem.system.name)}'`
+                },
+                this.log
+            );
         } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
             // unpublish the language variant first if published
             // there is no way to determine if language variant is published via MAPI
             // so we have to always try unpublishing first and catching possible errors
             try {
-               logSpinner(
-                   {
-                       type: 'unpublish',
-                       message: `${importContentItem.system.name}`
-                   },
-                   this.log
-               );
-
-                await managementClient
-                    .unpublishLanguageVariant()
-                    .byItemCodename(importContentItem.system.codename)
-                    .byLanguageCodename(importContentItem.system.language)
-                    .withoutData()
-                    .toPromise();
+                await runMapiRequestAsync({
+                    log: this.log,
+                    func: async () =>
+                        (
+                            await managementClient
+                                .unpublishLanguageVariant()
+                                .byItemCodename(migrationItem.system.codename)
+                                .byLanguageCodename(migrationItem.system.language)
+                                .withoutData()
+                                .toPromise()
+                        ).data,
+                    action: 'unpublish',
+                    type: 'languageVariant',
+                    useSpinner: true,
+                    itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
+                });
             } catch (error) {
                 if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                   logSpinner(
-                       {
-                           type: 'unpublish',
-                           message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
-                       },
-                       this.log
-                   );
+                    logSpinner(
+                        {
+                            type: 'unpublish',
+                            message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
+                        },
+                        this.log
+                    );
                 } else {
                     throw error;
                 }
             }
 
-           logSpinner(
-               {
-                   type: 'archive',
-                   message: `${importContentItem.system.name}`
-               },
-               this.log
-           );
-
-            await managementClient
-                .changeWorkflowOfLanguageVariant()
-                .byItemCodename(importContentItem.system.codename)
-                .byLanguageCodename(importContentItem.system.language)
-                .withData({
-                    step_identifier: {
-                        codename: workflow.archivedStep.codename
-                    },
-                    workflow_identifier: {
-                        codename: workflow.codename
-                    }
-                })
-                .toPromise();
+            await runMapiRequestAsync({
+                log: this.log,
+                func: async () =>
+                    (
+                        await managementClient
+                            .changeWorkflowOfLanguageVariant()
+                            .byItemCodename(migrationItem.system.codename)
+                            .byLanguageCodename(migrationItem.system.language)
+                            .withData({
+                                step_identifier: {
+                                    codename: workflow.archivedStep.codename
+                                },
+                                workflow_identifier: {
+                                    codename: workflow.codename
+                                }
+                            })
+                            .toPromise()
+                    ).data,
+                action: 'archive',
+                type: 'languageVariant',
+                useSpinner: true,
+                itemName: `${migrationItem.system.codename} (${migrationItem.system.language}) -> ${workflow.archivedStep.codename}`
+            });
         } else {
             if (workflow.codename === workflowStepCodename) {
                 // item is already in the target workflow step
             } else {
-               logSpinner(
-                   {
-                       type: 'changeWorkflowStep',
-                       message: `${importContentItem.system.name}`
-                   },
-                   this.log
-               );
-
-                await managementClient
-                    .changeWorkflowOfLanguageVariant()
-                    .byItemCodename(importContentItem.system.codename)
-                    .byLanguageCodename(importContentItem.system.language)
-                    .withData({
-                        step_identifier: {
-                            codename: step.codename
-                        },
-                        workflow_identifier: {
-                            codename: workflow.codename
-                        }
-                    })
-                    .toPromise();
+                await runMapiRequestAsync({
+                    log: this.log,
+                    func: async () =>
+                        (
+                            await managementClient
+                                .changeWorkflowOfLanguageVariant()
+                                .byItemCodename(migrationItem.system.codename)
+                                .byLanguageCodename(migrationItem.system.language)
+                                .withData({
+                                    step_identifier: {
+                                        codename: step.codename
+                                    },
+                                    workflow_identifier: {
+                                        codename: workflow.codename
+                                    }
+                                })
+                                .toPromise()
+                        ).data,
+                    action: 'changeWorkflowStep',
+                    type: 'languageVariant',
+                    useSpinner: true,
+                    itemName: `${migrationItem.system.codename} (${migrationItem.system.language}) -> ${step.codename}`
+                });
             }
         }
     }

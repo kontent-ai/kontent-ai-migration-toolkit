@@ -1,4 +1,4 @@
-import { ItemType } from '../models/core.models.js';
+import { IItemInfo, GeneralItemType, MapiType } from '../models/core.models.js';
 import { Log, logSpinner, startSpinner, stopSpinner } from './log.utils.js';
 
 export interface IChunk<T> {
@@ -6,58 +6,13 @@ export interface IChunk<T> {
     index: number;
 }
 
-export interface IProcessInChunksItemInfo {
-    title: string;
-    itemType: ItemType;
-}
-
-export function processWithSpinner<TInputItem, TOutputItem>(data: {
-    type: ItemType;
-    log: Log;
-    items: TInputItem[];
-    process: (item: TInputItem) => TOutputItem;
-    itemInfo?: (item: TInputItem) => IProcessInChunksItemInfo;
-}): TOutputItem[] {
-    const outputItems: TOutputItem[] = [];
-    let processingIndex: number = 0;
-
-    startSpinner(data.log);
-
-    try {
-        for (const item of data.items) {
-            processingIndex++;
-            if (data.itemInfo) {
-                const itemInfo = data.itemInfo(item);
-
-                logSpinner(
-                    {
-                        message: itemInfo.title,
-                        type: data.type,
-                        count: {
-                            index: processingIndex,
-                            total: data.items.length
-                        }
-                    },
-                    data.log
-                );
-            }
-
-            outputItems.push(data.process(item));
-        }
-
-        return outputItems;
-    } finally {
-        stopSpinner(data.log);
-    }
-}
-
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
-    type: ItemType;
+    type: GeneralItemType | MapiType;
     log: Log;
     items: TInputItem[];
     chunkSize: number;
     processFunc: (item: TInputItem) => Promise<TOutputItem>;
-    itemInfo?: (item: TInputItem) => IProcessInChunksItemInfo;
+    itemInfo?: (item: TInputItem) => IItemInfo;
 }): Promise<TOutputItem[]> {
     const chunks = splitArrayIntoChunks<TInputItem>(data.items, data.chunkSize);
     const outputItems: TOutputItem[] = [];

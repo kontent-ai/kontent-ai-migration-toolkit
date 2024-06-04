@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { ActionType, FetchItemType, ItemType } from '../models/core.models.js';
+import { GeneralActionType, GeneralItemType, MapiAction, MapiType } from '../models/core.models.js';
 
 export interface ILogCount {
     index: number;
@@ -21,6 +21,7 @@ export type Spinner = {
     stop: () => void;
     text: (data: ILogData) => void;
 };
+
 export type Logger = (data: ILogData) => void;
 
 export type DebugType =
@@ -31,8 +32,10 @@ export type DebugType =
     | 'errorData'
     | 'cancel'
     | 'process'
-    | ActionType
-    | ItemType;
+    | MapiType
+    | GeneralActionType
+    | MapiAction
+    | GeneralItemType;
 
 export function startSpinner(log: Log): void {
     log.spinner?.start();
@@ -52,13 +55,6 @@ export function logSpinner(data: ILogData, log: Log): void {
 
 export function logErrorAndExit(data: { message: string }): never {
     throw Error(data.message);
-}
-
-export function logFetchedItems(data: { count: number; itemType: FetchItemType; log: Log }): void {
-    data.log.logger({
-        type: 'info',
-        message: `Fetched '${chalk.yellow(data.count.toString())}' ${data.itemType}`
-    });
 }
 
 export async function getDefaultLogAsync(): Promise<Log> {
@@ -109,7 +105,7 @@ export function getLogDataMessage(data: ILogData): string {
     }
 
     if (data.count) {
-        return `${typeColor(`${data.count.index}/${data.count.total}`)}: ${data.message} ${chalk.cyan(data.type)} `;
+        return `${typeColor(`${data.count.index}/${data.count.total}`)}:  ${chalk.cyan(data.type)} -> ${data.message} `;
     }
     return `${typeColor(data.type)}: ${data.message}`;
 }

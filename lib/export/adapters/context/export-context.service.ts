@@ -10,9 +10,8 @@ import {
     Log,
     getFlattenedContentTypesAsync,
     is404Error,
-    logFetchedItems,
-    logSpinner,
     processInChunksAsync,
+    runMapiRequestAsync,
     uniqueStringFilter
 } from '../../../core/index.js';
 import {
@@ -117,43 +116,46 @@ export class ExportContextService {
             IKontentAiPreparedExportItem
         >({
             log: this.log,
-            type: 'exportItem',
+            type: 'exportedItem',
             chunkSize: 1,
             itemInfo: (input) => {
                 return {
                     title: `${input.itemCodename} (${input.languageCodename})`,
-                    itemType: 'exportItem'
+                    itemType: 'exportedItem'
                 };
             },
             items: data.exportItems,
             processFunc: async (exportItem) => {
-                logSpinner(
-                    {
-                        type: 'viewContentItemByCodename',
-                        message: `${exportItem.itemCodename}`
-                    },
-                    this.log
-                );
+                const contentItem = await runMapiRequestAsync({
+                    log: this.log,
+                    func: async () =>
+                        (
+                            await this.managementClient
+                                .viewContentItem()
+                                .byItemCodename(exportItem.itemCodename)
+                                .toPromise()
+                        ).data,
+                    action: 'viewByCodename',
+                    type: 'contentItem',
+                    useSpinner: true,
+                    itemName: `${exportItem.itemCodename} (${exportItem.languageCodename})`
+                });
 
-                const contentItem = (
-                    await this.managementClient.viewContentItem().byItemCodename(exportItem.itemCodename).toPromise()
-                ).data;
-
-                logSpinner(
-                    {
-                        type: 'viewLanguageVariant',
-                        message: `${exportItem.itemCodename} (${exportItem.languageCodename})`
-                    },
-                    this.log
-                );
-
-                const languageVariant = (
-                    await this.managementClient
-                        .viewLanguageVariant()
-                        .byItemCodename(exportItem.itemCodename)
-                        .byLanguageCodename(exportItem.languageCodename)
-                        .toPromise()
-                ).data;
+                const languageVariant = await runMapiRequestAsync({
+                    log: this.log,
+                    func: async () =>
+                        (
+                            await this.managementClient
+                                .viewLanguageVariant()
+                                .byItemCodename(exportItem.itemCodename)
+                                .byLanguageCodename(exportItem.languageCodename)
+                                .toPromise()
+                        ).data,
+                    action: 'viewByCodename',
+                    type: 'languageVariant',
+                    useSpinner: true,
+                    itemName: `${exportItem.itemCodename} (${exportItem.languageCodename})`
+                });
 
                 const collection = data.environmentData.collections.find((m) => m.id === contentItem.collection.id);
 
@@ -259,43 +261,43 @@ export class ExportContextService {
     }
 
     private async getAllLanguagesAsync(): Promise<LanguageModels.LanguageModel[]> {
-        const response = await this.managementClient.listLanguages().toAllPromise();
-        logFetchedItems({
-            count: response.data.items.length,
-            itemType: 'languages',
-            log: this.log
+        return await runMapiRequestAsync({
+            log: this.log,
+            func: async () => (await this.managementClient.listLanguages().toAllPromise()).data.items,
+            action: 'list',
+            type: 'language',
+            useSpinner: false
         });
-        return response.data.items;
     }
 
     private async getAllCollectionsAsync(): Promise<CollectionModels.Collection[]> {
-        const response = await this.managementClient.listCollections().toPromise();
-        logFetchedItems({
-            count: response.data.collections.length,
-            itemType: 'collections',
-            log: this.log
+        return await runMapiRequestAsync({
+            log: this.log,
+            func: async () => (await this.managementClient.listCollections().toPromise()).data.collections,
+            action: 'list',
+            type: 'collection',
+            useSpinner: false
         });
-        return response.data.collections;
     }
 
     private async getAllWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
-        const response = await this.managementClient.listWorkflows().toPromise();
-        logFetchedItems({
-            count: response.data.length,
-            itemType: 'workflows',
-            log: this.log
+        return await runMapiRequestAsync({
+            log: this.log,
+            func: async () => (await this.managementClient.listWorkflows().toPromise()).data,
+            action: 'list',
+            type: 'workflow',
+            useSpinner: false
         });
-        return response.data;
     }
 
     private async getAllTaxonomiesAsync(): Promise<TaxonomyModels.Taxonomy[]> {
-        const response = await this.managementClient.listTaxonomies().toAllPromise();
-        logFetchedItems({
-            count: response.data.items.length,
-            itemType: 'taxonomies',
-            log: this.log
+        return await runMapiRequestAsync({
+            log: this.log,
+            func: async () => (await this.managementClient.listTaxonomies().toAllPromise()).data.items,
+            action: 'list',
+            type: 'taxonomy',
+            useSpinner: false
         });
-        return response.data.items;
     }
 
     private async getContentItemsByIdsAsync(itemIds: string[]): Promise<ContentItemModels.ContentItem[]> {
@@ -314,19 +316,14 @@ export class ExportContextService {
             },
             processFunc: async (id) => {
                 try {
-                    logSpinner(
-                        {
-                            type: 'viewContentItemById',
-                            message: `${id}`
-                        },
-                        this.log
-                    );
-
-                    const contentItem = await this.managementClient
-                        .viewContentItem()
-                        .byItemId(id)
-                        .toPromise()
-                        .then((m) => m.data);
+                    const contentItem = await runMapiRequestAsync({
+                        log: this.log,
+                        func: async () => (await this.managementClient.viewContentItem().byItemId(id).toPromise()).data,
+                        action: 'viewById',
+                        type: 'contentItem',
+                        useSpinner: true,
+                        itemName: id
+                    });
 
                     contentItems.push(contentItem);
                 } catch (error) {
@@ -356,19 +353,14 @@ export class ExportContextService {
             },
             processFunc: async (id) => {
                 try {
-                    logSpinner(
-                        {
-                            type: 'viewAssetById',
-                            message: `${id}`
-                        },
-                        this.log
-                    );
-
-                    const asset = await this.managementClient
-                        .viewAsset()
-                        .byAssetId(id)
-                        .toPromise()
-                        .then((m) => m.data);
+                    const asset = await runMapiRequestAsync({
+                        log: this.log,
+                        func: async () => (await this.managementClient.viewAsset().byAssetId(id).toPromise()).data,
+                        action: 'viewById',
+                        type: 'asset',
+                        useSpinner: true,
+                        itemName: id
+                    });
 
                     assets.push(asset);
                 } catch (error) {
