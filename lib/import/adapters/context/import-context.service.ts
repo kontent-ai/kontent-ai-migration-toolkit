@@ -140,7 +140,7 @@ export class ImportContextService {
                         action: 'view',
                         type: 'languageVariant',
                         useSpinner: true,
-                        itemName: `byCodename -> ${item.system.codename} (${item.system.language})`
+                        itemName: `codename -> ${item.system.codename} (${item.system.language})`
                     });
 
                     languageVariants.push({
