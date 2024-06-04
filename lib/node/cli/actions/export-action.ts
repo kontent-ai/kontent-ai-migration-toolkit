@@ -50,5 +50,5 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
         }
     });
 
-    log.console({ type: 'completed', message: `Export has been successful` });
+    log.logger({ type: 'completed', message: `Export has been successful` });
 }

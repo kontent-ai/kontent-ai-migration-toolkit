@@ -11,6 +11,7 @@ import {
     getFlattenedContentTypesAsync,
     is404Error,
     logFetchedItems,
+    logSpinner,
     processInChunksAsync,
     uniqueStringFilter
 } from '../../../core/index.js';
@@ -38,7 +39,7 @@ export class ExportContextService {
     async getExportContextAsync(data: { exportItems: IKontentAiExportRequestItem[] }): Promise<IExportContext> {
         const environmentData = await this.getEnvironmentDataAsync();
 
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Preparing '${chalk.yellow(data.exportItems.length.toString())}' items for export`
         });
@@ -47,7 +48,7 @@ export class ExportContextService {
             exportItems: data.exportItems
         });
 
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Extracting referenced items from content`
         });
@@ -62,7 +63,7 @@ export class ExportContextService {
 
         const assetIdsToCheckInTargetEnv: string[] = [...referencedData.assetIds];
 
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Fetching referenced items`
         });
@@ -70,7 +71,7 @@ export class ExportContextService {
             itemIdsToCheckInTargetEnv
         );
 
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Fetching referenced assets`
         });
@@ -276,10 +277,13 @@ export class ExportContextService {
             },
             processFunc: async (id) => {
                 try {
-                    this.log.spinner?.text?.({
-                        type: 'fetch',
-                        message: `${id}`
-                    });
+                    logSpinner(
+                        {
+                            type: 'viewContentItemById',
+                            message: `${id}`
+                        },
+                        this.log
+                    );
 
                     const contentItem = await this.managementClient
                         .viewContentItem()
@@ -315,10 +319,13 @@ export class ExportContextService {
             },
             processFunc: async (id) => {
                 try {
-                    this.log.spinner?.text?.({
-                        type: 'fetch',
-                        message: `${id}`
-                    });
+                    logSpinner(
+                        {
+                            type: 'viewAssetById',
+                            message: `${id}`
+                        },
+                        this.log
+                    );
 
                     const asset = await this.managementClient
                         .viewAsset()

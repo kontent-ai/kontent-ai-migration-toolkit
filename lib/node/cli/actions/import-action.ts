@@ -51,5 +51,5 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
         })
     });
 
-    log.console({ type: 'completed', message: `Import has been successful` });
+    log.logger({ type: 'completed', message: `Import has been successful` });
 }

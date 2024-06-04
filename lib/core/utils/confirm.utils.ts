@@ -103,7 +103,7 @@ async function confirmAsync(data: { action: string; message: string; force: bool
     const prompts = await import('prompts');
 
     if (data.force) {
-        data.log.console({
+        data.log.logger({
             type: 'info',
             message: `Skipping confirmation prompt due to the use of 'force' param`
         });

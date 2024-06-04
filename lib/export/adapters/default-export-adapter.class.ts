@@ -46,7 +46,7 @@ class DefaultExportAdapter implements IExportAdapter {
     }
 
     async exportAsync(): Promise<IExportAdapterResult> {
-        this.config.log.console({
+        this.config.log.logger({
             type: 'info',
             message: `Preparing to export data`
         });
@@ -80,7 +80,7 @@ class DefaultExportAdapter implements IExportAdapter {
                 });
             } catch (error) {
                 if (this.config.skipFailedItems) {
-                    this.config.log.console({
+                    this.config.log.logger({
                         type: 'warning',
                         message: `Failed to export item '${chalk.yellow(
                             preparedItem.requestItem.itemCodename
@@ -182,7 +182,7 @@ class DefaultExportAdapter implements IExportAdapter {
         assets: AssetModels.Asset[],
         context: IExportContext
     ): Promise<IMigrationAsset[]> {
-        this.config.log.console({
+        this.config.log.logger({
             type: 'info',
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });

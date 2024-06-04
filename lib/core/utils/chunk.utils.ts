@@ -1,5 +1,5 @@
 import { ItemType } from '../models/core.models.js';
-import { Log } from './log.utils.js';
+import { Log, logSpinner, startSpinner, stopSpinner } from './log.utils.js';
 
 export interface IChunk<T> {
     items: T[];
@@ -23,7 +23,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     const outputItems: TOutputItem[] = [];
     let processingIndex: number = 0;
 
-    data?.log.spinner?.start();
+    startSpinner(data.log);
 
     try {
         for (const chunk of chunks) {
@@ -34,25 +34,17 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
                     if (data.itemInfo) {
                         const itemInfo = data.itemInfo(item);
 
-                        if (data.log.spinner) {
-                            data?.log.spinner?.text?.({
+                        logSpinner(
+                            {
                                 message: itemInfo.title,
                                 type: data.type,
                                 count: {
                                     index: processingIndex,
                                     total: data.items.length
                                 }
-                            });
-                        } else {
-                            data.log.console({
-                                message: itemInfo.title,
-                                type: data.type,
-                                count: {
-                                    index: processingIndex,
-                                    total: data.items.length
-                                }
-                            });
-                        }
+                            },
+                            data.log
+                        );
                     }
                     return data.processFunc(item).then((output) => {
                         outputItems.push(output);
@@ -63,7 +55,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
 
         return outputItems;
     } finally {
-        data?.log.spinner?.stop();
+        stopSpinner(data.log);
     }
 }
 

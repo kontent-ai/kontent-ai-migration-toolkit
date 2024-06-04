@@ -45,5 +45,5 @@ export async function migrateActionAsync(cliArgs: CliArgs): Promise<void> {
         }
     });
 
-    log.console({ type: 'completed', message: `Migration has been successful` });
+    log.logger({ type: 'completed', message: `Migration has been successful` });
 }

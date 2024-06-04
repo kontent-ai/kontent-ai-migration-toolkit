@@ -1,12 +1,12 @@
 import chalk from 'chalk';
 import { ActionType, FetchItemType, ItemType } from '../models/core.models.js';
 
-interface ILogCount {
+export interface ILogCount {
     index: number;
     total: number;
 }
 
-interface ILogData {
+export interface ILogData {
     type: DebugType;
     message: string;
     count?: ILogCount;
@@ -14,14 +14,14 @@ interface ILogData {
 
 export type Log = {
     spinner?: Spinner;
-    console: Console;
+    logger: Logger;
 };
 export type Spinner = {
     start: () => void;
     stop: () => void;
     text: (data: ILogData) => void;
 };
-export type Console = (data: ILogData) => void;
+export type Logger = (data: ILogData) => void;
 
 export type DebugType =
     | 'error'
@@ -34,12 +34,28 @@ export type DebugType =
     | ActionType
     | ItemType;
 
+export function startSpinner(log: Log): void {
+    log.spinner?.start();
+}
+
+export function stopSpinner(log: Log): void {
+    log.spinner?.stop();
+}
+
+export function logSpinner(data: ILogData, log: Log): void {
+    if (log.spinner) {
+        log.spinner.text(data);
+    } else {
+        log.logger(data);
+    }
+}
+
 export function logErrorAndExit(data: { message: string }): never {
     throw Error(data.message);
 }
 
 export function logFetchedItems(data: { count: number; itemType: FetchItemType; log: Log }): void {
-    data.log.console({
+    data.log.logger({
         type: 'info',
         message: `Fetched '${chalk.yellow(data.count.toString())}' ${data.itemType}`
     });
@@ -53,7 +69,7 @@ export async function getDefaultLogAsync(): Promise<Log> {
     let previousCount: ILogCount | undefined = undefined;
 
     return {
-        console: (data) => console.log(getLogDataMessage(data)),
+        logger: (data) => console.log(getLogDataMessage(data)),
         spinner: {
             start: () => spinner.start(),
             stop: () => spinner.stop(),

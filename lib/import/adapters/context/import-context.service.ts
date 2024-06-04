@@ -5,6 +5,7 @@ import {
     getAssetExternalIdForCodename,
     getItemExternalIdForCodename,
     is404Error,
+    logSpinner,
     processInChunksAsync,
     uniqueStringFilter
 } from '../../../core/index.js';
@@ -89,10 +90,13 @@ export class ImportContextService {
             },
             processFunc: async (codename) => {
                 try {
-                    this.log.spinner?.text?.({
-                        type: 'fetch',
-                        message: `${codename}`
-                    });
+                    logSpinner(
+                        {
+                            type: 'viewContentItemByCodename',
+                            message: `${codename}`
+                        },
+                        this.log
+                    );
 
                     const contentItem = await this.managementClient
                         .viewContentItem()
@@ -128,10 +132,13 @@ export class ImportContextService {
             },
             processFunc: async (codename) => {
                 try {
-                    this.log.spinner?.text?.({
-                        type: 'fetch',
-                        message: `${codename}`
-                    });
+                    logSpinner(
+                        {
+                            type: 'viewAssetByCodename',
+                            message: `${codename}`
+                        },
+                        this.log
+                    );
 
                     const asset = await this.managementClient
                         .viewAsset()

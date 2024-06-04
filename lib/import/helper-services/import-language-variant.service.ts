@@ -13,7 +13,8 @@ import {
     processInChunksAsync,
     IMigrationItem,
     IMigrationElement,
-    Log
+    Log,
+    logSpinner
 } from '../../core/index.js';
 import { ImportWorkflowService, getImportWorkflowService } from './import-workflow.service.js';
 import chalk from 'chalk';
@@ -42,7 +43,7 @@ export class ImportLanguageVariantServices {
         preparedContentItems: ContentItemModels.ContentItem[];
         importContext: IImportContext;
     }): Promise<void> {
-        this.config.log.console({
+        this.config.log.logger({
             type: 'info',
             message: `Importing '${chalk.yellow(data.importContentItems.length.toString())}' language variants`
         });
@@ -83,7 +84,7 @@ export class ImportLanguageVariantServices {
                     });
                 } catch (error) {
                     if (this.config.skipFailedItems) {
-                        this.config.log.console({
+                        this.config.log.logger({
                             type: 'error',
                             message: `Failed to import language variant '${chalk.red(
                                 importContentItem.system.name
@@ -116,10 +117,13 @@ export class ImportLanguageVariantServices {
         const workflowStepCodename = data.importContentItem.system.workflow_step;
         const workflowCodename = data.importContentItem.system.workflow;
 
-        this.config.log.spinner?.text?.({
-            type: 'upsert',
-            message: `${data.preparedContentItem.name}`
-        });
+        logSpinner(
+            {
+                type: 'upsert',
+                message: `${data.preparedContentItem.name}`
+            },
+            this.config.log
+        );
 
         if (!workflowCodename) {
             throw Error(
@@ -209,10 +213,10 @@ export class ImportLanguageVariantServices {
         });
 
         try {
-            this.config.log.spinner?.text?.({
-                type: 'fetch',
-                message: `${data.importContentItem.system.name}`
-            });
+            logSpinner({
+                type: 'viewLanguageVariant',
+                message: `${data.importContentItem.system.name} ${data.importContentItem.system.language}`
+            }, this.config.log);
 
             languageVariantOfContentItem = await data.managementClient
                 .viewLanguageVariant()
@@ -240,10 +244,10 @@ export class ImportLanguageVariantServices {
             // language variant exists
             // check if variant is published or archived
             if (this.isLanguageVariantPublished(languageVariantOfContentItem, data.workflows)) {
-                this.config.log.spinner?.text?.({
+                logSpinner({
                     type: 'createNewVersion',
                     message: `${data.importContentItem.system.name}`
-                });
+                },this.config.log);
 
                 // create new version
                 await data.managementClient
@@ -253,10 +257,10 @@ export class ImportLanguageVariantServices {
                     .toPromise();
             } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, data.workflows)) {
                 // change workflow step to draft
-                this.config.log.spinner?.text?.({
+                logSpinner({
                     type: 'unArchive',
                     message: `${data.importContentItem.system.name}`
-                });
+                }, this.config.log);
 
                 const firstWorkflowStep = workflow.steps?.[0];
 

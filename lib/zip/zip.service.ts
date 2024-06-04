@@ -31,13 +31,13 @@ export class ZipService {
         };
 
         if (data.items) {
-            this.log.console({
+            this.log.logger({
                 type: 'info',
                 message: 'Loading items zip file'
             });
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
 
-            this.log.console({
+            this.log.logger({
                 type: 'info',
                 message: 'Parsing items zip data'
             });
@@ -51,13 +51,13 @@ export class ZipService {
         }
 
         if (data.assets) {
-            this.log.console({
+            this.log.logger({
                 type: 'info',
                 message: 'Loading assets zip file'
             });
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
 
-            this.log.console({
+            this.log.logger({
                 type: 'info',
                 message: 'Parsing assets zip data'
             });
@@ -69,7 +69,7 @@ export class ZipService {
             );
         }
 
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Parsing completed. Parsed '${chalk.yellow(
                 result.items.length.toString()
@@ -94,7 +94,7 @@ export class ZipService {
         let parsedAssets: IMigrationAsset[] = [];
 
         if (data.items) {
-            this.log.console({
+            this.log.logger({
                 type: 'info',
                 message: `Parsing items file with '${chalk.yellow(data.items.formatService.name)}' `
             });
@@ -107,7 +107,7 @@ export class ZipService {
         }
 
         if (data.assets) {
-            this.log.console({
+            this.log.logger({
                 type: 'info',
                 message: `Parsing assets file with '${chalk.yellow(data.assets.formatService.name)}' `
             });
@@ -123,7 +123,7 @@ export class ZipService {
             assets: parsedAssets
         };
 
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Parsing completed. Parsed '${chalk.yellow(
                 result.items.length.toString()
@@ -140,7 +140,7 @@ export class ZipService {
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Creating items zip`,
             count: {
@@ -164,7 +164,7 @@ export class ZipService {
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Creating assets zip`,
             count: {

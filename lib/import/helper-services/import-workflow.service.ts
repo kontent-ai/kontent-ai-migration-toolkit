@@ -1,5 +1,5 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { IMigrationItem, Log } from '../../core/index.js';
+import { IMigrationItem, Log, logSpinner } from '../../core/index.js';
 import chalk from 'chalk';
 
 interface IWorkflowStep {
@@ -98,10 +98,10 @@ export class ImportWorkflowService {
         });
 
         if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
-            this.log.spinner?.text?.({
+           logSpinner({
                 type: 'publish',
                 message: `${importContentItem.system.name}`
-            });
+            }, this.log);
 
             await managementClient
                 .publishLanguageVariant()
@@ -110,19 +110,25 @@ export class ImportWorkflowService {
                 .withoutData()
                 .toPromise();
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
-            this.log.spinner?.text?.({
-                type: 'skip',
-                message: `Skipping scheduled workflow step for item '${chalk.yellow(importContentItem.system.name)}'`
-            });
+           logSpinner(
+               {
+                   type: 'skip',
+                   message: `Skipping scheduled workflow step for item '${chalk.yellow(importContentItem.system.name)}'`
+               },
+               this.log
+           );
         } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
             // unpublish the language variant first if published
             // there is no way to determine if language variant is published via MAPI
             // so we have to always try unpublishing first and catching possible errors
             try {
-                this.log.spinner?.text?.({
-                    type: 'unpublish',
-                    message: `${importContentItem.system.name}`
-                });
+               logSpinner(
+                   {
+                       type: 'unpublish',
+                       message: `${importContentItem.system.name}`
+                   },
+                   this.log
+               );
 
                 await managementClient
                     .unpublishLanguageVariant()
@@ -132,19 +138,25 @@ export class ImportWorkflowService {
                     .toPromise();
             } catch (error) {
                 if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                    this.log.spinner?.text?.({
-                        type: 'unpublish',
-                        message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
-                    });
+                   logSpinner(
+                       {
+                           type: 'unpublish',
+                           message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
+                       },
+                       this.log
+                   );
                 } else {
                     throw error;
                 }
             }
 
-            this.log.spinner?.text?.({
-                type: 'archive',
-                message: `${importContentItem.system.name}`
-            });
+           logSpinner(
+               {
+                   type: 'archive',
+                   message: `${importContentItem.system.name}`
+               },
+               this.log
+           );
 
             await managementClient
                 .changeWorkflowOfLanguageVariant()
@@ -163,10 +175,13 @@ export class ImportWorkflowService {
             if (workflow.codename === workflowStepCodename) {
                 // item is already in the target workflow step
             } else {
-                this.log.spinner?.text?.({
-                    type: 'changeWorkflowStep',
-                    message: `${importContentItem.system.name}`
-                });
+               logSpinner(
+                   {
+                       type: 'changeWorkflowStep',
+                       message: `${importContentItem.system.name}`
+                   },
+                   this.log
+               );
 
                 await managementClient
                     .changeWorkflowOfLanguageVariant()

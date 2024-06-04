@@ -4,7 +4,8 @@ import {
     logErrorAndExit,
     IMigrationItem,
     Log,
-    getItemExternalIdForCodename
+    getItemExternalIdForCodename,
+    logSpinner
 } from '../../core/index.js';
 import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
@@ -26,7 +27,7 @@ export class ImportContentItemHelper {
     }): Promise<ContentItemModels.ContentItem[]> {
         const preparedItems: ContentItemModels.ContentItem[] = [];
 
-        this.config.log.console({
+        this.config.log.logger({
             type: 'info',
             message: `Importing '${chalk.yellow(data.importContext.contentItems.length.toString())}' content items`
         });
@@ -48,7 +49,7 @@ export class ImportContentItemHelper {
                 preparedItems.push(contentItem);
             } catch (error) {
                 if (this.config.skipFailedItems) {
-                    this.config.log.console({
+                    this.config.log.logger({
                         type: 'error',
                         message: `Failed to import content item '${parsedItem.system.name}'. ${
                             extractErrorData(error).message
@@ -84,10 +85,10 @@ export class ImportContentItemHelper {
                     data.collections
                 )
             ) {
-                this.config.log.spinner?.text?.({
+                logSpinner({
                     type: 'upsert',
                     message: `${data.importContentItem.system.name}`
-                });
+                }, this.config.log);
 
                 await data.managementClient
                     .upsertContentItem()

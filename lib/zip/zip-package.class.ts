@@ -54,7 +54,7 @@ export class ZipPackage {
     async generateZipAsync(): Promise<FileBinaryData> {
         const zipOutputType = this.getZipOutputType(this.context);
 
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Creating zip file using '${zipOutputType}' with compression level '${this.compressionLevel.toString()}'`
         });
@@ -68,7 +68,7 @@ export class ZipPackage {
             streamFiles: true
         });
 
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Zip successfully generated (${chalk.yellow(formatBytes(this.getZipSizeInBytes(result)))})`
         });

@@ -1,5 +1,5 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IMigrationAsset, Log, is404Error, processInChunksAsync } from '../../core/index.js';
+import { IMigrationAsset, Log, is404Error, logSpinner, processInChunksAsync } from '../../core/index.js';
 import mime from 'mime';
 import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
@@ -15,7 +15,7 @@ export class ImportAssetsService {
     constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
 
     async importAssetsAsync(data: { assets: IMigrationAsset[]; importContext: IImportContext }): Promise<void> {
-        this.log.console({
+        this.log.logger({
             type: 'info',
             message: `Categorizing '${chalk.yellow(data.assets.length.toString())}' assets`
         });
@@ -25,7 +25,7 @@ export class ImportAssetsService {
         });
 
         if (filteredAssets.existingAssets.length) {
-            this.log.console({
+            this.log.logger({
                 type: 'skip',
                 message: `Skipping upload for '${chalk.yellow(
                     filteredAssets.existingAssets.length.toString()
@@ -33,7 +33,7 @@ export class ImportAssetsService {
             });
         }
 
-        this.log.console({
+        this.log.logger({
             type: 'upload',
             message: `Uploading '${chalk.yellow(filteredAssets.assetsToUpload.length.toString())}' assets`
         });
@@ -51,10 +51,10 @@ export class ImportAssetsService {
             },
             processFunc: async (asset) => {
                 // only import asset if it didn't exist
-                this.log.spinner?.text?.({
+                logSpinner({
                     type: 'upload',
                     message: asset.title
-                });
+                }, this.log);
 
                 const uploadedBinaryFile = await this.managementClient
                     .uploadBinaryFile()
@@ -65,10 +65,10 @@ export class ImportAssetsService {
                     })
                     .toPromise();
 
-                this.log.spinner?.text?.({
+                logSpinner({
                     type: 'create',
                     message: asset.title
-                });
+                }, this.log);
 
                 await this.managementClient
                     .addAsset()

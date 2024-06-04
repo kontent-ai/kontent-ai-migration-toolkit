@@ -93,7 +93,7 @@ class DefaultImportAdapter implements IImportAdapter {
                         importContext: importContext
                     });
                 } else {
-                    this.config.log.console({
+                    this.config.log.logger({
                         type: 'info',
                         message: `There are no assets to import`
                     });
@@ -103,13 +103,13 @@ class DefaultImportAdapter implements IImportAdapter {
                 if (dataToImport.items.length) {
                     await this.importMigrationItemsAsync(dataToImport.items, importContext);
                 } else {
-                    this.config.log.console({
+                    this.config.log.logger({
                         type: 'info',
                         message: `There are no content items to import`
                     });
                 }
 
-                this.config.log.console({
+                this.config.log.logger({
                     type: 'info',
                     message: `Finished import`
                 });
@@ -153,14 +153,14 @@ class DefaultImportAdapter implements IImportAdapter {
         }
 
         if (removedAssets > 0) {
-            this.config.log.console({
+            this.config.log.logger({
                 type: 'info',
                 message: `Removed '${chalk.yellow(removedAssets.toString())}' assets from import`
             });
         }
 
         if (removedContentItems) {
-            this.config.log.console({
+            this.config.log.logger({
                 type: 'info',
                 message: `Removed '${chalk.yellow(removedContentItems.toString())}' content items from import`
             });
