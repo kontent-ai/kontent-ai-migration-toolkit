@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { IItemInfo, GeneralItemType, MapiAction, MapiType } from '../models/core.models.js';
+import { IItemInfo, MapiAction, MapiType } from '../models/core.models.js';
 import { ILogData, Log, logSpinner, startSpinner, stopSpinner } from './log.utils.js';
 
 export async function runMapiRequestAsync<TResult>(data: {
@@ -54,7 +54,6 @@ export async function runMapiRequestAsync<TResult>(data: {
 }
 
 export function runWithSpinner<TInputItem, TOutputItem>(data: {
-    type: GeneralItemType;
     log: Log;
     items: TInputItem[];
     process: (item: TInputItem) => TOutputItem;
@@ -74,7 +73,7 @@ export function runWithSpinner<TInputItem, TOutputItem>(data: {
                 logSpinner(
                     {
                         message: itemInfo.title,
-                        type: data.type,
+                        type: 'process',
                         count: {
                             index: processingIndex,
                             total: data.items.length

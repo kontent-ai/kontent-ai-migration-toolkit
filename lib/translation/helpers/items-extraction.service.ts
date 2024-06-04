@@ -23,7 +23,6 @@ export class ItemsExtractionService {
 
         runWithSpinner<IKontentAiPreparedExportItem, void>({
             log: this.log,
-            type: 'exportedItem',
             itemInfo: (input) => {
                 return {
                     title: input.requestItem.itemCodename,
@@ -84,7 +83,6 @@ export class ItemsExtractionService {
 
         runWithSpinner<IMigrationItem, void>({
             log: this.log,
-            type: 'migrationItem',
             itemInfo: (input) => {
                 return {
                     title: input.system.codename,
