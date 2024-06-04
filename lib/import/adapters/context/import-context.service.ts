@@ -34,16 +34,18 @@ export class ImportContextService {
 
     async getImportContextAsync(dataToImport: IImportData): Promise<IImportContext> {
         const referencedData = this.itemsExtractionService.extractReferencedItemsFromMigrationItems(dataToImport.items);
-        const contentItems = dataToImport.items.filter((m) => m.system.workflow);
+        const contentItemsExcludingComponents = dataToImport.items.filter(
+            (m) => m.system.workflow && m.system.workflow_step
+        );
 
         // check all items, including referenced items
         const itemCodenamesToCheckInTargetEnv: string[] = [
             ...referencedData.itemCodenames,
-            ...contentItems.map((m) => m.system.codename)
+            ...contentItemsExcludingComponents.map((m) => m.system.codename)
         ].filter(uniqueStringFilter);
 
         // only load language variants for items to migrate, no need to get it for referenced items
-        const languageVariantToCheckInTargetEnv: IMigrationItem[] = dataToImport.items;
+        const languageVariantToCheckInTargetEnv: IMigrationItem[] = contentItemsExcludingComponents;
 
         const assetCodenamesToCheckInTargetEnv: string[] = [...referencedData.assetCodenames];
 
@@ -63,7 +65,7 @@ export class ImportContextService {
             // if content item does not have a workflow step it means it is used as a component within Rich text element
             // such items are procesed within element transform
             componentItems: dataToImport.items.filter((m) => !m.system.workflow?.length),
-            contentItems: contentItems,
+            contentItems: contentItemsExcludingComponents,
             referencedData: referencedData,
             itemsInTargetEnvironment: itemStates,
             getItemStateInTargetEnvironment: (itemCodename) => {
@@ -298,20 +300,20 @@ export class ImportContextService {
         const assets = await this.getAssetsByCodenamesAsync(assetCodenames);
         const assetStates: IAssetStateInTargetEnvironmentByCodename[] = [];
 
-        for (const codename of assetCodenames) {
-            const asset = assets.find((m) => m.codename === codename);
-            const externalId = getAssetExternalIdForCodename(codename);
+        for (const assetCodename of assetCodenames) {
+            const asset = assets.find((m) => m.codename === assetCodename);
+            const externalId = getAssetExternalIdForCodename(assetCodename);
 
             if (asset) {
                 assetStates.push({
-                    assetCodename: codename,
+                    assetCodename: assetCodename,
                     asset: asset,
                     state: 'exists',
                     externalIdToUse: externalId
                 });
             } else {
                 assetStates.push({
-                    assetCodename: codename,
+                    assetCodename: assetCodename,
                     asset: undefined,
                     state: 'doesNotExists',
                     externalIdToUse: externalId
