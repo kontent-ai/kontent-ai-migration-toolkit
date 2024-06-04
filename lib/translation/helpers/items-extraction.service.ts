@@ -25,7 +25,7 @@ export class ItemsExtractionService {
             log: this.log,
             itemInfo: (input) => {
                 return {
-                    title: input.requestItem.itemCodename,
+                    title: `extract -> ${input.requestItem.itemCodename} (${input.requestItem.languageCodename})`,
                     itemType: 'exportedItem'
                 };
             },
@@ -85,7 +85,7 @@ export class ItemsExtractionService {
             log: this.log,
             itemInfo: (input) => {
                 return {
-                    title: input.system.codename,
+                    title: `extract -> ${input.system.codename} (${input.system.language})`,
                     itemType: 'migrationItem'
                 };
             },
