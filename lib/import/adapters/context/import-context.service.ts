@@ -32,13 +32,13 @@ export class ImportContextService {
         this.itemsExtractionService = getItemsExtractionService(log);
     }
 
-    async getImportContextAsync(dataToImport: IImportData): Promise<IImportContext> {
-        const referencedData = this.itemsExtractionService.extractReferencedItemsFromMigrationItems(dataToImport.items);
-        const contentItemsExcludingComponents = dataToImport.items.filter(
+    async getImportContextAsync(importData: IImportData): Promise<IImportContext> {
+        const referencedData = this.itemsExtractionService.extractReferencedItemsFromMigrationItems(importData.items);
+        const contentItemsExcludingComponents = importData.items.filter(
             (m) => m.system.workflow && m.system.workflow_step
         );
 
-        // check all items, including referenced items
+        // check all items, including referenced items in content
         const itemCodenamesToCheckInTargetEnv: string[] = [
             ...referencedData.itemCodenames,
             ...contentItemsExcludingComponents.map((m) => m.system.codename)
@@ -47,7 +47,11 @@ export class ImportContextService {
         // only load language variants for items to migrate, no need to get it for referenced items
         const languageVariantToCheckInTargetEnv: IMigrationItem[] = contentItemsExcludingComponents;
 
-        const assetCodenamesToCheckInTargetEnv: string[] = [...referencedData.assetCodenames];
+        // check all assets, including referenced assets in content
+        const assetCodenamesToCheckInTargetEnv: string[] = [
+            ...referencedData.assetCodenames,
+            ...importData.assets.map((m) => m.codename).filter(uniqueStringFilter)
+        ];
 
         const itemStates: IItemStateInTargetEnvironmentByCodename[] = await this.getItemStatesAsync(
             itemCodenamesToCheckInTargetEnv
@@ -64,7 +68,7 @@ export class ImportContextService {
         const importContext: IImportContext = {
             // if content item does not have a workflow step it means it is used as a component within Rich text element
             // such items are procesed within element transform
-            componentItems: dataToImport.items.filter((m) => !m.system.workflow?.length),
+            componentItems: importData.items.filter((m) => !m.system.workflow?.length),
             contentItems: contentItemsExcludingComponents,
             referencedData: referencedData,
             itemsInTargetEnvironment: itemStates,

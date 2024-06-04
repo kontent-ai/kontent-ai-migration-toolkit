@@ -184,7 +184,7 @@ class DefaultImportAdapter implements IImportAdapter {
                 importContext: importContext
             });
 
-        // then process language variants
+        // then process language variants & workflow
         await this.importLanguageVariantService.importLanguageVariantsAsync({
             importContentItems: migrationContentItems,
             importContext: importContext,
