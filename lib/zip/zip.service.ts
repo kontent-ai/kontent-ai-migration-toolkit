@@ -2,17 +2,23 @@ import chalk from 'chalk';
 import JSZip from 'jszip';
 
 import { IExportAdapterResult } from '../export/index.js';
-import { IItemFormatService, ZipCompressionLevel, IAssetFormatService, FileBinaryData } from './zip.models.js';
+import {
+    IItemFormatService,
+    ZipCompressionLevel,
+    IAssetFormatService,
+    FileBinaryData,
+    ZipContext
+} from './zip.models.js';
 import { ZipPackage } from './zip-package.class.js';
 import { IFlattenedContentType, IMigrationAsset, IMigrationItem, Log } from '../core/index.js';
 import { IImportData } from '../import/import.models.js';
 
-export function getZipService(log: Log): ZipService {
-    return new ZipService(log);
+export function getZipService(log: Log, zipContext: ZipContext): ZipService {
+    return new ZipService(log, zipContext);
 }
 
 export class ZipService {
-    constructor(private readonly log: Log) {}
+    constructor(private readonly log: Log, private readonly zipContext: ZipContext) {}
 
     async parseZipAsync(data: {
         items?: {
@@ -44,7 +50,7 @@ export class ZipService {
 
             result.items.push(
                 ...(await data.items.formatService.parseContentItemsAsync({
-                    zip: new ZipPackage(itemsZipFile, this.log),
+                    zip: new ZipPackage(itemsZipFile, this.log, this.zipContext),
                     types: data.types
                 }))
             );
@@ -64,7 +70,7 @@ export class ZipService {
 
             result.assets.push(
                 ...(await data.assets.formatService.parseAssetsAsync({
-                    zip: new ZipPackage(assetsZipFile, this.log)
+                    zip: new ZipPackage(assetsZipFile, this.log, this.zipContext)
                 }))
             );
         }
@@ -101,7 +107,7 @@ export class ZipService {
 
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
             parsedItems = await data.items.formatService.parseContentItemsAsync({
-                zip: new ZipPackage(itemsZipFile, this.log),
+                zip: new ZipPackage(itemsZipFile, this.log, this.zipContext),
                 types: data.types
             });
         }
@@ -114,7 +120,7 @@ export class ZipService {
 
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
             parsedAssets = await data.assets.formatService.parseAssetsAsync({
-                zip: new ZipPackage(assetsZipFile, this.log)
+                zip: new ZipPackage(assetsZipFile, this.log, this.zipContext)
             });
         }
 
@@ -151,7 +157,7 @@ export class ZipService {
 
         const zip = await config.itemFormatService.transformContentItemsAsync({
             items: exportData.items,
-            zip: new ZipPackage(new JSZip(), this.log)
+            zip: new ZipPackage(new JSZip(), this.log, this.zipContext)
         });
 
         return zip;
@@ -175,7 +181,7 @@ export class ZipService {
 
         const zip = await config.assetFormatService.transformAssetsAsync({
             assets: exportData.assets,
-            zip: new ZipPackage(new JSZip(), this.log)
+            zip: new ZipPackage(new JSZip(), this.log, this.zipContext)
         });
 
         return zip;

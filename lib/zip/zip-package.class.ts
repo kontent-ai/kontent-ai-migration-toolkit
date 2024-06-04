@@ -9,10 +9,9 @@ interface IFileResult<T> {
 }
 
 export class ZipPackage {
-    private readonly context: ZipContext = 'node.js';
     private readonly compressionLevel: ZipCompressionLevel = 9;
 
-    constructor(private readonly jsZip: JSZip, private readonly log: Log) {}
+    constructor(private readonly jsZip: JSZip, private readonly log: Log, private readonly context: ZipContext) {}
 
     addFile(filePath: string, data: any): void {
         this.jsZip.file(filePath, data);

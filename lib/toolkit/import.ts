@@ -1,5 +1,11 @@
-import { AssetsFormatConfig, ItemsFormatConfig, getZipService } from '../zip/index.js';
-import { IMigrationAsset, IMigrationItem, Log, getDefaultLogAsync, getFlattenedContentTypesAsync } from '../core/index.js';
+import { AssetsFormatConfig, ItemsFormatConfig, ZipContext, getZipService } from '../zip/index.js';
+import {
+    IMigrationAsset,
+    IMigrationItem,
+    Log,
+    getDefaultLogAsync,
+    getFlattenedContentTypesAsync
+} from '../core/index.js';
 import { IImportAdapter, IImportData } from '../import/index.js';
 import { getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
 import { getFileService } from '../file/index.js';
@@ -21,6 +27,7 @@ export interface IImportFromFilesConfig {
         formatService: AssetsFormatConfig;
     };
     log?: Log;
+    zipContext?: ZipContext;
 }
 
 export async function importAsync(config: IImportConfig): Promise<void> {
@@ -32,7 +39,7 @@ export async function importFromFilesAsync(config: IImportFromFilesConfig): Prom
 }
 
 async function getSourceDataAsync(config: IImportFromFilesConfig): Promise<IImportData> {
-    const log = config.log ?? await getDefaultLogAsync();
+    const log = config.log ?? (await getDefaultLogAsync());
 
     if (config?.items?.filename?.toLowerCase()?.endsWith('.zip')) {
         return await getImportDataFromZipAsync(config, log);
@@ -43,7 +50,7 @@ async function getSourceDataAsync(config: IImportFromFilesConfig): Promise<IImpo
 
 async function getImportDataFromZipAsync(config: IImportFromFilesConfig, log: Log): Promise<IImportData> {
     const fileService = getFileService(log);
-    const fileProcessorService = getZipService(log);
+    const fileProcessorService = getZipService(log, config.zipContext ?? 'node.js');
 
     const importSourceData = await fileProcessorService.parseZipAsync({
         items: config.items
@@ -66,7 +73,7 @@ async function getImportDataFromZipAsync(config: IImportFromFilesConfig, log: Lo
 
 async function getImportDataFromNonZipFileAsync(config: IImportFromFilesConfig, log: Log): Promise<IImportData> {
     const fileService = getFileService(log);
-    const fileProcessorService = getZipService(log);
+    const fileProcessorService = getZipService(log, config.zipContext ?? 'node.js');
     const importSourceData = await fileProcessorService.parseFileAsync({
         items: config.items
             ? {
