@@ -1,4 +1,3 @@
-import { HttpService } from '@kontent-ai/core-sdk';
 import {
     IExportAdapter,
     IExportAdapterResult,
@@ -24,7 +23,8 @@ import {
     extractErrorData,
     processInChunksAsync,
     getAssetExternalIdForCodename,
-    logSpinner
+    logSpinner,
+    getBinaryDataFromUrlAsync
 } from '../../core/index.js';
 import { ExportContextService, getExportContextService } from './context/export-context.service.js';
 import { exportTransforms } from '../../translation/index.js';
@@ -37,7 +37,6 @@ export function getDefaultExportAdapter(config: IDefaultExportAdapterConfig): IE
 class DefaultExportAdapter implements IExportAdapter {
     public readonly name: string = 'Kontent.ai export adapter';
 
-    private readonly httpService: HttpService = new HttpService();
     private readonly managementClient: ManagementClient;
     private readonly exportContextService: ExportContextService;
 
@@ -211,7 +210,7 @@ class DefaultExportAdapter implements IExportAdapter {
                     this.config.log
                 );
 
-                const binaryData = await this.getBinaryDataFromUrlAsync(asset.url);
+                const binaryData = await getBinaryDataFromUrlAsync(asset.url);
 
                 const migrationAsset: IMigrationAsset = {
                     _zipFilename: asset.codename,
@@ -246,25 +245,5 @@ class DefaultExportAdapter implements IExportAdapter {
         });
 
         return exportedAssets;
-    }
-
-    private async getBinaryDataFromUrlAsync(url: string): Promise<{ data: any; contentLength: number }> {
-        // temp fix for Kontent.ai Repository not validating url
-        url = url.replace('#', '%23');
-
-        const response = await this.httpService.getAsync(
-            {
-                url
-            },
-            {
-                responseType: 'arraybuffer',
-                retryStrategy: defaultRetryStrategy
-            }
-        );
-
-        const contentLengthHeader = response.headers.find((m) => m.header.toLowerCase() === 'content-length');
-        const contentLength = contentLengthHeader ? +contentLengthHeader.value : 0;
-
-        return { data: response.data, contentLength: contentLength };
     }
 }

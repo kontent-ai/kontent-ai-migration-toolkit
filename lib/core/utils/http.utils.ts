@@ -4,7 +4,7 @@ const rateExceededErrorCode: number = 10000;
 const notFoundErrorCode: number = 10000;
 
 export const defaultHttpService: HttpService = new HttpService({
-    logErrorsToConsole: false
+    logErrorsToConsole: false,
 });
 
 export const defaultRetryStrategy: IRetryStrategyOptions = {
