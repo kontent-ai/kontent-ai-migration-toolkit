@@ -1,4 +1,4 @@
-import { AssetModels, ContentItemModels, ContentTypeElements } from '@kontent-ai/management-sdk';
+import { AssetModels, ContentItemModels, ContentTypeElements, LanguageVariantModels } from '@kontent-ai/management-sdk';
 import { MigrationElementType } from './migration.models.js';
 
 export type TargetItemState = 'exists' | 'doesNotExists';
@@ -83,14 +83,21 @@ export interface IAssetStateInSourceEnvironmentById {
 
 export interface IItemStateInTargetEnvironmentByCodename {
     state: TargetItemState;
-    codename: string;
+    itemCodename: string;
     item: ContentItemModels.ContentItem | undefined;
     externalIdToUse: string;
 }
 
+export interface ILanguageVariantStateInTargetEnvironmentByCodename {
+    state: TargetItemState;
+    itemCodename: string;
+    languageCodename: string;
+    languageVariant: LanguageVariantModels.ContentItemLanguageVariant | undefined;
+}
+
 export interface IAssetStateInTargetEnvironmentByCodename {
     state: TargetItemState;
-    codename: string;
+    assetCodename: string;
     asset: AssetModels.Asset | undefined;
     externalIdToUse: string;
 }

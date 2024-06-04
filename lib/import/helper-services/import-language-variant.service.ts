@@ -8,7 +8,6 @@ import {
 } from '@kontent-ai/management-sdk';
 import {
     extractErrorData,
-    is404Error,
     logErrorAndExit,
     processInChunksAsync,
     IMigrationItem,
@@ -110,20 +109,13 @@ export class ImportLanguageVariantServices {
     }): Promise<void> {
         await this.prepareLanguageVariantForImportAsync({
             importContentItem: data.importContentItem,
-            managementClient: data.managementClient,
-            workflows: data.workflows
+            workflows: data.workflows,
+            importContext: data.importContext,
+            managementClient: data.managementClient
         });
 
         const workflowStepCodename = data.importContentItem.system.workflow_step;
         const workflowCodename = data.importContentItem.system.workflow;
-
-        logSpinner(
-            {
-                type: 'upsert',
-                message: `${data.preparedContentItem.name}`
-            },
-            this.config.log
-        );
 
         if (!workflowCodename) {
             throw Error(
@@ -155,6 +147,13 @@ export class ImportLanguageVariantServices {
             );
         }
 
+        logSpinner(
+            {
+                type: 'upsert',
+                message: `${data.preparedContentItem.name}`
+            },
+            this.config.log
+        );
         await data.managementClient
             .upsertLanguageVariant()
             .byItemCodename(data.preparedContentItem.codename)
@@ -186,13 +185,24 @@ export class ImportLanguageVariantServices {
     }
 
     private async prepareLanguageVariantForImportAsync(data: {
-        managementClient: ManagementClient;
         importContentItem: IMigrationItem;
+        managementClient: ManagementClient;
         workflows: WorkflowModels.Workflow[];
+        importContext: IImportContext;
     }): Promise<void> {
-        let languageVariantOfContentItem: undefined | LanguageVariantModels.ContentItemLanguageVariant;
+        const languageVariantState = data.importContext.getLanguageVariantStateInTargetEnvironment(
+            data.importContentItem.system.codename,
+            data.importContentItem.system.language
+        );
+
         const workflowCodename = data.importContentItem.system.workflow;
         const workflowStepCodename = data.importContentItem.system.workflow_step;
+        const languageVariant = languageVariantState.languageVariant;
+
+        if (!languageVariant) {
+            // language variant does not exist, no need to process it any further as it will get upserted
+            return;
+        }
 
         if (!workflowCodename) {
             throw Error(
@@ -212,66 +222,41 @@ export class ImportLanguageVariantServices {
             workflowStepCodename: workflowStepCodename
         });
 
-        try {
-            logSpinner({
-                type: 'viewLanguageVariant',
-                message: `${data.importContentItem.system.name} ${data.importContentItem.system.language}`
-            }, this.config.log);
-
-            languageVariantOfContentItem = await data.managementClient
-                .viewLanguageVariant()
-                .byItemCodename(data.importContentItem.system.codename)
-                .byLanguageCodename(data.importContentItem.system.language)
-                .toPromise()
-                .then((m) => m.data);
-
-            if (!languageVariantOfContentItem) {
-                logErrorAndExit({
-                    message: `Invalid langauge variant for item '${chalk.red(
-                        data.importContentItem.system.codename
-                    )}' of type '${chalk.yellow(data.importContentItem.system.type)}' and language '${chalk.yellow(
-                        data.importContentItem.system.language
-                    )}'`
-                });
-            }
-        } catch (error) {
-            if (!is404Error(error)) {
-                throw error;
-            }
-        }
-
-        if (languageVariantOfContentItem) {
-            // language variant exists
-            // check if variant is published or archived
-            if (this.isLanguageVariantPublished(languageVariantOfContentItem, data.workflows)) {
-                logSpinner({
+        // check if variant is published or archived
+        if (this.isLanguageVariantPublished(languageVariant, data.workflows)) {
+            logSpinner(
+                {
                     type: 'createNewVersion',
                     message: `${data.importContentItem.system.name}`
-                },this.config.log);
+                },
+                this.config.log
+            );
 
-                // create new version
-                await data.managementClient
-                    .createNewVersionOfLanguageVariant()
-                    .byItemCodename(data.importContentItem.system.codename)
-                    .byLanguageCodename(data.importContentItem.system.language)
-                    .toPromise();
-            } else if (this.isLanguageVariantArchived(languageVariantOfContentItem, data.workflows)) {
-                // change workflow step to draft
-                logSpinner({
+            // create new version
+            await data.managementClient
+                .createNewVersionOfLanguageVariant()
+                .byItemCodename(data.importContentItem.system.codename)
+                .byLanguageCodename(data.importContentItem.system.language)
+                .toPromise();
+        } else if (this.isLanguageVariantArchived(languageVariant, data.workflows)) {
+            // change workflow step to draft
+            logSpinner(
+                {
                     type: 'unArchive',
                     message: `${data.importContentItem.system.name}`
-                }, this.config.log);
+                },
+                this.config.log
+            );
 
-                const firstWorkflowStep = workflow.steps?.[0];
+            const firstWorkflowStep = workflow.steps?.[0];
 
-                if (firstWorkflowStep) {
-                    await data.managementClient
-                        .changeWorkflowStepOfLanguageVariant()
-                        .byItemCodename(data.importContentItem.system.codename)
-                        .byLanguageCodename(data.importContentItem.system.language)
-                        .byWorkflowStepCodename(firstWorkflowStep.codename)
-                        .toPromise();
-                }
+            if (firstWorkflowStep) {
+                await data.managementClient
+                    .changeWorkflowStepOfLanguageVariant()
+                    .byItemCodename(data.importContentItem.system.codename)
+                    .byLanguageCodename(data.importContentItem.system.language)
+                    .byWorkflowStepCodename(firstWorkflowStep.codename)
+                    .toPromise();
             }
         }
     }

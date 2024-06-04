@@ -1,6 +1,8 @@
 import {
     IAssetStateInTargetEnvironmentByCodename,
     IItemStateInTargetEnvironmentByCodename,
+    ILanguageVariantStateInTargetEnvironmentByCodename,
+    IMigrationItem,
     Log,
     getAssetExternalIdForCodename,
     getItemExternalIdForCodename,
@@ -10,9 +12,14 @@ import {
     uniqueStringFilter
 } from '../../../core/index.js';
 
-import { AssetModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
+import { AssetModels, ContentItemModels, LanguageVariantModels, ManagementClient } from '@kontent-ai/management-sdk';
 import { IImportContext, IImportData } from '../../import.models.js';
 import { ItemsExtractionService, getItemsExtractionService } from '../../../translation/index.js';
+
+interface ILanguageVariantWrapper {
+    languageVariant: LanguageVariantModels.ContentItemLanguageVariant;
+    migrationItem: IMigrationItem;
+}
 
 export function getImportContextService(log: Log, managementClient: ManagementClient): ImportContextService {
     return new ImportContextService(log, managementClient);
@@ -29,15 +36,23 @@ export class ImportContextService {
         const referencedData = this.itemsExtractionService.extractReferencedItemsFromMigrationItems(dataToImport.items);
         const contentItems = dataToImport.items.filter((m) => m.system.workflow);
 
+        // check all items, including referenced items
         const itemCodenamesToCheckInTargetEnv: string[] = [
             ...referencedData.itemCodenames,
             ...contentItems.map((m) => m.system.codename)
         ].filter(uniqueStringFilter);
 
+        // only load language variants for items to migrate, no need to get it for referenced items
+        const languageVariantToCheckInTargetEnv: IMigrationItem[] = dataToImport.items;
+
         const assetCodenamesToCheckInTargetEnv: string[] = [...referencedData.assetCodenames];
 
         const itemStates: IItemStateInTargetEnvironmentByCodename[] = await this.getItemStatesAsync(
             itemCodenamesToCheckInTargetEnv
+        );
+
+        const variantStates: ILanguageVariantStateInTargetEnvironmentByCodename[] = await this.getVariantStatesAsync(
+            languageVariantToCheckInTargetEnv
         );
 
         const assetStates: IAssetStateInTargetEnvironmentByCodename[] = await this.getAssetStatesAsync(
@@ -51,23 +66,36 @@ export class ImportContextService {
             contentItems: contentItems,
             referencedData: referencedData,
             itemsInTargetEnvironment: itemStates,
-            getItemStateInTargetEnvironment: (codename) => {
-                const itemState = itemStates.find((m) => m.codename === codename);
+            getItemStateInTargetEnvironment: (itemCodename) => {
+                const itemState = itemStates.find((m) => m.itemCodename === itemCodename);
 
                 if (!itemState) {
                     throw Error(
-                        `Invalid state for item '${codename}'. It is expected that all item states will be initialized`
+                        `Invalid state for item '${itemCodename}'. It is expected that all item states will be initialized`
                     );
                 }
 
                 return itemState;
             },
-            getAssetStateInTargetEnvironment: (codename) => {
-                const assetState = assetStates.find((m) => m.codename === codename);
+            getLanguageVariantStateInTargetEnvironment: (itemCodename, languageCodename) => {
+                const variantState = variantStates.find(
+                    (m) => m.itemCodename === itemCodename && m.languageCodename === languageCodename
+                );
+
+                if (!variantState) {
+                    throw Error(
+                        `Invalid state for language variant '${itemCodename}' in language '${languageCodename}'. It is expected that all variant states will be initialized`
+                    );
+                }
+
+                return variantState;
+            },
+            getAssetStateInTargetEnvironment: (assetCodename) => {
+                const assetState = assetStates.find((m) => m.assetCodename === assetCodename);
 
                 if (!assetState) {
                     throw Error(
-                        `Invalid state for asset '${codename}'. It is expected that all asset states will be initialized`
+                        `Invalid state for asset '${assetCodename}'. It is expected that all asset states will be initialized`
                     );
                 }
 
@@ -76,6 +104,52 @@ export class ImportContextService {
         };
 
         return importContext;
+    }
+
+    private async getLanguageVariantsAsync(migrationItems: IMigrationItem[]): Promise<ILanguageVariantWrapper[]> {
+        const languageVariants: ILanguageVariantWrapper[] = [];
+
+        await processInChunksAsync<IMigrationItem, void>({
+            log: this.log,
+            type: 'languageVariant',
+            chunkSize: 1,
+            items: migrationItems,
+            itemInfo: (item) => {
+                return {
+                    itemType: 'languageVariant',
+                    title: `${item.system.codename} (${item.system.language})`
+                };
+            },
+            processFunc: async (item) => {
+                try {
+                    logSpinner(
+                        {
+                            type: 'viewLanguageVariant',
+                            message: `${item.system.codename} (${item.system.language})`
+                        },
+                        this.log
+                    );
+
+                    const variant = await this.managementClient
+                        .viewLanguageVariant()
+                        .byItemCodename(item.system.codename)
+                        .byLanguageCodename(item.system.language)
+                        .toPromise()
+                        .then((m) => m.data);
+
+                    languageVariants.push({
+                        languageVariant: variant,
+                        migrationItem: item
+                    });
+                } catch (error) {
+                    if (!is404Error(error)) {
+                        throw error;
+                    }
+                }
+            }
+        });
+
+        return languageVariants;
     }
 
     private async getContentItemsByCodenamesAsync(itemCodenames: string[]): Promise<ContentItemModels.ContentItem[]> {
@@ -162,6 +236,39 @@ export class ImportContextService {
         return assets;
     }
 
+    private async getVariantStatesAsync(
+        migrationItems: IMigrationItem[]
+    ): Promise<ILanguageVariantStateInTargetEnvironmentByCodename[]> {
+        const variants = await this.getLanguageVariantsAsync(migrationItems);
+        const variantStates: ILanguageVariantStateInTargetEnvironmentByCodename[] = [];
+
+        for (const migrationItem of migrationItems) {
+            const variant = variants.find(
+                (m) =>
+                    m.migrationItem.system.codename === migrationItem.system.codename &&
+                    m.migrationItem.system.language === migrationItem.system.language
+            );
+
+            if (variant) {
+                variantStates.push({
+                    itemCodename: migrationItem.system.codename,
+                    languageCodename: migrationItem.system.language,
+                    languageVariant: variant.languageVariant,
+                    state: 'exists'
+                });
+            } else {
+                variantStates.push({
+                    itemCodename: migrationItem.system.codename,
+                    languageCodename: migrationItem.system.language,
+                    languageVariant: undefined,
+                    state: 'doesNotExists'
+                });
+            }
+        }
+
+        return variantStates;
+    }
+
     private async getItemStatesAsync(itemCodenames: string[]): Promise<IItemStateInTargetEnvironmentByCodename[]> {
         const items = await this.getContentItemsByCodenamesAsync(itemCodenames);
         const itemStates: IItemStateInTargetEnvironmentByCodename[] = [];
@@ -172,14 +279,14 @@ export class ImportContextService {
 
             if (item) {
                 itemStates.push({
-                    codename: codename,
+                    itemCodename: codename,
                     item: item,
                     state: 'exists',
                     externalIdToUse: externalId
                 });
             } else {
                 itemStates.push({
-                    codename: codename,
+                    itemCodename: codename,
                     item: undefined,
                     state: 'doesNotExists',
                     externalIdToUse: externalId
@@ -200,14 +307,14 @@ export class ImportContextService {
 
             if (asset) {
                 assetStates.push({
-                    codename: codename,
+                    assetCodename: codename,
                     asset: asset,
                     state: 'exists',
                     externalIdToUse: externalId
                 });
             } else {
                 assetStates.push({
-                    codename: codename,
+                    assetCodename: codename,
                     asset: undefined,
                     state: 'doesNotExists',
                     externalIdToUse: externalId

@@ -84,7 +84,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             if (itemState.item) {
                 // linked item already exists in target environment
                 value.push({
-                    codename: itemState.codename
+                    codename: itemState.itemCodename
                 });
             } else {
                 // linked item is new, reference it with external id

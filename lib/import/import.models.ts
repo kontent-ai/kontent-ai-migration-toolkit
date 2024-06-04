@@ -6,7 +6,8 @@ import {
     Log,
     IAssetStateInTargetEnvironmentByCodename,
     IItemStateInTargetEnvironmentByCodename,
-    IReferencedDataInMigrationItems
+    IReferencedDataInMigrationItems,
+    ILanguageVariantStateInTargetEnvironmentByCodename
 } from '../core/index.js';
 import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 
@@ -28,8 +29,12 @@ export interface IImportContext {
     contentItems: IMigrationItem[];
     referencedData: IReferencedDataInMigrationItems;
     itemsInTargetEnvironment: IItemStateInTargetEnvironmentByCodename[];
-    getItemStateInTargetEnvironment: (codename: string) => IItemStateInTargetEnvironmentByCodename;
-    getAssetStateInTargetEnvironment: (codename: string) => IAssetStateInTargetEnvironmentByCodename;
+    getItemStateInTargetEnvironment: (itemCodename: string) => IItemStateInTargetEnvironmentByCodename;
+    getLanguageVariantStateInTargetEnvironment: (
+        itemCodename: string,
+        languageCodename: string
+    ) => ILanguageVariantStateInTargetEnvironmentByCodename;
+    getAssetStateInTargetEnvironment: (assetCodename: string) => IAssetStateInTargetEnvironmentByCodename;
 }
 
 export type ImportTransformFunc = (data: {
