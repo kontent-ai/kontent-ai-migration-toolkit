@@ -1,6 +1,6 @@
 import { libMetadata } from '../metadata.js';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
-import { Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
+import { IExternalIdGenerator, Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
 import { IKontentAiExportRequestItem, getDefaultExportAdapter } from '../export/index.js';
 import { getDefaultImportAdapter } from '../import/index.js';
 
@@ -20,6 +20,7 @@ export interface IMigrationTarget extends IMigrationEnv {
 
 export interface IMigrationConfig {
     retryStrategy?: IRetryStrategyOptions;
+    externalIdGenerator?: IExternalIdGenerator;
     log?: Log;
     sourceEnvironment: IMigrationSource;
     targetEnvironment: IMigrationTarget;
@@ -42,7 +43,8 @@ export async function migrateAsync(config: IMigrationConfig): Promise<void> {
         environmentId: config.targetEnvironment.id,
         apiKey: config.targetEnvironment.apiKey,
         skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
-        retryStrategy: config.retryStrategy
+        retryStrategy: config.retryStrategy,
+        externalIdGenerator: config.externalIdGenerator
     });
 
     return await executeWithTrackingAsync({

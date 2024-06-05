@@ -58,7 +58,7 @@ export class ImportLanguageVariantServices {
                     partA: input.system.language
                 };
             },
-            processFunc: async (importContentItem) => {
+            processAsync: async (importContentItem) => {
                 try {
                     const preparedContentItem = data.preparedContentItems.find(
                         (m) => m.codename === importContentItem.system.codename

@@ -1,12 +1,5 @@
 import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
-import {
-    extractErrorData,
-    logErrorAndExit,
-    IMigrationItem,
-    Log,
-    getItemExternalIdForCodename,
-    runMapiRequestAsync
-} from '../../core/index.js';
+import { extractErrorData, logErrorAndExit, IMigrationItem, Log, runMapiRequestAsync } from '../../core/index.js';
 import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
 
@@ -154,7 +147,7 @@ export class ImportContentItemHelper {
                             type: {
                                 codename: migrationContentItem.system.type
                             },
-                            external_id: getItemExternalIdForCodename(migrationContentItem.system.codename),
+                            external_id: itemStateInTargetEnv.externalIdToUse,
                             codename: migrationContentItem.system.codename,
                             collection: {
                                 codename: migrationContentItem.system.collection

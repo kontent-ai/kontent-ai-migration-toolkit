@@ -50,7 +50,7 @@ export class ImportAssetsService {
                     title: input.title
                 };
             },
-            processFunc: async (asset) => {
+            processAsync: async (asset) => {
                 const uploadedBinaryFile = await runMapiRequestAsync({
                     log: this.log,
                     func: async () =>

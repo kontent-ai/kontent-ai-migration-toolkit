@@ -11,7 +11,8 @@ import {
     defaultHttpService,
     IMigrationItem,
     executeWithTrackingAsync,
-    runMapiRequestAsync
+    runMapiRequestAsync,
+    defaultExternalIdGenerator
 } from '../../core/index.js';
 import { IDefaultImportAdapterConfig, IImportAdapter, IImportContext, IImportData } from '../import.models.js';
 import { ImportAssetsService, getImportAssetsService } from '../helper-services/import-assets.service.js';
@@ -59,7 +60,11 @@ class DefaultImportAdapter implements IImportAdapter {
             log: config.log,
             skipFailedItems: config.skipFailedItems
         });
-        this.importContextService = getImportContextService(config.log, this.client);
+        this.importContextService = getImportContextService({
+            log: config.log,
+            externalIdGenerator: this.config.externalIdGenerator ?? defaultExternalIdGenerator,
+            managementClient: this.client
+        });
     }
 
     getManagementClient(): ManagementClient {

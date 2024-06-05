@@ -7,7 +7,8 @@ import {
     IAssetStateInTargetEnvironmentByCodename,
     IItemStateInTargetEnvironmentByCodename,
     IReferencedDataInMigrationItems,
-    ILanguageVariantStateInTargetEnvironmentByCodename
+    ILanguageVariantStateInTargetEnvironmentByCodename,
+    IExternalIdGenerator
 } from '../core/index.js';
 import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 
@@ -46,11 +47,12 @@ export type ImportTransformFunc = (data: {
 
 export interface IDefaultImportAdapterConfig {
     log: Log;
+    environmentId: string;
     apiKey: string;
     skipFailedItems: boolean;
     retryStrategy?: IRetryStrategyOptions;
+    externalIdGenerator?: IExternalIdGenerator;
     baseUrl?: string;
-    environmentId: string;
     canImport?: {
         contentItem?: (item: IMigrationItem) => boolean | Promise<boolean>;
         asset?: (item: IMigrationAsset) => boolean | Promise<boolean>;
@@ -66,6 +68,6 @@ export interface IImportAllResult {
 
 export interface IFlattenedFolder {
     name: string;
-    externalId?: string;
     id: string;
+    externalId?: string;
 }

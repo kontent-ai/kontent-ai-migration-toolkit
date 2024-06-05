@@ -10,7 +10,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     log: Log;
     items: TInputItem[];
     chunkSize: number;
-    processFunc: (item: TInputItem) => Promise<TOutputItem>;
+    processAsync: (item: TInputItem) => Promise<TOutputItem>;
     itemInfo?: (item: TInputItem) => IItemInfo;
 }): Promise<TOutputItem[]> {
     const chunks = splitArrayIntoChunks<TInputItem>(data.items, data.chunkSize);
@@ -40,7 +40,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
                             data.log
                         );
                     }
-                    return data.processFunc(item).then((output) => {
+                    return data.processAsync(item).then((output) => {
                         outputItems.push(output);
                     });
                 })

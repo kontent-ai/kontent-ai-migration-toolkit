@@ -1,5 +1,5 @@
 import { SharedContracts, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
-import { parseArrayValue, logErrorAndExit, MigrationElementType } from '../../core/index.js';
+import { parseAsArray, logErrorAndExit, MigrationElementType } from '../../core/index.js';
 import { IImportContext, ImportTransformFunc } from '../../import/index.js';
 import { richTextHelper } from '../helpers/rich-text.helper.js';
 
@@ -24,7 +24,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: parseArrayValue(data.value).map((m) => {
+            value: parseAsArray(data.value).map((m) => {
                 return {
                     codename: m
                 };
@@ -34,7 +34,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
     asset: async (data) => {
         const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
 
-        for (const assetCodename of parseArrayValue(data.value)) {
+        for (const assetCodename of parseAsArray(data.value)) {
             // check if asset already exists in target env
             const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(assetCodename);
 
@@ -76,7 +76,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
     },
     modular_content: async (data) => {
         const value: SharedContracts.IReferenceObjectContract[] = [];
-        const linkedItemCodenames: string[] = parseArrayValue(data.value);
+        const linkedItemCodenames: string[] = parseAsArray(data.value);
 
         for (const linkedItemCodename of linkedItemCodenames) {
             const itemState = data.importContext.getItemStateInTargetEnvironment(linkedItemCodename);
@@ -106,7 +106,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: parseArrayValue(data.value).map((m) => {
+            value: parseAsArray(data.value).map((m) => {
                 return {
                     codename: m
                 };
@@ -136,7 +136,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: parseArrayValue(data.value).map((m) => {
+            value: parseAsArray(data.value).map((m) => {
                 return {
                     codename: m
                 };

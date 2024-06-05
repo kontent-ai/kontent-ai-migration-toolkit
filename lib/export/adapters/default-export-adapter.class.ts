@@ -22,7 +22,6 @@ import {
     IFlattenedContentTypeElement,
     extractErrorData,
     processInChunksAsync,
-    getAssetExternalIdForCodename,
     logSpinner,
     getBinaryDataFromUrlAsync
 } from '../../core/index.js';
@@ -191,7 +190,7 @@ class DefaultExportAdapter implements IExportAdapter {
                 };
             },
             items: assets,
-            processFunc: async (asset) => {
+            processAsync: async (asset) => {
                 const assetCollection: CollectionModels.Collection | undefined =
                     context.environmentData.collections.find((m) => m.id === asset.collection?.reference?.id);
 
@@ -209,7 +208,7 @@ class DefaultExportAdapter implements IExportAdapter {
                     _zipFilename: asset.codename,
                     filename: asset.fileName,
                     title: asset.title ?? '',
-                    externalId: asset.externalId ?? getAssetExternalIdForCodename(asset.codename),
+                    externalId: asset.externalId,
                     codename: asset.codename,
                     binaryData: binaryData.data,
                     collection: assetCollection ? { codename: assetCollection.codename } : undefined,

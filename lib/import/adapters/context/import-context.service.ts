@@ -1,11 +1,10 @@
 import {
     IAssetStateInTargetEnvironmentByCodename,
+    IExternalIdGenerator,
     IItemStateInTargetEnvironmentByCodename,
     ILanguageVariantStateInTargetEnvironmentByCodename,
     IMigrationItem,
     Log,
-    getAssetExternalIdForCodename,
-    getItemExternalIdForCodename,
     is404Error,
     processInChunksAsync,
     runMapiRequestAsync,
@@ -21,22 +20,33 @@ interface ILanguageVariantWrapper {
     migrationItem: IMigrationItem;
 }
 
-export function getImportContextService(log: Log, managementClient: ManagementClient): ImportContextService {
-    return new ImportContextService(log, managementClient);
+export interface IImportContextConfig {
+    readonly log: Log;
+    readonly managementClient: ManagementClient;
+    readonly externalIdGenerator: IExternalIdGenerator;
+}
+
+export function getImportContextService(config: IImportContextConfig): ImportContextService {
+    return new ImportContextService(config);
 }
 
 export class ImportContextService {
     private readonly itemsExtractionService: ItemsExtractionService;
 
-    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {
-        this.itemsExtractionService = getItemsExtractionService(log);
+    constructor(private readonly config: IImportContextConfig) {
+        this.itemsExtractionService = getItemsExtractionService(config.log);
     }
 
     async getImportContextAsync(importData: IImportData): Promise<IImportContext> {
         const referencedData = this.itemsExtractionService.extractReferencedItemsFromMigrationItems(importData.items);
+
+        // only items with workflow / step are standalone content items
         const contentItemsExcludingComponents = importData.items.filter(
             (m) => m.system.workflow && m.system.workflow_step
         );
+
+        // if content item does not have a workflow / step it means it is used as a component within Rich text element
+        const contentItemComponents = importData.items.filter((m) => !m.system.workflow || m.system.workflow_step);
 
         // check all items, including referenced items in content
         const itemCodenamesToCheckInTargetEnv: string[] = [
@@ -53,6 +63,7 @@ export class ImportContextService {
             ...importData.assets.map((m) => m.codename).filter(uniqueStringFilter)
         ];
 
+        // prepare state of objects in target environment
         const itemStates: IItemStateInTargetEnvironmentByCodename[] = await this.getItemStatesAsync(
             itemCodenamesToCheckInTargetEnv
         );
@@ -66,9 +77,7 @@ export class ImportContextService {
         );
 
         const importContext: IImportContext = {
-            // if content item does not have a workflow step it means it is used as a component within Rich text element
-            // such items are procesed within element transform
-            componentItems: importData.items.filter((m) => !m.system.workflow?.length),
+            componentItems: contentItemComponents,
             contentItems: contentItemsExcludingComponents,
             referencedData: referencedData,
             itemsInTargetEnvironment: itemStates,
@@ -116,7 +125,7 @@ export class ImportContextService {
         const languageVariants: ILanguageVariantWrapper[] = [];
 
         await processInChunksAsync<IMigrationItem, void>({
-            log: this.log,
+            log: this.config.log,
             chunkSize: 1,
             items: migrationItems,
             itemInfo: (item) => {
@@ -125,13 +134,13 @@ export class ImportContextService {
                     title: `${item.system.codename} (${item.system.language})`
                 };
             },
-            processFunc: async (item) => {
+            processAsync: async (item) => {
                 try {
                     const variant = await runMapiRequestAsync({
-                        log: this.log,
+                        log: this.config.log,
                         func: async () =>
                             (
-                                await this.managementClient
+                                await this.config.managementClient
                                     .viewLanguageVariant()
                                     .byItemCodename(item.system.codename)
                                     .byLanguageCodename(item.system.language)
@@ -162,7 +171,7 @@ export class ImportContextService {
         const contentItems: ContentItemModels.ContentItem[] = [];
 
         await processInChunksAsync<string, void>({
-            log: this.log,
+            log: this.config.log,
             chunkSize: 1,
             items: itemCodenames,
             itemInfo: (codename) => {
@@ -171,13 +180,16 @@ export class ImportContextService {
                     title: codename
                 };
             },
-            processFunc: async (codename) => {
+            processAsync: async (codename) => {
                 try {
                     const contentItem = await runMapiRequestAsync({
-                        log: this.log,
+                        log: this.config.log,
                         func: async () =>
                             (
-                                await this.managementClient.viewContentItem().byItemCodename(codename).toPromise()
+                                await this.config.managementClient
+                                    .viewContentItem()
+                                    .byItemCodename(codename)
+                                    .toPromise()
                             ).data,
                         action: 'view',
                         type: 'contentItem',
@@ -201,7 +213,7 @@ export class ImportContextService {
         const assets: AssetModels.Asset[] = [];
 
         await processInChunksAsync<string, void>({
-            log: this.log,
+            log: this.config.log,
             chunkSize: 1,
             items: assetCodenames,
             itemInfo: (codename) => {
@@ -210,13 +222,13 @@ export class ImportContextService {
                     title: codename
                 };
             },
-            processFunc: async (codename) => {
+            processAsync: async (codename) => {
                 try {
                     const asset = await runMapiRequestAsync({
-                        log: this.log,
+                        log: this.config.log,
                         func: async () =>
                             (
-                                await this.managementClient.viewAsset().byAssetCodename(codename).toPromise()
+                                await this.config.managementClient.viewAsset().byAssetCodename(codename).toPromise()
                             ).data,
                         action: 'view',
                         type: 'asset',
@@ -249,21 +261,12 @@ export class ImportContextService {
                     m.migrationItem.system.language === migrationItem.system.language
             );
 
-            if (variant) {
-                variantStates.push({
-                    itemCodename: migrationItem.system.codename,
-                    languageCodename: migrationItem.system.language,
-                    languageVariant: variant.languageVariant,
-                    state: 'exists'
-                });
-            } else {
-                variantStates.push({
-                    itemCodename: migrationItem.system.codename,
-                    languageCodename: migrationItem.system.language,
-                    languageVariant: undefined,
-                    state: 'doesNotExists'
-                });
-            }
+            variantStates.push({
+                itemCodename: migrationItem.system.codename,
+                languageCodename: migrationItem.system.language,
+                languageVariant: variant?.languageVariant,
+                state: variant ? 'exists' : 'doesNotExists'
+            });
         }
 
         return variantStates;
@@ -275,23 +278,14 @@ export class ImportContextService {
 
         for (const codename of itemCodenames) {
             const item = items.find((m) => m.codename === codename);
-            const externalId = getItemExternalIdForCodename(codename);
-
-            if (item) {
-                itemStates.push({
-                    itemCodename: codename,
-                    item: item,
-                    state: 'exists',
-                    externalIdToUse: externalId
-                });
-            } else {
-                itemStates.push({
-                    itemCodename: codename,
-                    item: undefined,
-                    state: 'doesNotExists',
-                    externalIdToUse: externalId
-                });
-            }
+            const externalId = this.config.externalIdGenerator.contentItemExternalId(codename);
+            console.log('############ TEST', externalId);
+            itemStates.push({
+                itemCodename: codename,
+                item: item,
+                state: item ? 'exists' : 'doesNotExists',
+                externalIdToUse: externalId
+            });
         }
 
         return itemStates;
@@ -303,23 +297,14 @@ export class ImportContextService {
 
         for (const assetCodename of assetCodenames) {
             const asset = assets.find((m) => m.codename === assetCodename);
-            const externalId = getAssetExternalIdForCodename(assetCodename);
+            const externalId = this.config.externalIdGenerator.assetExternalId(assetCodename);
 
-            if (asset) {
-                assetStates.push({
-                    assetCodename: assetCodename,
-                    asset: asset,
-                    state: 'exists',
-                    externalIdToUse: externalId
-                });
-            } else {
-                assetStates.push({
-                    assetCodename: assetCodename,
-                    asset: undefined,
-                    state: 'doesNotExists',
-                    externalIdToUse: externalId
-                });
-            }
+            assetStates.push({
+                assetCodename: assetCodename,
+                asset: asset,
+                state: asset ? 'exists' : 'doesNotExists',
+                externalIdToUse: externalId
+            });
         }
 
         return assetStates;

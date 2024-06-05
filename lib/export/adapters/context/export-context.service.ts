@@ -124,7 +124,7 @@ export class ExportContextService {
                 };
             },
             items: data.exportItems,
-            processFunc: async (exportItem) => {
+            processAsync: async (exportItem) => {
                 const contentItem = await runMapiRequestAsync({
                     log: this.log,
                     func: async () =>
@@ -312,7 +312,7 @@ export class ExportContextService {
                     title: id
                 };
             },
-            processFunc: async (id) => {
+            processAsync: async (id) => {
                 try {
                     const contentItem = await runMapiRequestAsync({
                         log: this.log,
@@ -348,7 +348,7 @@ export class ExportContextService {
                     title: id
                 };
             },
-            processFunc: async (id) => {
+            processAsync: async (id) => {
                 try {
                     const asset = await runMapiRequestAsync({
                         log: this.log,

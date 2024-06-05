@@ -4,7 +4,7 @@ import {
     IReferencedDataInLanguageVariants,
     IReferencedDataInMigrationItems,
     Log,
-    parseArrayValue,
+    parseAsArray,
     runWithSpinner,
     uniqueStringFilter
 } from '../../core/index.js';
@@ -103,9 +103,9 @@ export class ItemsExtractionService {
                         );
                         assetCodenames.push(...richTextHelper.processRteAssetCodenames(richTextHtml ?? '').codenames);
                     } else if (element.type === 'modular_content' || element.type === 'subpages') {
-                        itemCodenames.push(...parseArrayValue(element.value));
+                        itemCodenames.push(...parseAsArray(element.value));
                     } else if (element.type === 'asset') {
-                        assetCodenames.push(...parseArrayValue(element.value));
+                        assetCodenames.push(...parseAsArray(element.value));
                     }
                 }
             }
