@@ -279,7 +279,7 @@ export class ImportContextService {
         for (const codename of itemCodenames) {
             const item = items.find((m) => m.codename === codename);
             const externalId = this.config.externalIdGenerator.contentItemExternalId(codename);
-            console.log('############ TEST', externalId);
+            
             itemStates.push({
                 itemCodename: codename,
                 item: item,
