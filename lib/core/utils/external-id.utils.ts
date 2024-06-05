@@ -5,5 +5,5 @@ export interface IExternalIdGenerator {
 
 export const defaultExternalIdGenerator: IExternalIdGenerator = {
     assetExternalId: (codename) => `asset_${codename}`,
-    contentItemExternalId: (codename) => `content_item_${codename}`
+    contentItemExternalId: (codename) => `item_${codename}`
 };
