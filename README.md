@@ -45,6 +45,9 @@ kontent-ai-migration-toolkit migrate --help
 You may migrate content (items & asset) between Kontent.ai environments. For migrating _Data model / structure_ see
 [Data Ops](https://github.com/kontent-ai/data-ops) instead.
 
+> [!CAUTION]  
+> **We recommend migrating to test / dev environments first ** to ensure nothing unexpected happens..
+
 ## Configuration
 
 | Config                  | Value                                                                                                                                                   |
