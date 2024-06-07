@@ -1,95 +1,72 @@
-import { AssetsFormatConfig, ItemsFormatConfig, ZipContext, getZipService } from '../zip/index.js';
-import {
-    IMigrationAsset,
-    IMigrationItem,
-    Log,
-    getDefaultLogAsync,
-    getFlattenedContentTypesAsync
-} from '../core/index.js';
-import { IImportAdapter, IImportData } from '../import/index.js';
-import { getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
-import { getFileService } from '../file/index.js';
+import { Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
+import { IDefaultImportAdapterConfig, IImportAdapter, IImportData, getDefaultImportAdapter } from '../import/index.js';
+import { libMetadata } from '../metadata.js';
 
 export interface IImportConfig {
-    adapter: IImportAdapter;
-    items: IMigrationItem[];
-    assets: IMigrationAsset[];
-}
-
-export interface IImportFromFilesConfig {
-    adapter: IImportAdapter;
-    items: {
-        filename: string;
-        formatService: ItemsFormatConfig;
-    };
-    assets: {
-        filename: string;
-        formatService: AssetsFormatConfig;
-    };
     log?: Log;
-    zipContext?: ZipContext;
+    data: IImportData;
 }
 
-export async function importAsync(config: IImportConfig): Promise<void> {
-    await config.adapter.importAsync(config);
+export interface IDefaultImportConfig extends IImportConfig {
+    adapterConfig: Omit<IDefaultImportAdapterConfig, 'log'>;
 }
 
-export async function importFromFilesAsync(config: IImportFromFilesConfig): Promise<void> {
-    await config.adapter.importAsync(await getSourceDataAsync(config));
+export async function importAsync(config: IDefaultImportConfig): Promise<void>;
+export async function importAsync(adapter: IImportAdapter, config?: IImportConfig): Promise<void>;
+export async function importAsync(
+    inputAdapterOrDefaultConfig: IDefaultImportConfig | IImportAdapter,
+    inputConfig?: IImportConfig
+): Promise<void> {
+    const { adapter, config } = await getSetupAsync(inputAdapterOrDefaultConfig, inputConfig);
+
+    return await executeWithTrackingAsync({
+        event: {
+            tool: 'migrationToolkit',
+            package: {
+                name: libMetadata.name,
+                version: libMetadata.version
+            },
+            action: 'import',
+            relatedEnvironmentId: undefined,
+            details: {
+                adapter: adapter.name
+            }
+        },
+        func: async () => {
+            await adapter.importAsync(config.data);
+        }
+    });
 }
 
-async function getSourceDataAsync(config: IImportFromFilesConfig): Promise<IImportData> {
-    const log = config.log ?? (await getDefaultLogAsync());
+async function getSetupAsync<TConfig extends IImportConfig, TDefaultConfig extends IDefaultImportConfig & TConfig>(
+    inputAdapterOrDefaultConfig: TDefaultConfig | IImportAdapter,
+    inputConfig?: TConfig
+): Promise<{
+    adapter: IImportAdapter;
+    config: TConfig;
+    log: Log;
+}> {
+    let adapter: IImportAdapter;
+    let config: TConfig;
+    let log: Log;
 
-    if (config?.items?.filename?.toLowerCase()?.endsWith('.zip')) {
-        return await getImportDataFromZipAsync(config, log);
+    if ((inputAdapterOrDefaultConfig as IImportAdapter)?.name) {
+        adapter = inputAdapterOrDefaultConfig as IImportAdapter;
+        config = (inputConfig as TConfig) ?? {};
+        log = config.log ?? (await getDefaultLogAsync());
+    } else {
+        config = (inputAdapterOrDefaultConfig as unknown as TDefaultConfig) ?? {};
+        log = config.log ?? (await getDefaultLogAsync());
+
+        adapter = getDefaultImportAdapter({
+            ...(inputAdapterOrDefaultConfig as TDefaultConfig).adapterConfig,
+            log: log
+        });
     }
 
-    return await getImportDataFromNonZipFileAsync(config, log);
-}
-
-async function getImportDataFromZipAsync(config: IImportFromFilesConfig, log: Log): Promise<IImportData> {
-    const fileService = getFileService(log);
-    const zipService = getZipService(log, config.zipContext ?? 'node.js');
-
-    const importData = await zipService.parseZipAsync({
-        items: config.items
-            ? {
-                  file: await fileService.loadFileAsync(config.items.filename),
-                  formatService: getItemsFormatService(config.items.formatService)
-              }
-            : undefined,
-        assets: config.assets
-            ? {
-                  file: await fileService.loadFileAsync(config.assets.filename),
-                  formatService: getAssetsFormatService(config.assets.formatService)
-              }
-            : undefined,
-        types: await getFlattenedContentTypesAsync(config.adapter.client, log)
-    });
-
-    return importData;
-}
-
-async function getImportDataFromNonZipFileAsync(config: IImportFromFilesConfig, log: Log): Promise<IImportData> {
-    const fileService = getFileService(log);
-    const zipServiceService = getZipService(log, config.zipContext ?? 'node.js');
-
-    const importData = await zipServiceService.parseFileAsync({
-        items: config.items
-            ? {
-                  file: await fileService.loadFileAsync(config.items.filename),
-                  formatService: getItemsFormatService(config.items.formatService)
-              }
-            : undefined,
-        assets: config.assets
-            ? {
-                  file: await fileService.loadFileAsync(config.assets.filename),
-                  formatService: getAssetsFormatService(config.assets.formatService)
-              }
-            : undefined,
-        types: await getFlattenedContentTypesAsync(config.adapter.client, log)
-    });
-
-    return importData;
+    return {
+        adapter,
+        config,
+        log
+    };
 }

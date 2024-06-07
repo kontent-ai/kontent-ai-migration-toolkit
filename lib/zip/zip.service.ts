@@ -10,7 +10,7 @@ import {
     ZipContext
 } from './zip.models.js';
 import { ZipPackage } from './zip-package.class.js';
-import { IFlattenedContentType, IMigrationAsset, IMigrationItem, Log } from '../core/index.js';
+import { IMigrationAsset, IMigrationItem, Log } from '../core/index.js';
 import { IImportData } from '../import/import.models.js';
 
 export function getZipService(log: Log, zipContext: ZipContext): ZipService {
@@ -29,7 +29,6 @@ export class ZipService {
             file: Buffer;
             formatService: IAssetFormatService;
         };
-        types: IFlattenedContentType[];
     }): Promise<IImportData> {
         const result: IImportData = {
             items: [],
@@ -50,8 +49,7 @@ export class ZipService {
 
             result.items.push(
                 ...(await data.items.formatService.parseContentItemsAsync({
-                    zip: new ZipPackage(itemsZipFile, this.log, this.zipContext),
-                    types: data.types
+                    zip: new ZipPackage(itemsZipFile, this.log, this.zipContext)
                 }))
             );
         }
@@ -94,7 +92,6 @@ export class ZipService {
             file: Buffer;
             formatService: IAssetFormatService;
         };
-        types: IFlattenedContentType[];
     }): Promise<IImportData> {
         let parsedItems: IMigrationItem[] = [];
         let parsedAssets: IMigrationAsset[] = [];
@@ -107,8 +104,7 @@ export class ZipService {
 
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
             parsedItems = await data.items.formatService.parseContentItemsAsync({
-                zip: new ZipPackage(itemsZipFile, this.log, this.zipContext),
-                types: data.types
+                zip: new ZipPackage(itemsZipFile, this.log, this.zipContext)
             });
         }
 

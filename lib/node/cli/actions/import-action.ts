@@ -1,8 +1,6 @@
-import { confirmImportAsync, getDefaultLogAsync } from '../../../core/index.js';
-import { importFromFilesAsync } from '../../../toolkit/index.js';
+import { confirmImportAsync, getDefaultFilename, getDefaultLogAsync } from '../../../core/index.js';
+import { extractAsync, importAsync } from '../../../toolkit/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
-import { getDefaultExportFilename } from '../utils/cli.utils.js';
-import { getDefaultImportAdapter } from 'lib/import/index.js';
 
 export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     const log = await getDefaultLogAsync();
@@ -12,10 +10,9 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     const baseUrl = await cliArgs.getOptionalArgumentValueAsync('baseUrl');
     const force = await cliArgs.getBooleanArgumentValueAsync('force', false);
     const skipFailedItems = await cliArgs.getBooleanArgumentValueAsync('skipFailedItems', false);
-    const itemsFilename =
-        (await cliArgs.getOptionalArgumentValueAsync('itemsFilename')) ?? getDefaultExportFilename('items');
+    const itemsFilename = (await cliArgs.getOptionalArgumentValueAsync('itemsFilename')) ?? getDefaultFilename('items');
     const assetsFilename =
-        (await cliArgs.getOptionalArgumentValueAsync('assetsFilename')) ?? getDefaultExportFilename('assets');
+        (await cliArgs.getOptionalArgumentValueAsync('assetsFilename')) ?? getDefaultFilename('assets');
 
     await confirmImportAsync({
         force: force,
@@ -24,18 +21,25 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
         log: log
     });
 
-    await importFromFilesAsync({
-        items: {
-            filename: itemsFilename,
-            formatService: 'json'
-        },
-        assets: {
-            filename: assetsFilename,
-            formatService: 'json'
-        },
+    const importData = await extractAsync({
         log: log,
-        adapter: getDefaultImportAdapter({
-            log: log,
+        zipContext: 'node.js',
+        files: {
+            items: {
+                filename: itemsFilename,
+                formatService: 'json'
+            },
+            assets: {
+                filename: assetsFilename,
+                formatService: 'json'
+            }
+        }
+    });
+
+    await importAsync({
+        log: log,
+        data: importData,
+        adapterConfig: {
             skipFailedItems: skipFailedItems,
             baseUrl: baseUrl,
             environmentId: environmentId,
@@ -48,7 +52,7 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
                     return true;
                 }
             }
-        })
+        }
     });
 
     log.logger({ type: 'completed', message: `Import has been successful` });

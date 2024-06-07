@@ -9,6 +9,7 @@ import {
     uniqueStringFilter
 } from '../../core/index.js';
 import { IKontentAiPreparedExportItem } from '../../export/export.models.js';
+import { GetFlattenedElement } from '../../import/index.js';
 
 export function getItemsExtractionService(log: Log): ItemsExtractionService {
     return new ItemsExtractionService(log);
@@ -77,7 +78,10 @@ export class ItemsExtractionService {
         };
     }
 
-    extractReferencedItemsFromMigrationItems(items: IMigrationItem[]): IReferencedDataInMigrationItems {
+    extractReferencedItemsFromMigrationItems(
+        items: IMigrationItem[],
+        getElement: GetFlattenedElement
+    ): IReferencedDataInMigrationItems {
         const itemCodenames: string[] = [];
         const assetCodenames: string[] = [];
 
@@ -92,7 +96,9 @@ export class ItemsExtractionService {
             items: items,
             process: (item) => {
                 for (const element of item.elements) {
-                    if (element.type === 'rich_text') {
+                    const flattenedElement = getElement(item.system.type, element.codename);
+
+                    if (flattenedElement.type === 'rich_text') {
                         const richTextHtml = element.value?.toString();
 
                         itemCodenames.push(
@@ -102,9 +108,9 @@ export class ItemsExtractionService {
                             ]
                         );
                         assetCodenames.push(...richTextHelper.processRteAssetCodenames(richTextHtml ?? '').codenames);
-                    } else if (element.type === 'modular_content' || element.type === 'subpages') {
+                    } else if (flattenedElement.type === 'modular_content' || flattenedElement.type === 'subpages') {
                         itemCodenames.push(...parseAsArray(element.value));
-                    } else if (element.type === 'asset') {
+                    } else if (flattenedElement.type === 'asset') {
                         assetCodenames.push(...parseAsArray(element.value));
                     }
                 }

@@ -8,7 +8,8 @@ import {
     IItemStateInTargetEnvironmentByCodename,
     IReferencedDataInMigrationItems,
     ILanguageVariantStateInTargetEnvironmentByCodename,
-    IExternalIdGenerator
+    IExternalIdGenerator,
+    IFlattenedContentTypeElement
 } from '../core/index.js';
 import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 
@@ -25,6 +26,11 @@ export interface IImportAdapter {
     importAsync(data: IImportData): Promise<void>;
 }
 
+export type GetFlattenedElement = (
+    contentTypeCodename: string,
+    elementCodename: string
+) => IFlattenedContentTypeElement;
+
 export interface IImportContext {
     componentItems: IMigrationItem[];
     contentItems: IMigrationItem[];
@@ -36,6 +42,7 @@ export interface IImportContext {
         languageCodename: string
     ) => ILanguageVariantStateInTargetEnvironmentByCodename;
     getAssetStateInTargetEnvironment: (assetCodename: string) => IAssetStateInTargetEnvironmentByCodename;
+    getElement: GetFlattenedElement;
 }
 
 export type ImportTransformFunc = (data: {

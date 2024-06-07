@@ -1,30 +1,29 @@
-import { importAsync, importFromFilesAsync, getDefaultLogAsync, getDefaultImportAdapter } from '../lib/index.js';
+import { importAsync, getDefaultLogAsync, extractAsync } from '../lib/index.js';
 
 const log = await getDefaultLogAsync();
-const adapter = getDefaultImportAdapter({
-    environmentId: '<id>',
-    apiKey: '<mapiKey>',
-    skipFailedItems: false,
-    log: log
-});
 
-/* Import from previously exported files */
-await importFromFilesAsync({
-    adapter: adapter,
-    log: log,
-    items: {
-        filename: 'items-export.json', // or zip
-        formatService: 'json'
-    },
-    assets: {
-        filename: 'assets-export.zip', // always a zip
-        formatService: 'json'
+// get data from previously stored export (optional)
+const data = await extractAsync({
+    zipContext: 'node.js',
+    files: {
+        items: {
+            filename: 'items-export.zip',
+            formatService: 'json'
+        },
+        assets: {
+            filename: 'assets-export.zip',
+            formatService: 'json'
+        }
     }
 });
 
-/* Import migration items directly */
+// import data into your Kontent.ai environment
 await importAsync({
-    adapter: adapter,
-    assets: [], // array of `IMigrationAsset` objects
-    items: [] // array of `IMigrationItem` objects
+    log: log,
+    data: data,
+    adapterConfig: {
+        environmentId: '<id>',
+        apiKey: '<mapiKey>',
+        skipFailedItems: false
+    }
 });

@@ -25,9 +25,7 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
         const jsonItems: IJsonItem[] = JSON.parse(text);
 
         return jsonItems.map((m) =>
-            parseJsonItem(m, (typeCodenane, elementCodename) =>
-                super.getElement(data.types, typeCodenane, elementCodename)
-            )
+            parseJsonItem(m)
         );
     }
 }

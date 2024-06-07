@@ -15,7 +15,6 @@ export type MigrationElementType =
 
 export interface IMigrationElement {
     value: string | undefined | string[];
-    type: MigrationElementType;
     codename: string;
 }
 

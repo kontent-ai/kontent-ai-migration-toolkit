@@ -1,10 +1,12 @@
 import {
     IAssetStateInTargetEnvironmentByCodename,
     IExternalIdGenerator,
+    IFlattenedContentType,
     IItemStateInTargetEnvironmentByCodename,
     ILanguageVariantStateInTargetEnvironmentByCodename,
     IMigrationItem,
     Log,
+    getFlattenedContentTypesAsync,
     is404Error,
     processInChunksAsync,
     runMapiRequestAsync,
@@ -12,7 +14,7 @@ import {
 } from '../../../core/index.js';
 
 import { AssetModels, ContentItemModels, LanguageVariantModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IImportContext, IImportData } from '../../import.models.js';
+import { GetFlattenedElement, IImportContext, IImportData } from '../../import.models.js';
 import { ItemsExtractionService, getItemsExtractionService } from '../../../translation/index.js';
 
 interface ILanguageVariantWrapper {
@@ -38,7 +40,12 @@ export class ImportContextService {
     }
 
     async getImportContextAsync(importData: IImportData): Promise<IImportContext> {
-        const referencedData = this.itemsExtractionService.extractReferencedItemsFromMigrationItems(importData.items);
+        const getElement: GetFlattenedElement = await this.getElementFuncAsync();
+
+        const referencedData = this.itemsExtractionService.extractReferencedItemsFromMigrationItems(
+            importData.items,
+            getElement
+        );
 
         // only items with workflow / step are standalone content items
         const contentItemsExcludingComponents = importData.items.filter(
@@ -115,10 +122,43 @@ export class ImportContextService {
                 }
 
                 return assetState;
-            }
+            },
+            getElement: getElement
         };
 
         return importContext;
+    }
+
+    private async getElementFuncAsync(): Promise<GetFlattenedElement> {
+        // get & flatten content type and its elements
+        const flattenedTypes: IFlattenedContentType[] = await getFlattenedContentTypesAsync(
+            this.config.managementClient,
+            this.config.log
+        );
+
+        const getFlattenedElement: GetFlattenedElement = (contentTypeCodename, elementCodename) => {
+            const contentType = flattenedTypes.find(
+                (m) => m.contentTypeCodename.toLowerCase() === contentTypeCodename.toLowerCase()
+            );
+
+            if (!contentType) {
+                throw Error(`Content type with codename '${contentType}' was not found.`);
+            }
+
+            const element = contentType.elements.find(
+                (m) => m.codename.toLowerCase() === elementCodename.toLowerCase()
+            );
+
+            if (!element) {
+                throw Error(
+                    `Element type with codename '${elementCodename}' was not found in content type '${contentTypeCodename}'.`
+                );
+            }
+
+            return element;
+        };
+
+        return getFlattenedElement;
     }
 
     private async getLanguageVariantsAsync(migrationItems: IMigrationItem[]): Promise<ILanguageVariantWrapper[]> {
@@ -279,7 +319,7 @@ export class ImportContextService {
         for (const codename of itemCodenames) {
             const item = items.find((m) => m.codename === codename);
             const externalId = this.config.externalIdGenerator.contentItemExternalId(codename);
-            
+
             itemStates.push({
                 itemCodename: codename,
                 item: item,

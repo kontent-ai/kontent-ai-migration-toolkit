@@ -10,7 +10,6 @@ import {
     defaultRetryStrategy,
     defaultHttpService,
     IMigrationItem,
-    executeWithTrackingAsync,
     runMapiRequestAsync,
     defaultExternalIdGenerator
 } from '../../core/index.js';
@@ -25,7 +24,6 @@ import {
     getImportLanguageVariantstemService
 } from '../helper-services/import-language-variant.service.js';
 import chalk from 'chalk';
-import { libMetadata } from '../../metadata.js';
 import { ImportContextService, getImportContextService } from './context/import-context.service.js';
 
 export function getDefaultImportAdapter(config: IDefaultImportAdapterConfig): IImportAdapter {
@@ -72,54 +70,36 @@ class DefaultImportAdapter implements IImportAdapter {
     }
 
     async importAsync(sourceData: IImportData): Promise<void> {
-        await executeWithTrackingAsync({
-            event: {
-                tool: 'migrationToolkit',
-                package: {
-                    name: libMetadata.name,
-                    version: libMetadata.version
-                },
-                action: 'import',
-                relatedEnvironmentId: this.config.environmentId,
-                details: {
-                    skipFailedItems: this.config.skipFailedItems,
-                    itemsCount: sourceData.items.length,
-                    assetsCount: sourceData.assets.length
-                }
-            },
-            func: async () => {
-                const dataToImport = this.filterDataToImport(sourceData);
-                const importContext = await this.importContextService.getImportContextAsync(dataToImport);
+        const dataToImport = this.filterDataToImport(sourceData);
+        const importContext = await this.importContextService.getImportContextAsync(dataToImport);
 
-                // import order matters
-                // #1 Assets
-                if (dataToImport.assets.length) {
-                    await this.importAssetsService.importAssetsAsync({
-                        assets: dataToImport.assets,
-                        importContext: importContext
-                    });
-                } else {
-                    this.config.log.logger({
-                        type: 'info',
-                        message: `There are no assets to import`
-                    });
-                }
+        // import order matters
+        // #1 Assets
+        if (dataToImport.assets.length) {
+            await this.importAssetsService.importAssetsAsync({
+                assets: dataToImport.assets,
+                importContext: importContext
+            });
+        } else {
+            this.config.log.logger({
+                type: 'info',
+                message: `There are no assets to import`
+            });
+        }
 
-                // #2 Content items
-                if (dataToImport.items.length) {
-                    await this.importMigrationItemsAsync(dataToImport.items, importContext);
-                } else {
-                    this.config.log.logger({
-                        type: 'info',
-                        message: `There are no content items to import`
-                    });
-                }
+        // #2 Content items
+        if (dataToImport.items.length) {
+            await this.importMigrationItemsAsync(dataToImport.items, importContext);
+        } else {
+            this.config.log.logger({
+                type: 'info',
+                message: `There are no content items to import`
+            });
+        }
 
-                this.config.log.logger({
-                    type: 'info',
-                    message: `Finished import`
-                });
-            }
+        this.config.log.logger({
+            type: 'info',
+            message: `Finished import`
         });
     }
 

@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { migrateAsync, confirmMigrateAsync, getDefaultLogAsync } from '../lib/index.js';
+import { migrateAsync, confirmMigrateAsync, getDefaultLogAsync, handleError } from '../lib/index.js';
 import { getEnvironmentRequiredValue } from './utils/environment.utils.js';
 
 const run = async () => {
@@ -46,4 +46,6 @@ const run = async () => {
     });
 };
 
-run();
+run().catch((error) => {
+    handleError(error);
+});

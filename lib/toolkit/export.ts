@@ -1,28 +1,27 @@
 import { libMetadata } from '../metadata.js';
 import { Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
-import { IExportAdapter, IExportAdapterResult } from '../export/index.js';
-import { getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
-import { AssetsFormatConfig, ItemsFormatConfig, ZipContext, getZipService } from '../zip/index.js';
-import { getFileService } from '../file/index.js';
+import {
+    IDefaultExportAdapterConfig,
+    IExportAdapter,
+    IExportAdapterResult,
+    getDefaultExportAdapter
+} from '../export/index.js';
 
 export interface IExportConfig {
     log?: Log;
-    zipContext?: ZipContext;
-    adapter: IExportAdapter;
-    items: {
-        filename: string;
-        formatService: ItemsFormatConfig;
-    };
-    assets: {
-        filename: string;
-        formatService: AssetsFormatConfig;
-    };
 }
 
-export async function exportAsync(config: IExportConfig): Promise<IExportAdapterResult> {
-    const log = config.log ?? (await getDefaultLogAsync());
-    const fileService = getFileService(log);
-    const zipService = getZipService(log, config.zipContext ?? 'node.js');
+export interface IDefaultExportConfig extends IExportConfig {
+    adapterConfig: Omit<IDefaultExportAdapterConfig, 'log'>;
+}
+
+export async function exportAsync(config: IDefaultExportConfig): Promise<IExportAdapterResult>;
+export async function exportAsync(adapter: IExportAdapter, config?: IExportConfig): Promise<IExportAdapterResult>;
+export async function exportAsync(
+    inputAdapterOrDefaultConfig: IDefaultExportConfig | IExportAdapter,
+    inputConfig?: IExportConfig
+): Promise<IExportAdapterResult> {
+    const { adapter } = await getSetupAsync(inputAdapterOrDefaultConfig, inputConfig);
 
     return await executeWithTrackingAsync({
         event: {
@@ -34,27 +33,44 @@ export async function exportAsync(config: IExportConfig): Promise<IExportAdapter
             action: 'export',
             relatedEnvironmentId: undefined,
             details: {
-                adapter: config.adapter.name
+                adapter: adapter.name
             }
         },
         func: async () => {
-            const data = await config.adapter.exportAsync();
-
-            const itemsZipFile = await zipService.createItemsZipAsync(data, {
-                itemFormatService: getItemsFormatService(config.items.formatService)
-            });
-
-            await fileService.writeFileAsync(config.items.filename, itemsZipFile);
-
-            if (config.assets) {
-                const assetsZipFile = await zipService.createAssetsZipAsync(data, {
-                    assetFormatService: getAssetsFormatService(config.assets.formatService)
-                });
-
-                await fileService.writeFileAsync(config.assets.filename, assetsZipFile);
-            }
-
-            return data;
+            return await adapter.exportAsync();
         }
     });
+}
+
+async function getSetupAsync<TConfig extends IExportConfig, TDefaultConfig extends IDefaultExportConfig & TConfig>(
+    inputAdapterOrDefaultConfig: TDefaultConfig | IExportAdapter,
+    inputConfig?: TConfig
+): Promise<{
+    adapter: IExportAdapter;
+    config: TConfig;
+    log: Log;
+}> {
+    let adapter: IExportAdapter;
+    let config: TConfig;
+    let log: Log;
+
+    if ((inputAdapterOrDefaultConfig as IExportAdapter)?.name) {
+        adapter = inputAdapterOrDefaultConfig as IExportAdapter;
+        config = (inputConfig as TConfig) ?? {};
+        log = config.log ?? (await getDefaultLogAsync());
+    } else {
+        config = (inputAdapterOrDefaultConfig as unknown as TDefaultConfig) ?? {};
+        log = config.log ?? (await getDefaultLogAsync());
+
+        adapter = getDefaultExportAdapter({
+            ...(inputAdapterOrDefaultConfig as TDefaultConfig).adapterConfig,
+            log: log
+        });
+    }
+
+    return {
+        adapter,
+        config,
+        log
+    };
 }

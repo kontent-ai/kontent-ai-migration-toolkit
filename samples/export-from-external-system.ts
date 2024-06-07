@@ -1,7 +1,7 @@
-import { IMigrationAsset, IMigrationItem, getDefaultLogAsync, IExportAdapter, exportAsync } from '../lib/index.js';
+import { IMigrationAsset, IMigrationItem, IExportAdapter, exportAsync, storeAsync } from '../lib/index.js';
 
 /* Typically you query your external system to create the migration items & assets */
-const exportAdapter: IExportAdapter = {
+const adapter: IExportAdapter = {
     name: 'customExportAdapter',
     exportAsync: async () => {
         const migrationItems: IMigrationItem[] = [
@@ -21,13 +21,11 @@ const exportAdapter: IExportAdapter = {
                         // the codename of the element must match codename of the element in your target K.ai environment
                         // In this example it is expected that the target environment contains content type with codename 'article' that contains an element with codename 'title' that is of 'text' type
                         codename: 'title',
-                        type: 'text',
                         value: 'My article'
                     },
                     {
                         // the codename of the element must match codename of the element in your target K.ai environment
                         codename: 'summary',
-                        type: 'rich_text',
                         value: '<p>My article summary</p>'
                     }
                 ]
@@ -71,19 +69,20 @@ const exportAdapter: IExportAdapter = {
     }
 };
 
-/*
-This will create items.json & assets.zip files within current folder
-Once exported, you can use import CLI (or importToolkit in code) to import data to a specified Kontent.ai environment
-*/
-await exportAsync({
-    items: {
-        filename: 'items.json',
-        formatService: 'json'
-    },
-    assets: {
-        filename: 'assets.zip',
-        formatService: 'json'
-    },
-    log: await getDefaultLogAsync(),
-    adapter: exportAdapter
+// get data in proper format
+const exportData = await exportAsync(adapter);
+
+// stores data on FS for later use
+await storeAsync({
+    data: exportData,
+    files: {
+        items: {
+            filename: 'items-export.zip',
+            formatService: 'json'
+        },
+        assets: {
+            filename: 'assets-export.zip',
+            formatService: 'json'
+        }
+    }
 });

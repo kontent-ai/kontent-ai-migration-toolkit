@@ -1,15 +1,12 @@
-import { IFlattenedContentType, IMigrationAsset, IMigrationItem } from '../core/index.js';
+import { IMigrationAsset, IMigrationItem } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
 /**
  * Browser is currently not generally upported as we depend on few node.js specific APIs
  */
 export type ZipContext = 'node.js' | 'browser';
-
 export type FileBinaryData = Blob | Buffer;
-
 export type ProcessingFormat = 'json';
-
 export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export type ItemsTransformData = {
@@ -19,7 +16,6 @@ export type ItemsTransformData = {
 
 export type ItemsParseData = {
     readonly zip: ZipPackage;
-    readonly types: IFlattenedContentType[];
 };
 
 export type ItemsFormatConfig = IItemFormatService | 'json';

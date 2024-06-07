@@ -1,8 +1,9 @@
 import { libMetadata } from '../metadata.js';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { IExternalIdGenerator, Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
-import { IKontentAiExportRequestItem, getDefaultExportAdapter } from '../export/index.js';
-import { getDefaultImportAdapter } from '../import/index.js';
+import { IKontentAiExportRequestItem } from '../export/index.js';
+import { exportAsync } from './export.js';
+import { importAsync } from './import.js';
 
 export interface IMigrationEnv {
     id: string;
@@ -29,24 +30,6 @@ export interface IMigrationConfig {
 export async function migrateAsync(config: IMigrationConfig): Promise<void> {
     const log = config.log ?? (await getDefaultLogAsync());
 
-    const exportAdapter = getDefaultExportAdapter({
-        environmentId: config.sourceEnvironment.id,
-        apiKey: config.sourceEnvironment.apiKey,
-        exportItems: config.sourceEnvironment.items,
-        log: log,
-        retryStrategy: config.retryStrategy,
-        skipFailedItems: config.sourceEnvironment.skipFailedItems ?? false
-    });
-
-    const importAdapter = getDefaultImportAdapter({
-        log: log,
-        environmentId: config.targetEnvironment.id,
-        apiKey: config.targetEnvironment.apiKey,
-        skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
-        retryStrategy: config.retryStrategy,
-        externalIdGenerator: config.externalIdGenerator
-    });
-
     return await executeWithTrackingAsync({
         event: {
             tool: 'migrationToolkit',
@@ -61,8 +44,28 @@ export async function migrateAsync(config: IMigrationConfig): Promise<void> {
             }
         },
         func: async () => {
-            const exportData = await exportAdapter.exportAsync();
-            await importAdapter.importAsync(exportData);
+            const data = await exportAsync({
+                log: log,
+                adapterConfig: {
+                    environmentId: config.sourceEnvironment.id,
+                    apiKey: config.sourceEnvironment.apiKey,
+                    exportItems: config.sourceEnvironment.items,
+                    retryStrategy: config.retryStrategy,
+                    skipFailedItems: config.sourceEnvironment.skipFailedItems ?? false
+                }
+            });
+
+            await importAsync({
+                log: log,
+                data: data,
+                adapterConfig: {
+                    environmentId: config.targetEnvironment.id,
+                    apiKey: config.targetEnvironment.apiKey,
+                    skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
+                    retryStrategy: config.retryStrategy,
+                    externalIdGenerator: config.externalIdGenerator
+                }
+            });
         }
     });
 }

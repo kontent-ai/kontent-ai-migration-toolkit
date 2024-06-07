@@ -1,6 +1,5 @@
 import * as dotenv from 'dotenv';
-import { confirmImportAsync, getDefaultImportAdapter, getDefaultLogAsync, importFromFilesAsync } from '../lib/index.js';
-import { getDefaultExportFilename } from 'lib/node/cli/utils/cli.utils.js';
+import { confirmImportAsync, extractAsync, getDefaultLogAsync, handleError, importAsync } from '../lib/index.js';
 import { getEnvironmentRequiredValue } from './utils/environment.utils.js';
 
 const run = async () => {
@@ -19,24 +18,19 @@ const run = async () => {
         log: log
     });
 
-    await importFromFilesAsync({
+    const data = await extractAsync({});
+
+    await importAsync({
         log: log,
-        adapter: getDefaultImportAdapter({
+        data: data,
+        adapterConfig: {
             environmentId: environmentId,
             apiKey: apiKey,
-            skipFailedItems: false,
-            log: log
-        }),
-
-        items: {
-            filename: getDefaultExportFilename('items'),
-            formatService: 'json'
-        },
-        assets: {
-            filename: getDefaultExportFilename('assets'),
-            formatService: 'json'
+            skipFailedItems: false
         }
     });
 };
 
-run();
+run().catch((error) => {
+    handleError(error);
+});

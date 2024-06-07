@@ -1,27 +1,32 @@
-import { getDefaultLogAsync, getDefaultExportAdapter, exportAsync } from '../lib/index.js';
+import { getDefaultLogAsync, exportAsync, storeAsync } from '../lib/index.js';
 
 const log = await getDefaultLogAsync();
 
-await exportAsync({
-    adapter: getDefaultExportAdapter({
+const exportData = await exportAsync({
+    log: log,
+    adapterConfig: {
         environmentId: '<id>',
         apiKey: '<apiKey>',
-        log: log,
         exportItems: [
             {
                 itemCodename: '<itemCodename>',
                 languageCodename: '<languageCodename>'
             }
         ]
-    }),
-    log: log,
-    items: {
-        filename: 'items-export.zip',
-        formatService: 'json' // or different one, see readme.md
-    },
-    // assets are optional
-    assets: {
-        filename: 'assets-export.zip',
-        formatService: 'json' // or different one, see readme.md
+    }
+});
+
+// stores data on FS for later use
+await storeAsync({
+    data: exportData,
+    files: {
+        items: {
+            filename: 'items-export.zip',
+            formatService: 'json'
+        },
+        assets: {
+            filename: 'assets-export.zip',
+            formatService: 'json'
+        }
     }
 });

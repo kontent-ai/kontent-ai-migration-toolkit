@@ -33,7 +33,7 @@ export function getDefaultExportAdapter(config: IDefaultExportAdapterConfig): IE
     return new DefaultExportAdapter(config);
 }
 
-class DefaultExportAdapter implements IExportAdapter {
+export class DefaultExportAdapter implements IExportAdapter {
     public readonly name: string = 'Kontent.ai export adapter';
 
     private readonly managementClient: ManagementClient;
@@ -117,7 +117,6 @@ class DefaultExportAdapter implements IExportAdapter {
 
             migrationElements.push({
                 codename: typeElement.codename,
-                type: typeElement.type,
                 value: this.getValueToStoreFromElement({
                     context: context,
                     exportItem: exportItem,

@@ -59,11 +59,12 @@ export interface IKontentAiExportRequestItem {
 }
 
 export interface IDefaultExportAdapterConfig {
-    log: Log;
     environmentId: string;
     apiKey: string;
-    baseUrl?: string;
     exportItems: IKontentAiExportRequestItem[];
+    log: Log;
+
+    baseUrl?: string;
     skipFailedItems?: boolean;
     retryStrategy?: IRetryStrategyOptions;
 }

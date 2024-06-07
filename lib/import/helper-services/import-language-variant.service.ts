@@ -140,7 +140,12 @@ export class ImportLanguageVariantServices {
 
         for (const element of data.migrationItem.elements) {
             mappedElements.push(
-                await this.getElementContractAsync(data.importContentItems, element, data.importContext)
+                await this.getElementContractAsync(
+                    data.migrationItem,
+                    element,
+                    data.importContentItems,
+                    data.importContext
+                )
             );
         }
 
@@ -292,11 +297,14 @@ export class ImportLanguageVariantServices {
     }
 
     private async getElementContractAsync(
-        sourceItems: IMigrationItem[],
+        migrationItem: IMigrationItem,
         element: IMigrationElement,
+        sourceItems: IMigrationItem[],
         importContext: IImportContext
     ): Promise<ElementContracts.IContentItemElementContract> {
-        const importContract = await importTransforms[element.type]({
+        const flattenedElement = importContext.getElement(migrationItem.system.type, element.codename);
+
+        const importContract = await importTransforms[flattenedElement.type]({
             elementCodename: element.codename,
             importContext: importContext,
             sourceItems: sourceItems,
