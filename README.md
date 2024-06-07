@@ -9,8 +9,7 @@ environments.
 > which handles creation / updates of content items, language variants, moving items through workflow, publishing,
 > archiving, downloading binary data, uploading assets, `id` to `codename` translation and more.
 
-This library can only be used as a library both in `node.js` & `browser` or as a `CLI` utility. Use in Browsers is not
-supported.
+This library can only be used as a library both in `node.js` & `browser` or as a `CLI` utility.
 
 # Getting started
 
