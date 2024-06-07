@@ -14,7 +14,7 @@ export class ImportAssetsService {
     constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
 
     async importAssetsAsync(data: { assets: IMigrationAsset[]; importContext: IImportContext }): Promise<void> {
-        this.log.logger({
+        this.log.default({
             type: 'info',
             message: `Categorizing '${chalk.yellow(data.assets.length.toString())}' assets`
         });
@@ -27,7 +27,7 @@ export class ImportAssetsService {
         const skippedAssetsCount = data.assets.length - assetsToUpload.length;
 
         if (skippedAssetsCount) {
-            this.log.logger({
+            this.log.default({
                 type: 'skip',
                 message: `Skipping upload for '${chalk.yellow(
                     skippedAssetsCount.toString()
@@ -35,7 +35,7 @@ export class ImportAssetsService {
             });
         }
 
-        this.log.logger({
+        this.log.default({
             type: 'upload',
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
         });
@@ -50,7 +50,7 @@ export class ImportAssetsService {
                     title: input.title
                 };
             },
-            processAsync: async (asset) => {
+            processAsync: async (asset, spinner) => {
                 const uploadedBinaryFile = await runMapiRequestAsync({
                     log: this.log,
                     func: async () =>
@@ -66,7 +66,7 @@ export class ImportAssetsService {
                         ).data,
                     action: 'upload',
                     type: 'binaryFile',
-                    useSpinner: true,
+                    spinner: spinner,
                     itemName: `${asset.title ?? asset.filename}`
                 });
 
@@ -111,7 +111,7 @@ export class ImportAssetsService {
                         ).data,
                     action: 'create',
                     type: 'asset',
-                    useSpinner: true,
+                    spinner: spinner,
                     itemName: `${asset.title ?? asset.filename}`
                 });
             }

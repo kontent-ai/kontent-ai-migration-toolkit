@@ -4,7 +4,7 @@ const rateExceededErrorCode: number = 10000;
 const notFoundErrorCode: number = 10000;
 
 export const defaultHttpService: HttpService = new HttpService({
-    logErrorsToConsole: false,
+    logErrorsToConsole: false
 });
 
 export const defaultRetryStrategy: IRetryStrategyOptions = {
@@ -21,7 +21,7 @@ export const defaultRetryStrategy: IRetryStrategyOptions = {
             // do not retry errors indicating resource does not exist
             return false;
         }
-        
+
         if (errorCode >= 0) {
             // otherwise if error code is set, do not retry the request
             return false;

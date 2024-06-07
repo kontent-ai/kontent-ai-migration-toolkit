@@ -22,8 +22,8 @@ import {
     IFlattenedContentTypeElement,
     extractErrorData,
     processInChunksAsync,
-    logSpinner,
-    getBinaryDataFromUrlAsync
+    getBinaryDataFromUrlAsync,
+    logSpinnerOrDefaultAsync
 } from '../../core/index.js';
 import { ExportContextService, getExportContextService } from './context/export-context.service.js';
 import { exportTransforms } from '../../translation/index.js';
@@ -50,7 +50,7 @@ export class DefaultExportAdapter implements IExportAdapter {
     }
 
     async exportAsync(): Promise<IExportAdapterResult> {
-        this.config.log.logger({
+        this.config.log.default({
             type: 'info',
             message: `Preparing to export data`
         });
@@ -84,7 +84,7 @@ export class DefaultExportAdapter implements IExportAdapter {
                 });
             } catch (error) {
                 if (this.config.skipFailedItems) {
-                    this.config.log.logger({
+                    this.config.log.default({
                         type: 'warning',
                         message: `Failed to export item '${chalk.yellow(
                             preparedItem.requestItem.itemCodename
@@ -174,14 +174,14 @@ export class DefaultExportAdapter implements IExportAdapter {
         assets: AssetModels.Asset[],
         context: IExportContext
     ): Promise<IMigrationAsset[]> {
-        this.config.log.logger({
+        this.config.log.default({
             type: 'info',
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });
 
         const exportedAssets: IMigrationAsset[] = await processInChunksAsync<AssetModels.Asset, IMigrationAsset>({
             log: this.config.log,
-            chunkSize: 5,
+            chunkSize: 1,
             itemInfo: (input) => {
                 return {
                     title: input.codename,
@@ -189,17 +189,18 @@ export class DefaultExportAdapter implements IExportAdapter {
                 };
             },
             items: assets,
-            processAsync: async (asset) => {
+            processAsync: async (asset, spinner) => {
                 const assetCollection: CollectionModels.Collection | undefined =
                     context.environmentData.collections.find((m) => m.id === asset.collection?.reference?.id);
 
-                logSpinner(
-                    {
+                await logSpinnerOrDefaultAsync({
+                    log: this.config.log,
+                    logData: {
                         type: 'download',
                         message: `${asset.url}`
                     },
-                    this.config.log
-                );
+                    spinner: spinner
+                });
 
                 const binaryData = await getBinaryDataFromUrlAsync(asset.url);
 

@@ -36,7 +36,7 @@ export class ImportContextService {
     private readonly itemsExtractionService: ItemsExtractionService;
 
     constructor(private readonly config: IImportContextConfig) {
-        this.itemsExtractionService = getItemsExtractionService(config.log);
+        this.itemsExtractionService = getItemsExtractionService();
     }
 
     async getImportContextAsync(importData: IImportData): Promise<IImportContext> {
@@ -174,7 +174,7 @@ export class ImportContextService {
                     title: `${item.system.codename} (${item.system.language})`
                 };
             },
-            processAsync: async (item) => {
+            processAsync: async (item, spinner) => {
                 try {
                     const variant = await runMapiRequestAsync({
                         log: this.config.log,
@@ -188,7 +188,7 @@ export class ImportContextService {
                             ).data,
                         action: 'view',
                         type: 'languageVariant',
-                        useSpinner: true,
+                        spinner: spinner,
                         itemName: `codename -> ${item.system.codename} (${item.system.language})`
                     });
 
@@ -220,7 +220,7 @@ export class ImportContextService {
                     title: codename
                 };
             },
-            processAsync: async (codename) => {
+            processAsync: async (codename, spinner) => {
                 try {
                     const contentItem = await runMapiRequestAsync({
                         log: this.config.log,
@@ -233,7 +233,7 @@ export class ImportContextService {
                             ).data,
                         action: 'view',
                         type: 'contentItem',
-                        useSpinner: true,
+                        spinner: spinner,
                         itemName: `codename -> ${codename}`
                     });
 
@@ -262,7 +262,7 @@ export class ImportContextService {
                     title: codename
                 };
             },
-            processAsync: async (codename) => {
+            processAsync: async (codename, spinner) => {
                 try {
                     const asset = await runMapiRequestAsync({
                         log: this.config.log,
@@ -272,7 +272,7 @@ export class ImportContextService {
                             ).data,
                         action: 'view',
                         type: 'asset',
-                        useSpinner: true,
+                        spinner: spinner,
                         itemName: `codename -> ${codename}`
                     });
 

@@ -13,7 +13,8 @@ import {
     IMigrationItem,
     IMigrationElement,
     Log,
-    runMapiRequestAsync
+    runMapiRequestAsync,
+    ILogSpinner
 } from '../../core/index.js';
 import { ImportWorkflowService, getImportWorkflowService } from './import-workflow.service.js';
 import chalk from 'chalk';
@@ -42,7 +43,7 @@ export class ImportLanguageVariantServices {
         preparedContentItems: ContentItemModels.ContentItem[];
         importContext: IImportContext;
     }): Promise<void> {
-        this.config.log.logger({
+        this.config.log.default({
             type: 'info',
             message: `Importing '${chalk.yellow(data.importContentItems.length.toString())}' language variants`
         });
@@ -58,7 +59,7 @@ export class ImportLanguageVariantServices {
                     partA: input.system.language
                 };
             },
-            processAsync: async (importContentItem) => {
+            processAsync: async (importContentItem, spinner) => {
                 try {
                     const preparedContentItem = data.preparedContentItems.find(
                         (m) => m.codename === importContentItem.system.codename
@@ -73,6 +74,7 @@ export class ImportLanguageVariantServices {
                     }
 
                     await this.importLanguageVariantAsync({
+                        spinner: spinner,
                         migrationItem: importContentItem,
                         preparedContentItem,
                         managementClient: this.config.managementClient,
@@ -82,7 +84,7 @@ export class ImportLanguageVariantServices {
                     });
                 } catch (error) {
                     if (this.config.skipFailedItems) {
-                        this.config.log.logger({
+                        this.config.log.default({
                             type: 'error',
                             message: `Failed to import language variant '${chalk.red(
                                 importContentItem.system.name
@@ -99,6 +101,7 @@ export class ImportLanguageVariantServices {
     }
 
     private async importLanguageVariantAsync(data: {
+        spinner: ILogSpinner | undefined;
         migrationItem: IMigrationItem;
         preparedContentItem: ContentItemModels.ContentItem;
         managementClient: ManagementClient;
@@ -107,6 +110,7 @@ export class ImportLanguageVariantServices {
         importContext: IImportContext;
     }): Promise<void> {
         await this.prepareLanguageVariantForImportAsync({
+            spinner: data.spinner,
             migrationItem: data.migrationItem,
             workflows: data.workflows,
             importContext: data.importContext,
@@ -175,12 +179,13 @@ export class ImportLanguageVariantServices {
                 ).data,
             action: 'upsert',
             type: 'languageVariant',
-            useSpinner: true,
+            spinner: data.spinner,
             itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language})`
         });
 
         // set workflow of language variant
         await this.importWorkflowService.setWorkflowOfLanguageVariantAsync(
+            data.spinner,
             data.managementClient,
             workflowCodename,
             workflowStepCodename,
@@ -190,6 +195,7 @@ export class ImportLanguageVariantServices {
     }
 
     private async prepareLanguageVariantForImportAsync(data: {
+        spinner: ILogSpinner | undefined;
         migrationItem: IMigrationItem;
         managementClient: ManagementClient;
         workflows: WorkflowModels.Workflow[];
@@ -242,7 +248,7 @@ export class ImportLanguageVariantServices {
                     ).data,
                 action: 'createNewVersion',
                 type: 'languageVariant',
-                useSpinner: true,
+                spinner: data.spinner,
                 itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language})`
             });
         } else if (this.isLanguageVariantArchived(languageVariant, data.workflows)) {
@@ -263,7 +269,7 @@ export class ImportLanguageVariantServices {
                         ).data,
                     action: 'changeWorkflowStep',
                     type: 'languageVariant',
-                    useSpinner: true,
+                    spinner: data.spinner,
                     itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language}) -> ${firstWorkflowStep.codename}`
                 });
             }

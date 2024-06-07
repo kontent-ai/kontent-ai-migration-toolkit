@@ -36,13 +36,13 @@ export class ExportContextService {
     private readonly itemsExtractionService: ItemsExtractionService;
 
     constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {
-        this.itemsExtractionService = getItemsExtractionService(log);
+        this.itemsExtractionService = getItemsExtractionService();
     }
 
     async getExportContextAsync(data: { exportItems: IKontentAiExportRequestItem[] }): Promise<IExportContext> {
         const environmentData = await this.getEnvironmentDataAsync();
 
-        this.log.logger({
+        this.log.default({
             type: 'info',
             message: `Preparing '${chalk.yellow(data.exportItems.length.toString())}' items for export`
         });
@@ -51,7 +51,7 @@ export class ExportContextService {
             exportItems: data.exportItems
         });
 
-        this.log.logger({
+        this.log.default({
             type: 'info',
             message: `Extracting referenced items from content`
         });
@@ -66,7 +66,7 @@ export class ExportContextService {
 
         const assetIdsToCheckInTargetEnv: string[] = [...referencedData.assetIds];
 
-        this.log.logger({
+        this.log.default({
             type: 'info',
             message: `Fetching referenced items`
         });
@@ -74,7 +74,7 @@ export class ExportContextService {
             itemIdsToCheckInTargetEnv
         );
 
-        this.log.logger({
+        this.log.default({
             type: 'info',
             message: `Fetching referenced assets`
         });
@@ -124,9 +124,10 @@ export class ExportContextService {
                 };
             },
             items: data.exportItems,
-            processAsync: async (exportItem) => {
+            processAsync: async (exportItem, spinner) => {
                 const contentItem = await runMapiRequestAsync({
                     log: this.log,
+                    spinner: spinner,
                     func: async () =>
                         (
                             await this.managementClient
@@ -136,12 +137,12 @@ export class ExportContextService {
                         ).data,
                     action: 'view',
                     type: 'contentItem',
-                    useSpinner: true,
                     itemName: `codename -> ${exportItem.itemCodename} (${exportItem.languageCodename})`
                 });
 
                 const languageVariant = await runMapiRequestAsync({
                     log: this.log,
+                    spinner: spinner,
                     func: async () =>
                         (
                             await this.managementClient
@@ -152,7 +153,6 @@ export class ExportContextService {
                         ).data,
                     action: 'view',
                     type: 'languageVariant',
-                    useSpinner: true,
                     itemName: `codename -> ${exportItem.itemCodename} (${exportItem.languageCodename})`
                 });
 
@@ -264,8 +264,7 @@ export class ExportContextService {
             log: this.log,
             func: async () => (await this.managementClient.listLanguages().toAllPromise()).data.items,
             action: 'list',
-            type: 'language',
-            useSpinner: false
+            type: 'language'
         });
     }
 
@@ -274,8 +273,7 @@ export class ExportContextService {
             log: this.log,
             func: async () => (await this.managementClient.listCollections().toPromise()).data.collections,
             action: 'list',
-            type: 'collection',
-            useSpinner: false
+            type: 'collection'
         });
     }
 
@@ -284,8 +282,7 @@ export class ExportContextService {
             log: this.log,
             func: async () => (await this.managementClient.listWorkflows().toPromise()).data,
             action: 'list',
-            type: 'workflow',
-            useSpinner: false
+            type: 'workflow'
         });
     }
 
@@ -294,8 +291,7 @@ export class ExportContextService {
             log: this.log,
             func: async () => (await this.managementClient.listTaxonomies().toAllPromise()).data.items,
             action: 'list',
-            type: 'taxonomy',
-            useSpinner: false
+            type: 'taxonomy'
         });
     }
 
@@ -312,14 +308,14 @@ export class ExportContextService {
                     title: id
                 };
             },
-            processAsync: async (id) => {
+            processAsync: async (id, spinner) => {
                 try {
                     const contentItem = await runMapiRequestAsync({
+                        spinner: spinner,
                         log: this.log,
                         func: async () => (await this.managementClient.viewContentItem().byItemId(id).toPromise()).data,
                         action: 'view',
                         type: 'contentItem',
-                        useSpinner: true,
                         itemName: `id -> ${id}`
                     });
 
@@ -348,14 +344,14 @@ export class ExportContextService {
                     title: id
                 };
             },
-            processAsync: async (id) => {
+            processAsync: async (id, spinner) => {
                 try {
                     const asset = await runMapiRequestAsync({
                         log: this.log,
+                        spinner: spinner,
                         func: async () => (await this.managementClient.viewAsset().byAssetId(id).toPromise()).data,
                         action: 'view',
                         type: 'asset',
-                        useSpinner: true,
                         itemName: `id -> ${id}`
                     });
 

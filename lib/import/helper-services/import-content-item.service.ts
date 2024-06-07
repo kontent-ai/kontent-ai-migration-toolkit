@@ -1,5 +1,13 @@
 import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { extractErrorData, logErrorAndExit, IMigrationItem, Log, runMapiRequestAsync } from '../../core/index.js';
+import {
+    extractErrorData,
+    logErrorAndExit,
+    IMigrationItem,
+    Log,
+    runMapiRequestAsync,
+    ILogSpinner,
+    processInChunksAsync
+} from '../../core/index.js';
 import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
 
@@ -19,51 +27,72 @@ export class ImportContentItemHelper {
         importContext: IImportContext;
     }): Promise<ContentItemModels.ContentItem[]> {
         const preparedItems: ContentItemModels.ContentItem[] = [];
-
-        this.config.log.logger({
-            type: 'info',
-            message: `Importing '${chalk.yellow(data.importContext.contentItems.length.toString())}' content items`
+        const preparedItemsWithoutComponents = data.importContext.contentItems.filter((m) => {
+            if (!m.system.workflow || !m.system.workflow_step) {
+                // items without workflow or workflow step are components and they should not be imported individually
+                return false;
+            }
+            return true;
         });
 
-        for (const parsedItem of data.importContext.contentItems) {
-            if (!parsedItem.system.workflow || !parsedItem.system.workflow_step) {
-                // items without workflow or workflow step are components and they should not be imported individually
-                continue;
-            }
+        this.config.log.default({
+            type: 'info',
+            message: `Importing '${chalk.yellow(preparedItemsWithoutComponents.length.toString())}' content items'`
+        });
 
-            try {
-                const contentItem = await this.importContentItemAsync({
-                    managementClient: this.config.managementClient,
-                    collections: data.collections,
-                    migrationItem: parsedItem,
-                    importContext: data.importContext
-                });
+        await processInChunksAsync<IMigrationItem, void>({
+            log: this.config.log,
+            chunkSize: 1,
+            items: preparedItemsWithoutComponents,
+            itemInfo: (item) => {
+                return {
+                    itemType: 'contentItem',
+                    title: `${item.system.codename} -> ${item.system.language}`
+                };
+            },
+            processAsync: async (item, spinner) => {
+                if (!item.system.workflow || !item.system.workflow_step) {
+                    // items without workflow or workflow step are components and they should not be imported individually
+                    return;
+                }
 
-                preparedItems.push(contentItem);
-            } catch (error) {
-                if (this.config.skipFailedItems) {
-                    this.config.log.logger({
-                        type: 'error',
-                        message: `Failed to import content item '${parsedItem.system.name}'. ${
-                            extractErrorData(error).message
-                        }`
+                try {
+                    const contentItem = await this.importContentItemAsync({
+                        spinner: spinner,
+                        managementClient: this.config.managementClient,
+                        collections: data.collections,
+                        migrationItem: item,
+                        importContext: data.importContext
                     });
-                } else {
-                    throw error;
+
+                    preparedItems.push(contentItem);
+                } catch (error) {
+                    if (this.config.skipFailedItems) {
+                        this.config.log.default({
+                            type: 'error',
+                            message: `Failed to import content item '${item.system.name}'. ${
+                                extractErrorData(error).message
+                            }`
+                        });
+                    } else {
+                        throw error;
+                    }
                 }
             }
-        }
+        });
 
         return preparedItems;
     }
 
     private async importContentItemAsync(data: {
+        spinner: ILogSpinner | undefined;
         migrationItem: IMigrationItem;
         managementClient: ManagementClient;
         collections: CollectionModels.Collection[];
         importContext: IImportContext;
     }): Promise<ContentItemModels.ContentItem> {
         const preparedContentItemResult = await this.prepareContentItemAsync(
+            data.spinner,
             data.managementClient,
             data.migrationItem,
             data.importContext
@@ -95,7 +124,7 @@ export class ImportContentItemHelper {
                         ).data,
                     action: 'upsert',
                     type: 'contentItem',
-                    useSpinner: true,
+                    spinner: data.spinner,
                     itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language})`
                 });
             }
@@ -123,6 +152,7 @@ export class ImportContentItemHelper {
     }
 
     private async prepareContentItemAsync(
+        spinner: ILogSpinner | undefined,
         managementClient: ManagementClient,
         migrationContentItem: IMigrationItem,
         context: IImportContext
@@ -157,7 +187,7 @@ export class ImportContentItemHelper {
                 ).data,
             action: 'create',
             type: 'contentItem',
-            useSpinner: true,
+            spinner: spinner,
             itemName: `${migrationContentItem.system.codename} (${migrationContentItem.system.language})`
         });
 

@@ -54,5 +54,5 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
         zipContext: 'node.js'
     });
 
-    log.logger({ type: 'completed', message: `Export has been successful` });
+    log.default({ type: 'completed', message: `Export has been successful` });
 }

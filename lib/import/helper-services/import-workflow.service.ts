@@ -1,5 +1,5 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { IMigrationItem, Log, logSpinner, runMapiRequestAsync } from '../../core/index.js';
+import { ILogSpinner, IMigrationItem, Log, runMapiRequestAsync } from '../../core/index.js';
 import chalk from 'chalk';
 
 interface IWorkflowStep {
@@ -85,6 +85,7 @@ export class ImportWorkflowService {
     }
 
     async setWorkflowOfLanguageVariantAsync(
+        spinner: ILogSpinner | undefined,
         managementClient: ManagementClient,
         workflowCodename: string,
         workflowStepCodename: string,
@@ -111,17 +112,14 @@ export class ImportWorkflowService {
                     ).data,
                 action: 'publish',
                 type: 'languageVariant',
-                useSpinner: true,
+                spinner: spinner,
                 itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
             });
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
-            logSpinner(
-                {
-                    type: 'skip',
-                    message: `Skipping scheduled workflow step for item '${chalk.yellow(migrationItem.system.name)}'`
-                },
-                this.log
-            );
+            spinner?.logAsync({
+                type: 'skip',
+                message: `Skipping scheduled workflow step for item '${chalk.yellow(migrationItem.system.name)}'`
+            });
         } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
             // unpublish the language variant first if published
             // there is no way to determine if language variant is published via MAPI
@@ -140,18 +138,15 @@ export class ImportWorkflowService {
                         ).data,
                     action: 'unpublish',
                     type: 'languageVariant',
-                    useSpinner: true,
+                    spinner: spinner,
                     itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
                 });
             } catch (error) {
                 if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                    logSpinner(
-                        {
-                            type: 'unpublish',
-                            message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
-                        },
-                        this.log
-                    );
+                    spinner?.logAsync({
+                        type: 'unpublish',
+                        message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
+                    });
                 } else {
                     throw error;
                 }
@@ -177,7 +172,7 @@ export class ImportWorkflowService {
                     ).data,
                 action: 'archive',
                 type: 'languageVariant',
-                useSpinner: true,
+                spinner: spinner,
                 itemName: `${migrationItem.system.codename} (${migrationItem.system.language}) -> ${workflow.archivedStep.codename}`
             });
         } else {
@@ -204,7 +199,7 @@ export class ImportWorkflowService {
                         ).data,
                     action: 'changeWorkflowStep',
                     type: 'languageVariant',
-                    useSpinner: true,
+                    spinner: spinner,
                     itemName: `${migrationItem.system.codename} (${migrationItem.system.language}) -> ${step.codename}`
                 });
             }

@@ -20,16 +20,14 @@ export async function getFlattenedContentTypesAsync(
         log: log,
         func: async () => (await managementClient.listContentTypes().toAllPromise()).data.items,
         action: 'list',
-        type: 'contentType',
-        useSpinner: false
+        type: 'contentType'
     });
 
     const contentTypeSnippets = await runMapiRequestAsync({
         log: log,
         func: async () => (await managementClient.listContentTypeSnippets().toAllPromise()).data.items,
         action: 'list',
-        type: 'contentTypeSnippet',
-        useSpinner: false
+        type: 'contentTypeSnippet'
     });
 
     return [

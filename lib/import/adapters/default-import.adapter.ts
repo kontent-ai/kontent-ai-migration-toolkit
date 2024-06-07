@@ -81,7 +81,7 @@ class DefaultImportAdapter implements IImportAdapter {
                 importContext: importContext
             });
         } else {
-            this.config.log.logger({
+            this.config.log.default({
                 type: 'info',
                 message: `There are no assets to import`
             });
@@ -91,13 +91,13 @@ class DefaultImportAdapter implements IImportAdapter {
         if (dataToImport.items.length) {
             await this.importMigrationItemsAsync(dataToImport.items, importContext);
         } else {
-            this.config.log.logger({
+            this.config.log.default({
                 type: 'info',
                 message: `There are no content items to import`
             });
         }
 
-        this.config.log.logger({
+        this.config.log.default({
             type: 'info',
             message: `Finished import`
         });
@@ -139,14 +139,14 @@ class DefaultImportAdapter implements IImportAdapter {
         }
 
         if (removedAssets > 0) {
-            this.config.log.logger({
+            this.config.log.default({
                 type: 'info',
                 message: `Removed '${chalk.yellow(removedAssets.toString())}' assets from import`
             });
         }
 
         if (removedContentItems) {
-            this.config.log.logger({
+            this.config.log.default({
                 type: 'info',
                 message: `Removed '${chalk.yellow(removedContentItems.toString())}' content items from import`
             });
@@ -184,7 +184,6 @@ class DefaultImportAdapter implements IImportAdapter {
             func: async () => (await this.client.listWorkflows().toPromise()).data,
             action: 'list',
             type: 'workflow',
-            useSpinner: false
         });
     }
 
@@ -194,7 +193,6 @@ class DefaultImportAdapter implements IImportAdapter {
             func: async () => (await this.client.listCollections().toPromise()).data.collections,
             action: 'list',
             type: 'collection',
-            useSpinner: false
         });
     }
 }

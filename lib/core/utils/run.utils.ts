@@ -1,10 +1,10 @@
 import chalk from 'chalk';
-import { IItemInfo, MapiAction, MapiType } from '../models/core.models.js';
-import { ILogData, Log, logSpinner, startSpinner, stopSpinner } from './log.utils.js';
+import { MapiAction, MapiType } from '../models/core.models.js';
+import { ILogData, ILogSpinner, Log, logSpinnerOrDefaultAsync } from './log.utils.js';
 
 export async function runMapiRequestAsync<TResult>(data: {
     log: Log;
-    useSpinner: boolean;
+    spinner?: ILogSpinner;
     action: MapiAction;
     type: MapiType;
     func: () => Promise<TResult>;
@@ -29,11 +29,11 @@ export async function runMapiRequestAsync<TResult>(data: {
         };
     }
 
-    if (data.useSpinner) {
-        logSpinner(logData, data.log);
-    } else {
-        data.log.logger(logData);
-    }
+    await logSpinnerOrDefaultAsync({
+        spinner: data.spinner,
+        log: data.log,
+        logData: logData
+    });
 
     const result = await data.func();
 
@@ -43,51 +43,12 @@ export async function runMapiRequestAsync<TResult>(data: {
             type: data.action
         };
 
-        if (data.useSpinner) {
-            logSpinner(logData, data.log);
-        } else {
-            data.log.logger(logData);
-        }
+        await logSpinnerOrDefaultAsync({
+            spinner: data.spinner,
+            log: data.log,
+            logData: logData
+        });
     }
 
     return result;
-}
-
-export function runWithSpinner<TInputItem, TOutputItem>(data: {
-    log: Log;
-    items: TInputItem[];
-    process: (item: TInputItem) => TOutputItem;
-    itemInfo?: (item: TInputItem) => IItemInfo;
-}): TOutputItem[] {
-    const outputItems: TOutputItem[] = [];
-    let processingIndex: number = 0;
-
-    startSpinner(data.log);
-
-    try {
-        for (const item of data.items) {
-            processingIndex++;
-            if (data.itemInfo) {
-                const itemInfo = data.itemInfo(item);
-
-                logSpinner(
-                    {
-                        message: itemInfo.title,
-                        type: 'process',
-                        count: {
-                            index: processingIndex,
-                            total: data.items.length
-                        }
-                    },
-                    data.log
-                );
-            }
-
-            outputItems.push(data.process(item));
-        }
-
-        return outputItems;
-    } finally {
-        stopSpinner(data.log);
-    }
 }
