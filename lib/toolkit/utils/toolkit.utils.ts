@@ -1,4 +1,4 @@
-import { getDefaultFilename } from 'lib/core/index.js';
+import { getDefaultFilename } from '../../core/index.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../file/index.js';
 import { AssetsFormatConfig, IAssetFormatService, IItemFormatService, ItemsFormatConfig } from '../../zip/index.js';
 import { IFilesConfig } from '../models/toolkit.models.js';
