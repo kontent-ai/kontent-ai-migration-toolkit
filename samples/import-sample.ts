@@ -8,11 +8,11 @@ const data = await extractAsync({
     files: {
         items: {
             filename: 'items-export.zip',
-            formatService: 'json'
+            format: 'json'
         },
         assets: {
             filename: 'assets-export.zip',
-            formatService: 'json'
+            format: 'json'
         }
     }
 });

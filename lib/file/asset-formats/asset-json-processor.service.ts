@@ -8,7 +8,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
     public readonly name: string = 'json';
     private readonly assetsFilename: string = 'assets.json';
 
-    async transformAssetsAsync(data: AssetsTransformData): Promise<FileBinaryData> {
+    async transformAsync(data: AssetsTransformData): Promise<FileBinaryData> {
         const assetRecords: AssetRecord[] = [];
 
         for (const exportAsset of data.assets) {
@@ -29,7 +29,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
 
         return await data.zip.generateZipAsync();
     }
-    async parseAssetsAsync(data: AssetsParseData): Promise<IMigrationAsset[]> {
+    async parseAsync(data: AssetsParseData): Promise<IMigrationAsset[]> {
         const text = await data.zip.getFileContentAsync(this.assetsFilename);
 
         if (!text) {

@@ -1,12 +1,9 @@
 import { IMigrationAsset, IMigrationItem } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
-/**
- * Browser is currently not generally upported as we depend on few node.js specific APIs
- */
 export type ZipContext = 'node.js' | 'browser';
 export type FileBinaryData = Blob | Buffer;
-export type ProcessingFormat = 'json';
+export type DefaultFormats = 'json';
 export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export type ItemsTransformData = {
@@ -18,12 +15,13 @@ export type ItemsParseData = {
     readonly zip: ZipPackage;
 };
 
-export type ItemsFormatConfig = IItemFormatService | 'json';
+export type ItemsFormat = IItemFormatService | DefaultFormats;
+export type AssetsFormat = IAssetFormatService | DefaultFormats;
 
 export interface IItemFormatService {
     name: string;
-    transformContentItemsAsync(data: ItemsTransformData): Promise<FileBinaryData>;
-    parseContentItemsAsync(data: ItemsParseData): Promise<IMigrationItem[]>;
+    transformAsync(data: ItemsTransformData): Promise<FileBinaryData>;
+    parseAsync(data: ItemsParseData): Promise<IMigrationItem[]>;
 }
 
 export type AssetsTransformData = {
@@ -35,12 +33,10 @@ export type AssetsParseData = {
     readonly zip: ZipPackage;
 };
 
-export type AssetsFormatConfig = IAssetFormatService | 'json';
-
 export interface IAssetFormatService {
     name: string;
-    transformAssetsAsync(data: AssetsTransformData): Promise<FileBinaryData>;
-    parseAssetsAsync(data: AssetsParseData): Promise<IMigrationAsset[]>;
+    transformAsync(data: AssetsTransformData): Promise<FileBinaryData>;
+    parseAsync(data: AssetsParseData): Promise<IMigrationAsset[]>;
 }
 
 export interface IExtractedBinaryFileData {

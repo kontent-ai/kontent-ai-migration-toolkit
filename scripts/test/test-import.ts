@@ -1,10 +1,10 @@
 import * as dotenv from 'dotenv';
-import { confirmImportAsync, extractAsync, getDefaultLogAsync, handleError, importAsync } from '../lib/index.js';
-import { getEnvironmentRequiredValue } from './utils/environment.utils.js';
+import { confirmImportAsync, extractAsync, getDefaultLogAsync, handleError, importAsync } from '../../lib/index.js';
+import { getEnvironmentRequiredValue } from './utils/test.utils.js';
 
 const run = async () => {
     dotenv.config({
-        path: '../.env.local'
+        path: '../../.env.local'
     });
 
     const environmentId = getEnvironmentRequiredValue('targetEnvironmentId');
@@ -18,7 +18,12 @@ const run = async () => {
         log: log
     });
 
-    const data = await extractAsync({});
+    const data = await extractAsync({
+        files: {
+            assets: { filename: 'assets.zip', format: 'json' },
+            items: { filename: 'items.zip', format: 'json' }
+        }
+    });
 
     await importAsync({
         log: log,

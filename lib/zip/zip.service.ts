@@ -48,7 +48,7 @@ export class ZipService {
             });
 
             result.items.push(
-                ...(await data.items.formatService.parseContentItemsAsync({
+                ...(await data.items.formatService.parseAsync({
                     zip: new ZipPackage(itemsZipFile, this.log, this.zipContext)
                 }))
             );
@@ -67,7 +67,7 @@ export class ZipService {
             });
 
             result.assets.push(
-                ...(await data.assets.formatService.parseAssetsAsync({
+                ...(await data.assets.formatService.parseAsync({
                     zip: new ZipPackage(assetsZipFile, this.log, this.zipContext)
                 }))
             );
@@ -103,7 +103,7 @@ export class ZipService {
             });
 
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
-            parsedItems = await data.items.formatService.parseContentItemsAsync({
+            parsedItems = await data.items.formatService.parseAsync({
                 zip: new ZipPackage(itemsZipFile, this.log, this.zipContext)
             });
         }
@@ -115,7 +115,7 @@ export class ZipService {
             });
 
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
-            parsedAssets = await data.assets.formatService.parseAssetsAsync({
+            parsedAssets = await data.assets.formatService.parseAsync({
                 zip: new ZipPackage(assetsZipFile, this.log, this.zipContext)
             });
         }
@@ -147,7 +147,7 @@ export class ZipService {
             message: `Creating items zip`
         });
 
-        const zip = await config.itemFormatService.transformContentItemsAsync({
+        const zip = await config.itemFormatService.transformAsync({
             items: exportData.items,
             zip: new ZipPackage(new JSZip(), this.log, this.zipContext)
         });
@@ -167,7 +167,7 @@ export class ZipService {
             message: `Creating assets zip`
         });
 
-        const zip = await config.assetFormatService.transformAssetsAsync({
+        const zip = await config.assetFormatService.transformAsync({
             assets: exportData.assets,
             zip: new ZipPackage(new JSZip(), this.log, this.zipContext)
         });

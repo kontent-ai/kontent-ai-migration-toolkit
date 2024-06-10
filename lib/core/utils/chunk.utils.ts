@@ -23,7 +23,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
         for (const chunk of chunks) {
             await Promise.all(
                 chunk.items.map((item) => {
-                    spinner?.addCount();
+                    spinner?.nextItem();
                     let logData: ILogData | undefined;
 
                     if (data.itemInfo) {

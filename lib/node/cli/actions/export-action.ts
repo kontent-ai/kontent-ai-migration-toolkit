@@ -43,11 +43,11 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
         files: {
             items: {
                 filename: itemsFilename,
-                formatService: 'json'
+                format: 'json'
             },
             assets: {
                 filename: assetsFilename,
-                formatService: 'json'
+                format: 'json'
             }
         },
         log: log,

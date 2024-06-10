@@ -15,7 +15,7 @@ export class DefaultSpinner implements ILogSpinner {
 
     constructor(private readonly totalCount: number) {}
 
-    addCount(): void {
+    nextItem(): void {
         this.index += 1;
     }
 

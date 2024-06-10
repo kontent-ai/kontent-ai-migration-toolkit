@@ -1,12 +1,12 @@
-import { AssetsFormatConfig, ItemsFormatConfig } from '../../zip/index.js';
+import { AssetsFormat, ItemsFormat } from '../../zip/index.js';
 
 export interface IFilesConfig {
     items: {
         filename: string;
-        formatService: ItemsFormatConfig;
+        format: ItemsFormat;
     };
     assets: {
         filename: string;
-        formatService: AssetsFormatConfig;
+        format: AssetsFormat;
     };
 }

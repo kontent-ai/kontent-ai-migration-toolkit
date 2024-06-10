@@ -1,10 +1,10 @@
 import * as dotenv from 'dotenv';
-import { migrateAsync, confirmMigrateAsync, getDefaultLogAsync, handleError } from '../lib/index.js';
-import { getEnvironmentRequiredValue } from './utils/environment.utils.js';
+import { migrateAsync, confirmMigrateAsync, getDefaultLogAsync, handleError } from '../../lib/index.js';
+import { getEnvironmentRequiredValue } from './utils/test.utils.js';
 
 const run = async () => {
     dotenv.config({
-        path: '../.env.local'
+        path: '../../.env.local'
     });
 
     const sourceEnvironmentId = getEnvironmentRequiredValue('sourceEnvironmentId');

@@ -3,6 +3,6 @@ import { IAssetFormatService, AssetsTransformData, FileBinaryData, AssetsParseDa
 
 export abstract class BaseAssetProcessorService implements IAssetFormatService {
     abstract readonly name: string;
-    abstract transformAssetsAsync(data: AssetsTransformData): Promise<FileBinaryData>;
-    abstract parseAssetsAsync(data: AssetsParseData): Promise<IMigrationAsset[]>;
+    abstract transformAsync(data: AssetsTransformData): Promise<FileBinaryData>;
+    abstract parseAsync(data: AssetsParseData): Promise<IMigrationAsset[]>;
 }

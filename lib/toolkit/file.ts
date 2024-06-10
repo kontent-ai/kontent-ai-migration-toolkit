@@ -39,11 +39,11 @@ export async function storeAsync(config: IStoreConfig): Promise<void> {
         },
         func: async () => {
             const itemsZipFile = await zipService.createItemsZipAsync(config.data, {
-                itemFormatService: getItemsFormatService(files.items.formatService)
+                itemFormatService: getItemsFormatService(files.items.format)
             });
 
             const assetsZipFile = await zipService.createAssetsZipAsync(config.data, {
-                assetFormatService: getAssetsFormatService(files.assets.formatService)
+                assetFormatService: getAssetsFormatService(files.assets.format)
             });
 
             await fileService.writeFileAsync(files.items.filename, itemsZipFile);
@@ -103,13 +103,13 @@ async function getImportDataFromZipAsync(data: {
         items: data.files.items
             ? {
                   file: await data.fileService.loadFileAsync(data.files.items.filename),
-                  formatService: getItemsFormatService(data.files.items.formatService)
+                  formatService: getItemsFormatService(data.files.items.format)
               }
             : undefined,
         assets: data.files.assets
             ? {
                   file: await data.fileService.loadFileAsync(data.files.assets.filename),
-                  formatService: getAssetsFormatService(data.files.assets.formatService)
+                  formatService: getAssetsFormatService(data.files.assets.format)
               }
             : undefined
     });
@@ -127,13 +127,13 @@ async function getImportDataFromNonZipFileAsync(data: {
         items: data.files.items
             ? {
                   file: await data.fileService.loadFileAsync(data.files.items.filename),
-                  formatService: getItemsFormatService(data.files.items.formatService)
+                  formatService: getItemsFormatService(data.files.items.format)
               }
             : undefined,
         assets: data.files.assets
             ? {
                   file: await data.fileService.loadFileAsync(data.files.assets.filename),
-                  formatService: getAssetsFormatService(data.files.assets.formatService)
+                  formatService: getAssetsFormatService(data.files.assets.format)
               }
             : undefined
     });

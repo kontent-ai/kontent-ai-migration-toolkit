@@ -7,7 +7,7 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
     private readonly itemsFileName: string = 'items.json';
 
     public readonly name: string = 'json';
-    async transformContentItemsAsync(data: ItemsTransformData): Promise<FileBinaryData> {
+    async transformAsync(data: ItemsTransformData): Promise<FileBinaryData> {
         const jsonItems: IJsonItem[] = data.items.map((m) => mapToJsonItem(m));
 
         data.zip.addFile(this.itemsFileName, jsonItems.length ? JSON.stringify(jsonItems) : '[]');
@@ -15,7 +15,7 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
         return await data.zip.generateZipAsync();
     }
 
-    async parseContentItemsAsync(data: ItemsParseData): Promise<IMigrationItem[]> {
+    async parseAsync(data: ItemsParseData): Promise<IMigrationItem[]> {
         const text = await data.zip.getFileContentAsync(this.itemsFileName);
 
         if (!text) {

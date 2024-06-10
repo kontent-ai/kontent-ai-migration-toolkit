@@ -9,8 +9,8 @@ import chalk from 'chalk';
 
 export abstract class BaseItemProcessorService implements IItemFormatService {
     abstract readonly name: string;
-    abstract transformContentItemsAsync(data: ItemsTransformData): Promise<FileBinaryData>;
-    abstract parseContentItemsAsync(data: ItemsParseData): Promise<IMigrationItem[]>;
+    abstract transformAsync(data: ItemsTransformData): Promise<FileBinaryData>;
+    abstract parseAsync(data: ItemsParseData): Promise<IMigrationItem[]>;
 
     protected getElement(
         types: IFlattenedContentType[],

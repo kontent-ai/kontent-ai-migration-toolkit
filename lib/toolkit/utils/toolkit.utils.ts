@@ -1,20 +1,20 @@
 import { getDefaultFilename } from '../../core/index.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../file/index.js';
-import { AssetsFormatConfig, IAssetFormatService, IItemFormatService, ItemsFormatConfig } from '../../zip/index.js';
+import { AssetsFormat, IAssetFormatService, IItemFormatService, ItemsFormat } from '../../zip/index.js';
 import { IFilesConfig } from '../models/toolkit.models.js';
 
 export const defaultFilesConfig: IFilesConfig = {
     items: {
         filename: getDefaultFilename('items'),
-        formatService: 'json'
+        format: 'json'
     },
     assets: {
         filename: getDefaultFilename('assets'),
-        formatService: 'json'
+        format: 'json'
     }
 };
 
-export function getItemsFormatService(type: ItemsFormatConfig): IItemFormatService {
+export function getItemsFormatService(type: ItemsFormat): IItemFormatService {
     if (type === 'json') {
         return new ItemJsonProcessorService();
     }
@@ -22,7 +22,7 @@ export function getItemsFormatService(type: ItemsFormatConfig): IItemFormatServi
     return type;
 }
 
-export function getAssetsFormatService(type: AssetsFormatConfig): IAssetFormatService {
+export function getAssetsFormatService(type: AssetsFormat): IAssetFormatService {
     if (type === 'json') {
         return new AssetJsonProcessorService();
     }

@@ -18,7 +18,7 @@ export type Log = {
 };
 
 export interface ILogSpinner {
-    addCount(): void;
+    nextItem(): void;
     startAsync(): Promise<void>;
     stopAsync(): Promise<void>;
     logAsync(data: ILogData): Promise<void>;

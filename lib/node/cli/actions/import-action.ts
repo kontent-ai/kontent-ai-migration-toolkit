@@ -27,11 +27,11 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
         files: {
             items: {
                 filename: itemsFilename,
-                formatService: 'json'
+                format: 'json'
             },
             assets: {
                 filename: assetsFilename,
-                formatService: 'json'
+                format: 'json'
             }
         }
     });
