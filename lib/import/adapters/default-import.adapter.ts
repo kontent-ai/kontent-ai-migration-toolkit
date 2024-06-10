@@ -47,19 +47,19 @@ class DefaultImportAdapter implements IImportAdapter {
             httpService: defaultHttpService,
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy
         });
-        this.importAssetsService = getImportAssetsService(config.log, this.client);
+        this.importAssetsService = getImportAssetsService(config.logger, this.client);
         this.importContentItemService = getImportContentItemService({
             managementClient: this.client,
-            log: config.log,
+            logger: config.logger,
             skipFailedItems: config.skipFailedItems
         });
         this.importLanguageVariantService = getImportLanguageVariantstemService({
             managementClient: this.client,
-            log: config.log,
+            logger: config.logger,
             skipFailedItems: config.skipFailedItems
         });
         this.importContextService = getImportContextService({
-            log: config.log,
+            logger: config.logger,
             externalIdGenerator: this.config.externalIdGenerator ?? defaultExternalIdGenerator,
             managementClient: this.client
         });
@@ -81,7 +81,7 @@ class DefaultImportAdapter implements IImportAdapter {
                 importContext: importContext
             });
         } else {
-            this.config.log.default({
+            this.config.logger.log({
                 type: 'info',
                 message: `There are no assets to import`
             });
@@ -91,13 +91,13 @@ class DefaultImportAdapter implements IImportAdapter {
         if (dataToImport.items.length) {
             await this.importMigrationItemsAsync(dataToImport.items, importContext);
         } else {
-            this.config.log.default({
+            this.config.logger.log({
                 type: 'info',
                 message: `There are no content items to import`
             });
         }
 
-        this.config.log.default({
+        this.config.logger.log({
             type: 'info',
             message: `Finished import`
         });
@@ -139,14 +139,14 @@ class DefaultImportAdapter implements IImportAdapter {
         }
 
         if (removedAssets > 0) {
-            this.config.log.default({
+            this.config.logger.log({
                 type: 'info',
                 message: `Removed '${chalk.yellow(removedAssets.toString())}' assets from import`
             });
         }
 
         if (removedContentItems) {
-            this.config.log.default({
+            this.config.logger.log({
                 type: 'info',
                 message: `Removed '${chalk.yellow(removedContentItems.toString())}' content items from import`
             });
@@ -180,7 +180,7 @@ class DefaultImportAdapter implements IImportAdapter {
 
     private async getWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
         return await runMapiRequestAsync({
-            log: this.config.log,
+            logger: this.config.logger,
             func: async () => (await this.client.listWorkflows().toPromise()).data,
             action: 'list',
             type: 'workflow',
@@ -189,7 +189,7 @@ class DefaultImportAdapter implements IImportAdapter {
 
     private async getCollectionsAsync(): Promise<CollectionModels.Collection[]> {
         return await runMapiRequestAsync({
-            log: this.config.log,
+            logger: this.config.logger,
             func: async () => (await this.client.listCollections().toPromise()).data.collections,
             action: 'list',
             type: 'collection',

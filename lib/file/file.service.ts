@@ -1,18 +1,18 @@
 import { promises } from 'fs';
 import chalk from 'chalk';
-import { Log } from '../core/index.js';
+import { ILogger } from '../core/index.js';
 
-export function getFileService(log: Log): FileService {
-    return new FileService(log);
+export function getFileService(logger: ILogger): FileService {
+    return new FileService(logger);
 }
 
 export class FileService {
-    constructor(private readonly log: Log) {}
+    constructor(private readonly logger: ILogger) {}
 
     async loadFileAsync(filename: string): Promise<Buffer> {
         const filePath = this.getFilePath(filename);
 
-        this.log.default({
+        this.logger.log({
             type: 'readFs',
             message: `Reading file '${chalk.yellow(filePath)}'`
         });
@@ -25,7 +25,7 @@ export class FileService {
     async writeFileAsync(fileNameWithoutExtension: string, content: any): Promise<void> {
         const filePath = this.getFilePath(fileNameWithoutExtension);
 
-        this.log.default({
+        this.logger.log({
             type: 'writeFs',
             message: `Storing file '${chalk.yellow(filePath)}'`
         });

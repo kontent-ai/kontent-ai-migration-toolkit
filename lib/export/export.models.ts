@@ -3,7 +3,7 @@ import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import {
     IMigrationItem,
     IMigrationAsset,
-    Log,
+    ILogger,
     IFlattenedContentType,
     IAssetStateInSourceEnvironmentById,
     IFlattenedContentTypeElement,
@@ -62,7 +62,7 @@ export interface IDefaultExportAdapterConfig {
     environmentId: string;
     apiKey: string;
     exportItems: IKontentAiExportRequestItem[];
-    log: Log;
+    logger: ILogger;
 
     baseUrl?: string;
     skipFailedItems?: boolean;

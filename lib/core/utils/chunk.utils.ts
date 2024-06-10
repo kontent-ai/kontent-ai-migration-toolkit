@@ -1,5 +1,5 @@
 import { IItemInfo } from '../models/core.models.js';
-import { ILogData, ILogSpinner, Log } from './log.utils.js';
+import { ILogger, LogSpinnerData, getCountPrefix } from './log.utils.js';
 
 export interface IChunk<T> {
     items: T[];
@@ -7,42 +7,37 @@ export interface IChunk<T> {
 }
 
 export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
-    log: Log;
+    logger: ILogger;
     items: TInputItem[];
     chunkSize: number;
-    processAsync: (item: TInputItem, spinner?: ILogSpinner) => Promise<TOutputItem>;
-    itemInfo?: (item: TInputItem) => IItemInfo;
+    processAsync: (item: TInputItem, logSpinner: LogSpinnerData) => Promise<TOutputItem>;
+    itemInfo: (item: TInputItem) => IItemInfo;
 }): Promise<TOutputItem[]> {
+    if (!data.items.length) {
+        return [];
+    }
+
     const chunks = splitArrayIntoChunks<TInputItem>(data.items, data.chunkSize);
     const outputItems: TOutputItem[] = [];
 
-    const spinner = await data.log.spinner?.(data.items.length);
-    await spinner?.startAsync();
+    return await data.logger.logWithSpinnerAsync(async (logSpinner) => {
+        let index: number = 1;
 
-    try {
         for (const chunk of chunks) {
             await Promise.all(
                 chunk.items.map((item) => {
-                    spinner?.nextItem();
-                    let logData: ILogData | undefined;
+                    const itemInfo = data.itemInfo(item);
+                    const countPrefix = getCountPrefix(index, data.items.length);
 
-                    if (data.itemInfo) {
-                        const itemInfo = data.itemInfo(item);
-                        logData = {
-                            message: itemInfo.title,
-                            type: itemInfo.itemType
-                        };
-                    }
+                    logSpinner({
+                        prefix: countPrefix,
+                        message: itemInfo.title,
+                        type: itemInfo.itemType
+                    });
 
-                    return data.processAsync(item, spinner).then((output) => {
-                        if (logData) {
-                            if (spinner) {
-                                spinner.logAsync(logData);
-                            } else {
-                                data.log.default(logData);
-                            }
-                        }
+                    index++;
 
+                    return data.processAsync(item, logSpinner).then((output) => {
                         outputItems.push(output);
                     });
                 })
@@ -50,9 +45,7 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
         }
 
         return outputItems;
-    } finally {
-        await spinner?.stopAsync();
-    }
+    });
 }
 
 function splitArrayIntoChunks<T>(items: T[], chunkSize: number): IChunk<T>[] {

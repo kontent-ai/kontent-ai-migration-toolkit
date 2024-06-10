@@ -1,5 +1,5 @@
 import { libMetadata } from '../metadata.js';
-import { Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
+import {  ILogger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
 import {
     IDefaultExportAdapterConfig,
     IExportAdapter,
@@ -8,11 +8,11 @@ import {
 } from '../export/index.js';
 
 export interface IExportConfig {
-    log?: Log;
+    logger?: ILogger;
 }
 
 export interface IDefaultExportConfig extends IExportConfig {
-    adapterConfig: Omit<IDefaultExportAdapterConfig, 'log'>;
+    adapterConfig: Omit<IDefaultExportAdapterConfig, 'logger'>;
 }
 
 export async function exportAsync(config: IDefaultExportConfig): Promise<IExportAdapterResult>;
@@ -48,29 +48,29 @@ async function getSetupAsync<TConfig extends IExportConfig, TDefaultConfig exten
 ): Promise<{
     adapter: IExportAdapter;
     config: TConfig;
-    log: Log;
+    logger: ILogger;
 }> {
     let adapter: IExportAdapter;
     let config: TConfig;
-    let log: Log;
+    let logger: ILogger;
 
     if ((inputAdapterOrDefaultConfig as IExportAdapter)?.name) {
         adapter = inputAdapterOrDefaultConfig as IExportAdapter;
         config = (inputConfig as TConfig) ?? {};
-        log = config.log ?? (await getDefaultLogAsync());
+        logger = config.logger ?? getDefaultLogger();
     } else {
         config = (inputAdapterOrDefaultConfig as unknown as TDefaultConfig) ?? {};
-        log = config.log ?? (await getDefaultLogAsync());
+        logger = config.logger ?? getDefaultLogger();
 
         adapter = getDefaultExportAdapter({
             ...(inputAdapterOrDefaultConfig as TDefaultConfig).adapterConfig,
-            log: log
+            logger: logger
         });
     }
 
     return {
         adapter,
         config,
-        log
+        logger
     };
 }

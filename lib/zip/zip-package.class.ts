@@ -1,7 +1,8 @@
 import JSZip from 'jszip';
 import chalk from 'chalk';
-import { Log, formatBytes, logErrorAndExit } from '../core/index.js';
+import { ILogger, formatBytes, getCurrentEnvironment, logErrorAndExit } from '../core/index.js';
 import { FileBinaryData, ZipCompressionLevel, ZipContext } from './zip.models.js';
+import {} from 'browser-or-node';
 
 interface IFileResult<T> {
     data: T;
@@ -11,7 +12,7 @@ interface IFileResult<T> {
 export class ZipPackage {
     private readonly compressionLevel: ZipCompressionLevel = 9;
 
-    constructor(private readonly jsZip: JSZip, private readonly log: Log, private readonly context: ZipContext) {}
+    constructor(private readonly jsZip: JSZip, private readonly logger: ILogger, private readonly context?: ZipContext) {}
 
     addFile(filePath: string, data: any): void {
         this.jsZip.file(filePath, data);
@@ -53,7 +54,7 @@ export class ZipPackage {
     async generateZipAsync(): Promise<FileBinaryData> {
         const zipOutputType = this.getZipOutputType(this.context);
 
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Creating zip file using '${zipOutputType}' with compression level '${this.compressionLevel.toString()}'`
         });
@@ -67,7 +68,7 @@ export class ZipPackage {
             streamFiles: true
         });
 
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Zip successfully generated (${chalk.yellow(formatBytes(this.getZipSizeInBytes(result)))})`
         });
@@ -75,12 +76,23 @@ export class ZipPackage {
         return result;
     }
 
-    private getZipOutputType(context: ZipContext): 'nodebuffer' | 'blob' {
+    private getZipOutputType(context?: ZipContext): 'nodebuffer' | 'blob' {
+        if (!context) {
+            const currentEnv = getCurrentEnvironment();
+
+            if (currentEnv === 'browser') {
+                return 'blob';
+            }
+            if (currentEnv === 'node') {
+                return 'nodebuffer';
+            }
+        }
+
         if (context === 'browser') {
             return 'blob';
         }
 
-        if (context === 'node.js') {
+        if (context === 'node') {
             return 'nodebuffer';
         }
 

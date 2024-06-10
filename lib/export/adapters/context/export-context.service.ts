@@ -7,7 +7,7 @@ import {
 import {
     IAssetStateInSourceEnvironmentById,
     IItemStateInSourceEnvironmentById,
-    Log,
+    ILogger,
     getFlattenedContentTypesAsync,
     is404Error,
     processInChunksAsync,
@@ -28,21 +28,21 @@ import chalk from 'chalk';
 import { ItemsExtractionService, getItemsExtractionService } from '../../../translation/index.js';
 import { throwErrorForItemRequest } from '../../utils/export.utils.js';
 
-export function getExportContextService(log: Log, managementClient: ManagementClient): ExportContextService {
-    return new ExportContextService(log, managementClient);
+export function getExportContextService(logger: ILogger, managementClient: ManagementClient): ExportContextService {
+    return new ExportContextService(logger, managementClient);
 }
 
 export class ExportContextService {
     private readonly itemsExtractionService: ItemsExtractionService;
 
-    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {
+    constructor(private readonly logger: ILogger, private readonly managementClient: ManagementClient) {
         this.itemsExtractionService = getItemsExtractionService();
     }
 
     async getExportContextAsync(data: { exportItems: IKontentAiExportRequestItem[] }): Promise<IExportContext> {
         const environmentData = await this.getEnvironmentDataAsync();
 
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Preparing '${chalk.yellow(data.exportItems.length.toString())}' items for export`
         });
@@ -51,7 +51,7 @@ export class ExportContextService {
             exportItems: data.exportItems
         });
 
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Extracting referenced items from content`
         });
@@ -66,7 +66,7 @@ export class ExportContextService {
 
         const assetIdsToCheckInTargetEnv: string[] = [...referencedData.assetIds];
 
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Fetching referenced items`
         });
@@ -74,7 +74,7 @@ export class ExportContextService {
             itemIdsToCheckInTargetEnv
         );
 
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Fetching referenced assets`
         });
@@ -115,7 +115,7 @@ export class ExportContextService {
             IKontentAiExportRequestItem,
             IKontentAiPreparedExportItem
         >({
-            log: this.log,
+            logger: this.logger,
             chunkSize: 1,
             itemInfo: (input) => {
                 return {
@@ -124,10 +124,10 @@ export class ExportContextService {
                 };
             },
             items: data.exportItems,
-            processAsync: async (exportItem, spinner) => {
+            processAsync: async (exportItem, logSpinner) => {
                 const contentItem = await runMapiRequestAsync({
-                    log: this.log,
-                    spinner: spinner,
+                    logger: this.logger,
+                    logSpinner: logSpinner,
                     func: async () =>
                         (
                             await this.managementClient
@@ -141,8 +141,8 @@ export class ExportContextService {
                 });
 
                 const languageVariant = await runMapiRequestAsync({
-                    log: this.log,
-                    spinner: spinner,
+                    logger: this.logger,
+                    logSpinner: logSpinner,
                     func: async () =>
                         (
                             await this.managementClient
@@ -250,7 +250,7 @@ export class ExportContextService {
     private async getEnvironmentDataAsync(): Promise<IExportContextEnvironmentData> {
         const environmentData: IExportContextEnvironmentData = {
             collections: await this.getAllCollectionsAsync(),
-            contentTypes: await getFlattenedContentTypesAsync(this.managementClient, this.log),
+            contentTypes: await getFlattenedContentTypesAsync(this.managementClient, this.logger),
             languages: await this.getAllLanguagesAsync(),
             workflows: await this.getAllWorkflowsAsync(),
             taxonomies: await this.getAllTaxonomiesAsync()
@@ -261,7 +261,7 @@ export class ExportContextService {
 
     private async getAllLanguagesAsync(): Promise<LanguageModels.LanguageModel[]> {
         return await runMapiRequestAsync({
-            log: this.log,
+            logger: this.logger,
             func: async () => (await this.managementClient.listLanguages().toAllPromise()).data.items,
             action: 'list',
             type: 'language'
@@ -270,7 +270,7 @@ export class ExportContextService {
 
     private async getAllCollectionsAsync(): Promise<CollectionModels.Collection[]> {
         return await runMapiRequestAsync({
-            log: this.log,
+            logger: this.logger,
             func: async () => (await this.managementClient.listCollections().toPromise()).data.collections,
             action: 'list',
             type: 'collection'
@@ -279,7 +279,7 @@ export class ExportContextService {
 
     private async getAllWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
         return await runMapiRequestAsync({
-            log: this.log,
+            logger: this.logger,
             func: async () => (await this.managementClient.listWorkflows().toPromise()).data,
             action: 'list',
             type: 'workflow'
@@ -288,7 +288,7 @@ export class ExportContextService {
 
     private async getAllTaxonomiesAsync(): Promise<TaxonomyModels.Taxonomy[]> {
         return await runMapiRequestAsync({
-            log: this.log,
+            logger: this.logger,
             func: async () => (await this.managementClient.listTaxonomies().toAllPromise()).data.items,
             action: 'list',
             type: 'taxonomy'
@@ -299,7 +299,7 @@ export class ExportContextService {
         const contentItems: ContentItemModels.ContentItem[] = [];
 
         await processInChunksAsync<string, void>({
-            log: this.log,
+            logger: this.logger,
             chunkSize: 1,
             items: itemIds,
             itemInfo: (id) => {
@@ -308,11 +308,11 @@ export class ExportContextService {
                     title: id
                 };
             },
-            processAsync: async (id, spinner) => {
+            processAsync: async (id, logSpinner) => {
                 try {
                     const contentItem = await runMapiRequestAsync({
-                        spinner: spinner,
-                        log: this.log,
+                        logSpinner: logSpinner,
+                        logger: this.logger,
                         func: async () => (await this.managementClient.viewContentItem().byItemId(id).toPromise()).data,
                         action: 'view',
                         type: 'contentItem',
@@ -335,7 +335,7 @@ export class ExportContextService {
         const assets: AssetModels.Asset[] = [];
 
         await processInChunksAsync<string, void>({
-            log: this.log,
+            logger: this.logger,
             chunkSize: 1,
             items: itemIds,
             itemInfo: (id) => {
@@ -344,11 +344,11 @@ export class ExportContextService {
                     title: id
                 };
             },
-            processAsync: async (id, spinner) => {
+            processAsync: async (id, logSpinner) => {
                 try {
                     const asset = await runMapiRequestAsync({
-                        log: this.log,
-                        spinner: spinner,
+                        logger: this.logger,
+                        logSpinner: logSpinner,
                         func: async () => (await this.managementClient.viewAsset().byAssetId(id).toPromise()).data,
                         action: 'view',
                         type: 'asset',

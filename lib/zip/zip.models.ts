@@ -1,7 +1,7 @@
-import { IMigrationAsset, IMigrationItem } from '../core/index.js';
+import { EnvContext, IMigrationAsset, IMigrationItem } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
 
-export type ZipContext = 'node.js' | 'browser';
+export type ZipContext = EnvContext;
 export type FileBinaryData = Blob | Buffer;
 export type DefaultFormats = 'json';
 export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;

@@ -10,15 +10,15 @@ import {
     ZipContext
 } from './zip.models.js';
 import { ZipPackage } from './zip-package.class.js';
-import { IMigrationAsset, IMigrationItem, Log } from '../core/index.js';
+import { IMigrationAsset, IMigrationItem, ILogger } from '../core/index.js';
 import { IImportData } from '../import/import.models.js';
 
-export function getZipService(log: Log, zipContext: ZipContext): ZipService {
-    return new ZipService(log, zipContext);
+export function getZipService(logger: ILogger, zipContext?: ZipContext): ZipService {
+    return new ZipService(logger, zipContext);
 }
 
 export class ZipService {
-    constructor(private readonly log: Log, private readonly zipContext: ZipContext) {}
+    constructor(private readonly logger: ILogger, private readonly zipContext?: ZipContext) {}
 
     async parseZipAsync(data: {
         items?: {
@@ -36,44 +36,44 @@ export class ZipService {
         };
 
         if (data.items) {
-            this.log.default({
+            this.logger.log({
                 type: 'info',
                 message: 'Loading items zip file'
             });
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
 
-            this.log.default({
+            this.logger.log({
                 type: 'info',
                 message: 'Parsing items zip data'
             });
 
             result.items.push(
                 ...(await data.items.formatService.parseAsync({
-                    zip: new ZipPackage(itemsZipFile, this.log, this.zipContext)
+                    zip: new ZipPackage(itemsZipFile, this.logger, this.zipContext)
                 }))
             );
         }
 
         if (data.assets) {
-            this.log.default({
+            this.logger.log({
                 type: 'info',
                 message: 'Loading assets zip file'
             });
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
 
-            this.log.default({
+            this.logger.log({
                 type: 'info',
                 message: 'Parsing assets zip data'
             });
 
             result.assets.push(
                 ...(await data.assets.formatService.parseAsync({
-                    zip: new ZipPackage(assetsZipFile, this.log, this.zipContext)
+                    zip: new ZipPackage(assetsZipFile, this.logger, this.zipContext)
                 }))
             );
         }
 
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Parsing completed. Parsed '${chalk.yellow(
                 result.items.length.toString()
@@ -97,26 +97,26 @@ export class ZipService {
         let parsedAssets: IMigrationAsset[] = [];
 
         if (data.items) {
-            this.log.default({
+            this.logger.log({
                 type: 'info',
                 message: `Parsing items file with '${chalk.yellow(data.items.formatService.name)}' `
             });
 
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
             parsedItems = await data.items.formatService.parseAsync({
-                zip: new ZipPackage(itemsZipFile, this.log, this.zipContext)
+                zip: new ZipPackage(itemsZipFile, this.logger, this.zipContext)
             });
         }
 
         if (data.assets) {
-            this.log.default({
+            this.logger.log({
                 type: 'info',
                 message: `Parsing assets file with '${chalk.yellow(data.assets.formatService.name)}' `
             });
 
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
             parsedAssets = await data.assets.formatService.parseAsync({
-                zip: new ZipPackage(assetsZipFile, this.log, this.zipContext)
+                zip: new ZipPackage(assetsZipFile, this.logger, this.zipContext)
             });
         }
 
@@ -125,7 +125,7 @@ export class ZipService {
             assets: parsedAssets
         };
 
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Parsing completed. Parsed '${chalk.yellow(
                 result.items.length.toString()
@@ -142,14 +142,14 @@ export class ZipService {
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Creating items zip`
         });
 
         const zip = await config.itemFormatService.transformAsync({
             items: exportData.items,
-            zip: new ZipPackage(new JSZip(), this.log, this.zipContext)
+            zip: new ZipPackage(new JSZip(), this.logger, this.zipContext)
         });
 
         return zip;
@@ -162,14 +162,14 @@ export class ZipService {
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Creating assets zip`
         });
 
         const zip = await config.assetFormatService.transformAsync({
             assets: exportData.assets,
-            zip: new ZipPackage(new JSZip(), this.log, this.zipContext)
+            zip: new ZipPackage(new JSZip(), this.logger, this.zipContext)
         });
 
         return zip;

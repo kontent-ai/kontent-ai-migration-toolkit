@@ -12,4 +12,4 @@ export * from './utils/binary-data.utils.js';
 export * from './models/core.models.js';
 export * from './models/migration.models.js';
 
-export * from './spinner/default-spinner.js';
+export * from './logs/loggers.js';

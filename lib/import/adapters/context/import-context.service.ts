@@ -5,7 +5,7 @@ import {
     IItemStateInTargetEnvironmentByCodename,
     ILanguageVariantStateInTargetEnvironmentByCodename,
     IMigrationItem,
-    Log,
+    ILogger,
     getFlattenedContentTypesAsync,
     is404Error,
     processInChunksAsync,
@@ -23,7 +23,7 @@ interface ILanguageVariantWrapper {
 }
 
 export interface IImportContextConfig {
-    readonly log: Log;
+    readonly logger: ILogger;
     readonly managementClient: ManagementClient;
     readonly externalIdGenerator: IExternalIdGenerator;
 }
@@ -133,7 +133,7 @@ export class ImportContextService {
         // get & flatten content type and its elements
         const flattenedTypes: IFlattenedContentType[] = await getFlattenedContentTypesAsync(
             this.config.managementClient,
-            this.config.log
+            this.config.logger
         );
 
         const getFlattenedElement: GetFlattenedElement = (contentTypeCodename, elementCodename) => {
@@ -165,7 +165,7 @@ export class ImportContextService {
         const languageVariants: ILanguageVariantWrapper[] = [];
 
         await processInChunksAsync<IMigrationItem, void>({
-            log: this.config.log,
+            logger: this.config.logger,
             chunkSize: 1,
             items: migrationItems,
             itemInfo: (item) => {
@@ -174,10 +174,10 @@ export class ImportContextService {
                     title: `${item.system.codename} (${item.system.language})`
                 };
             },
-            processAsync: async (item, spinner) => {
+            processAsync: async (item, logSpinner) => {
                 try {
                     const variant = await runMapiRequestAsync({
-                        log: this.config.log,
+                        logger: this.config.logger,
                         func: async () =>
                             (
                                 await this.config.managementClient
@@ -188,7 +188,7 @@ export class ImportContextService {
                             ).data,
                         action: 'view',
                         type: 'languageVariant',
-                        spinner: spinner,
+                        logSpinner: logSpinner,
                         itemName: `codename -> ${item.system.codename} (${item.system.language})`
                     });
 
@@ -211,7 +211,7 @@ export class ImportContextService {
         const contentItems: ContentItemModels.ContentItem[] = [];
 
         await processInChunksAsync<string, void>({
-            log: this.config.log,
+            logger: this.config.logger,
             chunkSize: 1,
             items: itemCodenames,
             itemInfo: (codename) => {
@@ -220,10 +220,10 @@ export class ImportContextService {
                     title: codename
                 };
             },
-            processAsync: async (codename, spinner) => {
+            processAsync: async (codename, logSpinner) => {
                 try {
                     const contentItem = await runMapiRequestAsync({
-                        log: this.config.log,
+                        logger: this.config.logger,
                         func: async () =>
                             (
                                 await this.config.managementClient
@@ -233,7 +233,7 @@ export class ImportContextService {
                             ).data,
                         action: 'view',
                         type: 'contentItem',
-                        spinner: spinner,
+                        logSpinner: logSpinner,
                         itemName: `codename -> ${codename}`
                     });
 
@@ -253,7 +253,7 @@ export class ImportContextService {
         const assets: AssetModels.Asset[] = [];
 
         await processInChunksAsync<string, void>({
-            log: this.config.log,
+            logger: this.config.logger,
             chunkSize: 1,
             items: assetCodenames,
             itemInfo: (codename) => {
@@ -262,17 +262,17 @@ export class ImportContextService {
                     title: codename
                 };
             },
-            processAsync: async (codename, spinner) => {
+            processAsync: async (codename, logSpinner) => {
                 try {
                     const asset = await runMapiRequestAsync({
-                        log: this.config.log,
+                        logger: this.config.logger,
                         func: async () =>
                             (
                                 await this.config.managementClient.viewAsset().byAssetCodename(codename).toPromise()
                             ).data,
                         action: 'view',
                         type: 'asset',
-                        spinner: spinner,
+                        logSpinner: logSpinner,
                         itemName: `codename -> ${codename}`
                     });
 

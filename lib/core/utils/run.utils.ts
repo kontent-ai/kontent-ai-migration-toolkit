@@ -1,10 +1,10 @@
 import chalk from 'chalk';
 import { MapiAction, MapiType } from '../models/core.models.js';
-import { ILogData, ILogSpinner, Log, logSpinnerOrDefaultAsync } from './log.utils.js';
+import { ILogData, ILogger, logSpinnerOrDefaultAsync, LogSpinnerData } from './log.utils.js';
 
 export async function runMapiRequestAsync<TResult>(data: {
-    log: Log;
-    spinner?: ILogSpinner;
+    logger: ILogger;
+    logSpinner?: LogSpinnerData;
     action: MapiAction;
     type: MapiType;
     func: () => Promise<TResult>;
@@ -30,8 +30,8 @@ export async function runMapiRequestAsync<TResult>(data: {
     }
 
     await logSpinnerOrDefaultAsync({
-        spinner: data.spinner,
-        log: data.log,
+        logSpinner: data.logSpinner,
+        logger: data.logger,
         logData: logData
     });
 
@@ -44,8 +44,8 @@ export async function runMapiRequestAsync<TResult>(data: {
         };
 
         await logSpinnerOrDefaultAsync({
-            spinner: data.spinner,
-            log: data.log,
+            logSpinner: data.logSpinner,
+            logger: data.logger,
             logData: logData
         });
     }

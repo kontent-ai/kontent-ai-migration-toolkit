@@ -1,9 +1,9 @@
-import { confirmExportAsync, getDefaultFilename, getDefaultLogAsync } from '../../../core/index.js';
+import { confirmExportAsync, getDefaultFilename, getDefaultLogger } from '../../../core/index.js';
 import { exportAsync, storeAsync } from '../../../toolkit/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 
 export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
-    const log = await getDefaultLogAsync();
+    const logger = getDefaultLogger();
     const language = await cliArgs.getRequiredArgumentValueAsync('language');
     const environmentId = await cliArgs.getRequiredArgumentValueAsync('sourceEnvironmentId');
     const apiKey = await cliArgs.getRequiredArgumentValueAsync('sourceApiKey');
@@ -19,11 +19,11 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
         force: force,
         apiKey: apiKey,
         environmentId: environmentId,
-        log: log
+        logger: logger
     });
 
     const exportedData = await exportAsync({
-        log: log,
+        logger: logger,
         adapterConfig: {
             environmentId: environmentId,
             apiKey: apiKey,
@@ -50,9 +50,8 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
                 format: 'json'
             }
         },
-        log: log,
-        zipContext: 'node.js'
+        logger: logger
     });
 
-    log.default({ type: 'completed', message: `Export has been successful` });
+    logger.log({ type: 'completed', message: `Export has been successful` });
 }

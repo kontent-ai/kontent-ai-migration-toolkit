@@ -46,11 +46,11 @@ export class DefaultExportAdapter implements IExportAdapter {
             httpService: defaultHttpService,
             apiKey: config.apiKey
         });
-        this.exportContextService = getExportContextService(this.config.log, this.managementClient);
+        this.exportContextService = getExportContextService(this.config.logger, this.managementClient);
     }
 
     async exportAsync(): Promise<IExportAdapterResult> {
-        this.config.log.default({
+        this.config.logger.log({
             type: 'info',
             message: `Preparing to export data`
         });
@@ -84,7 +84,7 @@ export class DefaultExportAdapter implements IExportAdapter {
                 });
             } catch (error) {
                 if (this.config.skipFailedItems) {
-                    this.config.log.default({
+                    this.config.logger.log({
                         type: 'warning',
                         message: `Failed to export item '${chalk.yellow(
                             preparedItem.requestItem.itemCodename
@@ -174,13 +174,13 @@ export class DefaultExportAdapter implements IExportAdapter {
         assets: AssetModels.Asset[],
         context: IExportContext
     ): Promise<IMigrationAsset[]> {
-        this.config.log.default({
+        this.config.logger.log({
             type: 'info',
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });
 
         const exportedAssets: IMigrationAsset[] = await processInChunksAsync<AssetModels.Asset, IMigrationAsset>({
-            log: this.config.log,
+            logger: this.config.logger,
             chunkSize: 1,
             itemInfo: (input) => {
                 return {
@@ -189,17 +189,17 @@ export class DefaultExportAdapter implements IExportAdapter {
                 };
             },
             items: assets,
-            processAsync: async (asset, spinner) => {
+            processAsync: async (asset, logSpinner) => {
                 const assetCollection: CollectionModels.Collection | undefined =
                     context.environmentData.collections.find((m) => m.id === asset.collection?.reference?.id);
 
                 await logSpinnerOrDefaultAsync({
-                    log: this.config.log,
+                    logger: this.config.logger,
                     logData: {
                         type: 'download',
                         message: `${asset.url}`
                     },
-                    spinner: spinner
+                    logSpinner: logSpinner
                 });
 
                 const binaryData = await getBinaryDataFromUrlAsync(asset.url);

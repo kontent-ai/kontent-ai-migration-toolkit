@@ -6,6 +6,7 @@ export type CliAction = 'export' | 'import' | 'migrate';
 export type ExportAdapter = 'kontentAi';
 export type GeneralItemType = 'exportedItem' | 'migrationItem';
 export type GeneralActionType = 'readFs' | 'skip' | 'writeFs' | 'download';
+export type EnvContext = 'browser' | 'node';
 
 export type MapiAction =
     | 'list'

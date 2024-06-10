@@ -1,6 +1,6 @@
 import { libMetadata } from '../metadata.js';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
-import { IExternalIdGenerator, Log, executeWithTrackingAsync, getDefaultLogAsync } from '../core/index.js';
+import { IExternalIdGenerator, ILogger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
 import { IKontentAiExportRequestItem } from '../export/index.js';
 import { exportAsync } from './export.js';
 import { importAsync } from './import.js';
@@ -22,13 +22,13 @@ export interface IMigrationTarget extends IMigrationEnv {
 export interface IMigrationConfig {
     retryStrategy?: IRetryStrategyOptions;
     externalIdGenerator?: IExternalIdGenerator;
-    log?: Log;
+    logger?: ILogger;
     sourceEnvironment: IMigrationSource;
     targetEnvironment: IMigrationTarget;
 }
 
 export async function migrateAsync(config: IMigrationConfig): Promise<void> {
-    const log = config.log ?? (await getDefaultLogAsync());
+    const logger = config.logger ?? getDefaultLogger();
 
     return await executeWithTrackingAsync({
         event: {
@@ -45,7 +45,7 @@ export async function migrateAsync(config: IMigrationConfig): Promise<void> {
         },
         func: async () => {
             const data = await exportAsync({
-                log: log,
+                logger: logger,
                 adapterConfig: {
                     environmentId: config.sourceEnvironment.id,
                     apiKey: config.sourceEnvironment.apiKey,
@@ -56,7 +56,7 @@ export async function migrateAsync(config: IMigrationConfig): Promise<void> {
             });
 
             await importAsync({
-                log: log,
+                logger: logger,
                 data: data,
                 adapterConfig: {
                     environmentId: config.targetEnvironment.id,

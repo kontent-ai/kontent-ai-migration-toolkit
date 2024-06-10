@@ -1,10 +1,9 @@
-import { confirmImportAsync, getDefaultFilename, getDefaultLogAsync } from '../../../core/index.js';
+import { confirmImportAsync, getDefaultFilename, getDefaultLogger } from '../../../core/index.js';
 import { extractAsync, importAsync } from '../../../toolkit/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 
 export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
-    const log = await getDefaultLogAsync();
-
+    const log = getDefaultLogger();
     const environmentId = await cliArgs.getRequiredArgumentValueAsync('targetEnvironmentId');
     const apiKey = await cliArgs.getRequiredArgumentValueAsync('targetApiKey');
     const baseUrl = await cliArgs.getOptionalArgumentValueAsync('baseUrl');
@@ -18,12 +17,11 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
         force: force,
         apiKey: apiKey,
         environmentId: environmentId,
-        log: log
+        logger: log
     });
 
     const importData = await extractAsync({
-        log: log,
-        zipContext: 'node.js',
+        logger: log,
         files: {
             items: {
                 filename: itemsFilename,
@@ -37,7 +35,7 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     });
 
     await importAsync({
-        log: log,
+        logger: log,
         data: importData,
         adapterConfig: {
             skipFailedItems: skipFailedItems,
@@ -55,5 +53,5 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
         }
     });
 
-    log.default({ type: 'completed', message: `Import has been successful` });
+    log.log({ type: 'completed', message: `Import has been successful` });
 }

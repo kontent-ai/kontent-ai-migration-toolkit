@@ -3,7 +3,7 @@ import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import {
     IMigrationItem,
     IMigrationAsset,
-    Log,
+    ILogger,
     IAssetStateInTargetEnvironmentByCodename,
     IItemStateInTargetEnvironmentByCodename,
     IReferencedDataInMigrationItems,
@@ -53,7 +53,7 @@ export type ImportTransformFunc = (data: {
 }) => Promise<ElementContracts.IContentItemElementContract>;
 
 export interface IDefaultImportAdapterConfig {
-    log: Log;
+    logger: ILogger;
     environmentId: string;
     apiKey: string;
     skipFailedItems: boolean;

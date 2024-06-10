@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { migrateAsync, confirmMigrateAsync, getDefaultLogAsync, handleError } from '../../lib/index.js';
+import { migrateAsync, confirmMigrateAsync, handleError, getDefaultLogger } from '../../lib/index.js';
 import { getEnvironmentRequiredValue } from './utils/test.utils.js';
 
 const run = async () => {
@@ -11,7 +11,7 @@ const run = async () => {
     const sourceApiKey = getEnvironmentRequiredValue('sourceApiKey');
     const targetEnvironmentId = getEnvironmentRequiredValue('targetEnvironmentId');
     const targetApiKey = getEnvironmentRequiredValue('targetApiKey');
-    const log = await getDefaultLogAsync();
+    const logger = getDefaultLogger();
 
     await confirmMigrateAsync({
         force: false,
@@ -23,11 +23,11 @@ const run = async () => {
             apiKey: targetApiKey,
             environmentId: targetEnvironmentId
         },
-        log: log
+        logger: logger
     });
 
     await migrateAsync({
-        log: log,
+        logger: logger,
         sourceEnvironment: {
             id: sourceEnvironmentId,
             apiKey: sourceApiKey,

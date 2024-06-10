@@ -1,20 +1,20 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IMigrationAsset, Log, processInChunksAsync, runMapiRequestAsync } from '../../core/index.js';
+import { IMigrationAsset, ILogger, processInChunksAsync, runMapiRequestAsync } from '../../core/index.js';
 import mime from 'mime';
 import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
 
-export function getImportAssetsService(log: Log, managementClient: ManagementClient): ImportAssetsService {
-    return new ImportAssetsService(log, managementClient);
+export function getImportAssetsService(logger: ILogger, managementClient: ManagementClient): ImportAssetsService {
+    return new ImportAssetsService(logger, managementClient);
 }
 
 export class ImportAssetsService {
     private readonly importAssetsChunkSize: number = 1;
 
-    constructor(private readonly log: Log, private readonly managementClient: ManagementClient) {}
+    constructor(private readonly logger: ILogger, private readonly managementClient: ManagementClient) {}
 
     async importAssetsAsync(data: { assets: IMigrationAsset[]; importContext: IImportContext }): Promise<void> {
-        this.log.default({
+        this.logger.log({
             type: 'info',
             message: `Categorizing '${chalk.yellow(data.assets.length.toString())}' assets`
         });
@@ -27,7 +27,7 @@ export class ImportAssetsService {
         const skippedAssetsCount = data.assets.length - assetsToUpload.length;
 
         if (skippedAssetsCount) {
-            this.log.default({
+            this.logger.log({
                 type: 'skip',
                 message: `Skipping upload for '${chalk.yellow(
                     skippedAssetsCount.toString()
@@ -35,13 +35,13 @@ export class ImportAssetsService {
             });
         }
 
-        this.log.default({
+        this.logger.log({
             type: 'upload',
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
         });
 
         await processInChunksAsync<IMigrationAsset, void>({
-            log: this.log,
+            logger: this.logger,
             chunkSize: this.importAssetsChunkSize,
             items: assetsToUpload,
             itemInfo: (input) => {
@@ -50,9 +50,9 @@ export class ImportAssetsService {
                     title: input.title
                 };
             },
-            processAsync: async (asset, spinner) => {
+            processAsync: async (asset, logSpinner) => {
                 const uploadedBinaryFile = await runMapiRequestAsync({
-                    log: this.log,
+                    logger: this.logger,
                     func: async () =>
                         (
                             await this.managementClient
@@ -66,12 +66,12 @@ export class ImportAssetsService {
                         ).data,
                     action: 'upload',
                     type: 'binaryFile',
-                    spinner: spinner,
+                    logSpinner: logSpinner,
                     itemName: `${asset.title ?? asset.filename}`
                 });
 
                 await runMapiRequestAsync({
-                    log: this.log,
+                    logger: this.logger,
                     func: async () =>
                         (
                             await this.managementClient
@@ -111,7 +111,7 @@ export class ImportAssetsService {
                         ).data,
                     action: 'create',
                     type: 'asset',
-                    spinner: spinner,
+                    logSpinner: logSpinner,
                     itemName: `${asset.title ?? asset.filename}`
                 });
             }

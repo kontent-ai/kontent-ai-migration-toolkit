@@ -3,16 +3,16 @@ import {
     extractErrorData,
     logErrorAndExit,
     IMigrationItem,
-    Log,
+    ILogger,
     runMapiRequestAsync,
-    ILogSpinner,
-    processInChunksAsync
+    processInChunksAsync,
+    LogSpinnerData
 } from '../../core/index.js';
 import chalk from 'chalk';
 import { IImportContext } from '../import.models.js';
 
 export function getImportContentItemService(config: {
-    log: Log;
+    logger: ILogger;
     skipFailedItems: boolean;
     managementClient: ManagementClient;
 }): ImportContentItemHelper {
@@ -20,7 +20,9 @@ export function getImportContentItemService(config: {
 }
 
 export class ImportContentItemHelper {
-    constructor(private readonly config: { log: Log; skipFailedItems: boolean; managementClient: ManagementClient }) {}
+    constructor(
+        private readonly config: { logger: ILogger; skipFailedItems: boolean; managementClient: ManagementClient }
+    ) {}
 
     async importContentItemsAsync(data: {
         collections: CollectionModels.Collection[];
@@ -35,13 +37,13 @@ export class ImportContentItemHelper {
             return true;
         });
 
-        this.config.log.default({
+        this.config.logger.log({
             type: 'info',
-            message: `Importing '${chalk.yellow(preparedItemsWithoutComponents.length.toString())}' content items'`
+            message: `Importing '${chalk.yellow(preparedItemsWithoutComponents.length.toString())}' content items`
         });
 
         await processInChunksAsync<IMigrationItem, void>({
-            log: this.config.log,
+            logger: this.config.logger,
             chunkSize: 1,
             items: preparedItemsWithoutComponents,
             itemInfo: (item) => {
@@ -50,7 +52,7 @@ export class ImportContentItemHelper {
                     title: `${item.system.codename} -> ${item.system.language}`
                 };
             },
-            processAsync: async (item, spinner) => {
+            processAsync: async (item, logSpinner) => {
                 if (!item.system.workflow || !item.system.workflow_step) {
                     // items without workflow or workflow step are components and they should not be imported individually
                     return;
@@ -58,7 +60,7 @@ export class ImportContentItemHelper {
 
                 try {
                     const contentItem = await this.importContentItemAsync({
-                        spinner: spinner,
+                        logSpinner: logSpinner,
                         managementClient: this.config.managementClient,
                         collections: data.collections,
                         migrationItem: item,
@@ -68,7 +70,7 @@ export class ImportContentItemHelper {
                     preparedItems.push(contentItem);
                 } catch (error) {
                     if (this.config.skipFailedItems) {
-                        this.config.log.default({
+                        this.config.logger.log({
                             type: 'error',
                             message: `Failed to import content item '${item.system.name}'. ${
                                 extractErrorData(error).message
@@ -85,14 +87,14 @@ export class ImportContentItemHelper {
     }
 
     private async importContentItemAsync(data: {
-        spinner: ILogSpinner | undefined;
+        logSpinner: LogSpinnerData;
         migrationItem: IMigrationItem;
         managementClient: ManagementClient;
         collections: CollectionModels.Collection[];
         importContext: IImportContext;
     }): Promise<ContentItemModels.ContentItem> {
         const preparedContentItemResult = await this.prepareContentItemAsync(
-            data.spinner,
+            data.logSpinner,
             data.managementClient,
             data.migrationItem,
             data.importContext
@@ -108,7 +110,7 @@ export class ImportContentItemHelper {
                 )
             ) {
                 await runMapiRequestAsync({
-                    log: this.config.log,
+                    logger: this.config.logger,
                     func: async () =>
                         (
                             await data.managementClient
@@ -124,7 +126,7 @@ export class ImportContentItemHelper {
                         ).data,
                     action: 'upsert',
                     type: 'contentItem',
-                    spinner: data.spinner,
+                    logSpinner: data.logSpinner,
                     itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language})`
                 });
             }
@@ -152,7 +154,7 @@ export class ImportContentItemHelper {
     }
 
     private async prepareContentItemAsync(
-        spinner: ILogSpinner | undefined,
+        logSpinner: LogSpinnerData,
         managementClient: ManagementClient,
         migrationContentItem: IMigrationItem,
         context: IImportContext
@@ -167,7 +169,7 @@ export class ImportContentItemHelper {
         }
 
         const createdContentItem = await runMapiRequestAsync({
-            log: this.config.log,
+            logger: this.config.logger,
             func: async () =>
                 (
                     await managementClient
@@ -187,7 +189,7 @@ export class ImportContentItemHelper {
                 ).data,
             action: 'create',
             type: 'contentItem',
-            spinner: spinner,
+            logSpinner: logSpinner,
             itemName: `${migrationContentItem.system.codename} (${migrationContentItem.system.language})`
         });
 

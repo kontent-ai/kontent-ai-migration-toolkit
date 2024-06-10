@@ -1,6 +1,6 @@
-import { importAsync, getDefaultLogAsync, extractAsync } from '../lib/index.js';
+import { importAsync, getDefaultNodeLogAsync, extractAsync } from '../lib/index.js';
 
-const log = await getDefaultLogAsync();
+const log = await getDefaultNodeLogAsync();
 
 // get data from previously stored export (optional)
 const data = await extractAsync({
@@ -19,7 +19,7 @@ const data = await extractAsync({
 
 // import data into your Kontent.ai environment
 await importAsync({
-    log: log,
+    logger: log,
     data: data,
     adapterConfig: {
         environmentId: '<id>',

@@ -1,9 +1,9 @@
-import { getDefaultLogAsync, exportAsync, storeAsync } from '../lib/index.js';
+import { getDefaultNodeLogAsync, exportAsync, storeAsync } from '../lib/index.js';
 
-const log = await getDefaultLogAsync();
+const log = await getDefaultNodeLogAsync();
 
 const exportData = await exportAsync({
-    log: log,
+    logger: log,
     adapterConfig: {
         environmentId: '<id>',
         apiKey: '<apiKey>',

@@ -1,5 +1,5 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { ILogSpinner, IMigrationItem, Log, runMapiRequestAsync } from '../../core/index.js';
+import { IMigrationItem, ILogger, runMapiRequestAsync, LogSpinnerData } from '../../core/index.js';
 import chalk from 'chalk';
 
 interface IWorkflowStep {
@@ -12,12 +12,12 @@ interface IWorkflowAndStep {
     step: IWorkflowStep;
 }
 
-export function getImportWorkflowService(log: Log): ImportWorkflowService {
-    return new ImportWorkflowService(log);
+export function getImportWorkflowService(logger: ILogger): ImportWorkflowService {
+    return new ImportWorkflowService(logger);
 }
 
 export class ImportWorkflowService {
-    constructor(private readonly log: Log) {}
+    constructor(private readonly logger: ILogger) {}
 
     getWorkflowAndStep(data: {
         workflowStepCodename: string;
@@ -85,7 +85,7 @@ export class ImportWorkflowService {
     }
 
     async setWorkflowOfLanguageVariantAsync(
-        spinner: ILogSpinner | undefined,
+        logSpinner: LogSpinnerData,
         managementClient: ManagementClient,
         workflowCodename: string,
         workflowStepCodename: string,
@@ -100,7 +100,7 @@ export class ImportWorkflowService {
 
         if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
             await runMapiRequestAsync({
-                log: this.log,
+                logger: this.logger,
                 func: async () =>
                     (
                         await managementClient
@@ -112,11 +112,11 @@ export class ImportWorkflowService {
                     ).data,
                 action: 'publish',
                 type: 'languageVariant',
-                spinner: spinner,
+                logSpinner: logSpinner,
                 itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
             });
         } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
-            spinner?.logAsync({
+            logSpinner({
                 type: 'skip',
                 message: `Skipping scheduled workflow step for item '${chalk.yellow(migrationItem.system.name)}'`
             });
@@ -126,7 +126,7 @@ export class ImportWorkflowService {
             // so we have to always try unpublishing first and catching possible errors
             try {
                 await runMapiRequestAsync({
-                    log: this.log,
+                    logger: this.logger,
                     func: async () =>
                         (
                             await managementClient
@@ -138,12 +138,12 @@ export class ImportWorkflowService {
                         ).data,
                     action: 'unpublish',
                     type: 'languageVariant',
-                    spinner: spinner,
+                    logSpinner: logSpinner,
                     itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
                 });
             } catch (error) {
                 if (error instanceof SharedModels.ContentManagementBaseKontentError) {
-                    spinner?.logAsync({
+                    logSpinner({
                         type: 'unpublish',
                         message: `Unpublish failed, but this may be expected behavior as we cannot determine if there is a published version already. Error received: ${error.message}`
                     });
@@ -153,7 +153,7 @@ export class ImportWorkflowService {
             }
 
             await runMapiRequestAsync({
-                log: this.log,
+                logger: this.logger,
                 func: async () =>
                     (
                         await managementClient
@@ -172,7 +172,7 @@ export class ImportWorkflowService {
                     ).data,
                 action: 'archive',
                 type: 'languageVariant',
-                spinner: spinner,
+                logSpinner: logSpinner,
                 itemName: `${migrationItem.system.codename} (${migrationItem.system.language}) -> ${workflow.archivedStep.codename}`
             });
         } else {
@@ -180,7 +180,7 @@ export class ImportWorkflowService {
                 // item is already in the target workflow step
             } else {
                 await runMapiRequestAsync({
-                    log: this.log,
+                    logger: this.logger,
                     func: async () =>
                         (
                             await managementClient
@@ -199,7 +199,7 @@ export class ImportWorkflowService {
                         ).data,
                     action: 'changeWorkflowStep',
                     type: 'languageVariant',
-                    spinner: spinner,
+                    logSpinner: logSpinner,
                     itemName: `${migrationItem.system.codename} (${migrationItem.system.language}) -> ${step.codename}`
                 });
             }
