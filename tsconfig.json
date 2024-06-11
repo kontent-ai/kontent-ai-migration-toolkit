@@ -27,6 +27,6 @@
         "typeRoots": ["./node_modules/@types"],
         "lib": ["esnext"]
     },
-    "include": ["lib/**/*", "test/**/*", "samples"],
+    "include": ["lib/**/*", "samples/**/*", "scripts/**/*"],
     "exclude": ["node_modules"]
 }
