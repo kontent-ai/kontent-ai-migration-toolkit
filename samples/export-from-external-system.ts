@@ -42,8 +42,6 @@ const adapter: ExportAdapter = {
                 filename: 'filename.txt',
                 // title will be used in K.ai asset as a title
                 title: 'My file',
-                // external id of the asset (optional)
-                externalId: 'uniqueFileId',
                 // binary data of the asset you want to upload
                 binaryData: Buffer.from('myFile', 'utf8'),
                 // collection assignment
