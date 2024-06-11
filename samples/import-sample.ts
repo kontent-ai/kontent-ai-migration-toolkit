@@ -1,10 +1,7 @@
-import { importAsync, getDefaultNodeLogAsync, extractAsync } from '../lib/index.js';
-
-const log = await getDefaultNodeLogAsync();
+import { importAsync, extractAsync } from '../lib/index.js';
 
 // get data from previously stored export (optional)
 const data = await extractAsync({
-    zipContext: 'node.js',
     files: {
         items: {
             filename: 'items-export.zip',
@@ -19,7 +16,6 @@ const data = await extractAsync({
 
 // import data into your Kontent.ai environment
 await importAsync({
-    logger: log,
     data: data,
     adapterConfig: {
         environmentId: '<id>',
