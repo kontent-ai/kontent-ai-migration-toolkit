@@ -4,7 +4,28 @@ import { ILogger, getLogDataMessage } from '../utils/log.utils.js';
 
 const originalWarn = console.warn;
 
-export const defaultNodeLogger: ILogger = {
+export function getDefaultLogger(context?: EnvContext): ILogger {
+    if (!context) {
+        // automatically determine the env
+        const currentEnv = getCurrentEnvironment();
+
+        if (currentEnv === 'node') {
+            return defaultNodeLogger;
+        }
+        if (currentEnv === 'browser') {
+            return defaultBrowserLogger;
+        }
+    }
+    if (context === 'node') {
+        return defaultNodeLogger;
+    }
+    if (context === 'browser') {
+        return defaultBrowserLogger;
+    }
+    throw Error(`Invalid environment '${context}'`);
+}
+
+const defaultNodeLogger: ILogger = {
     log: (data) => console.log(getLogDataMessage(data)),
     logWithSpinnerAsync: async (func) => {
         const ora = await import('ora');
@@ -34,7 +55,7 @@ export const defaultNodeLogger: ILogger = {
     }
 };
 
-export const defaultBrowserLogger: ILogger = {
+const defaultBrowserLogger: ILogger = {
     log: (data) => console.log(getLogDataMessage(data)),
     logWithSpinnerAsync: async (func) => {
         return await func((data) => {
@@ -43,24 +64,3 @@ export const defaultBrowserLogger: ILogger = {
         });
     }
 };
-
-export function getDefaultLogger(context?: EnvContext): ILogger {
-    if (!context) {
-        // automatically determine the env
-        const currentEnv = getCurrentEnvironment();
-
-        if (currentEnv === 'node') {
-            return defaultNodeLogger;
-        }
-        if (currentEnv === 'browser') {
-            return defaultBrowserLogger;
-        }
-    }
-    if (context === 'node') {
-        return defaultNodeLogger;
-    }
-    if (context === 'browser') {
-        return defaultBrowserLogger;
-    }
-    throw Error(`Invalid environment '${context}'`);
-}
