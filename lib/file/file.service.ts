@@ -1,13 +1,13 @@
 import { promises } from 'fs';
 import chalk from 'chalk';
-import { ILogger } from '../core/index.js';
+import { Logger } from '../core/index.js';
 
-export function getFileService(logger: ILogger): FileService {
+export function getFileService(logger: Logger): FileService {
     return new FileService(logger);
 }
 
 export class FileService {
-    constructor(private readonly logger: ILogger) {}
+    constructor(private readonly logger: Logger) {}
 
     async loadFileAsync(filename: string): Promise<Buffer> {
         const filePath = this.getFilePath(filename);

@@ -1,8 +1,8 @@
 import { SharedModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
-import { IErrorData } from '../models/core.models.js';
+import { ErrorData } from '../models/core.models.js';
 
-export function extractErrorData(error: any): IErrorData {
+export function extractErrorData(error: any): ErrorData {
     let isUnknownError: boolean = true;
     let message: string = `Unknown error`;
     let requestUrl: string | undefined = undefined;

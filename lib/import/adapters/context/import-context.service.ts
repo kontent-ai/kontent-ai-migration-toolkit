@@ -1,11 +1,11 @@
 import {
-    IAssetStateInTargetEnvironmentByCodename,
-    IExternalIdGenerator,
-    IFlattenedContentType,
-    IItemStateInTargetEnvironmentByCodename,
-    ILanguageVariantStateInTargetEnvironmentByCodename,
-    IMigrationItem,
-    ILogger,
+    AssetStateInTargetEnvironmentByCodename,
+    ExternalIdGenerator,
+    FlattenedContentType,
+    ItemStateInTargetEnvironmentByCodename,
+    LanguageVariantStateInTargetEnvironmentByCodename,
+    MigrationItem,
+    Logger,
     getFlattenedContentTypesAsync,
     is404Error,
     processInChunksAsync,
@@ -14,32 +14,32 @@ import {
 } from '../../../core/index.js';
 
 import { AssetModels, ContentItemModels, LanguageVariantModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { GetFlattenedElement, IImportContext, IImportData } from '../../import.models.js';
+import { GetFlattenedElement, ImportContext, ImportData } from '../../import.models.js';
 import { ItemsExtractionService, getItemsExtractionService } from '../../../translation/index.js';
 
-interface ILanguageVariantWrapper {
+interface LanguageVariantWrapper {
     languageVariant: LanguageVariantModels.ContentItemLanguageVariant;
-    migrationItem: IMigrationItem;
+    migrationItem: MigrationItem;
 }
 
-export interface IImportContextConfig {
-    readonly logger: ILogger;
+export interface ImportContextConfig {
+    readonly logger: Logger;
     readonly managementClient: ManagementClient;
-    readonly externalIdGenerator: IExternalIdGenerator;
+    readonly externalIdGenerator: ExternalIdGenerator;
 }
 
-export function getImportContextService(config: IImportContextConfig): ImportContextService {
+export function getImportContextService(config: ImportContextConfig): ImportContextService {
     return new ImportContextService(config);
 }
 
 export class ImportContextService {
     private readonly itemsExtractionService: ItemsExtractionService;
 
-    constructor(private readonly config: IImportContextConfig) {
+    constructor(private readonly config: ImportContextConfig) {
         this.itemsExtractionService = getItemsExtractionService();
     }
 
-    async getImportContextAsync(importData: IImportData): Promise<IImportContext> {
+    async getImportContextAsync(importData: ImportData): Promise<ImportContext> {
         const getElement: GetFlattenedElement = await this.getElementFuncAsync();
 
         const referencedData = this.itemsExtractionService.extractReferencedItemsFromMigrationItems(
@@ -62,7 +62,7 @@ export class ImportContextService {
         ].filter(uniqueStringFilter);
 
         // only load language variants for items to migrate, no need to get it for referenced items
-        const languageVariantToCheckInTargetEnv: IMigrationItem[] = contentItemsExcludingComponents;
+        const languageVariantToCheckInTargetEnv: MigrationItem[] = contentItemsExcludingComponents;
 
         // check all assets, including referenced assets in content
         const assetCodenamesToCheckInTargetEnv: string[] = [
@@ -71,19 +71,19 @@ export class ImportContextService {
         ];
 
         // prepare state of objects in target environment
-        const itemStates: IItemStateInTargetEnvironmentByCodename[] = await this.getItemStatesAsync(
+        const itemStates: ItemStateInTargetEnvironmentByCodename[] = await this.getItemStatesAsync(
             itemCodenamesToCheckInTargetEnv
         );
 
-        const variantStates: ILanguageVariantStateInTargetEnvironmentByCodename[] = await this.getVariantStatesAsync(
+        const variantStates: LanguageVariantStateInTargetEnvironmentByCodename[] = await this.getVariantStatesAsync(
             languageVariantToCheckInTargetEnv
         );
 
-        const assetStates: IAssetStateInTargetEnvironmentByCodename[] = await this.getAssetStatesAsync(
+        const assetStates: AssetStateInTargetEnvironmentByCodename[] = await this.getAssetStatesAsync(
             assetCodenamesToCheckInTargetEnv
         );
 
-        const importContext: IImportContext = {
+        const importContext: ImportContext = {
             componentItems: contentItemComponents,
             contentItems: contentItemsExcludingComponents,
             referencedData: referencedData,
@@ -131,7 +131,7 @@ export class ImportContextService {
 
     private async getElementFuncAsync(): Promise<GetFlattenedElement> {
         // get & flatten content type and its elements
-        const flattenedTypes: IFlattenedContentType[] = await getFlattenedContentTypesAsync(
+        const flattenedTypes: FlattenedContentType[] = await getFlattenedContentTypesAsync(
             this.config.managementClient,
             this.config.logger
         );
@@ -161,10 +161,10 @@ export class ImportContextService {
         return getFlattenedElement;
     }
 
-    private async getLanguageVariantsAsync(migrationItems: IMigrationItem[]): Promise<ILanguageVariantWrapper[]> {
-        const languageVariants: ILanguageVariantWrapper[] = [];
+    private async getLanguageVariantsAsync(migrationItems: MigrationItem[]): Promise<LanguageVariantWrapper[]> {
+        const languageVariants: LanguageVariantWrapper[] = [];
 
-        await processInChunksAsync<IMigrationItem, void>({
+        await processInChunksAsync<MigrationItem, void>({
             logger: this.config.logger,
             chunkSize: 1,
             items: migrationItems,
@@ -289,10 +289,10 @@ export class ImportContextService {
     }
 
     private async getVariantStatesAsync(
-        migrationItems: IMigrationItem[]
-    ): Promise<ILanguageVariantStateInTargetEnvironmentByCodename[]> {
+        migrationItems: MigrationItem[]
+    ): Promise<LanguageVariantStateInTargetEnvironmentByCodename[]> {
         const variants = await this.getLanguageVariantsAsync(migrationItems);
-        const variantStates: ILanguageVariantStateInTargetEnvironmentByCodename[] = [];
+        const variantStates: LanguageVariantStateInTargetEnvironmentByCodename[] = [];
 
         for (const migrationItem of migrationItems) {
             const variant = variants.find(
@@ -312,9 +312,9 @@ export class ImportContextService {
         return variantStates;
     }
 
-    private async getItemStatesAsync(itemCodenames: string[]): Promise<IItemStateInTargetEnvironmentByCodename[]> {
+    private async getItemStatesAsync(itemCodenames: string[]): Promise<ItemStateInTargetEnvironmentByCodename[]> {
         const items = await this.getContentItemsByCodenamesAsync(itemCodenames);
-        const itemStates: IItemStateInTargetEnvironmentByCodename[] = [];
+        const itemStates: ItemStateInTargetEnvironmentByCodename[] = [];
 
         for (const codename of itemCodenames) {
             const item = items.find((m) => m.codename === codename);
@@ -331,9 +331,9 @@ export class ImportContextService {
         return itemStates;
     }
 
-    private async getAssetStatesAsync(assetCodenames: string[]): Promise<IAssetStateInTargetEnvironmentByCodename[]> {
+    private async getAssetStatesAsync(assetCodenames: string[]): Promise<AssetStateInTargetEnvironmentByCodename[]> {
         const assets = await this.getAssetsByCodenamesAsync(assetCodenames);
-        const assetStates: IAssetStateInTargetEnvironmentByCodename[] = [];
+        const assetStates: AssetStateInTargetEnvironmentByCodename[] = [];
 
         for (const assetCodename of assetCodenames) {
             const asset = assets.find((m) => m.codename === assetCodename);

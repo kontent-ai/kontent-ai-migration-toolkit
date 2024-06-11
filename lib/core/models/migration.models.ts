@@ -13,12 +13,12 @@ export type MigrationElementType =
     | 'custom'
     | 'subpages';
 
-export interface IMigrationElement {
+export interface MigrationElement {
     value: string | undefined | string[];
     codename: string;
 }
 
-export interface IMigrationItem {
+export interface MigrationItem {
     system: {
         codename: string;
         name: string;
@@ -29,19 +29,19 @@ export interface IMigrationItem {
         workflow?: string;
         workflow_step?: string;
     };
-    elements: IMigrationElement[];
+    elements: MigrationElement[];
 }
 
-export interface IMigrationReference {
+export interface MigrationReference {
     codename: string;
 }
 
-export interface IMigrationAssetDescription {
-    language: IMigrationReference;
+export interface MigrationAssetDescription {
+    language: MigrationReference;
     description: string | undefined;
 }
 
-export interface IMigrationAsset {
+export interface MigrationAsset {
     _zipFilename: string;
     codename: string;
     binaryData: Buffer | Blob | undefined;
@@ -49,6 +49,6 @@ export interface IMigrationAsset {
     title: string;
 
     externalId?: string;
-    collection?: IMigrationReference;
-    descriptions?: IMigrationAssetDescription[];
+    collection?: MigrationReference;
+    descriptions?: MigrationAssetDescription[];
 }

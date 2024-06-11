@@ -1,7 +1,7 @@
-import { getDefaultNodeLogAsync, migrateAsync } from '../lib/index.js';
+import { getDefaultLogger, migrateAsync } from '../lib/index.js';
 
 await migrateAsync({
-    logger: await getDefaultNodeLogAsync(),
+    logger: getDefaultLogger(),
     sourceEnvironment: {
         apiKey: '<key>',
         id: '<id>',

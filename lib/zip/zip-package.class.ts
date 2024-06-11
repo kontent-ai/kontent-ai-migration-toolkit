@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
 import chalk from 'chalk';
-import { ILogger, formatBytes, getCurrentEnvironment, logErrorAndExit } from '../core/index.js';
+import { Logger, formatBytes, getCurrentEnvironment, logErrorAndExit } from '../core/index.js';
 import { FileBinaryData, ZipCompressionLevel, ZipContext } from './zip.models.js';
 import {} from 'browser-or-node';
 
-interface IFileResult<T> {
+interface FileResult<T> {
     data: T;
     filename: string;
 }
@@ -12,7 +12,7 @@ interface IFileResult<T> {
 export class ZipPackage {
     private readonly compressionLevel: ZipCompressionLevel = 9;
 
-    constructor(private readonly jsZip: JSZip, private readonly logger: ILogger, private readonly context?: ZipContext) {}
+    constructor(private readonly jsZip: JSZip, private readonly logger: Logger, private readonly context?: ZipContext) {}
 
     addFile(filePath: string, data: any): void {
         this.jsZip.file(filePath, data);
@@ -22,8 +22,8 @@ export class ZipPackage {
         this.jsZip.folder(name);
     }
 
-    async getAllFilesAsync<TReturnType>(type: JSZip.OutputType): Promise<IFileResult<TReturnType>[]> {
-        const files: IFileResult<TReturnType>[] = [];
+    async getAllFilesAsync<TReturnType>(type: JSZip.OutputType): Promise<FileResult<TReturnType>[]> {
+        const files: FileResult<TReturnType>[] = [];
 
         for (const file of Object.values(this.jsZip.files)) {
             if (!file?.name) {

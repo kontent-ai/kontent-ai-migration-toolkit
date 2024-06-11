@@ -3,7 +3,6 @@ import { MigrationElementType } from './migration.models.js';
 
 export type TargetItemState = 'exists' | 'doesNotExists';
 export type CliAction = 'export' | 'import' | 'migrate';
-export type ExportAdapter = 'kontentAi';
 export type GeneralItemType = 'exportedItem' | 'migrationItem';
 export type GeneralActionType = 'readFs' | 'skip' | 'writeFs' | 'download';
 export type EnvContext = 'browser' | 'node';
@@ -32,12 +31,12 @@ export type MapiType =
     | 'binaryFile'
     | 'workflow';
 
-export interface IItemInfo {
+export interface ItemInfo {
     title: string;
     itemType: GeneralItemType | MapiType;
 }
 
-export interface IErrorData {
+export interface ErrorData {
     message: string;
     requestData?: string;
     requestUrl?: string;
@@ -45,69 +44,69 @@ export interface IErrorData {
     error: any;
 }
 
-export interface IReferencedDataInMigrationItems {
+export interface ReferencedDataInMigrationItems {
     itemCodenames: string[];
     assetCodenames: string[];
 }
 
-export interface IReferencedDataInLanguageVariants {
+export interface ReferencedDataInLanguageVariants {
     itemIds: string[];
     assetIds: string[];
 }
 
-export interface IItemStateInSourceEnvironmentById {
+export interface ItemStateInSourceEnvironmentById {
     state: TargetItemState;
     id: string;
     item: ContentItemModels.ContentItem | undefined;
 }
 
-export interface IAssetStateInSourceEnvironmentById {
+export interface AssetStateInSourceEnvironmentById {
     state: TargetItemState;
     id: string;
     asset: AssetModels.Asset | undefined;
 }
 
-export interface IItemStateInTargetEnvironmentByCodename {
+export interface ItemStateInTargetEnvironmentByCodename {
     state: TargetItemState;
     itemCodename: string;
     item: ContentItemModels.ContentItem | undefined;
     externalIdToUse: string;
 }
 
-export interface ILanguageVariantStateInTargetEnvironmentByCodename {
+export interface LanguageVariantStateInTargetEnvironmentByCodename {
     state: TargetItemState;
     itemCodename: string;
     languageCodename: string;
     languageVariant: LanguageVariantModels.ContentItemLanguageVariant | undefined;
 }
 
-export interface IAssetStateInTargetEnvironmentByCodename {
+export interface AssetStateInTargetEnvironmentByCodename {
     state: TargetItemState;
     assetCodename: string;
     asset: AssetModels.Asset | undefined;
     externalIdToUse: string;
 }
 
-export interface IPackageMetadata {
+export interface PackageMetadata {
     created: Date;
     environmentId: string;
-    dataOverview: IPackageDataOverview;
+    dataOverview: PackageDataOverview;
 }
 
-export interface IPackageDataOverview {
+export interface PackageDataOverview {
     contentItemsCount: number;
     assetsCount: number;
 }
 
-export interface IFlattenedContentTypeElement {
+export interface FlattenedContentTypeElement {
     codename: string;
     id: string;
     type: MigrationElementType;
     element: ContentTypeElements.ContentTypeElementModel;
 }
 
-export interface IFlattenedContentType {
+export interface FlattenedContentType {
     contentTypeCodename: string;
     contentTypeId: string;
-    elements: IFlattenedContentTypeElement[];
+    elements: FlattenedContentTypeElement[];
 }

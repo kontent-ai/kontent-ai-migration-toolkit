@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import { IKontentAiExportRequestItem } from '../export.models.js';
+import { KontentAiExportRequestItem } from '../export.models.js';
 
-export function throwErrorForItemRequest(itemRequest: IKontentAiExportRequestItem, message: string): never {
+export function throwErrorForItemRequest(itemRequest: KontentAiExportRequestItem, message: string): never {
     throw Error(
         `Export failed for item '${chalk.yellow(itemRequest.itemCodename)}' in language '${chalk.cyan(
             itemRequest.languageCodename

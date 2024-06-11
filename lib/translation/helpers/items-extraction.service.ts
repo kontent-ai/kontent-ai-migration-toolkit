@@ -1,12 +1,12 @@
 import { richTextHelper } from '../index.js';
 import {
-    IMigrationItem,
-    IReferencedDataInLanguageVariants,
-    IReferencedDataInMigrationItems,
+    MigrationItem,
+    ReferencedDataInLanguageVariants,
+    ReferencedDataInMigrationItems,
     parseAsArray,
     uniqueStringFilter
 } from '../../core/index.js';
-import { IKontentAiPreparedExportItem } from '../../export/export.models.js';
+import { KontentAiPreparedExportItem } from '../../export/export.models.js';
 import { GetFlattenedElement } from '../../import/index.js';
 
 export function getItemsExtractionService(): ItemsExtractionService {
@@ -16,7 +16,7 @@ export function getItemsExtractionService(): ItemsExtractionService {
 export class ItemsExtractionService {
     constructor() {}
 
-    extractReferencedDataFromExportItems(items: IKontentAiPreparedExportItem[]): IReferencedDataInLanguageVariants {
+    extractReferencedDataFromExportItems(items: KontentAiPreparedExportItem[]): ReferencedDataInLanguageVariants {
         const itemIds: string[] = [];
         const assetIds: string[] = [];
 
@@ -67,9 +67,9 @@ export class ItemsExtractionService {
     }
 
     extractReferencedItemsFromMigrationItems(
-        items: IMigrationItem[],
+        items: MigrationItem[],
         getElement: GetFlattenedElement
-    ): IReferencedDataInMigrationItems {
+    ): ReferencedDataInMigrationItems {
         const itemCodenames: string[] = [];
         const assetCodenames: string[] = [];
 
@@ -95,7 +95,7 @@ export class ItemsExtractionService {
             }
         }
 
-        const data: IReferencedDataInMigrationItems = {
+        const data: ReferencedDataInMigrationItems = {
             itemCodenames: itemCodenames.filter(uniqueStringFilter),
             assetCodenames: assetCodenames.filter(uniqueStringFilter)
         };

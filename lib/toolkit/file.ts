@@ -1,26 +1,26 @@
 import { FileService, getFileService } from '../file/index.js';
-import { ILogger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
-import { IExportAdapterResult } from '../export/index.js';
+import { Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
+import { ExportAdapterResult } from '../export/index.js';
 import { ZipContext, ZipService, getZipService } from '../zip/index.js';
 import { libMetadata } from '../metadata.js';
 import { defaultFilesConfig, getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
-import { IImportData } from '../import/index.js';
-import { IFilesConfig } from './models/toolkit.models.js';
+import { ImportData } from '../import/index.js';
+import { FilesConfig } from './models/toolkit.models.js';
 
-export interface IStoreConfig {
-    data: IExportAdapterResult;
-    files?: IFilesConfig;
+export interface StoreConfig {
+    data: ExportAdapterResult;
+    files?: FilesConfig;
     zipContext?: ZipContext;
-    logger?: ILogger;
+    logger?: Logger;
 }
 
-export interface IExtractConfig {
-    files?: IFilesConfig;
+export interface ExtractConfig {
+    files?: FilesConfig;
     zipContext?: ZipContext;
-    logger?: ILogger;
+    logger?: Logger;
 }
 
-export async function storeAsync(config: IStoreConfig): Promise<void> {
+export async function storeAsync(config: StoreConfig): Promise<void> {
     const logger = config.logger ?? getDefaultLogger();
     const fileService = getFileService(logger);
     const zipService = getZipService(logger);
@@ -52,7 +52,7 @@ export async function storeAsync(config: IStoreConfig): Promise<void> {
     });
 }
 
-export async function extractAsync(config: IExtractConfig): Promise<IImportData> {
+export async function extractAsync(config: ExtractConfig): Promise<ImportData> {
     const logger = config.logger ?? getDefaultLogger();
     const fileService = getFileService(logger);
     const zipService = getZipService(logger, config.zipContext);
@@ -81,11 +81,11 @@ export async function extractAsync(config: IExtractConfig): Promise<IImportData>
 }
 
 async function getImportDataFromFilesAsync(data: {
-    files: IFilesConfig;
+    files: FilesConfig;
     fileService: FileService;
     zipService: ZipService;
-    logger: ILogger;
-}): Promise<IImportData> {
+    logger: Logger;
+}): Promise<ImportData> {
     if (data.files.items?.filename?.toLowerCase()?.endsWith('.zip')) {
         return await getImportDataFromZipAsync(data);
     }
@@ -96,9 +96,9 @@ async function getImportDataFromFilesAsync(data: {
 async function getImportDataFromZipAsync(data: {
     fileService: FileService;
     zipService: ZipService;
-    files: IFilesConfig;
-    logger: ILogger;
-}): Promise<IImportData> {
+    files: FilesConfig;
+    logger: Logger;
+}): Promise<ImportData> {
     const importData = await data.zipService.parseZipAsync({
         items: data.files.items
             ? {
@@ -118,11 +118,11 @@ async function getImportDataFromZipAsync(data: {
 }
 
 async function getImportDataFromNonZipFileAsync(data: {
-    files: IFilesConfig;
+    files: FilesConfig;
     zipService: ZipService;
     fileService: FileService;
-    logger: ILogger;
-}): Promise<IImportData> {
+    logger: Logger;
+}): Promise<ImportData> {
     const importData = await data.zipService.parseFileAsync({
         items: data.files.items
             ? {

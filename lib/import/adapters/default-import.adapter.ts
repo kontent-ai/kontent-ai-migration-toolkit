@@ -9,11 +9,11 @@ import {
 import {
     defaultRetryStrategy,
     defaultHttpService,
-    IMigrationItem,
+    MigrationItem,
     runMapiRequestAsync,
     defaultExternalIdGenerator
 } from '../../core/index.js';
-import { IDefaultImportAdapterConfig, IImportAdapter, IImportContext, IImportData } from '../import.models.js';
+import { DefaultImportAdapterConfig, ImportAdapter, ImportContext, ImportData } from '../import.models.js';
 import { ImportAssetsService, getImportAssetsService } from '../helper-services/import-assets.service.js';
 import {
     ImportContentItemHelper,
@@ -26,11 +26,11 @@ import {
 import chalk from 'chalk';
 import { ImportContextService, getImportContextService } from './context/import-context.service.js';
 
-export function getDefaultImportAdapter(config: IDefaultImportAdapterConfig): IImportAdapter {
+export function getDefaultImportAdapter(config: DefaultImportAdapterConfig): ImportAdapter {
     return new DefaultImportAdapter(config);
 }
 
-class DefaultImportAdapter implements IImportAdapter {
+class DefaultImportAdapter implements ImportAdapter {
     public readonly name: string = 'Kontent.ai import adapter';
     public readonly client: ManagementClient;
 
@@ -39,7 +39,7 @@ class DefaultImportAdapter implements IImportAdapter {
     private readonly importLanguageVariantService: ImportLanguageVariantServices;
     private readonly importContextService: ImportContextService;
 
-    constructor(private config: IDefaultImportAdapterConfig) {
+    constructor(private config: DefaultImportAdapterConfig) {
         this.client = createManagementClient({
             apiKey: config.apiKey,
             baseUrl: config.baseUrl,
@@ -69,7 +69,7 @@ class DefaultImportAdapter implements IImportAdapter {
         return this.client;
     }
 
-    async importAsync(sourceData: IImportData): Promise<void> {
+    async importAsync(sourceData: ImportData): Promise<void> {
         const dataToImport = this.filterDataToImport(sourceData);
         const importContext = await this.importContextService.getImportContextAsync(dataToImport);
 
@@ -103,8 +103,8 @@ class DefaultImportAdapter implements IImportAdapter {
         });
     }
 
-    private filterDataToImport(source: IImportData): IImportData {
-        const dataToImport: IImportData = {
+    private filterDataToImport(source: ImportData): ImportData {
+        const dataToImport: ImportData = {
             assets: [],
             items: []
         };
@@ -156,8 +156,8 @@ class DefaultImportAdapter implements IImportAdapter {
     }
 
     private async importMigrationItemsAsync(
-        migrationContentItems: IMigrationItem[],
-        importContext: IImportContext
+        migrationContentItems: MigrationItem[],
+        importContext: ImportContext
     ): Promise<void> {
         const workflows = await this.getWorkflowsAsync();
         const collections = await this.getCollectionsAsync();

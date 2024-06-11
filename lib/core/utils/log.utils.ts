@@ -1,35 +1,30 @@
 import chalk from 'chalk';
 import { GeneralActionType, GeneralItemType, MapiAction, MapiType } from '../models/core.models.js';
 
-export interface ILogCount {
-    index: number;
-    total: number;
-}
-
-export interface ILogData {
+export interface LogMessage {
     type: DebugType;
     message: string;
 }
 
-export interface ISpinnerLogData extends ILogData {
+export interface SpinnerLogData extends LogMessage {
     prefix?: string;
 }
 
-export type LogData = (data: ILogData) => void;
-export type LogSpinnerData = (data: ISpinnerLogData) => void;
+export type LogData = (data: LogMessage) => void;
+export type LogSpinnerData = (data: SpinnerLogData) => void;
 
-export interface ILogger {
+export interface Logger {
     logWithSpinnerAsync<T>(func: (logData: LogSpinnerData) => Promise<T>): Promise<T>;
     log: LogData;
 }
 
-export interface ILogSpinner {
+export interface LogSpinner {
     withSpinnerAsync<T>(func: (logData: LogSpinnerData) => Promise<T>): Promise<T>;
 
     nextItem(): void;
     start(): Promise<void> | void;
     stop(): Promise<void> | void;
-    log(data: ILogData): Promise<void> | void;
+    log(data: LogMessage): Promise<void> | void;
 }
 
 export type DebugType =
@@ -51,8 +46,8 @@ export function logErrorAndExit(data: { message: string }): never {
 
 export async function logSpinnerOrDefaultAsync(data: {
     logSpinner: LogSpinnerData | undefined;
-    logData: ILogData;
-    logger: ILogger;
+    logData: LogMessage;
+    logger: Logger;
 }): Promise<void> {
     if (data.logSpinner) {
         await data.logSpinner(data.logData);
@@ -65,7 +60,7 @@ export function getCountPrefix(index: number, totalCount: number): string {
     return `${chalk.cyan(`${index}/${totalCount}`)}`;
 }
 
-export function getLogDataMessage(data: ISpinnerLogData): string {
+export function getLogDataMessage(data: SpinnerLogData): string {
     let typeColor = chalk.yellow;
 
     if (data.type === 'info') {

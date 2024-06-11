@@ -1,6 +1,6 @@
 import { CliAction } from '../../core/index.js';
 
-export interface ICliFileConfig {
+export interface CliFileConfig {
     environmentId?: string;
     apiKey?: string;
     language?: string;
@@ -13,14 +13,14 @@ export interface ICliFileConfig {
     force: boolean;
 }
 
-export interface ICommand {
+export interface Command {
     name: string;
     description: string;
-    options: ICommandOption[];
+    options: CommandOption[];
     examples: string[];
 }
 
-export interface ICommandOption {
+export interface CommandOption {
     name: string;
     isRequired: boolean;
     alias?: string;

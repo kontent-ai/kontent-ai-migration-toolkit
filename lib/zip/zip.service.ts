@@ -1,36 +1,36 @@
 import chalk from 'chalk';
 import JSZip from 'jszip';
 
-import { IExportAdapterResult } from '../export/index.js';
+import { ExportAdapterResult } from '../export/index.js';
 import {
-    IItemFormatService,
+    ItemFormatService,
     ZipCompressionLevel,
-    IAssetFormatService,
+    AssetFormatService,
     FileBinaryData,
     ZipContext
 } from './zip.models.js';
 import { ZipPackage } from './zip-package.class.js';
-import { IMigrationAsset, IMigrationItem, ILogger } from '../core/index.js';
-import { IImportData } from '../import/import.models.js';
+import { MigrationAsset, MigrationItem, Logger } from '../core/index.js';
+import { ImportData } from '../import/import.models.js';
 
-export function getZipService(logger: ILogger, zipContext?: ZipContext): ZipService {
+export function getZipService(logger: Logger, zipContext?: ZipContext): ZipService {
     return new ZipService(logger, zipContext);
 }
 
 export class ZipService {
-    constructor(private readonly logger: ILogger, private readonly zipContext?: ZipContext) {}
+    constructor(private readonly logger: Logger, private readonly zipContext?: ZipContext) {}
 
     async parseZipAsync(data: {
         items?: {
             file: Buffer;
-            formatService: IItemFormatService;
+            formatService: ItemFormatService;
         };
         assets?: {
             file: Buffer;
-            formatService: IAssetFormatService;
+            formatService: AssetFormatService;
         };
-    }): Promise<IImportData> {
-        const result: IImportData = {
+    }): Promise<ImportData> {
+        const result: ImportData = {
             items: [],
             assets: []
         };
@@ -86,15 +86,15 @@ export class ZipService {
     async parseFileAsync(data: {
         items?: {
             file: Buffer;
-            formatService: IItemFormatService;
+            formatService: ItemFormatService;
         };
         assets?: {
             file: Buffer;
-            formatService: IAssetFormatService;
+            formatService: AssetFormatService;
         };
-    }): Promise<IImportData> {
-        let parsedItems: IMigrationItem[] = [];
-        let parsedAssets: IMigrationAsset[] = [];
+    }): Promise<ImportData> {
+        let parsedItems: MigrationItem[] = [];
+        let parsedAssets: MigrationAsset[] = [];
 
         if (data.items) {
             this.logger.log({
@@ -120,7 +120,7 @@ export class ZipService {
             });
         }
 
-        const result: IImportData = {
+        const result: ImportData = {
             items: parsedItems,
             assets: parsedAssets
         };
@@ -136,9 +136,9 @@ export class ZipService {
     }
 
     async createItemsZipAsync(
-        exportData: IExportAdapterResult,
+        exportData: ExportAdapterResult,
         config: {
-            itemFormatService: IItemFormatService;
+            itemFormatService: ItemFormatService;
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {
@@ -156,9 +156,9 @@ export class ZipService {
     }
 
     async createAssetsZipAsync(
-        exportData: IExportAdapterResult,
+        exportData: ExportAdapterResult,
         config: {
-            assetFormatService: IAssetFormatService;
+            assetFormatService: AssetFormatService;
             compressionLevel?: ZipCompressionLevel;
         }
     ): Promise<FileBinaryData> {

@@ -1,6 +1,6 @@
 import { SharedContracts, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
 import { parseAsArray, logErrorAndExit, MigrationElementType } from '../../core/index.js';
-import { IImportContext, ImportTransformFunc } from '../../import/index.js';
+import { ImportContext, ImportTransformFunc } from '../../import/index.js';
 import { richTextHelper } from '../helpers/rich-text.helper.js';
 
 const elementsBuilder = new LanguageVariantElementsBuilder();
@@ -164,7 +164,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
 
 async function processImportRichTextHtmlValueAsync(
     richTextHtml: string | undefined,
-    importContext: IImportContext
+    importContext: ImportContext
 ): Promise<string | undefined> {
     if (!richTextHtml) {
         return richTextHtml;

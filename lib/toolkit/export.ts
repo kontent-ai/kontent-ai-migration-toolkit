@@ -1,26 +1,26 @@
 import { libMetadata } from '../metadata.js';
-import {  ILogger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
+import {  Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
 import {
-    IDefaultExportAdapterConfig,
-    IExportAdapter,
-    IExportAdapterResult,
+    DefaultExportAdapterConfig,
+    ExportAdapter,
+    ExportAdapterResult,
     getDefaultExportAdapter
 } from '../export/index.js';
 
-export interface IExportConfig {
-    logger?: ILogger;
+export interface ExportConfig {
+    logger?: Logger;
 }
 
-export interface IDefaultExportConfig extends IExportConfig {
-    adapterConfig: Omit<IDefaultExportAdapterConfig, 'logger'>;
+export interface DefaultExportConfig extends ExportConfig {
+    adapterConfig: Omit<DefaultExportAdapterConfig, 'logger'>;
 }
 
-export async function exportAsync(config: IDefaultExportConfig): Promise<IExportAdapterResult>;
-export async function exportAsync(adapter: IExportAdapter, config?: IExportConfig): Promise<IExportAdapterResult>;
+export async function exportAsync(config: DefaultExportConfig): Promise<ExportAdapterResult>;
+export async function exportAsync(adapter: ExportAdapter, config?: ExportConfig): Promise<ExportAdapterResult>;
 export async function exportAsync(
-    inputAdapterOrDefaultConfig: IDefaultExportConfig | IExportAdapter,
-    inputConfig?: IExportConfig
-): Promise<IExportAdapterResult> {
+    inputAdapterOrDefaultConfig: DefaultExportConfig | ExportAdapter,
+    inputConfig?: ExportConfig
+): Promise<ExportAdapterResult> {
     const { adapter } = await getSetupAsync(inputAdapterOrDefaultConfig, inputConfig);
 
     return await executeWithTrackingAsync({
@@ -42,20 +42,20 @@ export async function exportAsync(
     });
 }
 
-async function getSetupAsync<TConfig extends IExportConfig, TDefaultConfig extends IDefaultExportConfig & TConfig>(
-    inputAdapterOrDefaultConfig: TDefaultConfig | IExportAdapter,
+async function getSetupAsync<TConfig extends ExportConfig, TDefaultConfig extends DefaultExportConfig & TConfig>(
+    inputAdapterOrDefaultConfig: TDefaultConfig | ExportAdapter,
     inputConfig?: TConfig
 ): Promise<{
-    adapter: IExportAdapter;
+    adapter: ExportAdapter;
     config: TConfig;
-    logger: ILogger;
+    logger: Logger;
 }> {
-    let adapter: IExportAdapter;
+    let adapter: ExportAdapter;
     let config: TConfig;
-    let logger: ILogger;
+    let logger: Logger;
 
-    if ((inputAdapterOrDefaultConfig as IExportAdapter)?.name) {
-        adapter = inputAdapterOrDefaultConfig as IExportAdapter;
+    if ((inputAdapterOrDefaultConfig as ExportAdapter)?.name) {
+        adapter = inputAdapterOrDefaultConfig as ExportAdapter;
         config = (inputConfig as TConfig) ?? {};
         logger = config.logger ?? getDefaultLogger();
     } else {

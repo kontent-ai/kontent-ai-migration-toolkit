@@ -1,10 +1,10 @@
-import { IMigrationElement, IMigrationItem } from '../../../core/index.js';
+import { MigrationElement, MigrationItem } from '../../../core/index.js';
 
-export interface IJsonElements {
+export interface JsonElements {
     [elementCodename: string]: string | string[] | undefined;
 }
 
-export interface IJsonItem {
+export interface JsonItem {
     system: {
         codename: string;
         name: string;
@@ -14,22 +14,22 @@ export interface IJsonItem {
         workflow_step?: string;
         workflow?: string;
     };
-    elements: IJsonElements;
+    elements: JsonElements;
 }
 
-export interface ITypeWrapper {
+export interface TypeWrapper {
     typeCodename: string;
-    items: IMigrationItem[];
+    items: MigrationItem[];
 }
 
-export function mapToJsonItem(item: IMigrationItem): IJsonItem {
-    const jsonElements: IJsonElements = {};
+export function mapToJsonItem(item: MigrationItem): JsonItem {
+    const jsonElements: JsonElements = {};
 
     for (const element of item.elements) {
         jsonElements[element.codename] = element.value;
     }
 
-    const jsonItem: IJsonItem = {
+    const jsonItem: JsonItem = {
         system: {
             codename: item.system.codename,
             collection: item.system.collection,
@@ -44,8 +44,8 @@ export function mapToJsonItem(item: IMigrationItem): IJsonItem {
     return jsonItem;
 }
 
-export function parseJsonItem(item: IJsonItem): IMigrationItem {
-    const elements: IMigrationElement[] = [];
+export function parseJsonItem(item: JsonItem): MigrationItem {
+    const elements: MigrationElement[] = [];
 
     for (const propertyName of Object.keys(item.elements)) {
         elements.push({
@@ -54,7 +54,7 @@ export function parseJsonItem(item: IJsonItem): IMigrationItem {
         });
     }
 
-    const parsedItem: IMigrationItem = {
+    const parsedItem: MigrationItem = {
         system: {
             codename: item.system.codename,
             collection: item.system.collection,

@@ -1,13 +1,13 @@
 import {
-    IExportContext,
-    IExportContextEnvironmentData,
-    IKontentAiExportRequestItem,
-    IKontentAiPreparedExportItem
+    ExportContext,
+    ExportContextEnvironmentData,
+    KontentAiExportRequestItem,
+    KontentAiPreparedExportItem
 } from '../../export.models.js';
 import {
-    IAssetStateInSourceEnvironmentById,
-    IItemStateInSourceEnvironmentById,
-    ILogger,
+    AssetStateInSourceEnvironmentById,
+    ItemStateInSourceEnvironmentById,
+    Logger,
     getFlattenedContentTypesAsync,
     is404Error,
     processInChunksAsync,
@@ -28,18 +28,18 @@ import chalk from 'chalk';
 import { ItemsExtractionService, getItemsExtractionService } from '../../../translation/index.js';
 import { throwErrorForItemRequest } from '../../utils/export.utils.js';
 
-export function getExportContextService(logger: ILogger, managementClient: ManagementClient): ExportContextService {
+export function getExportContextService(logger: Logger, managementClient: ManagementClient): ExportContextService {
     return new ExportContextService(logger, managementClient);
 }
 
 export class ExportContextService {
     private readonly itemsExtractionService: ItemsExtractionService;
 
-    constructor(private readonly logger: ILogger, private readonly managementClient: ManagementClient) {
+    constructor(private readonly logger: Logger, private readonly managementClient: ManagementClient) {
         this.itemsExtractionService = getItemsExtractionService();
     }
 
-    async getExportContextAsync(data: { exportItems: IKontentAiExportRequestItem[] }): Promise<IExportContext> {
+    async getExportContextAsync(data: { exportItems: KontentAiExportRequestItem[] }): Promise<ExportContext> {
         const environmentData = await this.getEnvironmentDataAsync();
 
         this.logger.log({
@@ -70,7 +70,7 @@ export class ExportContextService {
             type: 'info',
             message: `Fetching referenced items`
         });
-        const itemStates: IItemStateInSourceEnvironmentById[] = await this.getItemStatesAsync(
+        const itemStates: ItemStateInSourceEnvironmentById[] = await this.getItemStatesAsync(
             itemIdsToCheckInTargetEnv
         );
 
@@ -78,7 +78,7 @@ export class ExportContextService {
             type: 'info',
             message: `Fetching referenced assets`
         });
-        const assetStates: IAssetStateInSourceEnvironmentById[] = await this.getAssetStatesAsync(
+        const assetStates: AssetStateInSourceEnvironmentById[] = await this.getAssetStatesAsync(
             assetIdsToCheckInTargetEnv
         );
 
@@ -108,12 +108,12 @@ export class ExportContextService {
     }
 
     private async prepareExportItemsAsync(data: {
-        environmentData: IExportContextEnvironmentData;
-        exportItems: IKontentAiExportRequestItem[];
-    }): Promise<IKontentAiPreparedExportItem[]> {
-        const items: IKontentAiPreparedExportItem[] = await processInChunksAsync<
-            IKontentAiExportRequestItem,
-            IKontentAiPreparedExportItem
+        environmentData: ExportContextEnvironmentData;
+        exportItems: KontentAiExportRequestItem[];
+    }): Promise<KontentAiPreparedExportItem[]> {
+        const items: KontentAiPreparedExportItem[] = await processInChunksAsync<
+            KontentAiExportRequestItem,
+            KontentAiPreparedExportItem
         >({
             logger: this.logger,
             chunkSize: 1,
@@ -202,7 +202,7 @@ export class ExportContextService {
                     );
                 }
 
-                const preparedItem: IKontentAiPreparedExportItem = {
+                const preparedItem: KontentAiPreparedExportItem = {
                     contentItem: contentItem,
                     languageVariant: languageVariant,
                     contentType: contentType,
@@ -247,8 +247,8 @@ export class ExportContextService {
         return undefined;
     }
 
-    private async getEnvironmentDataAsync(): Promise<IExportContextEnvironmentData> {
-        const environmentData: IExportContextEnvironmentData = {
+    private async getEnvironmentDataAsync(): Promise<ExportContextEnvironmentData> {
+        const environmentData: ExportContextEnvironmentData = {
             collections: await this.getAllCollectionsAsync(),
             contentTypes: await getFlattenedContentTypesAsync(this.managementClient, this.logger),
             languages: await this.getAllLanguagesAsync(),
@@ -367,9 +367,9 @@ export class ExportContextService {
         return assets;
     }
 
-    private async getItemStatesAsync(itemIds: string[]): Promise<IItemStateInSourceEnvironmentById[]> {
+    private async getItemStatesAsync(itemIds: string[]): Promise<ItemStateInSourceEnvironmentById[]> {
         const items = await this.getContentItemsByIdsAsync(itemIds);
-        const itemStates: IItemStateInSourceEnvironmentById[] = [];
+        const itemStates: ItemStateInSourceEnvironmentById[] = [];
 
         for (const itemId of itemIds) {
             const item = items.find((m) => m.id === itemId);
@@ -392,9 +392,9 @@ export class ExportContextService {
         return itemStates;
     }
 
-    private async getAssetStatesAsync(assetIds: string[]): Promise<IAssetStateInSourceEnvironmentById[]> {
+    private async getAssetStatesAsync(assetIds: string[]): Promise<AssetStateInSourceEnvironmentById[]> {
         const assets = await this.getAssetsByIdsAsync(assetIds);
-        const assetStates: IAssetStateInSourceEnvironmentById[] = [];
+        const assetStates: AssetStateInSourceEnvironmentById[] = [];
 
         for (const assetId of assetIds) {
             const asset = assets.find((m) => m.id === assetId);

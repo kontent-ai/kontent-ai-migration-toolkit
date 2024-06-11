@@ -1,29 +1,29 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { IMigrationItem, ILogger, runMapiRequestAsync, LogSpinnerData } from '../../core/index.js';
+import { MigrationItem, Logger, runMapiRequestAsync, LogSpinnerData } from '../../core/index.js';
 import chalk from 'chalk';
 
-interface IWorkflowStep {
+interface WorkflowStep {
     codename: string;
     id: string;
 }
 
-interface IWorkflowAndStep {
+interface WorkflowAndStep {
     workflow: WorkflowModels.Workflow;
-    step: IWorkflowStep;
+    step: WorkflowStep;
 }
 
-export function getImportWorkflowService(logger: ILogger): ImportWorkflowService {
+export function getImportWorkflowService(logger: Logger): ImportWorkflowService {
     return new ImportWorkflowService(logger);
 }
 
 export class ImportWorkflowService {
-    constructor(private readonly logger: ILogger) {}
+    constructor(private readonly logger: Logger) {}
 
     getWorkflowAndStep(data: {
         workflowStepCodename: string;
         workflowCodename: string;
         workflows: WorkflowModels.Workflow[];
-    }): IWorkflowAndStep {
+    }): WorkflowAndStep {
         const workflow = data.workflows.find((m) => m.codename?.toLowerCase() === data.workflowCodename.toLowerCase());
 
         if (!workflow) {
@@ -53,7 +53,7 @@ export class ImportWorkflowService {
         };
     }
 
-    private getWorkflowStep(workflow: WorkflowModels.Workflow, stepCodename: string): IWorkflowStep | undefined {
+    private getWorkflowStep(workflow: WorkflowModels.Workflow, stepCodename: string): WorkflowStep | undefined {
         if (workflow.archivedStep.codename === stepCodename) {
             return {
                 codename: workflow.archivedStep.codename,
@@ -89,7 +89,7 @@ export class ImportWorkflowService {
         managementClient: ManagementClient,
         workflowCodename: string,
         workflowStepCodename: string,
-        migrationItem: IMigrationItem,
+        migrationItem: MigrationItem,
         workflows: WorkflowModels.Workflow[]
     ): Promise<void> {
         const { workflow, step } = this.getWorkflowAndStep({

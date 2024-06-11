@@ -1,19 +1,19 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { IMigrationAsset, ILogger, processInChunksAsync, runMapiRequestAsync } from '../../core/index.js';
+import { MigrationAsset, Logger, processInChunksAsync, runMapiRequestAsync } from '../../core/index.js';
 import mime from 'mime';
 import chalk from 'chalk';
-import { IImportContext } from '../import.models.js';
+import { ImportContext } from '../import.models.js';
 
-export function getImportAssetsService(logger: ILogger, managementClient: ManagementClient): ImportAssetsService {
+export function getImportAssetsService(logger: Logger, managementClient: ManagementClient): ImportAssetsService {
     return new ImportAssetsService(logger, managementClient);
 }
 
 export class ImportAssetsService {
     private readonly importAssetsChunkSize: number = 1;
 
-    constructor(private readonly logger: ILogger, private readonly managementClient: ManagementClient) {}
+    constructor(private readonly logger: Logger, private readonly managementClient: ManagementClient) {}
 
-    async importAssetsAsync(data: { assets: IMigrationAsset[]; importContext: IImportContext }): Promise<void> {
+    async importAssetsAsync(data: { assets: MigrationAsset[]; importContext: ImportContext }): Promise<void> {
         this.logger.log({
             type: 'info',
             message: `Categorizing '${chalk.yellow(data.assets.length.toString())}' assets`
@@ -40,7 +40,7 @@ export class ImportAssetsService {
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
         });
 
-        await processInChunksAsync<IMigrationAsset, void>({
+        await processInChunksAsync<MigrationAsset, void>({
             logger: this.logger,
             chunkSize: this.importAssetsChunkSize,
             items: assetsToUpload,
@@ -119,10 +119,10 @@ export class ImportAssetsService {
     }
 
     private getAssetsToUpload(data: {
-        assets: IMigrationAsset[];
+        assets: MigrationAsset[];
         managementClient: ManagementClient;
-        importContext: IImportContext;
-    }): IMigrationAsset[] {
+        importContext: ImportContext;
+    }): MigrationAsset[] {
         return data.assets.filter((asset) => {
             return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
         });

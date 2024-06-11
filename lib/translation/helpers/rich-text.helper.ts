@@ -1,12 +1,12 @@
 type CodenameReplaceFunc = (codename: string) => { external_id?: string; id?: string };
 type IdReplaceFunc = (id: string) => { codename: string };
 
-interface IProcessCodenamesResult {
+interface ProcessCodenamesResult {
     codenames: string[];
     html: string;
 }
 
-interface IProcessIdsResult {
+interface ProcessIdsResult {
     ids: string[];
     html: string;
 }
@@ -56,7 +56,7 @@ class RichTextHelper {
 
     constructor() {}
 
-    processDataIds(richTextHtml: string, replaceFunc?: IdReplaceFunc): IProcessIdsResult {
+    processDataIds(richTextHtml: string, replaceFunc?: IdReplaceFunc): ProcessIdsResult {
         if (!richTextHtml) {
             return {
                 html: richTextHtml,
@@ -92,7 +92,7 @@ class RichTextHelper {
         };
     }
 
-    processAssetIds(richTextHtml: string, replaceFunc?: IdReplaceFunc): IProcessIdsResult {
+    processAssetIds(richTextHtml: string, replaceFunc?: IdReplaceFunc): ProcessIdsResult {
         if (!richTextHtml) {
             return {
                 html: richTextHtml,
@@ -128,7 +128,7 @@ class RichTextHelper {
         };
     }
 
-    processLinkItemIds(richTextHtml: string, replaceFunc?: IdReplaceFunc): IProcessIdsResult {
+    processLinkItemIds(richTextHtml: string, replaceFunc?: IdReplaceFunc): ProcessIdsResult {
         if (!richTextHtml) {
             return {
                 html: richTextHtml,
@@ -163,7 +163,7 @@ class RichTextHelper {
         };
     }
 
-    processRteItemCodenames(richTextHtml: string, replaceFunc?: CodenameReplaceFunc): IProcessCodenamesResult {
+    processRteItemCodenames(richTextHtml: string, replaceFunc?: CodenameReplaceFunc): ProcessCodenamesResult {
         if (!richTextHtml) {
             return {
                 codenames: [],
@@ -207,7 +207,7 @@ class RichTextHelper {
         };
     }
 
-    processRteLinkItemCodenames(richTextHtml: string, replaceFunc?: CodenameReplaceFunc): IProcessCodenamesResult {
+    processRteLinkItemCodenames(richTextHtml: string, replaceFunc?: CodenameReplaceFunc): ProcessCodenamesResult {
         if (!richTextHtml) {
             return {
                 codenames: [],
@@ -251,7 +251,7 @@ class RichTextHelper {
         };
     }
 
-    processRteAssetCodenames(richTextHtml: string, replaceFunc?: CodenameReplaceFunc): IProcessCodenamesResult {
+    processRteAssetCodenames(richTextHtml: string, replaceFunc?: CodenameReplaceFunc): ProcessCodenamesResult {
         if (!richTextHtml) {
             return {
                 codenames: [],

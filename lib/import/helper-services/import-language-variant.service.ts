@@ -10,20 +10,20 @@ import {
     extractErrorData,
     logErrorAndExit,
     processInChunksAsync,
-    IMigrationItem,
-    IMigrationElement,
-    ILogger,
+    MigrationItem,
+    MigrationElement,
+    Logger,
     runMapiRequestAsync,
     LogSpinnerData
 } from '../../core/index.js';
 import { ImportWorkflowService, getImportWorkflowService } from './import-workflow.service.js';
 import chalk from 'chalk';
 import { importTransforms } from '../../translation/index.js';
-import { IImportContext } from '../import.models.js';
+import { ImportContext } from '../import.models.js';
 
 export function getImportLanguageVariantstemService(config: {
     managementClient: ManagementClient;
-    logger: ILogger;
+    logger: Logger;
     skipFailedItems: boolean;
 }): ImportLanguageVariantServices {
     return new ImportLanguageVariantServices(config);
@@ -33,22 +33,22 @@ export class ImportLanguageVariantServices {
     private readonly importContentItemChunkSize: number = 1;
     private readonly importWorkflowService: ImportWorkflowService;
 
-    constructor(private readonly config: { managementClient: ManagementClient; logger: ILogger; skipFailedItems: boolean }) {
+    constructor(private readonly config: { managementClient: ManagementClient; logger: Logger; skipFailedItems: boolean }) {
         this.importWorkflowService = getImportWorkflowService(config.logger);
     }
 
     async importLanguageVariantsAsync(data: {
-        importContentItems: IMigrationItem[];
+        importContentItems: MigrationItem[];
         workflows: WorkflowModels.Workflow[];
         preparedContentItems: ContentItemModels.ContentItem[];
-        importContext: IImportContext;
+        importContext: ImportContext;
     }): Promise<void> {
         this.config.logger.log({
             type: 'info',
             message: `Importing '${chalk.yellow(data.importContentItems.length.toString())}' language variants`
         });
 
-        await processInChunksAsync<IMigrationItem, void>({
+        await processInChunksAsync<MigrationItem, void>({
             logger: this.config.logger,
             chunkSize: this.importContentItemChunkSize,
             items: data.importContentItems,
@@ -102,12 +102,12 @@ export class ImportLanguageVariantServices {
 
     private async importLanguageVariantAsync(data: {
         logSpinner: LogSpinnerData;
-        migrationItem: IMigrationItem;
+        migrationItem: MigrationItem;
         preparedContentItem: ContentItemModels.ContentItem;
         managementClient: ManagementClient;
-        importContentItems: IMigrationItem[];
+        importContentItems: MigrationItem[];
         workflows: WorkflowModels.Workflow[];
-        importContext: IImportContext;
+        importContext: ImportContext;
     }): Promise<void> {
         await this.prepareLanguageVariantForImportAsync({
             logSpinner: data.logSpinner,
@@ -196,10 +196,10 @@ export class ImportLanguageVariantServices {
 
     private async prepareLanguageVariantForImportAsync(data: {
         logSpinner: LogSpinnerData | undefined;
-        migrationItem: IMigrationItem;
+        migrationItem: MigrationItem;
         managementClient: ManagementClient;
         workflows: WorkflowModels.Workflow[];
-        importContext: IImportContext;
+        importContext: ImportContext;
     }): Promise<void> {
         const languageVariantState = data.importContext.getLanguageVariantStateInTargetEnvironment(
             data.migrationItem.system.codename,
@@ -303,10 +303,10 @@ export class ImportLanguageVariantServices {
     }
 
     private async getElementContractAsync(
-        migrationItem: IMigrationItem,
-        element: IMigrationElement,
-        sourceItems: IMigrationItem[],
-        importContext: IImportContext
+        migrationItem: MigrationItem,
+        element: MigrationElement,
+        sourceItems: MigrationItem[],
+        importContext: ImportContext
     ): Promise<ElementContracts.IContentItemElementContract> {
         const flattenedElement = importContext.getElement(migrationItem.system.type, element.codename);
 

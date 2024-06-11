@@ -1,33 +1,33 @@
 import { libMetadata } from '../metadata.js';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
-import { IExternalIdGenerator, ILogger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
-import { IKontentAiExportRequestItem } from '../export/index.js';
+import { ExternalIdGenerator, Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
+import { KontentAiExportRequestItem } from '../export/index.js';
 import { exportAsync } from './export.js';
 import { importAsync } from './import.js';
 
-export interface IMigrationEnv {
+export interface MigrationEnv {
     id: string;
     apiKey: string;
 }
 
-export interface IMigrationSource extends IMigrationEnv {
-    items: IKontentAiExportRequestItem[];
+export interface MigrationSource extends MigrationEnv {
+    items: KontentAiExportRequestItem[];
     skipFailedItems?: boolean;
 }
 
-export interface IMigrationTarget extends IMigrationEnv {
+export interface MigrationTarget extends MigrationEnv {
     skipFailedItems?: boolean;
 }
 
-export interface IMigrationConfig {
+export interface MigrationConfig {
     retryStrategy?: IRetryStrategyOptions;
-    externalIdGenerator?: IExternalIdGenerator;
-    logger?: ILogger;
-    sourceEnvironment: IMigrationSource;
-    targetEnvironment: IMigrationTarget;
+    externalIdGenerator?: ExternalIdGenerator;
+    logger?: Logger;
+    sourceEnvironment: MigrationSource;
+    targetEnvironment: MigrationTarget;
 }
 
-export async function migrateAsync(config: IMigrationConfig): Promise<void> {
+export async function migrateAsync(config: MigrationConfig): Promise<void> {
     const logger = config.logger ?? getDefaultLogger();
 
     return await executeWithTrackingAsync({

@@ -1,14 +1,14 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import {
-    IMigrationItem,
-    IMigrationAsset,
-    ILogger,
-    IFlattenedContentType,
-    IAssetStateInSourceEnvironmentById,
-    IFlattenedContentTypeElement,
-    IItemStateInSourceEnvironmentById,
-    IReferencedDataInLanguageVariants
+    MigrationItem,
+    MigrationAsset,
+    Logger,
+    FlattenedContentType,
+    AssetStateInSourceEnvironmentById,
+    FlattenedContentTypeElement,
+    ItemStateInSourceEnvironmentById,
+    ReferencedDataInLanguageVariants
 } from '../core/index.js';
 import {
     LanguageVariantModels,
@@ -20,62 +20,62 @@ import {
     TaxonomyModels
 } from '@kontent-ai/management-sdk';
 
-export interface IExportContextEnvironmentData {
+export interface ExportContextEnvironmentData {
     languages: LanguageModels.LanguageModel[];
-    contentTypes: IFlattenedContentType[];
+    contentTypes: FlattenedContentType[];
     collections: CollectionModels.Collection[];
     workflows: WorkflowModels.Workflow[];
     taxonomies: TaxonomyModels.Taxonomy[];
 }
 
 export type ExportTransformFunc = (data: {
-    exportItem: IKontentAiPreparedExportItem;
-    typeElement: IFlattenedContentTypeElement;
+    exportItem: KontentAiPreparedExportItem;
+    typeElement: FlattenedContentTypeElement;
     value: string | number | SharedModels.ReferenceObject[] | undefined;
-    context: IExportContext;
+    context: ExportContext;
 }) => string | string[] | undefined;
 
-export interface IExportContext {
-    environmentData: IExportContextEnvironmentData;
-    referencedData: IReferencedDataInLanguageVariants;
-    getItemStateInSourceEnvironment: (id: string) => IItemStateInSourceEnvironmentById;
-    getAssetStateInSourceEnvironment: (id: string) => IAssetStateInSourceEnvironmentById;
-    preparedExportItems: IKontentAiPreparedExportItem[];
+export interface ExportContext {
+    environmentData: ExportContextEnvironmentData;
+    referencedData: ReferencedDataInLanguageVariants;
+    getItemStateInSourceEnvironment: (id: string) => ItemStateInSourceEnvironmentById;
+    getAssetStateInSourceEnvironment: (id: string) => AssetStateInSourceEnvironmentById;
+    preparedExportItems: KontentAiPreparedExportItem[];
 }
 
-export interface IExportAdapter {
+export interface ExportAdapter {
     readonly name: string;
-    exportAsync(): Promise<IExportAdapterResult>;
+    exportAsync(): Promise<ExportAdapterResult>;
 }
 
-export interface IExportAdapterResult {
-    items: IMigrationItem[];
-    assets: IMigrationAsset[];
+export interface ExportAdapterResult {
+    items: MigrationItem[];
+    assets: MigrationAsset[];
 }
 
-export interface IKontentAiExportRequestItem {
+export interface KontentAiExportRequestItem {
     itemCodename: string;
     languageCodename: string;
 }
 
-export interface IDefaultExportAdapterConfig {
+export interface DefaultExportAdapterConfig {
     environmentId: string;
     apiKey: string;
-    exportItems: IKontentAiExportRequestItem[];
-    logger: ILogger;
+    exportItems: KontentAiExportRequestItem[];
+    logger: Logger;
 
     baseUrl?: string;
     skipFailedItems?: boolean;
     retryStrategy?: IRetryStrategyOptions;
 }
 
-export interface IKontentAiPreparedExportItem {
+export interface KontentAiPreparedExportItem {
     languageVariant: LanguageVariantModels.ContentItemLanguageVariant;
     contentItem: ContentItemModels.ContentItem;
     collection: CollectionModels.Collection;
     language: LanguageModels.LanguageModel;
     workflow: WorkflowModels.Workflow;
     workflowStepCodename: string;
-    requestItem: IKontentAiExportRequestItem;
-    contentType: IFlattenedContentType;
+    requestItem: KontentAiExportRequestItem;
+    contentType: FlattenedContentType;
 }

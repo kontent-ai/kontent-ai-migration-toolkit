@@ -1,21 +1,21 @@
-import { ILogger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
-import { IDefaultImportAdapterConfig, IImportAdapter, IImportData, getDefaultImportAdapter } from '../import/index.js';
+import { Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
+import { DefaultImportAdapterConfig, ImportAdapter, ImportData, getDefaultImportAdapter } from '../import/index.js';
 import { libMetadata } from '../metadata.js';
 
-export interface IImportConfig {
-    logger?: ILogger;
-    data: IImportData;
+export interface ImportConfig {
+    logger?: Logger;
+    data: ImportData;
 }
 
-export interface IDefaultImportConfig extends IImportConfig {
-    adapterConfig: Omit<IDefaultImportAdapterConfig, 'logger'>;
+export interface DefaultImportConfig extends ImportConfig {
+    adapterConfig: Omit<DefaultImportAdapterConfig, 'logger'>;
 }
 
-export async function importAsync(config: IDefaultImportConfig): Promise<void>;
-export async function importAsync(adapter: IImportAdapter, config?: IImportConfig): Promise<void>;
+export async function importAsync(config: DefaultImportConfig): Promise<void>;
+export async function importAsync(adapter: ImportAdapter, config?: ImportConfig): Promise<void>;
 export async function importAsync(
-    inputAdapterOrDefaultConfig: IDefaultImportConfig | IImportAdapter,
-    inputConfig?: IImportConfig
+    inputAdapterOrDefaultConfig: DefaultImportConfig | ImportAdapter,
+    inputConfig?: ImportConfig
 ): Promise<void> {
     const { adapter, config } = await getSetupAsync(inputAdapterOrDefaultConfig, inputConfig);
 
@@ -38,20 +38,20 @@ export async function importAsync(
     });
 }
 
-async function getSetupAsync<TConfig extends IImportConfig, TDefaultConfig extends IDefaultImportConfig & TConfig>(
-    inputAdapterOrDefaultConfig: TDefaultConfig | IImportAdapter,
+async function getSetupAsync<TConfig extends ImportConfig, TDefaultConfig extends DefaultImportConfig & TConfig>(
+    inputAdapterOrDefaultConfig: TDefaultConfig | ImportAdapter,
     inputConfig?: TConfig
 ): Promise<{
-    adapter: IImportAdapter;
+    adapter: ImportAdapter;
     config: TConfig;
-    logger: ILogger;
+    logger: Logger;
 }> {
-    let adapter: IImportAdapter;
+    let adapter: ImportAdapter;
     let config: TConfig;
-    let logger: ILogger;
+    let logger: Logger;
 
-    if ((inputAdapterOrDefaultConfig as IImportAdapter)?.name) {
-        adapter = inputAdapterOrDefaultConfig as IImportAdapter;
+    if ((inputAdapterOrDefaultConfig as ImportAdapter)?.name) {
+        adapter = inputAdapterOrDefaultConfig as ImportAdapter;
         config = (inputConfig as TConfig) ?? {};
         logger = config.logger ?? getDefaultLogger();
     } else {

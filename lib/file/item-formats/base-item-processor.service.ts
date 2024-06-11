@@ -1,22 +1,22 @@
-import { IItemFormatService, ItemsTransformData, ItemsParseData, FileBinaryData } from '../../zip/zip.models.js';
+import { ItemFormatService, ItemsTransformData, ItemsParseData, FileBinaryData } from '../../zip/zip.models.js';
 import {
-    IFlattenedContentType,
-    IFlattenedContentTypeElement,
-    IMigrationItem,
+    FlattenedContentType,
+    FlattenedContentTypeElement,
+    MigrationItem,
     logErrorAndExit
 } from '../../core/index.js';
 import chalk from 'chalk';
 
-export abstract class BaseItemProcessorService implements IItemFormatService {
+export abstract class BaseItemProcessorService implements ItemFormatService {
     abstract readonly name: string;
     abstract transformAsync(data: ItemsTransformData): Promise<FileBinaryData>;
-    abstract parseAsync(data: ItemsParseData): Promise<IMigrationItem[]>;
+    abstract parseAsync(data: ItemsParseData): Promise<MigrationItem[]>;
 
     protected getElement(
-        types: IFlattenedContentType[],
+        types: FlattenedContentType[],
         contentItemType: string,
         elementCodename: string
-    ): IFlattenedContentTypeElement {
+    ): FlattenedContentTypeElement {
         const type = types.find((m) => m.contentTypeCodename.toLowerCase() === contentItemType.toLowerCase());
 
         if (!type) {

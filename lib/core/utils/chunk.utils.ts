@@ -1,24 +1,24 @@
-import { IItemInfo } from '../models/core.models.js';
-import { ILogger, LogSpinnerData, getCountPrefix } from './log.utils.js';
+import { ItemInfo } from '../models/core.models.js';
+import { Logger, LogSpinnerData, getCountPrefix } from './log.utils.js';
 
-export interface IChunk<T> {
+export interface Chunk<T> {
     items: T[];
     index: number;
 }
 
-export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
-    logger: ILogger;
-    items: TInputItem[];
+export async function processInChunksAsync<InputItem, OutputItem>(data: {
+    logger: Logger;
+    items: InputItem[];
     chunkSize: number;
-    processAsync: (item: TInputItem, logSpinner: LogSpinnerData) => Promise<TOutputItem>;
-    itemInfo: (item: TInputItem) => IItemInfo;
-}): Promise<TOutputItem[]> {
+    processAsync: (item: InputItem, logSpinner: LogSpinnerData) => Promise<OutputItem>;
+    itemInfo: (item: InputItem) => ItemInfo;
+}): Promise<OutputItem[]> {
     if (!data.items.length) {
         return [];
     }
 
-    const chunks = splitArrayIntoChunks<TInputItem>(data.items, data.chunkSize);
-    const outputItems: TOutputItem[] = [];
+    const chunks = splitArrayIntoChunks<InputItem>(data.items, data.chunkSize);
+    const outputItems: OutputItem[] = [];
 
     return await data.logger.logWithSpinnerAsync(async (logSpinner) => {
         let index: number = 1;
@@ -48,12 +48,12 @@ export async function processInChunksAsync<TInputItem, TOutputItem>(data: {
     });
 }
 
-function splitArrayIntoChunks<T>(items: T[], chunkSize: number): IChunk<T>[] {
+function splitArrayIntoChunks<T>(items: T[], chunkSize: number): Chunk<T>[] {
     if (!items.length) {
         return [];
     }
 
-    const chunks: IChunk<T>[] = [];
+    const chunks: Chunk<T>[] = [];
 
     for (let i = 0; i < items.length; i += chunkSize) {
         const chunk = items.slice(i, i + chunkSize);

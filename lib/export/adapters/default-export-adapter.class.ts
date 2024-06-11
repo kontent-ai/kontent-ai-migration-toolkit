@@ -1,9 +1,9 @@
 import {
-    IExportAdapter,
-    IExportAdapterResult,
-    IExportContext,
-    IDefaultExportAdapterConfig,
-    IKontentAiPreparedExportItem
+    ExportAdapter,
+    ExportAdapterResult,
+    ExportContext,
+    DefaultExportAdapterConfig,
+    KontentAiPreparedExportItem
 } from '../export.models.js';
 import chalk from 'chalk';
 import {
@@ -15,11 +15,11 @@ import {
 } from '@kontent-ai/management-sdk';
 import {
     defaultRetryStrategy,
-    IMigrationAsset,
-    IMigrationElement,
-    IMigrationItem,
+    MigrationAsset,
+    MigrationElement,
+    MigrationItem,
     defaultHttpService,
-    IFlattenedContentTypeElement,
+    FlattenedContentTypeElement,
     extractErrorData,
     processInChunksAsync,
     getBinaryDataFromUrlAsync,
@@ -29,17 +29,17 @@ import { ExportContextService, getExportContextService } from './context/export-
 import { exportTransforms } from '../../translation/index.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
 
-export function getDefaultExportAdapter(config: IDefaultExportAdapterConfig): IExportAdapter {
+export function getDefaultExportAdapter(config: DefaultExportAdapterConfig): ExportAdapter {
     return new DefaultExportAdapter(config);
 }
 
-export class DefaultExportAdapter implements IExportAdapter {
+export class DefaultExportAdapter implements ExportAdapter {
     public readonly name: string = 'Kontent.ai export adapter';
 
     private readonly managementClient: ManagementClient;
     private readonly exportContextService: ExportContextService;
 
-    constructor(private config: IDefaultExportAdapterConfig) {
+    constructor(private config: DefaultExportAdapterConfig) {
         this.managementClient = createManagementClient({
             environmentId: config.environmentId,
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy,
@@ -49,7 +49,7 @@ export class DefaultExportAdapter implements IExportAdapter {
         this.exportContextService = getExportContextService(this.config.logger, this.managementClient);
     }
 
-    async exportAsync(): Promise<IExportAdapterResult> {
+    async exportAsync(): Promise<ExportAdapterResult> {
         this.config.logger.log({
             type: 'info',
             message: `Preparing to export data`
@@ -65,8 +65,8 @@ export class DefaultExportAdapter implements IExportAdapter {
         };
     }
 
-    private getMigrationItems(context: IExportContext): IMigrationItem[] {
-        const migrationItems: IMigrationItem[] = [];
+    private getMigrationItems(context: ExportContext): MigrationItem[] {
+        const migrationItems: MigrationItem[] = [];
 
         for (const preparedItem of context.preparedExportItems) {
             try {
@@ -100,10 +100,10 @@ export class DefaultExportAdapter implements IExportAdapter {
     }
 
     private getMigrationElements(
-        exportItem: IKontentAiPreparedExportItem,
-        context: IExportContext
-    ): IMigrationElement[] {
-        const migrationElements: IMigrationElement[] = [];
+        exportItem: KontentAiPreparedExportItem,
+        context: ExportContext
+    ): MigrationElement[] {
+        const migrationElements: MigrationElement[] = [];
 
         for (const typeElement of exportItem.contentType.elements) {
             const languageElement = exportItem.languageVariant.elements.find((m) => m.element.id === typeElement.id);
@@ -130,10 +130,10 @@ export class DefaultExportAdapter implements IExportAdapter {
     }
 
     private getValueToStoreFromElement(data: {
-        exportItem: IKontentAiPreparedExportItem;
-        typeElement: IFlattenedContentTypeElement;
+        exportItem: KontentAiPreparedExportItem;
+        typeElement: FlattenedContentTypeElement;
         value: string | number | SharedModels.ReferenceObject[] | undefined;
-        context: IExportContext;
+        context: ExportContext;
     }): string | undefined | string[] {
         try {
             return exportTransforms[data.typeElement.type](data);
@@ -156,7 +156,7 @@ export class DefaultExportAdapter implements IExportAdapter {
         }
     }
 
-    private async exportAssetsAsync(context: IExportContext): Promise<IMigrationAsset[]> {
+    private async exportAssetsAsync(context: ExportContext): Promise<MigrationAsset[]> {
         const assets: AssetModels.Asset[] = [];
 
         for (const assetId of context.referencedData.assetIds) {
@@ -172,14 +172,14 @@ export class DefaultExportAdapter implements IExportAdapter {
 
     private async getMigrationAssetsWithBinaryDataAsync(
         assets: AssetModels.Asset[],
-        context: IExportContext
-    ): Promise<IMigrationAsset[]> {
+        context: ExportContext
+    ): Promise<MigrationAsset[]> {
         this.config.logger.log({
             type: 'info',
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });
 
-        const exportedAssets: IMigrationAsset[] = await processInChunksAsync<AssetModels.Asset, IMigrationAsset>({
+        const exportedAssets: MigrationAsset[] = await processInChunksAsync<AssetModels.Asset, MigrationAsset>({
             logger: this.config.logger,
             chunkSize: 1,
             itemInfo: (input) => {
@@ -204,7 +204,7 @@ export class DefaultExportAdapter implements IExportAdapter {
 
                 const binaryData = await getBinaryDataFromUrlAsync(asset.url);
 
-                const migrationAsset: IMigrationAsset = {
+                const migrationAsset: MigrationAsset = {
                     _zipFilename: asset.codename,
                     filename: asset.fileName,
                     title: asset.title ?? '',

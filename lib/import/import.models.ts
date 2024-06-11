@@ -1,79 +1,79 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import {
-    IMigrationItem,
-    IMigrationAsset,
-    ILogger,
-    IAssetStateInTargetEnvironmentByCodename,
-    IItemStateInTargetEnvironmentByCodename,
-    IReferencedDataInMigrationItems,
-    ILanguageVariantStateInTargetEnvironmentByCodename,
-    IExternalIdGenerator,
-    IFlattenedContentTypeElement
+    MigrationItem,
+    MigrationAsset,
+    Logger,
+    AssetStateInTargetEnvironmentByCodename,
+    ItemStateInTargetEnvironmentByCodename,
+    ReferencedDataInMigrationItems,
+    LanguageVariantStateInTargetEnvironmentByCodename,
+    ExternalIdGenerator,
+    FlattenedContentTypeElement
 } from '../core/index.js';
 import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 
 export type ImportSourceType = 'zip' | 'file';
 
-export interface IImportData {
-    items: IMigrationItem[];
-    assets: IMigrationAsset[];
+export interface ImportData {
+    items: MigrationItem[];
+    assets: MigrationAsset[];
 }
 
-export interface IImportAdapter {
+export interface ImportAdapter {
     readonly name: string;
     readonly client: ManagementClient;
-    importAsync(data: IImportData): Promise<void>;
+    importAsync(data: ImportData): Promise<void>;
 }
 
 export type GetFlattenedElement = (
     contentTypeCodename: string,
     elementCodename: string
-) => IFlattenedContentTypeElement;
+) => FlattenedContentTypeElement;
 
-export interface IImportContext {
-    componentItems: IMigrationItem[];
-    contentItems: IMigrationItem[];
-    referencedData: IReferencedDataInMigrationItems;
-    itemsInTargetEnvironment: IItemStateInTargetEnvironmentByCodename[];
-    getItemStateInTargetEnvironment: (itemCodename: string) => IItemStateInTargetEnvironmentByCodename;
+export interface ImportContext {
+    componentItems: MigrationItem[];
+    contentItems: MigrationItem[];
+    referencedData: ReferencedDataInMigrationItems;
+    itemsInTargetEnvironment: ItemStateInTargetEnvironmentByCodename[];
+    getItemStateInTargetEnvironment: (itemCodename: string) => ItemStateInTargetEnvironmentByCodename;
     getLanguageVariantStateInTargetEnvironment: (
         itemCodename: string,
         languageCodename: string
-    ) => ILanguageVariantStateInTargetEnvironmentByCodename;
-    getAssetStateInTargetEnvironment: (assetCodename: string) => IAssetStateInTargetEnvironmentByCodename;
+    ) => LanguageVariantStateInTargetEnvironmentByCodename;
+    getAssetStateInTargetEnvironment: (assetCodename: string) => AssetStateInTargetEnvironmentByCodename;
     getElement: GetFlattenedElement;
 }
 
 export type ImportTransformFunc = (data: {
     value: string | string[] | undefined;
     elementCodename: string;
-    importContext: IImportContext;
-    sourceItems: IMigrationItem[];
+    importContext: ImportContext;
+    sourceItems: MigrationItem[];
 }) => Promise<ElementContracts.IContentItemElementContract>;
 
-export interface IDefaultImportAdapterConfig {
-    logger: ILogger;
+export interface DefaultImportAdapterConfig {
+    logger: Logger;
     environmentId: string;
     apiKey: string;
     skipFailedItems: boolean;
     retryStrategy?: IRetryStrategyOptions;
-    externalIdGenerator?: IExternalIdGenerator;
+    externalIdGenerator?: ExternalIdGenerator;
     baseUrl?: string;
     canImport?: {
-        contentItem?: (item: IMigrationItem) => boolean | Promise<boolean>;
-        asset?: (item: IMigrationAsset) => boolean | Promise<boolean>;
+        contentItem?: (item: MigrationItem) => boolean | Promise<boolean>;
+        asset?: (item: MigrationAsset) => boolean | Promise<boolean>;
     };
 }
 
-export interface IImportAllResult {
+export interface ImportAllResult {
     metadata: {
         timestamp: Date;
         environmentId: string;
     };
 }
 
-export interface IFlattenedFolder {
+export interface FlattenedFolder {
     name: string;
     id: string;
     externalId?: string;

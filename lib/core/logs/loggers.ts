@@ -1,10 +1,10 @@
 import { EnvContext } from '../models/core.models.js';
 import { getCurrentEnvironment } from '../utils/global.utils.js';
-import { ILogger, getLogDataMessage } from '../utils/log.utils.js';
+import { Logger, getLogDataMessage } from '../utils/log.utils.js';
 
 const originalWarn = console.warn;
 
-export function getDefaultLogger(context?: EnvContext): ILogger {
+export function getDefaultLogger(context?: EnvContext): Logger {
     if (!context) {
         // automatically determine the env
         const currentEnv = getCurrentEnvironment();
@@ -25,7 +25,7 @@ export function getDefaultLogger(context?: EnvContext): ILogger {
     throw Error(`Invalid environment '${context}'`);
 }
 
-const defaultNodeLogger: ILogger = {
+const defaultNodeLogger: Logger = {
     log: (data) => console.log(getLogDataMessage(data)),
     logWithSpinnerAsync: async (func) => {
         const ora = await import('ora');
@@ -55,7 +55,7 @@ const defaultNodeLogger: ILogger = {
     }
 };
 
-const defaultBrowserLogger: ILogger = {
+const defaultBrowserLogger: Logger = {
     log: (data) => console.log(getLogDataMessage(data)),
     logWithSpinnerAsync: async (func) => {
         return await func((data) => {

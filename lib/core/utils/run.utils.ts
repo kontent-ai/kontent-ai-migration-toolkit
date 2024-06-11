@@ -1,16 +1,16 @@
 import chalk from 'chalk';
 import { MapiAction, MapiType } from '../models/core.models.js';
-import { ILogData, ILogger, logSpinnerOrDefaultAsync, LogSpinnerData } from './log.utils.js';
+import { LogMessage, Logger, logSpinnerOrDefaultAsync, LogSpinnerData } from './log.utils.js';
 
 export async function runMapiRequestAsync<TResult>(data: {
-    logger: ILogger;
+    logger: Logger;
     logSpinner?: LogSpinnerData;
     action: MapiAction;
     type: MapiType;
     func: () => Promise<TResult>;
     itemName?: string;
 }): Promise<TResult> {
-    let logData: ILogData | undefined;
+    let logData: LogMessage | undefined;
 
     if (data.action === 'list') {
         logData = {
@@ -38,7 +38,7 @@ export async function runMapiRequestAsync<TResult>(data: {
     const result = await data.func();
 
     if (Array.isArray(result) && data.action === 'list') {
-        const logData: ILogData = {
+        const logData: LogMessage = {
             message: `Fetched '${chalk.yellow(result.length)}' objects of type '${chalk.yellow(data.type)}'`,
             type: data.action
         };

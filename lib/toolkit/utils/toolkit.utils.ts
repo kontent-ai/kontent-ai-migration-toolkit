@@ -1,9 +1,9 @@
 import { getDefaultFilename } from '../../core/index.js';
 import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../file/index.js';
-import { AssetsFormat, IAssetFormatService, IItemFormatService, ItemsFormat } from '../../zip/index.js';
-import { IFilesConfig } from '../models/toolkit.models.js';
+import { AssetsFormat, AssetFormatService, ItemFormatService, ItemsFormat } from '../../zip/index.js';
+import { FilesConfig } from '../models/toolkit.models.js';
 
-export const defaultFilesConfig: IFilesConfig = {
+export const defaultFilesConfig: FilesConfig = {
     items: {
         filename: getDefaultFilename('items'),
         format: 'json'
@@ -14,7 +14,7 @@ export const defaultFilesConfig: IFilesConfig = {
     }
 };
 
-export function getItemsFormatService(type: ItemsFormat): IItemFormatService {
+export function getItemsFormatService(type: ItemsFormat): ItemFormatService {
     if (type === 'json') {
         return new ItemJsonProcessorService();
     }
@@ -22,7 +22,7 @@ export function getItemsFormatService(type: ItemsFormat): IItemFormatService {
     return type;
 }
 
-export function getAssetsFormatService(type: AssetsFormat): IAssetFormatService {
+export function getAssetsFormatService(type: AssetsFormat): AssetFormatService {
     if (type === 'json') {
         return new AssetJsonProcessorService();
     }

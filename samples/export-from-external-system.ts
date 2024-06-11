@@ -1,10 +1,10 @@
-import { IMigrationAsset, IMigrationItem, IExportAdapter, exportAsync, storeAsync } from '../lib/index.js';
+import { MigrationAsset, MigrationItem, ExportAdapter, exportAsync, storeAsync } from '../lib/index.js';
 
 /* Typically you query your external system to create the migration items & assets */
-const adapter: IExportAdapter = {
+const adapter: ExportAdapter = {
     name: 'customExportAdapter',
     exportAsync: async () => {
-        const migrationItems: IMigrationItem[] = [
+        const migrationItems: MigrationItem[] = [
             {
                 system: {
                     codename: 'myArticle',
@@ -32,7 +32,7 @@ const adapter: IExportAdapter = {
             }
         ];
 
-        const migrationAssets: IMigrationAsset[] = [
+        const migrationAssets: MigrationAsset[] = [
             {
                 // _zipFilename is a name of the file within the export .zip package. It is used only for identifying the file within export
                 _zipFilename: 'my_file.txt',

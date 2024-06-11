@@ -2,17 +2,17 @@ import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-
 import {
     extractErrorData,
     logErrorAndExit,
-    IMigrationItem,
-    ILogger,
+    MigrationItem,
+    Logger,
     runMapiRequestAsync,
     processInChunksAsync,
     LogSpinnerData
 } from '../../core/index.js';
 import chalk from 'chalk';
-import { IImportContext } from '../import.models.js';
+import { ImportContext } from '../import.models.js';
 
 export function getImportContentItemService(config: {
-    logger: ILogger;
+    logger: Logger;
     skipFailedItems: boolean;
     managementClient: ManagementClient;
 }): ImportContentItemHelper {
@@ -21,12 +21,12 @@ export function getImportContentItemService(config: {
 
 export class ImportContentItemHelper {
     constructor(
-        private readonly config: { logger: ILogger; skipFailedItems: boolean; managementClient: ManagementClient }
+        private readonly config: { logger: Logger; skipFailedItems: boolean; managementClient: ManagementClient }
     ) {}
 
     async importContentItemsAsync(data: {
         collections: CollectionModels.Collection[];
-        importContext: IImportContext;
+        importContext: ImportContext;
     }): Promise<ContentItemModels.ContentItem[]> {
         const preparedItems: ContentItemModels.ContentItem[] = [];
         const preparedItemsWithoutComponents = data.importContext.contentItems.filter((m) => {
@@ -42,7 +42,7 @@ export class ImportContentItemHelper {
             message: `Importing '${chalk.yellow(preparedItemsWithoutComponents.length.toString())}' content items`
         });
 
-        await processInChunksAsync<IMigrationItem, void>({
+        await processInChunksAsync<MigrationItem, void>({
             logger: this.config.logger,
             chunkSize: 1,
             items: preparedItemsWithoutComponents,
@@ -88,10 +88,10 @@ export class ImportContentItemHelper {
 
     private async importContentItemAsync(data: {
         logSpinner: LogSpinnerData;
-        migrationItem: IMigrationItem;
+        migrationItem: MigrationItem;
         managementClient: ManagementClient;
         collections: CollectionModels.Collection[];
-        importContext: IImportContext;
+        importContext: ImportContext;
     }): Promise<ContentItemModels.ContentItem> {
         const preparedContentItemResult = await this.prepareContentItemAsync(
             data.logSpinner,
@@ -136,7 +136,7 @@ export class ImportContentItemHelper {
     }
 
     private shouldUpdateContentItem(
-        migrationContentItem: IMigrationItem,
+        migrationContentItem: MigrationItem,
         contentItem: ContentItemModels.ContentItem,
         collections: CollectionModels.Collection[]
     ): boolean {
@@ -156,8 +156,8 @@ export class ImportContentItemHelper {
     private async prepareContentItemAsync(
         logSpinner: LogSpinnerData,
         managementClient: ManagementClient,
-        migrationContentItem: IMigrationItem,
-        context: IImportContext
+        migrationContentItem: MigrationItem,
+        context: ImportContext
     ): Promise<{ contentItem: ContentItemModels.ContentItem; status: 'created' | 'itemAlreadyExists' }> {
         const itemStateInTargetEnv = context.getItemStateInTargetEnvironment(migrationContentItem.system.codename);
 

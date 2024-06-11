@@ -1,8 +1,8 @@
-import { IMigrationAsset } from '../../core/index.js';
-import { IAssetFormatService, AssetsTransformData, FileBinaryData, AssetsParseData } from '../../zip/zip.models.js';
+import { MigrationAsset } from '../../core/index.js';
+import { AssetFormatService, AssetsTransformData, FileBinaryData, AssetsParseData } from '../../zip/zip.models.js';
 
-export abstract class BaseAssetProcessorService implements IAssetFormatService {
+export abstract class BaseAssetProcessorService implements AssetFormatService {
     abstract readonly name: string;
     abstract transformAsync(data: AssetsTransformData): Promise<FileBinaryData>;
-    abstract parseAsync(data: AssetsParseData): Promise<IMigrationAsset[]>;
+    abstract parseAsync(data: AssetsParseData): Promise<MigrationAsset[]>;
 }

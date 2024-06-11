@@ -1,12 +1,12 @@
 import { createManagementClient } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
-import { ILogger } from './log.utils.js';
+import { Logger } from './log.utils.js';
 
 export async function confirmExportAsync(data: {
     force: boolean;
     environmentId: string;
     apiKey: string;
-    logger: ILogger;
+    logger: Logger;
 }): Promise<void> {
     const environment = (
         await createManagementClient({
@@ -39,7 +39,7 @@ export async function confirmMigrateAsync(data: {
         environmentId: string;
         apiKey: string;
     };
-    logger: ILogger;
+    logger: Logger;
 }): Promise<void> {
     const sourceEnvironment = (
         await createManagementClient({
@@ -74,7 +74,7 @@ export async function confirmImportAsync(data: {
     force: boolean;
     environmentId: string;
     apiKey: string;
-    logger: ILogger;
+    logger: Logger;
 }): Promise<void> {
     const environment = (
         await createManagementClient({
@@ -97,7 +97,7 @@ export async function confirmImportAsync(data: {
     });
 }
 
-async function confirmAsync(data: { action: string; message: string; force: boolean; logger: ILogger }): Promise<void> {
+async function confirmAsync(data: { action: string; message: string; force: boolean; logger: Logger }): Promise<void> {
     // Prompts is imported dynamically because it's a node.js only module and would not work if user
     // tried using this library in a browser
     const prompts = await import('prompts');

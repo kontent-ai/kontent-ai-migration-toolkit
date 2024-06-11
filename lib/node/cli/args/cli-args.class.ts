@@ -2,7 +2,7 @@ import yargs, { Argv } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import chalk from 'chalk';
 import { CliAction, logErrorAndExit } from '../../../core/index.js';
-import { ICommand, ICommandOption } from '../cli.models.js';
+import { Command, CommandOption } from '../cli.models.js';
 
 export function getCliArgs(): CliArgs {
     const argv = yargs(hideBin(process.argv));
@@ -13,7 +13,7 @@ export function getCliArgs(): CliArgs {
 export class CliArgs {
     constructor(private readonly argv: Argv) {}
 
-    withCommand(command: ICommand): CliArgs {
+    withCommand(command: Command): CliArgs {
         this.argv.command(command.name, command.description, (yargs) => {
             for (const example of command.examples) {
                 yargs.example(command.name, example);
@@ -32,7 +32,7 @@ export class CliArgs {
         return this;
     }
 
-    withOption(option: ICommandOption): CliArgs {
+    withOption(option: CommandOption): CliArgs {
         this.argv.option(option.name, {
             alias: option.alias,
             description: option.description,

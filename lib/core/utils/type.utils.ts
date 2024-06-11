@@ -5,8 +5,8 @@ import {
     ManagementClient,
     ElementModels
 } from '@kontent-ai/management-sdk';
-import { IFlattenedContentType, IFlattenedContentTypeElement } from '../models/core.models.js';
-import { ILogger, logErrorAndExit } from './log.utils.js';
+import { FlattenedContentType, FlattenedContentTypeElement } from '../models/core.models.js';
+import { Logger, logErrorAndExit } from './log.utils.js';
 import chalk from 'chalk';
 import { runMapiRequestAsync } from './run.utils.js';
 
@@ -14,8 +14,8 @@ const excludedFlattenedElements: ElementModels.ElementType[] = ['guidelines'];
 
 export async function getFlattenedContentTypesAsync(
     managementClient: ManagementClient,
-    logger: ILogger
-): Promise<IFlattenedContentType[]> {
+    logger: Logger
+): Promise<FlattenedContentType[]> {
     const contentTypes = await runMapiRequestAsync({
         logger: logger,
         func: async () => (await managementClient.listContentTypes().toAllPromise()).data.items,
@@ -32,7 +32,7 @@ export async function getFlattenedContentTypesAsync(
 
     return [
         ...contentTypes.map((contentType) => {
-            const importType: IFlattenedContentType = {
+            const importType: FlattenedContentType = {
                 contentTypeCodename: contentType.codename,
                 contentTypeId: contentType.id,
                 elements: getContentTypeElements(contentType, contentTypeSnippets)
@@ -46,8 +46,8 @@ export async function getFlattenedContentTypesAsync(
 function getContentTypeElements(
     contentType: ContentTypeModels.ContentType,
     contentTypeSnippets: ContentTypeSnippetModels.ContentTypeSnippet[]
-): IFlattenedContentTypeElement[] {
-    const elements: IFlattenedContentTypeElement[] = [];
+): FlattenedContentTypeElement[] {
+    const elements: FlattenedContentTypeElement[] = [];
 
     for (const element of contentType.elements) {
         if (!element.codename || !element.id) {
@@ -81,7 +81,7 @@ function getContentTypeElements(
                     continue;
                 }
 
-                const flattenedElement: IFlattenedContentTypeElement = {
+                const flattenedElement: FlattenedContentTypeElement = {
                     codename: snippetElement.codename,
                     type: snippetElement.type,
                     id: snippetElement.id,
@@ -91,7 +91,7 @@ function getContentTypeElements(
                 elements.push(flattenedElement);
             }
         } else {
-            const flattenedElement: IFlattenedContentTypeElement = {
+            const flattenedElement: FlattenedContentTypeElement = {
                 codename: element.codename,
                 id: element.id,
                 type: element.type,

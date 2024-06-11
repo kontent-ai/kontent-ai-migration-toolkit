@@ -1,6 +1,6 @@
 import { MigrationElementType } from '../../core/index.js';
 import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
-import { ExportTransformFunc, IExportContext } from '../../export/index.js';
+import { ExportTransformFunc, ExportContext } from '../../export/index.js';
 import { richTextHelper } from '../helpers/rich-text.helper.js';
 
 /**
@@ -188,7 +188,7 @@ function findTaxonomy(termId: string, taxonomy: TaxonomyModels.Taxonomy): Taxono
     return undefined;
 }
 
-function transformRichTextValue(richTextHtml: string | undefined, context: IExportContext): string | undefined {
+function transformRichTextValue(richTextHtml: string | undefined, context: ExportContext): string | undefined {
     if (!richTextHtml) {
         return richTextHtml;
     }
