@@ -2,12 +2,12 @@ import chalk from 'chalk';
 import { GeneralActionType, GeneralItemType, MapiAction, MapiType } from '../models/core.models.js';
 
 export interface LogMessage {
-    type: DebugType;
-    message: string;
+    readonly type: DebugType;
+    readonly message: string;
 }
 
 export interface SpinnerLogData extends LogMessage {
-    prefix?: string;
+    readonly prefix?: string;
 }
 
 export type LogData = (data: LogMessage) => void;
@@ -40,14 +40,14 @@ export type DebugType =
     | MapiAction
     | GeneralItemType;
 
-export function logErrorAndExit(data: { message: string }): never {
+export function logErrorAndExit(data: { readonly message: string }): never {
     throw Error(data.message);
 }
 
 export async function logSpinnerOrDefaultAsync(data: {
-    logSpinner: LogSpinnerData | undefined;
-    logData: LogMessage;
-    logger: Logger;
+    readonly logSpinner: LogSpinnerData | undefined;
+    readonly logData: LogMessage;
+    readonly logger: Logger;
 }): Promise<void> {
     if (data.logSpinner) {
         await data.logSpinner(data.logData);

@@ -1,14 +1,14 @@
 import { Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
-import { DefaultImportAdapterConfig, ImportAdapter, ImportData, getDefaultImportAdapter } from '../import/index.js';
+import { DefaultImportAdapter, DefaultImportAdapterConfig, ImportAdapter, ImportData } from '../import/index.js';
 import { libMetadata } from '../metadata.js';
 
 export interface ImportConfig {
-    logger?: Logger;
-    data: ImportData;
+    readonly logger?: Logger;
+    readonly data: ImportData;
 }
 
 export interface DefaultImportConfig extends ImportConfig {
-    adapterConfig: Omit<DefaultImportAdapterConfig, 'logger'>;
+    readonly adapterConfig: Omit<DefaultImportAdapterConfig, 'logger'>;
 }
 
 export async function importAsync(config: DefaultImportConfig): Promise<void>;
@@ -58,7 +58,7 @@ async function getSetupAsync<TConfig extends ImportConfig, TDefaultConfig extend
         config = (inputAdapterOrDefaultConfig as unknown as TDefaultConfig) ?? {};
         logger = config.logger ?? getDefaultLogger();
 
-        adapter = getDefaultImportAdapter({
+        adapter = new DefaultImportAdapter({
             ...(inputAdapterOrDefaultConfig as TDefaultConfig).adapterConfig,
             logger: logger
         });

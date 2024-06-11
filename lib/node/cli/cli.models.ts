@@ -1,31 +1,31 @@
 import { CliAction } from '../../core/index.js';
 
 export interface CliFileConfig {
-    environmentId?: string;
-    apiKey?: string;
-    language?: string;
-    items?: string[];
-    skipFailedItems: boolean;
-    action: CliAction;
-    itemsFilename?: string;
-    assetsFilename?: string;
-    baseUrl?: string;
-    force: boolean;
+    readonly environmentId?: string;
+    readonly apiKey?: string;
+    readonly language?: string;
+    readonly items?: string[];
+    readonly skipFailedItems: boolean;
+    readonly action: CliAction;
+    readonly itemsFilename?: string;
+    readonly assetsFilename?: string;
+    readonly baseUrl?: string;
+    readonly force: boolean;
 }
 
 export interface Command {
-    name: string;
-    description: string;
-    options: CommandOption[];
-    examples: string[];
+    readonly name: string;
+    readonly description: string;
+    readonly options: CommandOption[];
+    readonly examples: string[];
 }
 
 export interface CommandOption {
-    name: string;
-    isRequired: boolean;
-    alias?: string;
-    description?: string;
-    type?: 'boolean' | 'number' | 'string';
+    readonly name: string;
+    readonly isRequired: boolean;
+    readonly alias?: string;
+    readonly description?: string;
+    readonly type?: 'boolean' | 'number' | 'string';
 }
 
 export type Args = { [key: string]: string | unknown };

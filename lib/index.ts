@@ -7,3 +7,4 @@ export * from './zip/index.js';
 export * from './toolkit/index.js';
 export * from './file/index.js';
 export * from './translation/index.js';
+export * from './format/index.js';

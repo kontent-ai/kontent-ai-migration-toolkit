@@ -3,10 +3,10 @@ import chalk from 'chalk';
 import { Logger } from './log.utils.js';
 
 export async function confirmExportAsync(data: {
-    force: boolean;
-    environmentId: string;
-    apiKey: string;
-    logger: Logger;
+    readonly force: boolean;
+    readonly environmentId: string;
+    readonly apiKey: string;
+    readonly logger: Logger;
 }): Promise<void> {
     const environment = (
         await createManagementClient({

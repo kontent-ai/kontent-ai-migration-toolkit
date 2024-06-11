@@ -41,15 +41,7 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
             skipFailedItems: skipFailedItems,
             baseUrl: baseUrl,
             environmentId: environmentId,
-            apiKey: apiKey,
-            canImport: {
-                contentItem: (item) => {
-                    return true;
-                },
-                asset: (asset) => {
-                    return true;
-                }
-            }
+            apiKey: apiKey
         }
     });
 

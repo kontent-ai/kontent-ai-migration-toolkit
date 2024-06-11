@@ -5,14 +5,18 @@ import { FileBinaryData, ZipCompressionLevel, ZipContext } from './zip.models.js
 import {} from 'browser-or-node';
 
 interface FileResult<T> {
-    data: T;
-    filename: string;
+    readonly data: T;
+    readonly filename: string;
 }
 
 export class ZipPackage {
     private readonly compressionLevel: ZipCompressionLevel = 9;
 
-    constructor(private readonly jsZip: JSZip, private readonly logger: Logger, private readonly context?: ZipContext) {}
+    constructor(
+        private readonly jsZip: JSZip,
+        private readonly logger: Logger,
+        private readonly context?: ZipContext
+    ) {}
 
     addFile(filePath: string, data: any): void {
         this.jsZip.file(filePath, data);

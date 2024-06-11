@@ -6,25 +6,25 @@ import { exportAsync } from './export.js';
 import { importAsync } from './import.js';
 
 export interface MigrationEnv {
-    id: string;
-    apiKey: string;
+    readonly id: string;
+    readonly apiKey: string;
 }
 
 export interface MigrationSource extends MigrationEnv {
-    items: KontentAiExportRequestItem[];
-    skipFailedItems?: boolean;
+    readonly items: KontentAiExportRequestItem[];
+    readonly skipFailedItems?: boolean;
 }
 
 export interface MigrationTarget extends MigrationEnv {
-    skipFailedItems?: boolean;
+    readonly skipFailedItems?: boolean;
 }
 
 export interface MigrationConfig {
-    retryStrategy?: IRetryStrategyOptions;
-    externalIdGenerator?: ExternalIdGenerator;
-    logger?: Logger;
-    sourceEnvironment: MigrationSource;
-    targetEnvironment: MigrationTarget;
+    readonly retryStrategy?: IRetryStrategyOptions;
+    readonly externalIdGenerator?: ExternalIdGenerator;
+    readonly logger?: Logger;
+    readonly sourceEnvironment: MigrationSource;
+    readonly targetEnvironment: MigrationTarget;
 }
 
 export async function migrateAsync(config: MigrationConfig): Promise<void> {

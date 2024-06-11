@@ -34,15 +34,7 @@ export type AssetsParseData = {
 };
 
 export interface AssetFormatService {
-    name: string;
+    readonly name: string;
     transformAsync(data: AssetsTransformData): Promise<FileBinaryData>;
     parseAsync(data: AssetsParseData): Promise<MigrationAsset[]>;
-}
-
-export interface ExtractedBinaryFileData {
-    filename: string;
-    assetId: string;
-    extension: string;
-    mimeType: string;
-    binaryData: Buffer | Blob;
 }

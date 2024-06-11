@@ -16,65 +16,65 @@ import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 export type ImportSourceType = 'zip' | 'file';
 
 export interface ImportData {
-    items: MigrationItem[];
-    assets: MigrationAsset[];
+    readonly items: MigrationItem[];
+    readonly assets: MigrationAsset[];
+}
+
+export interface ImportContextConfig {
+    readonly logger: Logger;
+    readonly managementClient: ManagementClient;
+    readonly externalIdGenerator: ExternalIdGenerator;
+    readonly importData: ImportData;
 }
 
 export interface ImportAdapter {
     readonly name: string;
-    readonly client: ManagementClient;
+    readonly targetEnvironmentClient: ManagementClient;
     importAsync(data: ImportData): Promise<void>;
 }
 
-export type GetFlattenedElement = (
-    contentTypeCodename: string,
-    elementCodename: string
-) => FlattenedContentTypeElement;
+export type GetFlattenedElement = (contentTypeCodename: string, elementCodename: string) => FlattenedContentTypeElement;
 
 export interface ImportContext {
-    componentItems: MigrationItem[];
-    contentItems: MigrationItem[];
-    referencedData: ReferencedDataInMigrationItems;
-    itemsInTargetEnvironment: ItemStateInTargetEnvironmentByCodename[];
-    getItemStateInTargetEnvironment: (itemCodename: string) => ItemStateInTargetEnvironmentByCodename;
-    getLanguageVariantStateInTargetEnvironment: (
+    readonly assets: MigrationAsset[];
+    readonly componentItems: MigrationItem[];
+    readonly contentItems: MigrationItem[];
+    readonly referencedData: ReferencedDataInMigrationItems;
+    readonly getItemStateInTargetEnvironment: (itemCodename: string) => ItemStateInTargetEnvironmentByCodename;
+    readonly getLanguageVariantStateInTargetEnvironment: (
         itemCodename: string,
         languageCodename: string
     ) => LanguageVariantStateInTargetEnvironmentByCodename;
-    getAssetStateInTargetEnvironment: (assetCodename: string) => AssetStateInTargetEnvironmentByCodename;
-    getElement: GetFlattenedElement;
+    readonly getAssetStateInTargetEnvironment: (assetCodename: string) => AssetStateInTargetEnvironmentByCodename;
+    readonly getElement: GetFlattenedElement;
 }
 
 export type ImportTransformFunc = (data: {
-    value: string | string[] | undefined;
-    elementCodename: string;
-    importContext: ImportContext;
-    sourceItems: MigrationItem[];
+    readonly value: string | string[] | undefined;
+    readonly elementCodename: string;
+    readonly importContext: ImportContext;
+    readonly sourceItems: MigrationItem[];
 }) => Promise<ElementContracts.IContentItemElementContract>;
 
 export interface DefaultImportAdapterConfig {
-    logger: Logger;
-    environmentId: string;
-    apiKey: string;
-    skipFailedItems: boolean;
-    retryStrategy?: IRetryStrategyOptions;
-    externalIdGenerator?: ExternalIdGenerator;
-    baseUrl?: string;
-    canImport?: {
-        contentItem?: (item: MigrationItem) => boolean | Promise<boolean>;
-        asset?: (item: MigrationAsset) => boolean | Promise<boolean>;
-    };
+    readonly logger: Logger;
+    readonly environmentId: string;
+    readonly apiKey: string;
+    readonly skipFailedItems: boolean;
+    readonly retryStrategy?: IRetryStrategyOptions;
+    readonly externalIdGenerator?: ExternalIdGenerator;
+    readonly baseUrl?: string;
 }
 
 export interface ImportAllResult {
-    metadata: {
-        timestamp: Date;
-        environmentId: string;
+    readonly metadata: {
+        readonly timestamp: Date;
+        readonly environmentId: string;
     };
 }
 
 export interface FlattenedFolder {
-    name: string;
-    id: string;
-    externalId?: string;
+    readonly name: string;
+    readonly id: string;
+    readonly externalId?: string;
 }

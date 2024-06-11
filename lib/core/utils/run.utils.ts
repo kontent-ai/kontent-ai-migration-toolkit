@@ -3,12 +3,12 @@ import { MapiAction, MapiType } from '../models/core.models.js';
 import { LogMessage, Logger, logSpinnerOrDefaultAsync, LogSpinnerData } from './log.utils.js';
 
 export async function runMapiRequestAsync<TResult>(data: {
-    logger: Logger;
-    logSpinner?: LogSpinnerData;
-    action: MapiAction;
-    type: MapiType;
-    func: () => Promise<TResult>;
-    itemName?: string;
+    readonly logger: Logger;
+    readonly logSpinner?: LogSpinnerData;
+    readonly action: MapiAction;
+    readonly type: MapiType;
+    readonly func: () => Promise<TResult>;
+    readonly itemName?: string;
 }): Promise<TResult> {
     let logData: LogMessage | undefined;
 

@@ -1,59 +1,9 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { MigrationItem, Logger, runMapiRequestAsync, LogSpinnerData } from '../../core/index.js';
+import { Logger, runMapiRequestAsync, LogSpinnerData, MigrationItem } from '../../core/index.js';
 import chalk from 'chalk';
 
-interface WorkflowStep {
-    codename: string;
-    id: string;
-}
-
-interface WorkflowAndStep {
-    workflow: WorkflowModels.Workflow;
-    step: WorkflowStep;
-}
-
-export function getImportWorkflowService(logger: Logger): ImportWorkflowService {
-    return new ImportWorkflowService(logger);
-}
-
-export class ImportWorkflowService {
-    constructor(private readonly logger: Logger) {}
-
-    getWorkflowAndStep(data: {
-        workflowStepCodename: string;
-        workflowCodename: string;
-        workflows: WorkflowModels.Workflow[];
-    }): WorkflowAndStep {
-        const workflow = data.workflows.find((m) => m.codename?.toLowerCase() === data.workflowCodename.toLowerCase());
-
-        if (!workflow) {
-            const errorMessages: string[] = [
-                `Workflow with codename '${chalk.red(data.workflowCodename)}' does not exist in target project`,
-                `Available workflows are (${data.workflows.length}): ${data.workflows
-                    .map((m) => chalk.cyan(m.codename))
-                    .join(', ')}`
-            ];
-
-            throw Error(errorMessages.join('. '));
-        }
-
-        const workflowStep = this.getWorkflowStep(workflow, data.workflowStepCodename);
-
-        if (!workflowStep) {
-            throw Error(
-                `Workflow step with codename '${chalk.red(
-                    data.workflowStepCodename
-                )}' does not exist within worklflow '${chalk.cyan(workflow.codename)}'`
-            );
-        }
-
-        return {
-            step: workflowStep,
-            workflow: workflow
-        };
-    }
-
-    private getWorkflowStep(workflow: WorkflowModels.Workflow, stepCodename: string): WorkflowStep | undefined {
+export function workflowImporter(logger: Logger) {
+    const getWorkflowStep = (workflow: WorkflowModels.Workflow, stepCodename: string) => {
         if (workflow.archivedStep.codename === stepCodename) {
             return {
                 codename: workflow.archivedStep.codename,
@@ -82,25 +32,98 @@ export class ImportWorkflowService {
         }
 
         return undefined;
-    }
+    };
 
-    async setWorkflowOfLanguageVariantAsync(
+    const getWorkflowAndStep = (data: {
+        readonly workflowStepCodename: string;
+        readonly workflowCodename: string;
+        readonly workflows: WorkflowModels.Workflow[];
+    }) => {
+        const workflow = data.workflows.find((m) => m.codename?.toLowerCase() === data.workflowCodename.toLowerCase());
+
+        if (!workflow) {
+            const errorMessages: string[] = [
+                `Workflow with codename '${chalk.red(data.workflowCodename)}' does not exist in target project`,
+                `Available workflows are (${data.workflows.length}): ${data.workflows
+                    .map((m) => chalk.cyan(m.codename))
+                    .join(', ')}`
+            ];
+
+            throw Error(errorMessages.join('. '));
+        }
+
+        const workflowStep = getWorkflowStep(workflow, data.workflowStepCodename);
+
+        if (!workflowStep) {
+            throw Error(
+                `Workflow step with codename '${chalk.red(
+                    data.workflowStepCodename
+                )}' does not exist within worklflow '${chalk.cyan(workflow.codename)}'`
+            );
+        }
+
+        return {
+            step: workflowStep,
+            workflow: workflow
+        };
+    };
+
+    const doesWorkflowStepCodenameRepresentPublishedStep = (
+        stepCodename: string,
+        workflows: WorkflowModels.Workflow[]
+    ) => {
+        for (const workflow of workflows) {
+            if (workflow.publishedStep.codename === stepCodename) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    const doesWorkflowStepCodenameRepresentArchivedStep = (
+        workflowStepCodename: string,
+        workflows: WorkflowModels.Workflow[]
+    ) => {
+        for (const workflow of workflows) {
+            if (workflow.archivedStep.codename === workflowStepCodename) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    const doesWorkflowStepCodenameRepresentScheduledStep = (
+        stepCodename: string,
+        workflows: WorkflowModels.Workflow[]
+    ) => {
+        for (const workflow of workflows) {
+            if (workflow.scheduledStep.codename === stepCodename) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    const setWorkflowOfLanguageVariantAsync = async (
         logSpinner: LogSpinnerData,
         managementClient: ManagementClient,
         workflowCodename: string,
         workflowStepCodename: string,
         migrationItem: MigrationItem,
         workflows: WorkflowModels.Workflow[]
-    ): Promise<void> {
-        const { workflow, step } = this.getWorkflowAndStep({
+    ) => {
+        const { workflow, step } = getWorkflowAndStep({
             workflows: workflows,
             workflowCodename: workflowCodename,
             workflowStepCodename: workflowStepCodename
         });
 
-        if (this.doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
+        if (doesWorkflowStepCodenameRepresentPublishedStep(workflowStepCodename, workflows)) {
             await runMapiRequestAsync({
-                logger: this.logger,
+                logger: logger,
                 func: async () =>
                     (
                         await managementClient
@@ -115,18 +138,18 @@ export class ImportWorkflowService {
                 logSpinner: logSpinner,
                 itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
             });
-        } else if (this.doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
+        } else if (doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
             logSpinner({
                 type: 'skip',
                 message: `Skipping scheduled workflow step for item '${chalk.yellow(migrationItem.system.name)}'`
             });
-        } else if (this.doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
+        } else if (doesWorkflowStepCodenameRepresentArchivedStep(workflowStepCodename, workflows)) {
             // unpublish the language variant first if published
             // there is no way to determine if language variant is published via MAPI
             // so we have to always try unpublishing first and catching possible errors
             try {
                 await runMapiRequestAsync({
-                    logger: this.logger,
+                    logger: logger,
                     func: async () =>
                         (
                             await managementClient
@@ -153,7 +176,7 @@ export class ImportWorkflowService {
             }
 
             await runMapiRequestAsync({
-                logger: this.logger,
+                logger: logger,
                 func: async () =>
                     (
                         await managementClient
@@ -180,7 +203,7 @@ export class ImportWorkflowService {
                 // item is already in the target workflow step
             } else {
                 await runMapiRequestAsync({
-                    logger: this.logger,
+                    logger: logger,
                     func: async () =>
                         (
                             await managementClient
@@ -204,44 +227,10 @@ export class ImportWorkflowService {
                 });
             }
         }
-    }
+    };
 
-    private doesWorkflowStepCodenameRepresentPublishedStep(
-        stepCodename: string,
-        workflows: WorkflowModels.Workflow[]
-    ): boolean {
-        for (const workflow of workflows) {
-            if (workflow.publishedStep.codename === stepCodename) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private doesWorkflowStepCodenameRepresentArchivedStep(
-        workflowStepCodename: string,
-        workflows: WorkflowModels.Workflow[]
-    ): boolean {
-        for (const workflow of workflows) {
-            if (workflow.archivedStep.codename === workflowStepCodename) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private doesWorkflowStepCodenameRepresentScheduledStep(
-        stepCodename: string,
-        workflows: WorkflowModels.Workflow[]
-    ): boolean {
-        for (const workflow of workflows) {
-            if (workflow.scheduledStep.codename === stepCodename) {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    return {
+        getWorkflowAndStep,
+        setWorkflowOfLanguageVariantAsync
+    };
 }

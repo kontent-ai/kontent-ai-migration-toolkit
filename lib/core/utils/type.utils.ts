@@ -2,15 +2,13 @@ import {
     ContentTypeModels,
     ContentTypeSnippetModels,
     ContentTypeElements,
-    ManagementClient,
-    ElementModels
+    ManagementClient
 } from '@kontent-ai/management-sdk';
 import { FlattenedContentType, FlattenedContentTypeElement } from '../models/core.models.js';
 import { Logger, logErrorAndExit } from './log.utils.js';
 import chalk from 'chalk';
 import { runMapiRequestAsync } from './run.utils.js';
-
-const excludedFlattenedElements: ElementModels.ElementType[] = ['guidelines'];
+import { MigrationElementType } from '../models/migration.models.js';
 
 export async function getFlattenedContentTypesAsync(
     managementClient: ManagementClient,
@@ -53,7 +51,9 @@ function getContentTypeElements(
         if (!element.codename || !element.id) {
             continue;
         }
-        if (excludeElement(element)) {
+
+        const migrationElementType = mapToMigrationElementType(element);
+        if (!migrationElementType) {
             continue;
         }
 
@@ -77,13 +77,15 @@ function getContentTypeElements(
                 if (!snippetElement.codename || !snippetElement.id) {
                     continue;
                 }
-                if (excludeElement(snippetElement)) {
+
+                const migrationElementType = mapToMigrationElementType(snippetElement);
+                if (!migrationElementType) {
                     continue;
                 }
 
                 const flattenedElement: FlattenedContentTypeElement = {
                     codename: snippetElement.codename,
-                    type: snippetElement.type,
+                    type: migrationElementType,
                     id: snippetElement.id,
                     element: element
                 };
@@ -94,7 +96,7 @@ function getContentTypeElements(
             const flattenedElement: FlattenedContentTypeElement = {
                 codename: element.codename,
                 id: element.id,
-                type: element.type,
+                type: migrationElementType,
                 element: element
             };
 
@@ -105,6 +107,11 @@ function getContentTypeElements(
     return elements;
 }
 
-function excludeElement(element: ContentTypeElements.ContentTypeElementModel): boolean {
-    return excludedFlattenedElements.includes(element.type);
+function mapToMigrationElementType(
+    element: ContentTypeElements.ContentTypeElementModel
+): MigrationElementType | undefined {
+    if (element.type === 'guidelines' || element.type === 'snippet') {
+        return undefined;
+    }
+    return element.type;
 }

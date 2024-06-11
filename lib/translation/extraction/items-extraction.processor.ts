@@ -1,22 +1,10 @@
-import { richTextHelper } from '../index.js';
-import {
-    MigrationItem,
-    ReferencedDataInLanguageVariants,
-    ReferencedDataInMigrationItems,
-    parseAsArray,
-    uniqueStringFilter
-} from '../../core/index.js';
+import { richTextProcessor } from '../index.js';
+import { MigrationItem, ReferencedDataInMigrationItems, parseAsArray, uniqueStringFilter } from '../../core/index.js';
 import { KontentAiPreparedExportItem } from '../../export/export.models.js';
 import { GetFlattenedElement } from '../../import/index.js';
 
-export function getItemsExtractionService(): ItemsExtractionService {
-    return new ItemsExtractionService();
-}
-
-export class ItemsExtractionService {
-    constructor() {}
-
-    extractReferencedDataFromExportItems(items: KontentAiPreparedExportItem[]): ReferencedDataInLanguageVariants {
+export function itemsExtractionProcessor() {
+    const extractReferencedDataFromExportItems = (items: KontentAiPreparedExportItem[]) => {
         const itemIds: string[] = [];
         const assetIds: string[] = [];
 
@@ -33,11 +21,11 @@ export class ItemsExtractionService {
 
                     itemIds.push(
                         ...[
-                            ...richTextHelper.processDataIds(rteValue ?? '').ids,
-                            ...richTextHelper.processLinkItemIds(rteValue ?? '').ids
+                            ...richTextProcessor().processDataIds(rteValue ?? '').ids,
+                            ...richTextProcessor().processLinkItemIds(rteValue ?? '').ids
                         ]
                     );
-                    assetIds.push(...richTextHelper.processAssetIds(rteValue ?? '').ids);
+                    assetIds.push(...richTextProcessor().processAssetIds(rteValue ?? '').ids);
                 } else if (typeElement.type === 'modular_content' || typeElement.type === 'subpages') {
                     if (itemElement.value && Array.isArray(itemElement.value)) {
                         for (const arrayVal of itemElement.value) {
@@ -64,12 +52,9 @@ export class ItemsExtractionService {
             itemIds: itemIds.filter(uniqueStringFilter),
             assetIds: assetIds.filter(uniqueStringFilter)
         };
-    }
+    };
 
-    extractReferencedItemsFromMigrationItems(
-        items: MigrationItem[],
-        getElement: GetFlattenedElement
-    ): ReferencedDataInMigrationItems {
+    const extractReferencedItemsFromMigrationItems = (items: MigrationItem[], getElement: GetFlattenedElement) => {
         const itemCodenames: string[] = [];
         const assetCodenames: string[] = [];
 
@@ -82,11 +67,11 @@ export class ItemsExtractionService {
 
                     itemCodenames.push(
                         ...[
-                            ...richTextHelper.processRteItemCodenames(richTextHtml ?? '').codenames,
-                            ...richTextHelper.processRteLinkItemCodenames(richTextHtml ?? '').codenames
+                            ...richTextProcessor().processRteItemCodenames(richTextHtml ?? '').codenames,
+                            ...richTextProcessor().processRteLinkItemCodenames(richTextHtml ?? '').codenames
                         ]
                     );
-                    assetCodenames.push(...richTextHelper.processRteAssetCodenames(richTextHtml ?? '').codenames);
+                    assetCodenames.push(...richTextProcessor().processRteAssetCodenames(richTextHtml ?? '').codenames);
                 } else if (flattenedElement.type === 'modular_content' || flattenedElement.type === 'subpages') {
                     itemCodenames.push(...parseAsArray(element.value));
                 } else if (flattenedElement.type === 'asset') {
@@ -101,5 +86,10 @@ export class ItemsExtractionService {
         };
 
         return data;
-    }
+    };
+
+    return {
+        extractReferencedDataFromExportItems,
+        extractReferencedItemsFromMigrationItems
+    };
 }

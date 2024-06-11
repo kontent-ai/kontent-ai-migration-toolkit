@@ -1,6 +1,6 @@
 import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../../zip/zip.models.js';
 import { BaseItemProcessorService } from './base-item-processor.service.js';
-import { JsonItem, mapToJsonItem, parseJsonItem } from './utils/item-json.utils.js';
+import { JsonItem, mapToJsonItem, parseJsonItem } from '../utils/item-json.utils.js';
 import { MigrationItem } from '../../core/index.js';
 
 export class ItemJsonProcessorService extends BaseItemProcessorService {

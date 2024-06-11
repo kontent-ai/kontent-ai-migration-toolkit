@@ -2,16 +2,16 @@ import { ItemInfo } from '../models/core.models.js';
 import { Logger, LogSpinnerData, getCountPrefix } from './log.utils.js';
 
 export interface Chunk<T> {
-    items: T[];
-    index: number;
+    readonly items: T[];
+    readonly index: number;
 }
 
 export async function processInChunksAsync<InputItem, OutputItem>(data: {
-    logger: Logger;
-    items: InputItem[];
-    chunkSize: number;
-    processAsync: (item: InputItem, logSpinner: LogSpinnerData) => Promise<OutputItem>;
-    itemInfo: (item: InputItem) => ItemInfo;
+    readonly logger: Logger;
+    readonly items: InputItem[];
+    readonly chunkSize: number;
+    readonly processAsync: (item: InputItem, logSpinner: LogSpinnerData) => Promise<OutputItem>;
+    readonly itemInfo: (item: InputItem) => ItemInfo;
 }): Promise<OutputItem[]> {
     if (!data.items.length) {
         return [];

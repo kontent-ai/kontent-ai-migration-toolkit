@@ -1,121 +1,34 @@
+import { WorkflowModels, LanguageVariantModels, ContentItemModels, AssetModels } from '@kontent-ai/management-sdk';
+import chalk from 'chalk';
 import {
+    processInChunksAsync,
+    runMapiRequestAsync,
+    getFlattenedContentTypesAsync,
+    is404Error,
+    ItemStateInSourceEnvironmentById,
+    AssetStateInSourceEnvironmentById,
+    uniqueStringFilter
+} from '../../core/index.js';
+import { itemsExtractionProcessor } from '../../translation/index.js';
+import {
+    DefaultExportContextConfig,
     ExportContext,
     ExportContextEnvironmentData,
     KontentAiExportRequestItem,
     KontentAiPreparedExportItem
-} from '../../export.models.js';
-import {
-    AssetStateInSourceEnvironmentById,
-    ItemStateInSourceEnvironmentById,
-    Logger,
-    getFlattenedContentTypesAsync,
-    is404Error,
-    processInChunksAsync,
-    runMapiRequestAsync,
-    uniqueStringFilter
-} from '../../../core/index.js';
-import {
-    AssetModels,
-    CollectionModels,
-    ContentItemModels,
-    LanguageModels,
-    LanguageVariantModels,
-    ManagementClient,
-    TaxonomyModels,
-    WorkflowModels
-} from '@kontent-ai/management-sdk';
-import chalk from 'chalk';
-import { ItemsExtractionService, getItemsExtractionService } from '../../../translation/index.js';
-import { throwErrorForItemRequest } from '../../utils/export.utils.js';
+} from '../export.models.js';
+import { throwErrorForItemRequest } from '../utils/export.utils.js';
 
-export function getExportContextService(logger: Logger, managementClient: ManagementClient): ExportContextService {
-    return new ExportContextService(logger, managementClient);
-}
-
-export class ExportContextService {
-    private readonly itemsExtractionService: ItemsExtractionService;
-
-    constructor(private readonly logger: Logger, private readonly managementClient: ManagementClient) {
-        this.itemsExtractionService = getItemsExtractionService();
-    }
-
-    async getExportContextAsync(data: { exportItems: KontentAiExportRequestItem[] }): Promise<ExportContext> {
-        const environmentData = await this.getEnvironmentDataAsync();
-
-        this.logger.log({
-            type: 'info',
-            message: `Preparing '${chalk.yellow(data.exportItems.length.toString())}' items for export`
-        });
-        const preparedItems = await this.prepareExportItemsAsync({
-            environmentData: environmentData,
-            exportItems: data.exportItems
-        });
-
-        this.logger.log({
-            type: 'info',
-            message: `Extracting referenced items from content`
-        });
-
-        const referencedData = this.itemsExtractionService.extractReferencedDataFromExportItems(preparedItems);
-
-        // fetch both referenced items and items that are set to be exported
-        const itemIdsToCheckInTargetEnv: string[] = [
-            ...referencedData.itemIds,
-            ...preparedItems.map((m) => m.contentItem.id)
-        ].filter(uniqueStringFilter);
-
-        const assetIdsToCheckInTargetEnv: string[] = [...referencedData.assetIds];
-
-        this.logger.log({
-            type: 'info',
-            message: `Fetching referenced items`
-        });
-        const itemStates: ItemStateInSourceEnvironmentById[] = await this.getItemStatesAsync(
-            itemIdsToCheckInTargetEnv
-        );
-
-        this.logger.log({
-            type: 'info',
-            message: `Fetching referenced assets`
-        });
-        const assetStates: AssetStateInSourceEnvironmentById[] = await this.getAssetStatesAsync(
-            assetIdsToCheckInTargetEnv
-        );
-
-        return {
-            preparedExportItems: preparedItems,
-            environmentData: environmentData,
-            referencedData: referencedData,
-            getAssetStateInSourceEnvironment: (id) => {
-                const assetSate = assetStates.find((m) => m.id === id);
-
-                if (!assetSate) {
-                    throw Error(`Invalid state for asset '${id}'. It is expected that all asset states will exist`);
-                }
-
-                return assetSate;
-            },
-            getItemStateInSourceEnvironment: (id) => {
-                const itemState = itemStates.find((m) => m.id === id);
-
-                if (!itemState) {
-                    throw Error(`Invalid state for item '${id}'. It is expected that all item states will exist`);
-                }
-
-                return itemState;
-            }
-        };
-    }
-
-    private async prepareExportItemsAsync(data: {
-        environmentData: ExportContextEnvironmentData;
-        exportItems: KontentAiExportRequestItem[];
-    }): Promise<KontentAiPreparedExportItem[]> {
+export function exportContextFetcher(config: DefaultExportContextConfig) {
+    const prepareExportItemsAsync = async (
+        environmentData: ExportContextEnvironmentData,
+        exportItems: KontentAiExportRequestItem[]
+    ) => {
         const items: KontentAiPreparedExportItem[] = await processInChunksAsync<
             KontentAiExportRequestItem,
             KontentAiPreparedExportItem
         >({
-            logger: this.logger,
+            logger: config.logger,
             chunkSize: 1,
             itemInfo: (input) => {
                 return {
@@ -123,14 +36,14 @@ export class ExportContextService {
                     itemType: 'exportedItem'
                 };
             },
-            items: data.exportItems,
+            items: exportItems,
             processAsync: async (exportItem, logSpinner) => {
                 const contentItem = await runMapiRequestAsync({
-                    logger: this.logger,
+                    logger: config.logger,
                     logSpinner: logSpinner,
                     func: async () =>
                         (
-                            await this.managementClient
+                            await config.managementClient
                                 .viewContentItem()
                                 .byItemCodename(exportItem.itemCodename)
                                 .toPromise()
@@ -141,11 +54,11 @@ export class ExportContextService {
                 });
 
                 const languageVariant = await runMapiRequestAsync({
-                    logger: this.logger,
+                    logger: config.logger,
                     logSpinner: logSpinner,
                     func: async () =>
                         (
-                            await this.managementClient
+                            await config.managementClient
                                 .viewLanguageVariant()
                                 .byItemCodename(exportItem.itemCodename)
                                 .byLanguageCodename(exportItem.languageCodename)
@@ -156,7 +69,7 @@ export class ExportContextService {
                     itemName: `codename -> ${exportItem.itemCodename} (${exportItem.languageCodename})`
                 });
 
-                const collection = data.environmentData.collections.find((m) => m.id === contentItem.collection.id);
+                const collection = environmentData.collections.find((m) => m.id === contentItem.collection.id);
 
                 if (!collection) {
                     throwErrorForItemRequest(
@@ -165,15 +78,13 @@ export class ExportContextService {
                     );
                 }
 
-                const contentType = data.environmentData.contentTypes.find(
-                    (m) => m.contentTypeId === contentItem.type.id
-                );
+                const contentType = environmentData.contentTypes.find((m) => m.contentTypeId === contentItem.type.id);
 
                 if (!contentType) {
                     throwErrorForItemRequest(exportItem, `Invalid content type '${chalk.yellow(contentItem.type.id)}'`);
                 }
 
-                const language = data.environmentData.languages.find((m) => m.id === languageVariant.language.id);
+                const language = environmentData.languages.find((m) => m.id === languageVariant.language.id);
 
                 if (!language) {
                     throwErrorForItemRequest(
@@ -182,7 +93,7 @@ export class ExportContextService {
                     );
                 }
 
-                const workflow = data.environmentData.workflows.find(
+                const workflow = environmentData.workflows.find(
                     (m) => m.id === languageVariant.workflow.workflowIdentifier.id
                 );
 
@@ -193,7 +104,7 @@ export class ExportContextService {
                     );
                 }
 
-                const workflowStepCodename = this.getWorkflowStepCodename(workflow, languageVariant);
+                const workflowStepCodename = getWorkflowStepCodename(workflow, languageVariant);
 
                 if (!workflowStepCodename) {
                     throwErrorForItemRequest(
@@ -218,12 +129,12 @@ export class ExportContextService {
         });
 
         return items;
-    }
+    };
 
-    private getWorkflowStepCodename(
+    const getWorkflowStepCodename = (
         workflow: WorkflowModels.Workflow,
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant
-    ): string | undefined {
+    ) => {
         const variantStepId = languageVariant.workflow.stepIdentifier.id;
 
         for (const step of workflow.steps) {
@@ -245,61 +156,61 @@ export class ExportContextService {
         }
 
         return undefined;
-    }
+    };
 
-    private async getEnvironmentDataAsync(): Promise<ExportContextEnvironmentData> {
+    const getEnvironmentDataAsync = async () => {
         const environmentData: ExportContextEnvironmentData = {
-            collections: await this.getAllCollectionsAsync(),
-            contentTypes: await getFlattenedContentTypesAsync(this.managementClient, this.logger),
-            languages: await this.getAllLanguagesAsync(),
-            workflows: await this.getAllWorkflowsAsync(),
-            taxonomies: await this.getAllTaxonomiesAsync()
+            collections: await getAllCollectionsAsync(),
+            contentTypes: await getFlattenedContentTypesAsync(config.managementClient, config.logger),
+            languages: await getAllLanguagesAsync(),
+            workflows: await getAllWorkflowsAsync(),
+            taxonomies: await getAllTaxonomiesAsync()
         };
 
         return environmentData;
-    }
+    };
 
-    private async getAllLanguagesAsync(): Promise<LanguageModels.LanguageModel[]> {
+    const getAllLanguagesAsync = async () => {
         return await runMapiRequestAsync({
-            logger: this.logger,
-            func: async () => (await this.managementClient.listLanguages().toAllPromise()).data.items,
+            logger: config.logger,
+            func: async () => (await config.managementClient.listLanguages().toAllPromise()).data.items,
             action: 'list',
             type: 'language'
         });
-    }
+    };
 
-    private async getAllCollectionsAsync(): Promise<CollectionModels.Collection[]> {
+    const getAllCollectionsAsync = async () => {
         return await runMapiRequestAsync({
-            logger: this.logger,
-            func: async () => (await this.managementClient.listCollections().toPromise()).data.collections,
+            logger: config.logger,
+            func: async () => (await config.managementClient.listCollections().toPromise()).data.collections,
             action: 'list',
             type: 'collection'
         });
-    }
+    };
 
-    private async getAllWorkflowsAsync(): Promise<WorkflowModels.Workflow[]> {
+    const getAllWorkflowsAsync = async () => {
         return await runMapiRequestAsync({
-            logger: this.logger,
-            func: async () => (await this.managementClient.listWorkflows().toPromise()).data,
+            logger: config.logger,
+            func: async () => (await config.managementClient.listWorkflows().toPromise()).data,
             action: 'list',
             type: 'workflow'
         });
-    }
+    };
 
-    private async getAllTaxonomiesAsync(): Promise<TaxonomyModels.Taxonomy[]> {
+    const getAllTaxonomiesAsync = async () => {
         return await runMapiRequestAsync({
-            logger: this.logger,
-            func: async () => (await this.managementClient.listTaxonomies().toAllPromise()).data.items,
+            logger: config.logger,
+            func: async () => (await config.managementClient.listTaxonomies().toAllPromise()).data.items,
             action: 'list',
             type: 'taxonomy'
         });
-    }
+    };
 
-    private async getContentItemsByIdsAsync(itemIds: string[]): Promise<ContentItemModels.ContentItem[]> {
+    const getContentItemsByIdsAsync = async (itemIds: string[]) => {
         const contentItems: ContentItemModels.ContentItem[] = [];
 
         await processInChunksAsync<string, void>({
-            logger: this.logger,
+            logger: config.logger,
             chunkSize: 1,
             items: itemIds,
             itemInfo: (id) => {
@@ -312,8 +223,11 @@ export class ExportContextService {
                 try {
                     const contentItem = await runMapiRequestAsync({
                         logSpinner: logSpinner,
-                        logger: this.logger,
-                        func: async () => (await this.managementClient.viewContentItem().byItemId(id).toPromise()).data,
+                        logger: config.logger,
+                        func: async () =>
+                            (
+                                await config.managementClient.viewContentItem().byItemId(id).toPromise()
+                            ).data,
                         action: 'view',
                         type: 'contentItem',
                         itemName: `id -> ${id}`
@@ -329,13 +243,13 @@ export class ExportContextService {
         });
 
         return contentItems;
-    }
+    };
 
-    private async getAssetsByIdsAsync(itemIds: string[]): Promise<AssetModels.Asset[]> {
+    const getAssetsByIdsAsync = async (itemIds: string[]) => {
         const assets: AssetModels.Asset[] = [];
 
         await processInChunksAsync<string, void>({
-            logger: this.logger,
+            logger: config.logger,
             chunkSize: 1,
             items: itemIds,
             itemInfo: (id) => {
@@ -347,9 +261,9 @@ export class ExportContextService {
             processAsync: async (id, logSpinner) => {
                 try {
                     const asset = await runMapiRequestAsync({
-                        logger: this.logger,
+                        logger: config.logger,
                         logSpinner: logSpinner,
-                        func: async () => (await this.managementClient.viewAsset().byAssetId(id).toPromise()).data,
+                        func: async () => (await config.managementClient.viewAsset().byAssetId(id).toPromise()).data,
                         action: 'view',
                         type: 'asset',
                         itemName: `id -> ${id}`
@@ -365,10 +279,10 @@ export class ExportContextService {
         });
 
         return assets;
-    }
+    };
 
-    private async getItemStatesAsync(itemIds: string[]): Promise<ItemStateInSourceEnvironmentById[]> {
-        const items = await this.getContentItemsByIdsAsync(itemIds);
+    const getItemStatesAsync = async (itemIds: string[]) => {
+        const items = await getContentItemsByIdsAsync(itemIds);
         const itemStates: ItemStateInSourceEnvironmentById[] = [];
 
         for (const itemId of itemIds) {
@@ -390,10 +304,10 @@ export class ExportContextService {
         }
 
         return itemStates;
-    }
+    };
 
-    private async getAssetStatesAsync(assetIds: string[]): Promise<AssetStateInSourceEnvironmentById[]> {
-        const assets = await this.getAssetsByIdsAsync(assetIds);
+    const getAssetStatesAsync = async (assetIds: string[]) => {
+        const assets = await getAssetsByIdsAsync(assetIds);
         const assetStates: AssetStateInSourceEnvironmentById[] = [];
 
         for (const assetId of assetIds) {
@@ -415,5 +329,72 @@ export class ExportContextService {
         }
 
         return assetStates;
-    }
+    };
+
+    const getExportContextAsync = async () => {
+        const environmentData = await getEnvironmentDataAsync();
+
+        config.logger.log({
+            type: 'info',
+            message: `Preparing '${chalk.yellow(config.exportItems.length.toString())}' items for export`
+        });
+        const preparedItems = await prepareExportItemsAsync(environmentData, config.exportItems);
+
+        config.logger.log({
+            type: 'info',
+            message: `Extracting referenced items from content`
+        });
+
+        const referencedData = itemsExtractionProcessor().extractReferencedDataFromExportItems(preparedItems);
+
+        // fetch both referenced items and items that are set to be exported
+        const itemIdsToCheckInTargetEnv: string[] = [
+            ...referencedData.itemIds,
+            ...preparedItems.map((m) => m.contentItem.id)
+        ].filter(uniqueStringFilter);
+
+        const assetIdsToCheckInTargetEnv: string[] = [...referencedData.assetIds];
+
+        config.logger.log({
+            type: 'info',
+            message: `Fetching referenced items`
+        });
+        const itemStates: ItemStateInSourceEnvironmentById[] = await getItemStatesAsync(itemIdsToCheckInTargetEnv);
+
+        config.logger.log({
+            type: 'info',
+            message: `Fetching referenced assets`
+        });
+        const assetStates: AssetStateInSourceEnvironmentById[] = await getAssetStatesAsync(assetIdsToCheckInTargetEnv);
+
+        const exportContext: ExportContext = {
+            preparedExportItems: preparedItems,
+            environmentData: environmentData,
+            referencedData: referencedData,
+            getAssetStateInSourceEnvironment: (id) => {
+                const assetSate = assetStates.find((m) => m.id === id);
+
+                if (!assetSate) {
+                    throw Error(`Invalid state for asset '${id}'. It is expected that all asset states will exist`);
+                }
+
+                return assetSate;
+            },
+            getItemStateInSourceEnvironment: (id) => {
+                const itemState = itemStates.find((m) => m.id === id);
+
+                if (!itemState) {
+                    throw Error(`Invalid state for item '${id}'. It is expected that all item states will exist`);
+                }
+
+                return itemState;
+            }
+        };
+
+        return exportContext;
+    };
+
+    return {
+        getExportContextAsync
+    };
 }

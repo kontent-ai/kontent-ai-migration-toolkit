@@ -17,30 +17,31 @@ import {
     CollectionModels,
     LanguageModels,
     SharedModels,
-    TaxonomyModels
+    TaxonomyModels,
+    ManagementClient
 } from '@kontent-ai/management-sdk';
 
 export interface ExportContextEnvironmentData {
-    languages: LanguageModels.LanguageModel[];
-    contentTypes: FlattenedContentType[];
-    collections: CollectionModels.Collection[];
-    workflows: WorkflowModels.Workflow[];
-    taxonomies: TaxonomyModels.Taxonomy[];
+    readonly languages: LanguageModels.LanguageModel[];
+    readonly contentTypes: FlattenedContentType[];
+    readonly collections: CollectionModels.Collection[];
+    readonly workflows: WorkflowModels.Workflow[];
+    readonly taxonomies: TaxonomyModels.Taxonomy[];
 }
 
 export type ExportTransformFunc = (data: {
-    exportItem: KontentAiPreparedExportItem;
-    typeElement: FlattenedContentTypeElement;
-    value: string | number | SharedModels.ReferenceObject[] | undefined;
-    context: ExportContext;
+    readonly exportItem: KontentAiPreparedExportItem;
+    readonly typeElement: FlattenedContentTypeElement;
+    readonly value: string | number | SharedModels.ReferenceObject[] | undefined;
+    readonly context: ExportContext;
 }) => string | string[] | undefined;
 
 export interface ExportContext {
-    environmentData: ExportContextEnvironmentData;
-    referencedData: ReferencedDataInLanguageVariants;
-    getItemStateInSourceEnvironment: (id: string) => ItemStateInSourceEnvironmentById;
-    getAssetStateInSourceEnvironment: (id: string) => AssetStateInSourceEnvironmentById;
-    preparedExportItems: KontentAiPreparedExportItem[];
+    readonly environmentData: ExportContextEnvironmentData;
+    readonly referencedData: ReferencedDataInLanguageVariants;
+    readonly getItemStateInSourceEnvironment: (id: string) => ItemStateInSourceEnvironmentById;
+    readonly getAssetStateInSourceEnvironment: (id: string) => AssetStateInSourceEnvironmentById;
+    readonly preparedExportItems: KontentAiPreparedExportItem[];
 }
 
 export interface ExportAdapter {
@@ -49,33 +50,39 @@ export interface ExportAdapter {
 }
 
 export interface ExportAdapterResult {
-    items: MigrationItem[];
-    assets: MigrationAsset[];
+    readonly items: MigrationItem[];
+    readonly assets: MigrationAsset[];
 }
 
 export interface KontentAiExportRequestItem {
-    itemCodename: string;
-    languageCodename: string;
+    readonly itemCodename: string;
+    readonly languageCodename: string;
 }
 
 export interface DefaultExportAdapterConfig {
-    environmentId: string;
-    apiKey: string;
-    exportItems: KontentAiExportRequestItem[];
-    logger: Logger;
+    readonly environmentId: string;
+    readonly apiKey: string;
+    readonly exportItems: KontentAiExportRequestItem[];
+    readonly logger: Logger;
 
-    baseUrl?: string;
-    skipFailedItems?: boolean;
-    retryStrategy?: IRetryStrategyOptions;
+    readonly baseUrl?: string;
+    readonly skipFailedItems?: boolean;
+    readonly retryStrategy?: IRetryStrategyOptions;
+}
+
+export interface DefaultExportContextConfig {
+    readonly logger: Logger;
+    readonly exportItems: KontentAiExportRequestItem[];
+    readonly managementClient: ManagementClient;
 }
 
 export interface KontentAiPreparedExportItem {
-    languageVariant: LanguageVariantModels.ContentItemLanguageVariant;
-    contentItem: ContentItemModels.ContentItem;
-    collection: CollectionModels.Collection;
-    language: LanguageModels.LanguageModel;
-    workflow: WorkflowModels.Workflow;
-    workflowStepCodename: string;
-    requestItem: KontentAiExportRequestItem;
-    contentType: FlattenedContentType;
+    readonly languageVariant: LanguageVariantModels.ContentItemLanguageVariant;
+    readonly contentItem: ContentItemModels.ContentItem;
+    readonly collection: CollectionModels.Collection;
+    readonly language: LanguageModels.LanguageModel;
+    readonly workflow: WorkflowModels.Workflow;
+    readonly workflowStepCodename: string;
+    readonly requestItem: KontentAiExportRequestItem;
+    readonly contentType: FlattenedContentType;
 }

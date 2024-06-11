@@ -6,7 +6,6 @@ import { Command, CommandOption } from '../cli.models.js';
 
 export function getCliArgs(): CliArgs {
     const argv = yargs(hideBin(process.argv));
-
     return new CliArgs(argv);
 }
 

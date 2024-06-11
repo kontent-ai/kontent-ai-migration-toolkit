@@ -1,5 +1,5 @@
 import { getDefaultFilename } from '../../core/index.js';
-import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../file/index.js';
+import { AssetJsonProcessorService, ItemJsonProcessorService } from '../../format/index.js';
 import { AssetsFormat, AssetFormatService, ItemFormatService, ItemsFormat } from '../../zip/index.js';
 import { FilesConfig } from '../models/toolkit.models.js';
 

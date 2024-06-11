@@ -37,7 +37,7 @@
         "test:help": "tsx lib/node/cli/app --help",
         "test:help:command": "tsx lib/node/cli/app migrate --help",
         "lint": "npx eslint lib",
-        "clean": "tsx clean.ts",
+        "clean": "tsx scripts/clean.ts",
         "push:tags": "git push --tags",
         "update:version": "tsx ./scripts/version/update-version.ts"
     },

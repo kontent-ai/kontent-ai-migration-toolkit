@@ -1,7 +1,7 @@
 import { MigrationElementType } from '../../core/index.js';
 import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
 import { ExportTransformFunc, ExportContext } from '../../export/index.js';
-import { richTextHelper } from '../helpers/rich-text.helper.js';
+import { richTextProcessor } from '../helpers/rich-text.processor.js';
 
 /**
  * Element transforms used by Kontent.ai export adapter
@@ -136,12 +136,6 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
 
         return selectedOptionCodenames;
     },
-    guidelines: (data) => {
-        throw Error('Not supported');
-    },
-    snippet: (data) => {
-        throw Error('Not supported');
-    },
     subpages: (data) => {
         if (!data.value) {
             return [];
@@ -194,7 +188,7 @@ function transformRichTextValue(richTextHtml: string | undefined, context: Expor
     }
 
     // replace item ids with codenames
-    richTextHtml = richTextHelper.processDataIds(richTextHtml, (id) => {
+    richTextHtml = richTextProcessor().processDataIds(richTextHtml, (id) => {
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
         if (!itemInEnv) {
@@ -207,7 +201,7 @@ function transformRichTextValue(richTextHtml: string | undefined, context: Expor
     }).html;
 
     // replace link item ids with codenames
-    richTextHtml = richTextHelper.processLinkItemIds(richTextHtml, (id) => {
+    richTextHtml = richTextProcessor().processLinkItemIds(richTextHtml, (id) => {
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
         if (!itemInEnv) {
@@ -220,7 +214,7 @@ function transformRichTextValue(richTextHtml: string | undefined, context: Expor
     }).html;
 
     // replace asset ids with codenames
-    richTextHtml = richTextHelper.processAssetIds(richTextHtml, (id) => {
+    richTextHtml = richTextProcessor().processAssetIds(richTextHtml, (id) => {
         const assetInEnv = context.getAssetStateInSourceEnvironment(id).asset;
 
         if (!assetInEnv) {

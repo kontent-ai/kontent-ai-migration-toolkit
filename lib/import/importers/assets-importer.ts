@@ -4,30 +4,29 @@ import mime from 'mime';
 import chalk from 'chalk';
 import { ImportContext } from '../import.models.js';
 
-export function getImportAssetsService(logger: Logger, managementClient: ManagementClient): ImportAssetsService {
-    return new ImportAssetsService(logger, managementClient);
-}
+export function assetsImporter(data: {
+    readonly logger: Logger;
+    readonly client: ManagementClient;
+    readonly importContext: ImportContext;
+}) {
+    const importAssetsChunkSize = 1;
+    const getAssetsToUpload: () => MigrationAsset[] = () => {
+        return data.importContext.assets.filter((asset) => {
+            return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
+        });
+    };
 
-export class ImportAssetsService {
-    private readonly importAssetsChunkSize: number = 1;
-
-    constructor(private readonly logger: Logger, private readonly managementClient: ManagementClient) {}
-
-    async importAssetsAsync(data: { assets: MigrationAsset[]; importContext: ImportContext }): Promise<void> {
-        this.logger.log({
+    const importAsync = async () => {
+        data.logger.log({
             type: 'info',
-            message: `Categorizing '${chalk.yellow(data.assets.length.toString())}' assets`
-        });
-        const assetsToUpload = this.getAssetsToUpload({
-            assets: data.assets,
-            managementClient: this.managementClient,
-            importContext: data.importContext
+            message: `Categorizing '${chalk.yellow(data.importContext.assets.length.toString())}' assets`
         });
 
-        const skippedAssetsCount = data.assets.length - assetsToUpload.length;
+        const assetsToUpload = getAssetsToUpload();
+        const skippedAssetsCount = data.importContext.assets.length - assetsToUpload.length;
 
         if (skippedAssetsCount) {
-            this.logger.log({
+            data.logger.log({
                 type: 'skip',
                 message: `Skipping upload for '${chalk.yellow(
                     skippedAssetsCount.toString()
@@ -35,14 +34,14 @@ export class ImportAssetsService {
             });
         }
 
-        this.logger.log({
+        data.logger.log({
             type: 'upload',
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
         });
 
         await processInChunksAsync<MigrationAsset, void>({
-            logger: this.logger,
-            chunkSize: this.importAssetsChunkSize,
+            logger: data.logger,
+            chunkSize: importAssetsChunkSize,
             items: assetsToUpload,
             itemInfo: (input) => {
                 return {
@@ -52,10 +51,10 @@ export class ImportAssetsService {
             },
             processAsync: async (asset, logSpinner) => {
                 const uploadedBinaryFile = await runMapiRequestAsync({
-                    logger: this.logger,
+                    logger: data.logger,
                     func: async () =>
                         (
-                            await this.managementClient
+                            await data.client
                                 .uploadBinaryFile()
                                 .withData({
                                     binaryData: asset.binaryData,
@@ -71,20 +70,24 @@ export class ImportAssetsService {
                 });
 
                 await runMapiRequestAsync({
-                    logger: this.logger,
+                    logger: data.logger,
                     func: async () =>
                         (
-                            await this.managementClient
+                            await data.client
                                 .addAsset()
                                 .withData((builder) => {
-                                    const data: AssetModels.IAddAssetRequestData = {
+                                    const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(
+                                        asset.codename
+                                    );
+
+                                    const assetRequestData: AssetModels.IAddAssetRequestData = {
                                         file_reference: {
                                             id: uploadedBinaryFile.id,
                                             type: 'internal'
                                         },
                                         codename: asset.codename,
                                         title: asset.title,
-                                        external_id: asset.externalId,
+                                        external_id: assetStateInTargetEnv.externalIdToUse,
                                         collection: asset.collection
                                             ? {
                                                   reference: {
@@ -105,7 +108,7 @@ export class ImportAssetsService {
                                               })
                                             : []
                                     };
-                                    return data;
+                                    return assetRequestData;
                                 })
                                 .toPromise()
                         ).data,
@@ -116,15 +119,9 @@ export class ImportAssetsService {
                 });
             }
         });
-    }
+    };
 
-    private getAssetsToUpload(data: {
-        assets: MigrationAsset[];
-        managementClient: ManagementClient;
-        importContext: ImportContext;
-    }): MigrationAsset[] {
-        return data.assets.filter((asset) => {
-            return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
-        });
-    }
+    return {
+        importAsync
+    };
 }

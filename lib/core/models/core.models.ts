@@ -32,81 +32,81 @@ export type MapiType =
     | 'workflow';
 
 export interface ItemInfo {
-    title: string;
-    itemType: GeneralItemType | MapiType;
+    readonly title: string;
+    readonly itemType: GeneralItemType | MapiType;
 }
 
 export interface ErrorData {
-    message: string;
-    requestData?: string;
-    requestUrl?: string;
-    isUnknownError: boolean;
-    error: any;
+    readonly message: string;
+    readonly requestData?: string;
+    readonly requestUrl?: string;
+    readonly isUnknownError: boolean;
+    readonly error: any;
 }
 
 export interface ReferencedDataInMigrationItems {
-    itemCodenames: string[];
-    assetCodenames: string[];
+    readonly itemCodenames: string[];
+    readonly assetCodenames: string[];
 }
 
 export interface ReferencedDataInLanguageVariants {
-    itemIds: string[];
-    assetIds: string[];
+    readonly itemIds: string[];
+    readonly assetIds: string[];
 }
 
 export interface ItemStateInSourceEnvironmentById {
-    state: TargetItemState;
-    id: string;
-    item: ContentItemModels.ContentItem | undefined;
+    readonly state: TargetItemState;
+    readonly id: string;
+    readonly item: ContentItemModels.ContentItem | undefined;
 }
 
 export interface AssetStateInSourceEnvironmentById {
-    state: TargetItemState;
-    id: string;
-    asset: AssetModels.Asset | undefined;
+    readonly state: TargetItemState;
+    readonly id: string;
+    readonly asset: AssetModels.Asset | undefined;
 }
 
 export interface ItemStateInTargetEnvironmentByCodename {
-    state: TargetItemState;
-    itemCodename: string;
-    item: ContentItemModels.ContentItem | undefined;
-    externalIdToUse: string;
+    readonly state: TargetItemState;
+    readonly itemCodename: string;
+    readonly item: ContentItemModels.ContentItem | undefined;
+    readonly externalIdToUse: string;
 }
 
 export interface LanguageVariantStateInTargetEnvironmentByCodename {
-    state: TargetItemState;
-    itemCodename: string;
-    languageCodename: string;
-    languageVariant: LanguageVariantModels.ContentItemLanguageVariant | undefined;
+    readonly state: TargetItemState;
+    readonly itemCodename: string;
+    readonly languageCodename: string;
+    readonly languageVariant: LanguageVariantModels.ContentItemLanguageVariant | undefined;
 }
 
 export interface AssetStateInTargetEnvironmentByCodename {
-    state: TargetItemState;
-    assetCodename: string;
-    asset: AssetModels.Asset | undefined;
-    externalIdToUse: string;
+    readonly state: TargetItemState;
+    readonly assetCodename: string;
+    readonly asset: AssetModels.Asset | undefined;
+    readonly externalIdToUse: string;
 }
 
 export interface PackageMetadata {
-    created: Date;
-    environmentId: string;
-    dataOverview: PackageDataOverview;
+    readonly created: Date;
+    readonly environmentId: string;
+    readonly dataOverview: PackageDataOverview;
 }
 
 export interface PackageDataOverview {
-    contentItemsCount: number;
-    assetsCount: number;
+    readonly contentItemsCount: number;
+    readonly assetsCount: number;
 }
 
 export interface FlattenedContentTypeElement {
-    codename: string;
-    id: string;
-    type: MigrationElementType;
-    element: ContentTypeElements.ContentTypeElementModel;
+    readonly codename: string;
+    readonly id: string;
+    readonly type: MigrationElementType;
+    readonly element: ContentTypeElements.ContentTypeElementModel;
 }
 
 export interface FlattenedContentType {
-    contentTypeCodename: string;
-    contentTypeId: string;
-    elements: FlattenedContentTypeElement[];
+    readonly contentTypeCodename: string;
+    readonly contentTypeId: string;
+    readonly elements: FlattenedContentTypeElement[];
 }

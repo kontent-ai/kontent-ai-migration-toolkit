@@ -1,24 +1,15 @@
 import { SharedContracts, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
-import { parseAsArray, logErrorAndExit, MigrationElementType } from '../../core/index.js';
+import { parseAsArray, MigrationElementType } from '../../core/index.js';
 import { ImportContext, ImportTransformFunc } from '../../import/index.js';
-import { richTextHelper } from '../helpers/rich-text.helper.js';
+import { richTextProcessor } from '../helpers/rich-text.processor.js';
 
 const elementsBuilder = new LanguageVariantElementsBuilder();
 
 /**
- * Import transforms for import (K.ai Management API) format
+ * The purpose of import transform is to take the exported value and convert it to a value that
+ * Kontent.ai Management API understands
  */
 export const importTransforms: Readonly<Record<MigrationElementType, ImportTransformFunc>> = {
-    guidelines: async (data) => {
-        logErrorAndExit({
-            message: `Guidelines import transform not supported`
-        });
-    },
-    snippet: async (data) => {
-        logErrorAndExit({
-            message: `Content type snippet import transform not supported`
-        });
-    },
     subpages: async (data) => {
         return elementsBuilder.linkedItemsElement({
             element: {
@@ -171,7 +162,7 @@ async function processImportRichTextHtmlValueAsync(
     }
 
     // replace item codenames with id or external_id
-    richTextHtml = richTextHelper.processRteItemCodenames(richTextHtml, (codename) => {
+    richTextHtml = richTextProcessor().processRteItemCodenames(richTextHtml, (codename) => {
         const itemState = importContext.getItemStateInTargetEnvironment(codename);
 
         if (itemState.state === 'exists' && itemState.item) {
@@ -186,7 +177,7 @@ async function processImportRichTextHtmlValueAsync(
     }).html;
 
     // replace link item codenames with id or external_id
-    richTextHtml = richTextHelper.processRteLinkItemCodenames(richTextHtml, (codename) => {
+    richTextHtml = richTextProcessor().processRteLinkItemCodenames(richTextHtml, (codename) => {
         const itemState = importContext.getItemStateInTargetEnvironment(codename);
 
         if (itemState.state === 'exists' && itemState.item) {
@@ -201,7 +192,7 @@ async function processImportRichTextHtmlValueAsync(
     }).html;
 
     // replace asset codenames with id or external_id
-    richTextHtml = richTextHelper.processRteAssetCodenames(richTextHtml, (codename) => {
+    richTextHtml = richTextProcessor().processRteAssetCodenames(richTextHtml, (codename) => {
         const assetState = importContext.getAssetStateInTargetEnvironment(codename);
 
         if (assetState.state === 'exists' && assetState.asset) {

@@ -1,25 +1,25 @@
-import { MigrationElement, MigrationItem } from '../../../core/index.js';
+import { MigrationElement, MigrationItem } from '../../core/index.js';
 
 export interface JsonElements {
     [elementCodename: string]: string | string[] | undefined;
 }
 
 export interface JsonItem {
-    system: {
-        codename: string;
-        name: string;
-        language: string;
-        type: string;
-        collection: string;
-        workflow_step?: string;
-        workflow?: string;
+    readonly system: {
+        readonly codename: string;
+        readonly name: string;
+        readonly language: string;
+        readonly type: string;
+        readonly collection: string;
+        readonly workflow_step?: string;
+        readonly workflow?: string;
     };
-    elements: JsonElements;
+    readonly elements: JsonElements;
 }
 
 export interface TypeWrapper {
-    typeCodename: string;
-    items: MigrationItem[];
+    readonly typeCodename: string;
+    readonly items: MigrationItem[];
 }
 
 export function mapToJsonItem(item: MigrationItem): JsonItem {
@@ -41,6 +41,7 @@ export function mapToJsonItem(item: MigrationItem): JsonItem {
         },
         elements: jsonElements
     };
+
     return jsonItem;
 }
 

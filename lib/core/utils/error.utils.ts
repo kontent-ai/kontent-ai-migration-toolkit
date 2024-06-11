@@ -22,13 +22,15 @@ export function extractErrorData(error: any): ErrorData {
         message = error.message;
     }
 
-    return {
+    const errorData: ErrorData = {
         message: message,
         requestData: requestData,
         requestUrl: requestUrl,
         error: error,
         isUnknownError: isUnknownError
     };
+
+    return errorData;
 }
 
 export function is404Error(error: any): boolean {

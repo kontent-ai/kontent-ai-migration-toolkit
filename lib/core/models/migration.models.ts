@@ -8,47 +8,44 @@ export type MigrationElementType =
     | 'modular_content'
     | 'taxonomy'
     | 'url_slug'
-    | 'guidelines'
-    | 'snippet'
     | 'custom'
     | 'subpages';
 
 export interface MigrationElement {
-    value: string | undefined | string[];
-    codename: string;
+    readonly value: string | undefined | string[];
+    readonly codename: string;
 }
 
 export interface MigrationItem {
-    system: {
-        codename: string;
-        name: string;
-        language: string;
-        type: string;
-        collection: string;
+    readonly system: {
+        readonly codename: string;
+        readonly name: string;
+        readonly language: string;
+        readonly type: string;
+        readonly collection: string;
 
-        workflow?: string;
-        workflow_step?: string;
+        readonly workflow?: string;
+        readonly workflow_step?: string;
     };
-    elements: MigrationElement[];
+    readonly elements: MigrationElement[];
 }
 
 export interface MigrationReference {
-    codename: string;
+    readonly codename: string;
 }
 
 export interface MigrationAssetDescription {
-    language: MigrationReference;
-    description: string | undefined;
+    readonly language: MigrationReference;
+    readonly description: string | undefined;
 }
 
 export interface MigrationAsset {
-    _zipFilename: string;
-    codename: string;
-    binaryData: Buffer | Blob | undefined;
-    filename: string;
-    title: string;
+    readonly _zipFilename: string;
+    readonly codename: string;
+    readonly binaryData: Buffer | Blob | undefined;
+    readonly filename: string;
+    readonly title: string;
 
-    externalId?: string;
-    collection?: MigrationReference;
-    descriptions?: MigrationAssetDescription[];
+    readonly collection?: MigrationReference;
+    readonly descriptions?: MigrationAssetDescription[];
 }

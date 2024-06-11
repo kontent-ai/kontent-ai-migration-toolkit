@@ -1,29 +1,27 @@
-import { FileService, getFileService } from '../file/index.js';
+import { fileManager } from '../file/index.js';
 import { Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
 import { ExportAdapterResult } from '../export/index.js';
-import { ZipContext, ZipService, getZipService } from '../zip/index.js';
+import { ZipContext, zipManager } from '../zip/index.js';
 import { libMetadata } from '../metadata.js';
 import { defaultFilesConfig, getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
 import { ImportData } from '../import/index.js';
 import { FilesConfig } from './models/toolkit.models.js';
 
 export interface StoreConfig {
-    data: ExportAdapterResult;
-    files?: FilesConfig;
-    zipContext?: ZipContext;
-    logger?: Logger;
+    readonly data: ExportAdapterResult;
+    readonly files?: FilesConfig;
+    readonly zipContext?: ZipContext;
+    readonly logger?: Logger;
 }
 
 export interface ExtractConfig {
-    files?: FilesConfig;
-    zipContext?: ZipContext;
-    logger?: Logger;
+    readonly files?: FilesConfig;
+    readonly zipContext?: ZipContext;
+    readonly logger?: Logger;
 }
 
 export async function storeAsync(config: StoreConfig): Promise<void> {
     const logger = config.logger ?? getDefaultLogger();
-    const fileService = getFileService(logger);
-    const zipService = getZipService(logger);
     const files = config.files ?? defaultFilesConfig;
 
     await executeWithTrackingAsync({
@@ -38,24 +36,22 @@ export async function storeAsync(config: StoreConfig): Promise<void> {
             details: {}
         },
         func: async () => {
-            const itemsZipFile = await zipService.createItemsZipAsync(config.data, {
+            const itemsZipFile = await zipManager(logger, config.zipContext).createItemsZipAsync(config.data, {
                 itemFormatService: getItemsFormatService(files.items.format)
             });
 
-            const assetsZipFile = await zipService.createAssetsZipAsync(config.data, {
+            const assetsZipFile = await zipManager(logger, config.zipContext).createAssetsZipAsync(config.data, {
                 assetFormatService: getAssetsFormatService(files.assets.format)
             });
 
-            await fileService.writeFileAsync(files.items.filename, itemsZipFile);
-            await fileService.writeFileAsync(files.assets.filename, assetsZipFile);
+            await fileManager(logger).writeFileAsync(files.items.filename, itemsZipFile);
+            await fileManager(logger).writeFileAsync(files.assets.filename, assetsZipFile);
         }
     });
 }
 
 export async function extractAsync(config: ExtractConfig): Promise<ImportData> {
     const logger = config.logger ?? getDefaultLogger();
-    const fileService = getFileService(logger);
-    const zipService = getZipService(logger, config.zipContext);
     const files = config.files ?? defaultFilesConfig;
 
     return await executeWithTrackingAsync({
@@ -72,8 +68,7 @@ export async function extractAsync(config: ExtractConfig): Promise<ImportData> {
         func: async () => {
             return await getImportDataFromFilesAsync({
                 files: files,
-                fileService: fileService,
-                zipService: zipService,
+                zipContext: config.zipContext,
                 logger: logger
             });
         }
@@ -81,10 +76,9 @@ export async function extractAsync(config: ExtractConfig): Promise<ImportData> {
 }
 
 async function getImportDataFromFilesAsync(data: {
-    files: FilesConfig;
-    fileService: FileService;
-    zipService: ZipService;
-    logger: Logger;
+    readonly files: FilesConfig;
+    readonly zipContext: ZipContext | undefined;
+    readonly logger: Logger;
 }): Promise<ImportData> {
     if (data.files.items?.filename?.toLowerCase()?.endsWith('.zip')) {
         return await getImportDataFromZipAsync(data);
@@ -94,21 +88,20 @@ async function getImportDataFromFilesAsync(data: {
 }
 
 async function getImportDataFromZipAsync(data: {
-    fileService: FileService;
-    zipService: ZipService;
-    files: FilesConfig;
-    logger: Logger;
+    readonly zipContext: ZipContext | undefined;
+    readonly files: FilesConfig;
+    readonly logger: Logger;
 }): Promise<ImportData> {
-    const importData = await data.zipService.parseZipAsync({
+    const importData = await zipManager(data.logger, data.zipContext).parseZipAsync({
         items: data.files.items
             ? {
-                  file: await data.fileService.loadFileAsync(data.files.items.filename),
+                  file: await fileManager(data.logger).loadFileAsync(data.files.items.filename),
                   formatService: getItemsFormatService(data.files.items.format)
               }
             : undefined,
         assets: data.files.assets
             ? {
-                  file: await data.fileService.loadFileAsync(data.files.assets.filename),
+                  file: await fileManager(data.logger).loadFileAsync(data.files.assets.filename),
                   formatService: getAssetsFormatService(data.files.assets.format)
               }
             : undefined
@@ -118,21 +111,20 @@ async function getImportDataFromZipAsync(data: {
 }
 
 async function getImportDataFromNonZipFileAsync(data: {
-    files: FilesConfig;
-    zipService: ZipService;
-    fileService: FileService;
-    logger: Logger;
+    readonly files: FilesConfig;
+    readonly zipContext: ZipContext | undefined;
+    readonly logger: Logger;
 }): Promise<ImportData> {
-    const importData = await data.zipService.parseFileAsync({
+    const importData = await zipManager(data.logger, data.zipContext).parseFileAsync({
         items: data.files.items
             ? {
-                  file: await data.fileService.loadFileAsync(data.files.items.filename),
+                  file: await fileManager(data.logger).loadFileAsync(data.files.items.filename),
                   formatService: getItemsFormatService(data.files.items.format)
               }
             : undefined,
         assets: data.files.assets
             ? {
-                  file: await data.fileService.loadFileAsync(data.files.assets.filename),
+                  file: await fileManager(data.logger).loadFileAsync(data.files.assets.filename),
                   formatService: getAssetsFormatService(data.files.assets.format)
               }
             : undefined

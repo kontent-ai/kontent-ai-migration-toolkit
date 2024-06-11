@@ -25,28 +25,22 @@ import {
     getBinaryDataFromUrlAsync,
     logSpinnerOrDefaultAsync
 } from '../../core/index.js';
-import { ExportContextService, getExportContextService } from './context/export-context.service.js';
 import { exportTransforms } from '../../translation/index.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
-
-export function getDefaultExportAdapter(config: DefaultExportAdapterConfig): ExportAdapter {
-    return new DefaultExportAdapter(config);
-}
+import { exportContextFetcher } from '../context/export-context-fetcher.js';
 
 export class DefaultExportAdapter implements ExportAdapter {
     public readonly name: string = 'Kontent.ai export adapter';
 
     private readonly managementClient: ManagementClient;
-    private readonly exportContextService: ExportContextService;
 
-    constructor(private config: DefaultExportAdapterConfig) {
+    constructor(private readonly config: DefaultExportAdapterConfig) {
         this.managementClient = createManagementClient({
             environmentId: config.environmentId,
             retryStrategy: config.retryStrategy ?? defaultRetryStrategy,
             httpService: defaultHttpService,
             apiKey: config.apiKey
         });
-        this.exportContextService = getExportContextService(this.config.logger, this.managementClient);
     }
 
     async exportAsync(): Promise<ExportAdapterResult> {
@@ -55,9 +49,11 @@ export class DefaultExportAdapter implements ExportAdapter {
             message: `Preparing to export data`
         });
 
-        const exportContext = await this.exportContextService.getExportContextAsync({
-            exportItems: this.config.exportItems
-        });
+        const exportContext = await exportContextFetcher({
+            exportItems: this.config.exportItems,
+            logger: this.config.logger,
+            managementClient: this.managementClient
+        }).getExportContextAsync();
 
         return {
             items: this.getMigrationItems(exportContext),
@@ -99,10 +95,7 @@ export class DefaultExportAdapter implements ExportAdapter {
         return migrationItems;
     }
 
-    private getMigrationElements(
-        exportItem: KontentAiPreparedExportItem,
-        context: ExportContext
-    ): MigrationElement[] {
+    private getMigrationElements(exportItem: KontentAiPreparedExportItem, context: ExportContext): MigrationElement[] {
         const migrationElements: MigrationElement[] = [];
 
         for (const typeElement of exportItem.contentType.elements) {
@@ -208,7 +201,6 @@ export class DefaultExportAdapter implements ExportAdapter {
                     _zipFilename: asset.codename,
                     filename: asset.fileName,
                     title: asset.title ?? '',
-                    externalId: asset.externalId,
                     codename: asset.codename,
                     binaryData: binaryData.data,
                     collection: assetCollection ? { codename: assetCollection.codename } : undefined,

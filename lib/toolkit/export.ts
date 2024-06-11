@@ -1,18 +1,18 @@
 import { libMetadata } from '../metadata.js';
-import {  Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
+import { Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
 import {
+    DefaultExportAdapter,
     DefaultExportAdapterConfig,
     ExportAdapter,
-    ExportAdapterResult,
-    getDefaultExportAdapter
+    ExportAdapterResult
 } from '../export/index.js';
 
 export interface ExportConfig {
-    logger?: Logger;
+    readonly logger?: Logger;
 }
 
 export interface DefaultExportConfig extends ExportConfig {
-    adapterConfig: Omit<DefaultExportAdapterConfig, 'logger'>;
+    readonly adapterConfig: Omit<DefaultExportAdapterConfig, 'logger'>;
 }
 
 export async function exportAsync(config: DefaultExportConfig): Promise<ExportAdapterResult>;
@@ -62,7 +62,7 @@ async function getSetupAsync<TConfig extends ExportConfig, TDefaultConfig extend
         config = (inputAdapterOrDefaultConfig as unknown as TDefaultConfig) ?? {};
         logger = config.logger ?? getDefaultLogger();
 
-        adapter = getDefaultExportAdapter({
+        adapter = new DefaultExportAdapter({
             ...(inputAdapterOrDefaultConfig as TDefaultConfig).adapterConfig,
             logger: logger
         });
