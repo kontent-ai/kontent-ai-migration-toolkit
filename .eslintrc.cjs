@@ -9,7 +9,18 @@ module.exports = {
     },
     rules: {
         '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unused-vars': 'off'
+        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/naming-convention': [
+            'warn',
+            {
+                selector: 'interface',
+                format: ['PascalCase'],
+                custom: {
+                    regex: '^I[A-Z]',
+                    match: false
+                }
+            }
+        ]
     },
     root: true
 };
