@@ -55,7 +55,7 @@ async function getSetupAsync<TConfig extends ImportConfig, TDefaultConfig extend
         config = (inputConfig as TConfig) ?? {};
         logger = config.logger ?? getDefaultLogger();
     } else {
-        config = (inputAdapterOrDefaultConfig as unknown as TDefaultConfig) ?? {};
+        config = (inputAdapterOrDefaultConfig as TDefaultConfig) ?? {};
         logger = config.logger ?? getDefaultLogger();
 
         adapter = new DefaultImportAdapter({
