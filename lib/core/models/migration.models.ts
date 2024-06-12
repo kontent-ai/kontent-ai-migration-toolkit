@@ -11,17 +11,37 @@ export type MigrationElementType =
     | 'custom'
     | 'subpages';
 
-export type MigrationElementValue = string | undefined | string[] | number;
+export namespace MigrationElements {
+    export interface TextElement extends MigrationElement {}
+    export interface NumberElement extends MigrationElement {}
+    export interface RichTextElement extends MigrationElement {}
+    export interface MultipleChoiceElement extends MigrationElement {}
+    export interface DateTimeElement extends MigrationElement {}
+    export interface AssetElement extends MigrationElement {}
+    export interface LinkedItemsElement extends MigrationElement {}
+    export interface TaxonomyElement extends MigrationElement {}
+    export interface UrlSlugElement extends MigrationElement {}
+    export interface CustomElement extends MigrationElement {}
+    export interface SubpagesElement extends MigrationElement {}
+}
+
+export type MigrationElementValue = string | undefined | MigrationReference[] | number;
 
 export interface MigrationElement {
     /**
      * Value of the element
      */
     readonly value: MigrationElementValue;
+
     /**
      * Codename of the element
      */
     readonly codename: string;
+
+    /**
+     * Type of the element
+     */
+    readonly type: MigrationElementType;
 }
 
 export interface MigrationItem {
@@ -35,29 +55,26 @@ export interface MigrationItem {
          */
         readonly name: string;
         /**
-         * Language codename of language variant
+         * Language of the language variant
          */
-        readonly language: string;
+        readonly language: MigrationReference;
         /**
-         * Content type codename that content item uses
+         * Content type of the item
          */
-        readonly type: string;
+        readonly type: MigrationReference;
         /**
-         * Optional
-         * Codename of the collection
+         * Collection of the item
          */
-        readonly collection: string;
+        readonly collection: MigrationReference;
 
         /**
-         * Codename of the workflow
          * Undefined only if migration item represents components in RTE
          */
-        readonly workflow?: string;
+        readonly workflow?: MigrationReference;
         /**
-         * Codename of the workflow step
          * Undefined only if migration item represents components in RTE
          */
-        readonly workflow_step?: string;
+        readonly workflow_step?: MigrationReference;
     };
     readonly elements: MigrationElement[];
 }

@@ -287,20 +287,11 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
 
         for (const itemId of itemIds) {
             const item = items.find((m) => m.id === itemId);
-
-            if (item) {
-                itemStates.push({
-                    id: itemId,
-                    item: item,
-                    state: 'exists'
-                });
-            } else {
-                itemStates.push({
-                    id: itemId,
-                    item: undefined,
-                    state: 'doesNotExists'
-                });
-            }
+            itemStates.push({
+                id: itemId,
+                item: item,
+                state: item ? 'exists' : 'doesNotExists'
+            });
         }
 
         return itemStates;
@@ -312,20 +303,11 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
 
         for (const assetId of assetIds) {
             const asset = assets.find((m) => m.id === assetId);
-
-            if (asset) {
-                assetStates.push({
-                    id: assetId,
-                    asset: asset,
-                    state: 'exists'
-                });
-            } else {
-                assetStates.push({
-                    id: assetId,
-                    asset: undefined,
-                    state: 'doesNotExists'
-                });
-            }
+            assetStates.push({
+                id: assetId,
+                asset: asset,
+                state: asset ? 'exists' : 'doesNotExists'
+            });
         }
 
         return assetStates;

@@ -62,7 +62,7 @@ export function importContextFetcher(config: ImportContextConfig) {
             itemInfo: (item) => {
                 return {
                     itemType: 'languageVariant',
-                    title: `${item.system.codename} (${item.system.language})`
+                    title: `${item.system.codename} (${item.system.language.codename})`
                 };
             },
             processAsync: async (item, logSpinner) => {
@@ -74,13 +74,13 @@ export function importContextFetcher(config: ImportContextConfig) {
                                 await config.managementClient
                                     .viewLanguageVariant()
                                     .byItemCodename(item.system.codename)
-                                    .byLanguageCodename(item.system.language)
+                                    .byLanguageCodename(item.system.language.codename)
                                     .toPromise()
                             ).data,
                         action: 'view',
                         type: 'languageVariant',
                         logSpinner: logSpinner,
-                        itemName: `codename -> ${item.system.codename} (${item.system.language})`
+                        itemName: `codename -> ${item.system.codename} (${item.system.language.codename})`
                     });
 
                     languageVariants.push({
@@ -189,7 +189,7 @@ export function importContextFetcher(config: ImportContextConfig) {
 
             variantStates.push({
                 itemCodename: migrationItem.system.codename,
-                languageCodename: migrationItem.system.language,
+                languageCodename: migrationItem.system.language.codename,
                 languageVariant: variant?.languageVariant,
                 state: variant ? 'exists' : 'doesNotExists'
             });

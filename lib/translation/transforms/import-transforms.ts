@@ -1,5 +1,5 @@
 import { SharedContracts, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
-import { parseAsArray, MigrationElementType } from '../../core/index.js';
+import { parseAsMigrationReferencesArray, MigrationElementType, MigrationReference } from '../../core/index.js';
 import { ImportContext, ImportTransformFunc } from '../../import/index.js';
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
 
@@ -15,9 +15,9 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: parseAsArray(data.value).map((m) => {
+            value: parseAsMigrationReferencesArray(data.value).map((m) => {
                 return {
-                    codename: m
+                    codename: m.codename
                 };
             })
         });
@@ -25,12 +25,13 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
     asset: async (data) => {
         const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
 
-        for (const assetCodename of parseAsArray(data.value)) {
+        for (const assetReference of parseAsMigrationReferencesArray(data.value)) {
             // check if asset already exists in target env
-            const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(assetCodename);
+            const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(assetReference.codename);
 
             if (assetStateInTargetEnv.state === 'exists' && assetStateInTargetEnv.asset) {
                 // asset exists, use its id as a reference
+                // (API currently only supports referencing assets by ids only, not by codenames)
                 assetReferences.push({
                     id: assetStateInTargetEnv.asset.id
                 });
@@ -67,10 +68,10 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
     },
     modular_content: async (data) => {
         const value: SharedContracts.IReferenceObjectContract[] = [];
-        const linkedItemCodenames: string[] = parseAsArray(data.value);
+        const linkedItemReferences: MigrationReference[] = parseAsMigrationReferencesArray(data.value);
 
-        for (const linkedItemCodename of linkedItemCodenames) {
-            const itemState = data.importContext.getItemStateInTargetEnvironment(linkedItemCodename);
+        for (const linkedItemReference of linkedItemReferences) {
+            const itemState = data.importContext.getItemStateInTargetEnvironment(linkedItemReference.codename);
 
             if (itemState.item) {
                 // linked item already exists in target environment
@@ -97,9 +98,9 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: parseAsArray(data.value).map((m) => {
+            value: parseAsMigrationReferencesArray(data.value).map((m) => {
                 return {
-                    codename: m
+                    codename: m.codename
                 };
             })
         });
@@ -127,9 +128,9 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: parseAsArray(data.value).map((m) => {
+            value: parseAsMigrationReferencesArray(data.value).map((m) => {
                 return {
-                    codename: m
+                    codename: m.codename
                 };
             })
         });

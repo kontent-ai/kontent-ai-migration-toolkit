@@ -7,12 +7,7 @@ import {
     ExportElementValue
 } from '../export.models.js';
 import chalk from 'chalk';
-import {
-    AssetModels,
-    CollectionModels,
-    ManagementClient,
-    createManagementClient
-} from '@kontent-ai/management-sdk';
+import { AssetModels, CollectionModels, ManagementClient, createManagementClient } from '@kontent-ai/management-sdk';
 import {
     defaultRetryStrategy,
     MigrationAsset,
@@ -69,13 +64,15 @@ export class DefaultExportAdapter implements ExportAdapter {
             try {
                 migrationItems.push({
                     system: {
-                        codename: preparedItem.contentItem.codename,
-                        collection: preparedItem.collection.codename,
-                        language: preparedItem.language.codename,
                         name: preparedItem.contentItem.name,
-                        type: preparedItem.contentType.contentTypeCodename,
-                        workflow: preparedItem.workflow.codename,
-                        workflow_step: preparedItem.workflowStepCodename
+                        codename: preparedItem.contentItem.codename,
+                        language: { codename: preparedItem.language.codename },
+                        type: { codename: preparedItem.contentType.contentTypeCodename },
+                        collection: { codename: preparedItem.collection.codename },
+                        workflow: {
+                            codename: preparedItem.workflow.codename
+                        },
+                        workflow_step: { codename: preparedItem.workflowStepCodename }
                     },
                     elements: this.getMigrationElements(preparedItem, context)
                 });
@@ -100,9 +97,9 @@ export class DefaultExportAdapter implements ExportAdapter {
         const migrationElements: MigrationElement[] = [];
 
         for (const typeElement of exportItem.contentType.elements) {
-            const languageElement = exportItem.languageVariant.elements.find((m) => m.element.id === typeElement.id);
+            const itemElement = exportItem.languageVariant.elements.find((m) => m.element.id === typeElement.id);
 
-            if (!languageElement) {
+            if (!itemElement) {
                 throwErrorForItemRequest(
                     exportItem.requestItem,
                     `Could not find element '${typeElement.codename}' in language variant'`
@@ -111,16 +108,25 @@ export class DefaultExportAdapter implements ExportAdapter {
 
             migrationElements.push({
                 codename: typeElement.codename,
+                type: typeElement.type,
                 value: this.getValueToStoreFromElement({
                     context: context,
                     exportItem: exportItem,
-                    value: languageElement.value,
+                    value: itemElement.value,
                     typeElement: typeElement
                 })
             });
         }
 
-        return migrationElements;
+        return migrationElements.sort((a, b) => {
+            if (a.codename < b.codename) {
+                return -1;
+            }
+            if (a.codename > b.codename) {
+                return 1;
+            }
+            return 0;
+        });
     }
 
     private getValueToStoreFromElement(data: {

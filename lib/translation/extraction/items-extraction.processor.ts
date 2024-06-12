@@ -1,5 +1,10 @@
 import { richTextProcessor } from '../index.js';
-import { MigrationItem, ReferencedDataInMigrationItems, parseAsArray, uniqueStringFilter } from '../../core/index.js';
+import {
+    MigrationItem,
+    ReferencedDataInMigrationItems,
+    parseAsMigrationReferencesArray,
+    uniqueStringFilter
+} from '../../core/index.js';
 import { KontentAiPreparedExportItem } from '../../export/export.models.js';
 import { GetFlattenedElement } from '../../import/index.js';
 
@@ -60,7 +65,7 @@ export function itemsExtractionProcessor() {
 
         for (const item of items) {
             for (const element of item.elements) {
-                const flattenedElement = getElement(item.system.type, element.codename);
+                const flattenedElement = getElement(item.system.type.codename, element.codename);
 
                 if (flattenedElement.type === 'rich_text') {
                     const richTextHtml = element.value?.toString();
@@ -73,9 +78,9 @@ export function itemsExtractionProcessor() {
                     );
                     assetCodenames.push(...richTextProcessor().processRteAssetCodenames(richTextHtml ?? '').codenames);
                 } else if (flattenedElement.type === 'modular_content' || flattenedElement.type === 'subpages') {
-                    itemCodenames.push(...parseAsArray(element.value));
+                    itemCodenames.push(...parseAsMigrationReferencesArray(element.value).map((m) => m.codename));
                 } else if (flattenedElement.type === 'asset') {
-                    assetCodenames.push(...parseAsArray(element.value));
+                    assetCodenames.push(...parseAsMigrationReferencesArray(element.value).map((m) => m.codename));
                 }
             }
         }

@@ -2,7 +2,7 @@ import { format } from 'bytes';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
 import { isBrowser, isNode, isWebWorker } from 'browser-or-node';
 import { EnvContext } from '../models/core.models.js';
-import { MigrationElementValue } from '../models/migration.models.js';
+import { MigrationElementValue, MigrationReference } from '../models/migration.models.js';
 
 export function formatBytes(bytes: number): string {
     return format(bytes);
@@ -12,7 +12,7 @@ export function sleepAsync(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function parseAsArray(value: MigrationElementValue): string[] {
+export function parseAsMigrationReferencesArray(value: MigrationElementValue): MigrationReference[] {
     if (!value) {
         return [];
     }

@@ -129,14 +129,14 @@ export function workflowImporter(logger: Logger) {
                         await managementClient
                             .publishLanguageVariant()
                             .byItemCodename(migrationItem.system.codename)
-                            .byLanguageCodename(migrationItem.system.language)
+                            .byLanguageCodename(migrationItem.system.language.codename)
                             .withoutData()
                             .toPromise()
                     ).data,
                 action: 'publish',
                 type: 'languageVariant',
                 logSpinner: logSpinner,
-                itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
+                itemName: `${migrationItem.system.codename} (${migrationItem.system.language.codename})`
             });
         } else if (doesWorkflowStepCodenameRepresentScheduledStep(workflowStepCodename, workflows)) {
             logSpinner({
@@ -155,14 +155,14 @@ export function workflowImporter(logger: Logger) {
                             await managementClient
                                 .unpublishLanguageVariant()
                                 .byItemCodename(migrationItem.system.codename)
-                                .byLanguageCodename(migrationItem.system.language)
+                                .byLanguageCodename(migrationItem.system.language.codename)
                                 .withoutData()
                                 .toPromise()
                         ).data,
                     action: 'unpublish',
                     type: 'languageVariant',
                     logSpinner: logSpinner,
-                    itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
+                    itemName: `${migrationItem.system.codename} (${migrationItem.system.language.codename})`
                 });
             } catch (error) {
                 if (error instanceof SharedModels.ContentManagementBaseKontentError) {
@@ -182,7 +182,7 @@ export function workflowImporter(logger: Logger) {
                         await managementClient
                             .changeWorkflowOfLanguageVariant()
                             .byItemCodename(migrationItem.system.codename)
-                            .byLanguageCodename(migrationItem.system.language)
+                            .byLanguageCodename(migrationItem.system.language.codename)
                             .withData({
                                 step_identifier: {
                                     codename: workflow.archivedStep.codename
@@ -196,7 +196,7 @@ export function workflowImporter(logger: Logger) {
                 action: 'archive',
                 type: 'languageVariant',
                 logSpinner: logSpinner,
-                itemName: `${migrationItem.system.codename} (${migrationItem.system.language}) -> ${workflow.archivedStep.codename}`
+                itemName: `${migrationItem.system.codename} (${migrationItem.system.language.codename}) -> ${workflow.archivedStep.codename}`
             });
         } else {
             if (workflow.codename === workflowStepCodename) {
@@ -209,7 +209,7 @@ export function workflowImporter(logger: Logger) {
                             await managementClient
                                 .changeWorkflowOfLanguageVariant()
                                 .byItemCodename(migrationItem.system.codename)
-                                .byLanguageCodename(migrationItem.system.language)
+                                .byLanguageCodename(migrationItem.system.language.codename)
                                 .withData({
                                     step_identifier: {
                                         codename: step.codename
@@ -223,7 +223,7 @@ export function workflowImporter(logger: Logger) {
                     action: 'changeWorkflowStep',
                     type: 'languageVariant',
                     logSpinner: logSpinner,
-                    itemName: `${migrationItem.system.codename} (${migrationItem.system.language}) -> ${step.codename}`
+                    itemName: `${migrationItem.system.codename} (${migrationItem.system.language.codename}) -> ${step.codename}`
                 });
             }
         }

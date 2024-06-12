@@ -22,7 +22,7 @@ export function contentItemsImporter(data: {
         migrationContentItem: MigrationItem,
         contentItem: ContentItemModels.ContentItem
     ) => {
-        const collection = data.collections.find((m) => m.codename === migrationContentItem.system.collection);
+        const collection = data.collections.find((m) => m.codename === migrationContentItem.system.collection.codename);
 
         if (!collection) {
             logErrorAndExit({
@@ -31,7 +31,7 @@ export function contentItemsImporter(data: {
         }
         return (
             migrationContentItem.system.name !== contentItem.name ||
-            migrationContentItem.system.collection !== collection.codename
+            migrationContentItem.system.collection.codename !== collection.codename
         );
     };
 
@@ -62,12 +62,12 @@ export function contentItemsImporter(data: {
                         .withData({
                             name: migrationContentItem.system.name,
                             type: {
-                                codename: migrationContentItem.system.type
+                                codename: migrationContentItem.system.type.codename
                             },
                             external_id: itemStateInTargetEnv.externalIdToUse,
                             codename: migrationContentItem.system.codename,
                             collection: {
-                                codename: migrationContentItem.system.collection
+                                codename: migrationContentItem.system.collection.codename
                             }
                         })
                         .toPromise()
@@ -75,7 +75,7 @@ export function contentItemsImporter(data: {
             action: 'create',
             type: 'contentItem',
             logSpinner: logSpinner,
-            itemName: `${migrationContentItem.system.codename} (${migrationContentItem.system.language})`
+            itemName: `${migrationContentItem.system.codename} (${migrationContentItem.system.language.codename})`
         });
 
         return {
@@ -103,7 +103,7 @@ export function contentItemsImporter(data: {
                                 .withData({
                                     name: migrationItem.system.name,
                                     collection: {
-                                        codename: migrationItem.system.collection
+                                        codename: migrationItem.system.collection.codename
                                     }
                                 })
                                 .toPromise()
@@ -111,7 +111,7 @@ export function contentItemsImporter(data: {
                     action: 'upsert',
                     type: 'contentItem',
                     logSpinner: logSpinner,
-                    itemName: `${migrationItem.system.codename} (${migrationItem.system.language})`
+                    itemName: `${migrationItem.system.codename} (${migrationItem.system.language.codename})`
                 });
             }
         }
@@ -135,7 +135,7 @@ export function contentItemsImporter(data: {
             itemInfo: (item) => {
                 return {
                     itemType: 'contentItem',
-                    title: `${item.system.codename} -> ${item.system.language}`
+                    title: `${item.system.codename} -> ${item.system.language.codename}`
                 };
             },
             processAsync: async (item, logSpinner) => {

@@ -1,18 +1,29 @@
-import { MigrationElement, MigrationElementValue, MigrationItem } from '../../core/index.js';
+import {
+    MigrationElement,
+    MigrationElementType,
+    MigrationElementValue,
+    MigrationItem,
+    MigrationReference
+} from '../../core/index.js';
 
 export interface JsonElements {
-    [elementCodename: string]: MigrationElementValue;
+    [elementCodename: string]: JsonElement;
+}
+
+export interface JsonElement {
+    type: MigrationElementType;
+    value: MigrationElementValue;
 }
 
 export interface JsonItem {
     readonly system: {
         readonly codename: string;
         readonly name: string;
-        readonly language: string;
-        readonly type: string;
-        readonly collection: string;
-        readonly workflow_step?: string;
-        readonly workflow?: string;
+        readonly language: MigrationReference;
+        readonly type: MigrationReference;
+        readonly collection: MigrationReference;
+        readonly workflow_step?: MigrationReference;
+        readonly workflow?: MigrationReference;
     };
     readonly elements: JsonElements;
 }
@@ -26,7 +37,10 @@ export function mapToJsonItem(item: MigrationItem): JsonItem {
     const jsonElements: JsonElements = {};
 
     for (const element of item.elements) {
-        jsonElements[element.codename] = element.value;
+        jsonElements[element.codename] = {
+            type: element.type,
+            value: element.value
+        };
     }
 
     const jsonItem: JsonItem = {
@@ -46,22 +60,22 @@ export function mapToJsonItem(item: MigrationItem): JsonItem {
 }
 
 export function parseJsonItem(item: JsonItem): MigrationItem {
-    const elements: MigrationElement[] = [];
+    const elements: MigrationElement[] = Object.entries(item.elements).map((m) => {
+        const migrationElement: MigrationElement = {
+            codename: m[0],
+            type: m[1].type,
+            value: m[1].value
+        };
 
-    for (const propertyName of Object.keys(item.elements)) {
-        elements.push({
-            codename: propertyName,
-            value: item.elements[propertyName]
-        });
-    }
-
+        return migrationElement;
+    });
     const parsedItem: MigrationItem = {
         system: {
-            codename: item.system.codename,
-            collection: item.system.collection,
-            language: item.system.language,
             name: item.system.name,
+            codename: item.system.codename,
+            language: item.system.language,
             type: item.system.type,
+            collection: item.system.collection,
             workflow_step: item.system.workflow_step,
             workflow: item.system.workflow
         },

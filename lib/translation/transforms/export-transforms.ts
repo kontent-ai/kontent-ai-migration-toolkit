@@ -1,4 +1,4 @@
-import { MigrationElementType } from '../../core/index.js';
+import { MigrationElementType, MigrationReference } from '../../core/index.js';
 import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
 import { ExportTransformFunc, ExportContext } from '../../export/index.js';
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
@@ -35,7 +35,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate asset id to codename
-        const assetCodenames: string[] = [];
+        const assetReferences: MigrationReference[] = [];
         for (const arrayVal of data.value) {
             if (!arrayVal.id) {
                 continue;
@@ -45,13 +45,13 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
 
             if (assetState.asset) {
                 // reference asset by codename
-                assetCodenames.push(assetState.asset.codename);
+                assetReferences.push({ codename: assetState.asset.codename });
             } else {
                 throw Error(`Missing asset with id '${arrayVal.id}'`);
             }
         }
 
-        return assetCodenames;
+        return assetReferences;
     },
     taxonomy: (data) => {
         if (!data.value) {
@@ -73,7 +73,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate item id to codename
-        const codenames: string[] = [];
+        const taxonomyReferences: MigrationReference[] = [];
         for (const arrayVal of data.value) {
             if (!arrayVal.id) {
                 continue;
@@ -83,13 +83,13 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
 
             if (taxonomyTerm) {
                 // reference taxonomy term by codename
-                codenames.push(taxonomyTerm.codename);
+                taxonomyReferences.push({ codename: taxonomyTerm.codename });
             } else {
                 throw Error(`Missing taxonomy term with id '${arrayVal.id}'`);
             }
         }
 
-        return codenames;
+        return taxonomyReferences;
     },
     modular_content: (data) => {
         if (!data.value) {
@@ -101,7 +101,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate item id to codename
-        const codenames: string[] = [];
+        const linkedItemReferences: MigrationReference[] = [];
         for (const arrayVal of data.value) {
             if (!arrayVal.id) {
                 continue;
@@ -111,13 +111,13 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
 
             if (itemState.item) {
                 // reference item by codename
-                codenames.push(itemState.item.codename);
+                linkedItemReferences.push({ codename: itemState.item.codename });
             } else {
                 throw Error(`Missing item with id '${arrayVal.id}'`);
             }
         }
 
-        return codenames;
+        return linkedItemReferences;
     },
     custom: (data) => data.value?.toString(),
     url_slug: (data) => data.value?.toString(),
@@ -132,7 +132,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
 
         // translate multiple choice option id to codename
         const multipleChoiceElement = data.typeElement.element as ContentTypeElements.IMultipleChoiceElement;
-        const selectedOptionCodenames: string[] = [];
+        const choiceOptionReferences: MigrationReference[] = [];
 
         for (const arrayVal of data.value) {
             if (!arrayVal.id) {
@@ -141,14 +141,14 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
 
             const option = multipleChoiceElement.options.find((m) => m.id === arrayVal.id);
 
-            if (!option) {
+            if (!option?.codename) {
                 throw Error(`Could not find multiple choice element with option id '${arrayVal.id}'`);
             }
 
-            selectedOptionCodenames.push(option.codename as string);
+            choiceOptionReferences.push({ codename: option.codename });
         }
 
-        return selectedOptionCodenames;
+        return choiceOptionReferences;
     },
     subpages: (data) => {
         if (!data.value) {
@@ -159,7 +159,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate item id to codename
-        const codenames: string[] = [];
+        const linkedItemReferences: MigrationReference[] = [];
         for (const arrayVal of data.value) {
             if (!arrayVal.id) {
                 continue;
@@ -169,13 +169,13 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
 
             if (itemState.item) {
                 // reference item by codename
-                codenames.push(itemState.item.codename);
+                linkedItemReferences.push({ codename: itemState.item.codename });
             } else {
                 throw Error(`Missing item with id '${arrayVal.id}'`);
             }
         }
 
-        return codenames;
+        return linkedItemReferences;
     }
 };
 
