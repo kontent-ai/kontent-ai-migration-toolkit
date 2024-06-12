@@ -1,11 +1,10 @@
 import { fileManager } from '../file/index.js';
 import { Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
 import { ExportAdapterResult } from '../export/index.js';
-import { ZipContext, zipManager } from '../zip/index.js';
+import { FilesConfig, ZipContext, zipManager } from '../zip/index.js';
 import { libMetadata } from '../metadata.js';
 import { defaultFilesConfig, getAssetsFormatService, getItemsFormatService } from './utils/toolkit.utils.js';
 import { ImportData } from '../import/index.js';
-import { FilesConfig } from './models/toolkit.models.js';
 
 export interface StoreConfig {
     readonly data: ExportAdapterResult;

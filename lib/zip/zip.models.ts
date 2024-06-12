@@ -38,3 +38,14 @@ export interface AssetFormatService {
     transformAsync(data: AssetsTransformData): Promise<FileBinaryData>;
     parseAsync(data: AssetsParseData): Promise<MigrationAsset[]>;
 }
+
+export interface FilesConfig {
+    readonly items: {
+        readonly filename: string;
+        readonly format: ItemsFormat;
+    };
+    readonly assets: {
+        readonly filename: string;
+        readonly format: AssetsFormat;
+    };
+}
