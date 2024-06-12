@@ -2,6 +2,7 @@ import { format } from 'bytes';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
 import { isBrowser, isNode, isWebWorker } from 'browser-or-node';
 import { EnvContext } from '../models/core.models.js';
+import { MigrationElementValue } from '../models/migration.models.js';
 
 export function formatBytes(bytes: number): string {
     return format(bytes);
@@ -11,14 +12,14 @@ export function sleepAsync(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function parseAsArray(value: string | Array<string> | null | undefined): string[] {
+export function parseAsArray(value: MigrationElementValue): string[] {
     if (!value) {
         return [];
     }
     if (Array.isArray(value)) {
         return value;
     }
-    return JSON.parse(value);
+    throw Error(`Value is not an array`);
 }
 
 export function getCurrentEnvironment(): EnvContext {

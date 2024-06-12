@@ -11,11 +11,13 @@ export type MigrationElementType =
     | 'custom'
     | 'subpages';
 
+export type MigrationElementValue = string | undefined | string[] | number;
+
 export interface MigrationElement {
     /**
      * Value of the element
      */
-    readonly value: string | undefined | string[];
+    readonly value: MigrationElementValue;
     /**
      * Codename of the element
      */

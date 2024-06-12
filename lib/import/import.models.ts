@@ -9,7 +9,8 @@ import {
     ReferencedDataInMigrationItems,
     LanguageVariantStateInTargetEnvironmentByCodename,
     ExternalIdGenerator,
-    FlattenedContentTypeElement
+    FlattenedContentTypeElement,
+    MigrationElementValue
 } from '../core/index.js';
 import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 
@@ -50,7 +51,7 @@ export interface ImportContext {
 }
 
 export type ImportTransformFunc = (data: {
-    readonly value: string | string[] | undefined;
+    readonly value: MigrationElementValue;
     readonly elementCodename: string;
     readonly importContext: ImportContext;
     readonly sourceItems: MigrationItem[];

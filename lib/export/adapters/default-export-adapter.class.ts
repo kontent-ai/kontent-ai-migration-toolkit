@@ -3,14 +3,14 @@ import {
     ExportAdapterResult,
     ExportContext,
     DefaultExportAdapterConfig,
-    KontentAiPreparedExportItem
+    KontentAiPreparedExportItem,
+    ExportElementValue
 } from '../export.models.js';
 import chalk from 'chalk';
 import {
     AssetModels,
     CollectionModels,
     ManagementClient,
-    SharedModels,
     createManagementClient
 } from '@kontent-ai/management-sdk';
 import {
@@ -23,7 +23,8 @@ import {
     extractErrorData,
     processInChunksAsync,
     getBinaryDataFromUrlAsync,
-    logSpinnerOrDefaultAsync
+    logSpinnerOrDefaultAsync,
+    MigrationElementValue
 } from '../../core/index.js';
 import { exportTransforms } from '../../translation/index.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
@@ -125,9 +126,9 @@ export class DefaultExportAdapter implements ExportAdapter {
     private getValueToStoreFromElement(data: {
         exportItem: KontentAiPreparedExportItem;
         typeElement: FlattenedContentTypeElement;
-        value: string | number | SharedModels.ReferenceObject[] | undefined;
+        value: ExportElementValue;
         context: ExportContext;
-    }): string | undefined | string[] {
+    }): MigrationElementValue {
         try {
             return exportTransforms[data.typeElement.type](data);
         } catch (error) {

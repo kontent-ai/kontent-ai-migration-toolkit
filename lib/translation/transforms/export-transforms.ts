@@ -8,7 +8,21 @@ import { richTextProcessor } from '../helpers/rich-text.processor.js';
  */
 export const exportTransforms: Readonly<Record<MigrationElementType, ExportTransformFunc>> = {
     text: (data) => data.value?.toString(),
-    number: (data) => data.value?.toString(),
+    number: (data) => {
+        if (!data.value) {
+            return undefined;
+        }
+
+        if (Array.isArray(data.value)) {
+            throw Error(`Expected value to be a number, not array`);
+        }
+
+        if (data.value === 0) {
+            return 0;
+        }
+
+        return +data.value;
+    },
     date_time: (data) => data.value?.toString(),
     rich_text: (data) => transformRichTextValue(data.value?.toString(), data.context),
     asset: (data) => {

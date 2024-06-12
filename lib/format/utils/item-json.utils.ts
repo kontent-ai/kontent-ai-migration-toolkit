@@ -1,7 +1,7 @@
-import { MigrationElement, MigrationItem } from '../../core/index.js';
+import { MigrationElement, MigrationElementValue, MigrationItem } from '../../core/index.js';
 
 export interface JsonElements {
-    [elementCodename: string]: string | string[] | undefined;
+    [elementCodename: string]: MigrationElementValue;
 }
 
 export interface JsonItem {

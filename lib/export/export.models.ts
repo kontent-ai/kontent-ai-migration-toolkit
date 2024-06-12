@@ -8,7 +8,8 @@ import {
     AssetStateInSourceEnvironmentById,
     FlattenedContentTypeElement,
     ItemStateInSourceEnvironmentById,
-    ReferencedDataInLanguageVariants
+    ReferencedDataInLanguageVariants,
+    MigrationElementValue
 } from '../core/index.js';
 import {
     LanguageVariantModels,
@@ -16,9 +17,9 @@ import {
     WorkflowModels,
     CollectionModels,
     LanguageModels,
-    SharedModels,
     TaxonomyModels,
-    ManagementClient
+    ManagementClient,
+    SharedModels
 } from '@kontent-ai/management-sdk';
 
 export interface ExportContextEnvironmentData {
@@ -29,12 +30,14 @@ export interface ExportContextEnvironmentData {
     readonly taxonomies: TaxonomyModels.Taxonomy[];
 }
 
+export type ExportElementValue = string | number | SharedModels.ReferenceObject[] | undefined;
+
 export type ExportTransformFunc = (data: {
     readonly exportItem: KontentAiPreparedExportItem;
     readonly typeElement: FlattenedContentTypeElement;
-    readonly value: string | number | SharedModels.ReferenceObject[] | undefined;
+    readonly value: ExportElementValue;
     readonly context: ExportContext;
-}) => string | string[] | undefined;
+}) => MigrationElementValue;
 
 export interface ExportContext {
     readonly environmentData: ExportContextEnvironmentData;
