@@ -133,10 +133,22 @@ this library also exposes `elementsBuilder`.
 See below examples of `MigrationItem` and `MigrationAsset`:
 
 ```typescript
-const migrationItem: MigrationItem = {
+/**
+ * Optionally (but strongly recommended) you may define a migration model
+ * representing the content type you are trying to migrate into
+ */
+interface ArticleElements extends MigrationElements {
+    title: MigrationElementModels.TextElement;
+    rating: MigrationElementModels.NumberElement;
+    related_pages: MigrationElementModels.LinkedItemsElement;
+    teaser_image: MigrationElementModels.AssetElement;
+}
+
+const migrationItem: MigrationItem<ArticleElements> = {
     system: {
         name: 'My article',
-        codename: 'myArticle', // item identifier - also used for validating whether asset exists in target env
+        // codename is primary identifier - also used for validating whether asset exists in target env
+        codename: 'myArticle',
         collection: {
             // collection codename must match the collection in your target K.ai environment
             codename: 'default'
@@ -150,12 +162,10 @@ const migrationItem: MigrationItem = {
             codename: 'article'
         }
     },
-    elements: [
-        // use `elementsBuilder` to help you create element values
-        elementsBuilder().textElement({ codename: 'title', value: 'Title of the article' }),
-        elementsBuilder().numberElement({ codename: 'rating', value: 5 }),
-        elementsBuilder().linkedItemsElement({
-            codename: 'related_pages',
+    elements: {
+        title: elementsBuilder().textElement({ value: 'Title of the article' }),
+        rating: elementsBuilder().numberElement({ value: 5 }),
+        related_pages: elementsBuilder().linkedItemsElement({
             value: [
                 {
                     codename: 'pageA'
@@ -165,8 +175,8 @@ const migrationItem: MigrationItem = {
                 }
             ]
         }),
-        elementsBuilder().assetElement({ codename: 'teaser', value: [{ codename: 'article_teaser' }] })
-    ]
+        teaser_image: elementsBuilder().assetElement({ value: [{ codename: 'article_teaser' }] })
+    }
 };
 
 const migrationAsset: MigrationAsset = {

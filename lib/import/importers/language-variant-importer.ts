@@ -60,8 +60,8 @@ export function languageVariantImporter(data: {
         // prepare & map elements
         const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] = [];
 
-        for (const element of migrationItem.elements) {
-            mappedElements.push(await getElementContractAsync(migrationItem, element));
+        for (const [codename, migrationElement] of Object.entries(migrationItem.elements)) {
+            mappedElements.push(await getElementContractAsync(migrationItem, migrationElement, codename));
         }
 
         // upsert language variant
@@ -205,11 +205,15 @@ export function languageVariantImporter(data: {
         return false;
     };
 
-    const getElementContractAsync = async (migrationItem: MigrationItem, element: MigrationElement) => {
-        const flattenedElement = data.importContext.getElement(migrationItem.system.type.codename, element.codename);
+    const getElementContractAsync = async (
+        migrationItem: MigrationItem,
+        element: MigrationElement,
+        elementCodename: string
+    ) => {
+        const flattenedElement = data.importContext.getElement(migrationItem.system.type.codename, elementCodename);
 
         const importContract = await importTransforms[flattenedElement.type]({
-            elementCodename: element.codename,
+            elementCodename: elementCodename,
             importContext: data.importContext,
             sourceItems: data.importContext.contentItems,
             value: element.value
@@ -217,7 +221,7 @@ export function languageVariantImporter(data: {
 
         if (!importContract) {
             logErrorAndExit({
-                message: `Missing import contract for element '${chalk.red(element.codename)}' `
+                message: `Missing import contract for element '${chalk.red(elementCodename)}'`
             });
         }
 

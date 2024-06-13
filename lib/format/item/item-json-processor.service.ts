@@ -1,6 +1,5 @@
 import { FileBinaryData, ItemsParseData, ItemsTransformData } from '../../zip/zip.models.js';
 import { BaseItemProcessorService } from './base-item-processor.service.js';
-import { JsonItem, mapToJsonItem, parseJsonItem } from '../utils/item-json.utils.js';
 import { MigrationItem } from '../../core/index.js';
 
 export class ItemJsonProcessorService extends BaseItemProcessorService {
@@ -8,9 +7,9 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
 
     public readonly name: string = 'json';
     async transformAsync(data: ItemsTransformData): Promise<FileBinaryData> {
-        const jsonItems: JsonItem[] = data.items.map((m) => mapToJsonItem(m));
+        const migrationItems: MigrationItem[] = data.items;
 
-        data.zip.addFile(this.itemsFileName, jsonItems.length ? JSON.stringify(jsonItems) : '[]');
+        data.zip.addFile(this.itemsFileName, migrationItems.length ? JSON.stringify(migrationItems) : '[]');
 
         return await data.zip.generateZipAsync();
     }
@@ -22,10 +21,8 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
             return [];
         }
 
-        const jsonItems: JsonItem[] = JSON.parse(text);
+        const migrationItems: MigrationItem[] = JSON.parse(text);
 
-        return jsonItems.map((m) =>
-            parseJsonItem(m)
-        );
+        return migrationItems;
     }
 }

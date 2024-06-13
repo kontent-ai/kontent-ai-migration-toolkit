@@ -11,7 +11,6 @@ import { AssetModels, CollectionModels, ManagementClient, createManagementClient
 import {
     defaultRetryStrategy,
     MigrationAsset,
-    MigrationElement,
     MigrationItem,
     defaultHttpService,
     FlattenedContentTypeElement,
@@ -19,7 +18,8 @@ import {
     processInChunksAsync,
     getBinaryDataFromUrlAsync,
     logSpinnerOrDefaultAsync,
-    MigrationElementValue
+    MigrationElementValue,
+    MigrationElements
 } from '../../core/index.js';
 import { exportTransforms } from '../../translation/index.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
@@ -93,10 +93,19 @@ export class DefaultExportAdapter implements ExportAdapter {
         return migrationItems;
     }
 
-    private getMigrationElements(exportItem: KontentAiPreparedExportItem, context: ExportContext): MigrationElement[] {
-        const migrationElements: MigrationElement[] = [];
+    private getMigrationElements(exportItem: KontentAiPreparedExportItem, context: ExportContext): MigrationElements {
+        const migrationModel: MigrationElements = {};
+        const sortedContentTypeElements = exportItem.contentType.elements.sort((a, b) => {
+            if (a.codename < b.codename) {
+                return -1;
+            }
+            if (a.codename > b.codename) {
+                return 1;
+            }
+            return 0;
+        });
 
-        for (const typeElement of exportItem.contentType.elements) {
+        for (const typeElement of sortedContentTypeElements) {
             const itemElement = exportItem.languageVariant.elements.find((m) => m.element.id === typeElement.id);
 
             if (!itemElement) {
@@ -106,8 +115,7 @@ export class DefaultExportAdapter implements ExportAdapter {
                 );
             }
 
-            migrationElements.push({
-                codename: typeElement.codename,
+            migrationModel[typeElement.codename] = {
                 type: typeElement.type,
                 value: this.getValueToStoreFromElement({
                     context: context,
@@ -115,18 +123,10 @@ export class DefaultExportAdapter implements ExportAdapter {
                     value: itemElement.value,
                     typeElement: typeElement
                 })
-            });
+            };
         }
 
-        return migrationElements.sort((a, b) => {
-            if (a.codename < b.codename) {
-                return -1;
-            }
-            if (a.codename > b.codename) {
-                return 1;
-            }
-            return 0;
-        });
+        return migrationModel;
     }
 
     private getValueToStoreFromElement(data: {

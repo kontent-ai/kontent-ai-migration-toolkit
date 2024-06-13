@@ -64,8 +64,8 @@ export function itemsExtractionProcessor() {
         const assetCodenames: string[] = [];
 
         for (const item of items) {
-            for (const element of item.elements) {
-                const flattenedElement = getElement(item.system.type.codename, element.codename);
+            for (const [elementCodename, element] of Object.entries(item.elements)) {
+                const flattenedElement = getElement(item.system.type.codename, elementCodename);
 
                 if (flattenedElement.type === 'rich_text') {
                     const richTextHtml = element.value?.toString();

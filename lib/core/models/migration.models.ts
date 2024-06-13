@@ -23,17 +23,12 @@ export interface MigrationElement<
     readonly value: TValue;
 
     /**
-     * Codename of the element
-     */
-    readonly codename: string;
-
-    /**
      * Type of the element
      */
     readonly type: TElementType;
 }
 
-export namespace MigrationElements {
+export namespace MigrationElementModels {
     export interface TextElement extends MigrationElement<'text', string | undefined> {}
     export interface NumberElement extends MigrationElement<'number', number | undefined> {}
     export interface RichTextElement extends MigrationElement<'rich_text', string | undefined> {}
@@ -48,7 +43,11 @@ export namespace MigrationElements {
     export interface SubpagesElement extends MigrationElement<'subpages', MigrationReference[] | undefined> {}
 }
 
-export interface MigrationItem {
+export interface MigrationElements {
+    [elementCodename: string]: MigrationElement;
+}
+
+export interface MigrationItem<TElements extends MigrationElements = MigrationElements> {
     readonly system: {
         /**
          * Codename of the content item
@@ -80,7 +79,7 @@ export interface MigrationItem {
          */
         readonly workflow_step?: MigrationReference;
     };
-    readonly elements: MigrationElement[];
+    readonly elements: TElements;
 }
 
 export interface MigrationReference {

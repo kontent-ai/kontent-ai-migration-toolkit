@@ -1,7 +1,7 @@
-import { MigrationElements } from '../core/index.js';
+import { MigrationElementModels } from '../core/index.js';
 
 export function elementsBuilder() {
-    const textElement: (data: Omit<MigrationElements.TextElement, 'type'>) => MigrationElements.TextElement = (
+    const textElement: (data: Omit<MigrationElementModels.TextElement, 'type'>) => MigrationElementModels.TextElement = (
         data
     ) => {
         return {
@@ -10,7 +10,7 @@ export function elementsBuilder() {
         };
     };
 
-    const assetElement: (data: Omit<MigrationElements.AssetElement, 'type'>) => MigrationElements.AssetElement = (
+    const assetElement: (data: Omit<MigrationElementModels.AssetElement, 'type'>) => MigrationElementModels.AssetElement = (
         data
     ) => {
         return {
@@ -19,7 +19,7 @@ export function elementsBuilder() {
         };
     };
 
-    const customElement: (data: Omit<MigrationElements.CustomElement, 'type'>) => MigrationElements.CustomElement = (
+    const customElement: (data: Omit<MigrationElementModels.CustomElement, 'type'>) => MigrationElementModels.CustomElement = (
         data
     ) => {
         return {
@@ -29,8 +29,8 @@ export function elementsBuilder() {
     };
 
     const dateTimeElement: (
-        data: Omit<MigrationElements.DateTimeElement, 'type'>
-    ) => MigrationElements.DateTimeElement = (data) => {
+        data: Omit<MigrationElementModels.DateTimeElement, 'type'>
+    ) => MigrationElementModels.DateTimeElement = (data) => {
         return {
             ...data,
             type: 'date_time'
@@ -38,8 +38,8 @@ export function elementsBuilder() {
     };
 
     const linkedItemsElement: (
-        data: Omit<MigrationElements.LinkedItemsElement, 'type'>
-    ) => MigrationElements.LinkedItemsElement = (data) => {
+        data: Omit<MigrationElementModels.LinkedItemsElement, 'type'>
+    ) => MigrationElementModels.LinkedItemsElement = (data) => {
         return {
             ...data,
             type: 'modular_content'
@@ -47,15 +47,15 @@ export function elementsBuilder() {
     };
 
     const multipleChoiceElement: (
-        data: Omit<MigrationElements.MultipleChoiceElement, 'type'>
-    ) => MigrationElements.MultipleChoiceElement = (data) => {
+        data: Omit<MigrationElementModels.MultipleChoiceElement, 'type'>
+    ) => MigrationElementModels.MultipleChoiceElement = (data) => {
         return {
             ...data,
             type: 'multiple_choice'
         };
     };
 
-    const numberElement: (data: Omit<MigrationElements.NumberElement, 'type'>) => MigrationElements.NumberElement = (
+    const numberElement: (data: Omit<MigrationElementModels.NumberElement, 'type'>) => MigrationElementModels.NumberElement = (
         data
     ) => {
         return {
@@ -65,8 +65,8 @@ export function elementsBuilder() {
     };
 
     const richTextElement: (
-        data: Omit<MigrationElements.RichTextElement, 'type'>
-    ) => MigrationElements.RichTextElement = (data) => {
+        data: Omit<MigrationElementModels.RichTextElement, 'type'>
+    ) => MigrationElementModels.RichTextElement = (data) => {
         return {
             ...data,
             type: 'rich_text'
@@ -74,8 +74,8 @@ export function elementsBuilder() {
     };
 
     const subpagesElement: (
-        data: Omit<MigrationElements.SubpagesElement, 'type'>
-    ) => MigrationElements.SubpagesElement = (data) => {
+        data: Omit<MigrationElementModels.SubpagesElement, 'type'>
+    ) => MigrationElementModels.SubpagesElement = (data) => {
         return {
             ...data,
             type: 'subpages'
@@ -83,15 +83,15 @@ export function elementsBuilder() {
     };
 
     const taxonomyElement: (
-        data: Omit<MigrationElements.TaxonomyElement, 'type'>
-    ) => MigrationElements.TaxonomyElement = (data) => {
+        data: Omit<MigrationElementModels.TaxonomyElement, 'type'>
+    ) => MigrationElementModels.TaxonomyElement = (data) => {
         return {
             ...data,
             type: 'taxonomy'
         };
     };
 
-    const urlSlugElement: (data: Omit<MigrationElements.UrlSlugElement, 'type'>) => MigrationElements.UrlSlugElement = (
+    const urlSlugElement: (data: Omit<MigrationElementModels.UrlSlugElement, 'type'>) => MigrationElementModels.UrlSlugElement = (
         data
     ) => {
         return {
