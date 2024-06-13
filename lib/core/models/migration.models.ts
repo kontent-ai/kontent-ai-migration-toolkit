@@ -11,27 +11,16 @@ export type MigrationElementType =
     | 'custom'
     | 'subpages';
 
-export namespace MigrationElements {
-    export interface TextElement extends MigrationElement {}
-    export interface NumberElement extends MigrationElement {}
-    export interface RichTextElement extends MigrationElement {}
-    export interface MultipleChoiceElement extends MigrationElement {}
-    export interface DateTimeElement extends MigrationElement {}
-    export interface AssetElement extends MigrationElement {}
-    export interface LinkedItemsElement extends MigrationElement {}
-    export interface TaxonomyElement extends MigrationElement {}
-    export interface UrlSlugElement extends MigrationElement {}
-    export interface CustomElement extends MigrationElement {}
-    export interface SubpagesElement extends MigrationElement {}
-}
-
 export type MigrationElementValue = string | undefined | MigrationReference[] | number;
 
-export interface MigrationElement {
+export interface MigrationElement<
+    TElementType extends MigrationElementType = MigrationElementType,
+    TValue extends MigrationElementValue = MigrationElementValue
+> {
     /**
      * Value of the element
      */
-    readonly value: MigrationElementValue;
+    readonly value: TValue;
 
     /**
      * Codename of the element
@@ -41,7 +30,22 @@ export interface MigrationElement {
     /**
      * Type of the element
      */
-    readonly type: MigrationElementType;
+    readonly type: TElementType;
+}
+
+export namespace MigrationElements {
+    export interface TextElement extends MigrationElement<'text', string | undefined> {}
+    export interface NumberElement extends MigrationElement<'number', number | undefined> {}
+    export interface RichTextElement extends MigrationElement<'rich_text', string | undefined> {}
+    export interface MultipleChoiceElement
+        extends MigrationElement<'multiple_choice', MigrationReference[] | undefined> {}
+    export interface DateTimeElement extends MigrationElement<'date_time', string | undefined> {}
+    export interface AssetElement extends MigrationElement<'asset', MigrationReference[] | undefined> {}
+    export interface LinkedItemsElement extends MigrationElement<'modular_content', MigrationReference[] | undefined> {}
+    export interface TaxonomyElement extends MigrationElement<'taxonomy', MigrationReference[] | undefined> {}
+    export interface UrlSlugElement extends MigrationElement<'url_slug', string | undefined> {}
+    export interface CustomElement extends MigrationElement<'custom', string | undefined> {}
+    export interface SubpagesElement extends MigrationElement<'subpages', MigrationReference[] | undefined> {}
 }
 
 export interface MigrationItem {

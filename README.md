@@ -123,6 +123,95 @@ However, when migration from 3rd party system you typically only use the `import
 kontent-ai-migration-toolkit export --sourceEnvironmentId=x --sourceApiKey=x --language=default --items=itemA,itemB
 ```
 
+# Export from external systems
+
+You can use this library when exporting from 3rd party systems (i.e. legacy CMS) as it will abstract your from using
+Kontent.ai Management API directly. Your job as a developer is to `transform` the data you want to migrate into a format
+this library supports. The main migration models are `MigrationItem` and `MigrationAsset`. For creating element values
+this library also exposes `elementsBuilder`.
+
+See below examples of `MigrationItem` and `MigrationAsset`:
+
+```typescript
+const migrationItem: MigrationItem = {
+    system: {
+        name: 'My article',
+        codename: 'myArticle', // item identifier - also used for validating whether asset exists in target env
+        collection: {
+            // collection codename must match the collection in your target K.ai environment
+            codename: 'default'
+        },
+        language: {
+            // language codename must match the language in your target K.ai environment
+            codename: 'en_uk'
+        },
+        type: {
+            // type codename must match the content type codename in your target K.ai environment
+            codename: 'article'
+        }
+    },
+    elements: [
+        // use `elementsBuilder` to help you create element values
+        elementsBuilder().textElement({ codename: 'title', value: 'Title of the article' }),
+        elementsBuilder().numberElement({ codename: 'rating', value: 5 }),
+        elementsBuilder().linkedItemsElement({
+            codename: 'related_pages',
+            value: [
+                {
+                    codename: 'pageA'
+                },
+                {
+                    codename: 'pageB'
+                }
+            ]
+        }),
+        elementsBuilder().assetElement({ codename: 'teaser', value: [{ codename: 'article_teaser' }] })
+    ]
+};
+
+const migrationAsset: MigrationAsset = {
+    // _zipFilename is a name of the file within the export .zip package. It is used only for identifying the file within export
+    _zipFilename: 'my_file.txt',
+    // codename of the asset - Used for validating whether asset exists in target env
+    codename: 'my_file',
+    // filename will be used in K.ai asset as a filename
+    filename: 'filename.txt',
+    // title will be used in K.ai asset as a title
+    title: 'My file',
+    // binary data of the asset you want to upload
+    binaryData: Buffer.from('myFile', 'utf8'),
+    // collection assignment
+    collection: {
+        codename: 'collectionCodename'
+    },
+    // description of asset in project languages
+    descriptions: [
+        {
+            description: 'description of asset',
+            language: {
+                codename: 'default'
+            }
+        }
+    ]
+};
+```
+
+Once you are happy with the data, you can import them to Kontent.ai using the `importAsync` function.
+
+```typescript
+await importAsync({
+    data: {
+        assets: [migrationAsset],
+        items: [migrationItem]
+    },
+    adapterConfig: {
+        environmentId: environmentId,
+        apiKey: apiKey,
+        skipFailedItems: false
+    }
+});
+```
+
 # Migration / import processing
 
 ### How are content items imported?

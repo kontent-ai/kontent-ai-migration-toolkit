@@ -1,4 +1,13 @@
-import { MigrationAsset, MigrationItem, ExportAdapter, exportAsync, storeAsync } from '../lib/index.js';
+import {
+    MigrationAsset,
+    MigrationItem,
+    ExportAdapter,
+    exportAsync,
+    storeAsync,
+    elementsBuilder
+} from '../lib/index.js';
+
+
 
 /* Typically you query your external system to create the migration items & assets */
 const adapter: ExportAdapter = {
@@ -7,27 +16,37 @@ const adapter: ExportAdapter = {
         const migrationItems: MigrationItem[] = [
             {
                 system: {
-                    codename: 'myArticle',
-                    // collection codename must match the collection in your target K.ai environment
-                    collection: 'default',
-                    // language codename must match the language in your target K.ai environment
-                    language: 'default',
-                    // type codename must match the content type codename in your target K.ai environment
-                    type: 'article',
-                    name: 'My article'
+                    name: 'My article',
+                    codename: 'myArticle', // item identifier - also used for validating whether asset exists in target env
+                    collection: {
+                        // collection codename must match the collection in your target K.ai environment
+                        codename: 'default'
+                    },
+                    language: {
+                        // language codename must match the language in your target K.ai environment
+                        codename: 'en_uk'
+                    },
+                    type: {
+                        // type codename must match the content type codename in your target K.ai environment
+                        codename: 'article'
+                    }
                 },
                 elements: [
-                    {
-                        // the codename of the element must match codename of the element in your target K.ai environment
-                        // In this example it is expected that the target environment contains content type with codename 'article' that contains an element with codename 'title' that is of 'text' type
-                        codename: 'title',
-                        value: 'My article'
-                    },
-                    {
-                        // the codename of the element must match codename of the element in your target K.ai environment
-                        codename: 'summary',
-                        value: '<p>My article summary</p>'
-                    }
+                    // use `elementsBuilder` to help you create element values
+                    elementsBuilder().textElement({ codename: 'title', value: 'Title of the article' }),
+                    elementsBuilder().numberElement({ codename: 'rating', value: 5 }),
+                    elementsBuilder().linkedItemsElement({
+                        codename: 'related_pages',
+                        value: [
+                            {
+                                codename: 'pageA'
+                            },
+                            {
+                                codename: 'pageB'
+                            }
+                        ]
+                    }),
+                    elementsBuilder().assetElement({ codename: 'teaser', value: [{ codename: 'article_teaser' }] })
                 ]
             }
         ];
