@@ -32,7 +32,7 @@ kontent-ai-migration-toolkit migrate --help
 
 1. [Import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-sample.ts)
 2. [Export](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-sample.ts)
-3. [Export from external system](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-from-external-system.ts)
+3. [Migrate from external system](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-from-external-system.ts)
 4. [Migrate content between Kontent.ai environments](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-between-kontent-ai-environments.ts)
 
 > [!NOTE]  
@@ -98,7 +98,7 @@ kontent-ai-migration-toolkit migrate --targetEnvironmentId=x --targetApiKey=x --
 kontent-ai-migration-toolkit import --targetEnvironmentId=x --targetApiKey=x --itemsFilename=items.zip --assetsFilename=assets.zip
 ```
 
-# Export from Kontent.ai
+# Migrate from Kontent.ai
 
 There is a built-in `kontentAi` adapter that can be used to export content items & assets from Kontent.ai environments.
 However, when migration from 3rd party system you typically only use the `import` capabilities of this repository.
@@ -123,7 +123,7 @@ However, when migration from 3rd party system you typically only use the `import
 kontent-ai-migration-toolkit export --sourceEnvironmentId=x --sourceApiKey=x --language=default --items=itemA,itemB
 ```
 
-# Export from external systems
+# Migrate from external systems
 
 You can use this library when exporting from 3rd party systems (i.e. legacy CMS) as it will abstract your from using
 Kontent.ai Management API directly. Your job as a developer is to `transform` the data you want to migrate into a format
