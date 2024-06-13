@@ -57,31 +57,32 @@ const adapter: ExportAdapter = {
                         }
                     ]
                 }),
+                // assets are referenced by their codename
                 teaser_image: elementsBuilder().assetElement({ value: [{ codename: 'article_teaser' }] })
             }
         };
 
         const migrationAsset: MigrationAsset = {
             // _zipFilename is a name of the file within the export .zip package. It is used only for identifying the file within export
-            _zipFilename: 'my_file.txt',
-            // codename of the asset - also used for validating whether asset exists in target env
-            codename: 'my_file',
+            _zipFilename: 'article_teaser.jpg',
+            // codename of the asset - Used for validating whether asset exists in target env
+            codename: 'article_teaser',
             // filename will be used in K.ai asset as a filename
-            filename: 'filename.txt',
+            filename: 'article_teaser.jpg',
             // title will be used in K.ai asset as a title
-            title: 'My file',
+            title: 'Article teaser',
             // binary data of the asset you want to upload
-            binaryData: Buffer.from('myFile', 'utf8'),
+            binaryData: undefined,
             // collection assignment
             collection: {
-                codename: 'collectionCodename'
+                codename: 'teasers'
             },
             // description of asset in project languages
             descriptions: [
                 {
-                    description: 'description of asset',
+                    description: 'Teaser of the article',
                     language: {
-                        codename: 'default'
+                        codename: 'en_uk'
                     }
                 }
             ]

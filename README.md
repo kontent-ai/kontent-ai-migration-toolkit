@@ -126,11 +126,12 @@ kontent-ai-migration-toolkit export --sourceEnvironmentId=x --sourceApiKey=x --l
 # Migrate from external systems
 
 You can use this library when exporting from 3rd party systems (i.e. legacy CMS) as it will abstract your from using
-Kontent.ai Management API directly. Your job as a developer is to `transform` the data you want to migrate into a format
-this library supports. The main migration models are `MigrationItem` and `MigrationAsset`. For creating element values
-this library also exposes `elementsBuilder`.
+Kontent.ai Management API directly.
 
-See below examples of `MigrationItem` and `MigrationAsset`:
+The main focus is therefore on transforming the data you need to migrate into a format this library supports. The main
+migration models are `MigrationItem` and `MigrationAsset`. For creating element values `elementsBuilder`.
+
+See below example of using a strongly typed model and migrating a single item with an asset.
 
 ```typescript
 /**
@@ -175,31 +176,32 @@ const migrationItem: MigrationItem<ArticleElements> = {
                 }
             ]
         }),
+        // assets are referenced by their codename
         teaser_image: elementsBuilder().assetElement({ value: [{ codename: 'article_teaser' }] })
     }
 };
 
 const migrationAsset: MigrationAsset = {
     // _zipFilename is a name of the file within the export .zip package. It is used only for identifying the file within export
-    _zipFilename: 'my_file.txt',
+    _zipFilename: 'article_teaser.jpg',
     // codename of the asset - Used for validating whether asset exists in target env
-    codename: 'my_file',
+    codename: 'article_teaser',
     // filename will be used in K.ai asset as a filename
-    filename: 'filename.txt',
+    filename: 'article_teaser.jpg',
     // title will be used in K.ai asset as a title
-    title: 'My file',
+    title: 'Article teaser',
     // binary data of the asset you want to upload
-    binaryData: Buffer.from('myFile', 'utf8'),
+    binaryData: <BinaryData>,
     // collection assignment
     collection: {
-        codename: 'collectionCodename'
+        codename: 'teasers'
     },
     // description of asset in project languages
     descriptions: [
         {
-            description: 'description of asset',
+            description: 'Teaser of the article',
             language: {
-                codename: 'default'
+                codename: 'en_uk'
             }
         }
     ]
