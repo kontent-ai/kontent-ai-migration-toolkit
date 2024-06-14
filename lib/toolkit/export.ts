@@ -21,7 +21,7 @@ export async function exportAsync(
     inputAdapterOrDefaultConfig: DefaultExportConfig | ExportAdapter,
     inputConfig?: ExportConfig
 ): Promise<ExportAdapterResult> {
-    const { adapter } = await getSetupAsync(inputAdapterOrDefaultConfig, inputConfig);
+    const { adapter } = getSetup(inputAdapterOrDefaultConfig, inputConfig);
 
     return await executeWithTrackingAsync({
         event: {
@@ -42,14 +42,14 @@ export async function exportAsync(
     });
 }
 
-async function getSetupAsync<TConfig extends ExportConfig, TDefaultConfig extends DefaultExportConfig & TConfig>(
+function getSetup<TConfig extends ExportConfig, TDefaultConfig extends DefaultExportConfig & TConfig>(
     inputAdapterOrDefaultConfig: TDefaultConfig | ExportAdapter,
     inputConfig?: TConfig
-): Promise<{
+): {
     adapter: ExportAdapter;
     config: TConfig;
     logger: Logger;
-}> {
+} {
     let adapter: ExportAdapter;
     let config: TConfig;
     let logger: Logger;

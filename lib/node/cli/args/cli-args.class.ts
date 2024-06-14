@@ -1,8 +1,14 @@
 import yargs, { Argv } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import chalk from 'chalk';
-import { CliAction, logErrorAndExit } from '../../../core/index.js';
+import { CliAction, exitProgram } from '../../../core/index.js';
 import { Command, CommandOption } from '../cli.models.js';
+
+type ArgvResult = {
+    [x: string]: unknown;
+    _: (string | number)[];
+    $0: string;
+};
 
 export function getCliArgs(): CliArgs {
     const argv = yargs(hideBin(process.argv));
@@ -67,7 +73,7 @@ export class CliArgs {
         const value = await this.getOptionalArgumentValueAsync(argName);
 
         if (!value) {
-            logErrorAndExit({
+            exitProgram({
                 message: `Missing '${chalk.yellow(argName)}' argument value`
             });
         }
@@ -85,7 +91,7 @@ export class CliArgs {
         return value.toLowerCase() === 'true'.toLowerCase();
     }
 
-    private async resolveArgsAsync(): Promise<any> {
+    private async resolveArgsAsync(): Promise<ArgvResult> {
         const resolvedArgv = await this.argv.argv;
         return resolvedArgv;
     }

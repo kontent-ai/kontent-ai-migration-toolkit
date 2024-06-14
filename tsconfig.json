@@ -27,6 +27,6 @@
         "typeRoots": ["./node_modules/@types"],
         "lib": ["esnext"]
     },
-    "include": ["lib/**/*", "samples/**/*", "scripts/**/*"],
+    "include": ["lib/**/*", "samples/**/*", "scripts/**/*", "eslint.config.js"],
     "exclude": ["node_modules"]
 }

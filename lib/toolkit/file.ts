@@ -43,8 +43,21 @@ export async function storeAsync(config: StoreConfig): Promise<void> {
                 assetFormatService: getAssetsFormatService(files.assets.format)
             });
 
-            await fileManager(logger).writeFileAsync(files.items.filename, itemsZipFile);
-            await fileManager(logger).writeFileAsync(files.assets.filename, assetsZipFile);
+            if (itemsZipFile instanceof Buffer) {
+                await fileManager(logger).writeFileAsync(files.items.filename, itemsZipFile);
+            } else {
+                throw Error(
+                    `Cannot store '${files.items.filename}' on File system because the provided zip is not a Buffer`
+                );
+            }
+
+            if (assetsZipFile instanceof Buffer) {
+                await fileManager(logger).writeFileAsync(files.assets.filename, assetsZipFile);
+            } else {
+                throw Error(
+                    `Cannot store '${files.assets.filename}' on File system because the provided zip is not a Buffer`
+                );
+            }
         }
     });
 }

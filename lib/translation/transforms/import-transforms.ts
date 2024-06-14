@@ -10,7 +10,7 @@ const elementsBuilder = new LanguageVariantElementsBuilder();
  * Kontent.ai Management API understands
  */
 export const importTransforms: Readonly<Record<MigrationElementType, ImportTransformFunc>> = {
-    subpages: async (data) => {
+    subpages: (data) => {
         return elementsBuilder.linkedItemsElement({
             element: {
                 codename: data.elementCodename
@@ -22,7 +22,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             })
         });
     },
-    asset: async (data) => {
+    asset: (data) => {
         const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
 
         for (const assetReference of parseAsMigrationReferencesArray(data.value)) {
@@ -50,7 +50,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             value: assetReferences
         });
     },
-    custom: async (data) => {
+    custom: (data) => {
         return elementsBuilder.customElement({
             element: {
                 codename: data.elementCodename
@@ -58,7 +58,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             value: data.value?.toString() ?? ''
         });
     },
-    date_time: async (data) => {
+    date_time: (data) => {
         return elementsBuilder.dateTimeElement({
             element: {
                 codename: data.elementCodename
@@ -66,7 +66,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             value: data.value?.toString() ?? null
         });
     },
-    modular_content: async (data) => {
+    modular_content: (data) => {
         const value: SharedContracts.IReferenceObjectContract[] = [];
         const linkedItemReferences: MigrationReference[] = parseAsMigrationReferencesArray(data.value);
 
@@ -93,7 +93,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             value: value
         });
     },
-    multiple_choice: async (data) => {
+    multiple_choice: (data) => {
         return elementsBuilder.multipleChoiceElement({
             element: {
                 codename: data.elementCodename
@@ -105,7 +105,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             })
         });
     },
-    number: async (data) => {
+    number: (data) => {
         return elementsBuilder.numberElement({
             element: {
                 codename: data.elementCodename
@@ -113,8 +113,8 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             value: data.value ? +data.value : null
         });
     },
-    rich_text: async (data) => {
-        const rteHtml = await processImportRichTextHtmlValueAsync(data.value?.toString(), data.importContext);
+    rich_text: (data) => {
+        const rteHtml = processImportRichTextHtmlValue(data.value?.toString(), data.importContext);
 
         return elementsBuilder.richTextElement({
             element: {
@@ -123,7 +123,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             value: rteHtml ?? null
         });
     },
-    taxonomy: async (data) => {
+    taxonomy: (data) => {
         return elementsBuilder.taxonomyElement({
             element: {
                 codename: data.elementCodename
@@ -135,7 +135,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             })
         });
     },
-    text: async (data) => {
+    text: (data) => {
         return elementsBuilder.textElement({
             element: {
                 codename: data.elementCodename
@@ -143,7 +143,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             value: data.value?.toString() ?? null
         });
     },
-    url_slug: async (data) => {
+    url_slug: (data) => {
         return elementsBuilder.urlSlugElement({
             element: {
                 codename: data.elementCodename
@@ -154,10 +154,10 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
     }
 };
 
-async function processImportRichTextHtmlValueAsync(
+function processImportRichTextHtmlValue(
     richTextHtml: string | undefined,
     importContext: ImportContext
-): Promise<string | undefined> {
+): string | undefined {
     if (!richTextHtml) {
         return richTextHtml;
     }

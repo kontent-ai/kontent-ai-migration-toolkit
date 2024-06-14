@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
 
-import { handleError, logErrorAndExit } from '../../core/index.js';
+import { handleError, exitProgram } from '../../core/index.js';
 import { cliArgs } from './commands.js';
 import { exportActionAsync } from './actions/export-action.js';
 import { importActionAsync } from './actions/import-action.js';
@@ -17,7 +17,7 @@ const run = async () => {
     } else if (action === 'migrate') {
         await migrateActionAsync(cliArgs);
     } else {
-        logErrorAndExit({
+        exitProgram({
             message: `Invalid action '${chalk.red(action)}'`
         });
     }

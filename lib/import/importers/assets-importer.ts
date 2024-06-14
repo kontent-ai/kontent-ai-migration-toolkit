@@ -75,7 +75,7 @@ export function assetsImporter(data: {
                         (
                             await data.client
                                 .addAsset()
-                                .withData((builder) => {
+                                .withData(() => {
                                     const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(
                                         asset.codename
                                     );

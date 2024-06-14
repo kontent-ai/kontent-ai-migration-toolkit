@@ -21,7 +21,9 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
                 descriptions: exportAsset.descriptions
             });
 
-            await data.zip.addFile(exportAsset.filename, exportAsset.binaryData);
+            if (exportAsset.binaryData) {
+                data.zip.addFile(exportAsset.filename, exportAsset.binaryData);
+            }
         }
 
         data.zip.addFile(this.assetsFilename, JSON.stringify(assetRecords));
@@ -35,7 +37,7 @@ export class AssetJsonProcessorService extends BaseAssetProcessorService {
             return [];
         }
 
-        const assetRecords: AssetRecord[] = JSON.parse(text);
+        const assetRecords: AssetRecord[] = JSON.parse(text) as AssetRecord[];
         const parsedAssets: MigrationAsset[] = [];
 
         for (const assetRecord of assetRecords) {

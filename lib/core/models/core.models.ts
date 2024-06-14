@@ -41,7 +41,7 @@ export interface ErrorData {
     readonly requestData?: string;
     readonly requestUrl?: string;
     readonly isUnknownError: boolean;
-    readonly error: any;
+    readonly error: unknown;
 }
 
 export interface ReferencedDataInMigrationItems {
@@ -109,4 +109,17 @@ export interface FlattenedContentType {
     readonly contentTypeCodename: string;
     readonly contentTypeId: string;
     readonly elements: FlattenedContentTypeElement[];
+}
+
+export interface OriginalManagementError {
+    response?: {
+        status?: number;
+        config?: {
+            url?: string;
+            data?: string;
+        };
+        data?: {
+            error_code?: number;
+        }
+    };
 }

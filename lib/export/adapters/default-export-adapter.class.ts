@@ -17,7 +17,6 @@ import {
     extractErrorData,
     processInChunksAsync,
     getBinaryDataFromUrlAsync,
-    logSpinnerOrDefaultAsync,
     MigrationElementValue,
     MigrationElements
 } from '../../core/index.js';
@@ -193,13 +192,9 @@ export class DefaultExportAdapter implements ExportAdapter {
                 const assetCollection: CollectionModels.Collection | undefined =
                     context.environmentData.collections.find((m) => m.id === asset.collection?.reference?.id);
 
-                await logSpinnerOrDefaultAsync({
-                    logger: this.config.logger,
-                    logData: {
-                        type: 'download',
-                        message: `${asset.url}`
-                    },
-                    logSpinner: logSpinner
+                logSpinner({
+                    type: 'download',
+                    message: `${asset.url}`
                 });
 
                 const binaryData = await getBinaryDataFromUrlAsync(asset.url);

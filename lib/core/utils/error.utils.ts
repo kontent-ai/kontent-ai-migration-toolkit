@@ -1,8 +1,8 @@
 import { SharedModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
-import { ErrorData } from '../models/core.models.js';
+import { ErrorData, OriginalManagementError } from '../models/core.models.js';
 
-export function extractErrorData(error: any): ErrorData {
+export function extractErrorData(error: unknown): ErrorData {
     let isUnknownError: boolean = true;
     let message: string = `Unknown error`;
     let requestUrl: string | undefined = undefined;
@@ -11,8 +11,13 @@ export function extractErrorData(error: any): ErrorData {
     if (error instanceof SharedModels.ContentManagementBaseKontentError) {
         isUnknownError = false;
         message = `${error.message}`;
-        requestUrl = error.originalError?.response?.config.url;
-        requestData = error.originalError?.response?.config.data;
+
+        const originalError: OriginalManagementError | undefined = error.originalError as
+            | OriginalManagementError
+            | undefined;
+
+        requestUrl = originalError?.response?.config?.url;
+        requestData = originalError?.response?.config?.data;
 
         for (const validationError of error.validationErrors) {
             message += ` ${validationError.message}`;
@@ -33,18 +38,21 @@ export function extractErrorData(error: any): ErrorData {
     return errorData;
 }
 
-export function is404Error(error: any): boolean {
-    if (
-        error instanceof SharedModels.ContentManagementBaseKontentError &&
-        error.originalError?.response?.status === 404
-    ) {
-        return true;
+export function is404Error(error: unknown): boolean {
+    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+        const originalError: OriginalManagementError | undefined = error.originalError as
+            | OriginalManagementError
+            | undefined;
+
+        if (originalError?.response?.status === 404) {
+            return true;
+        }
     }
 
     return false;
 }
 
-export function handleError(error: any): void {
+export function handleError(error: unknown): void {
     const errorData = extractErrorData(error);
 
     if (errorData.isUnknownError) {

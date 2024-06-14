@@ -1,11 +1,13 @@
 import JSZip from 'jszip';
 import chalk from 'chalk';
-import { Logger, formatBytes, getCurrentEnvironment, logErrorAndExit } from '../core/index.js';
+import { Logger, formatBytes, getCurrentEnvironment, exitProgram } from '../core/index.js';
 import { FileBinaryData, ZipCompressionLevel, ZipContext } from './zip.models.js';
 import {} from 'browser-or-node';
 
-interface FileResult<T> {
-    readonly data: T;
+type ZipFileType = string | Blob | Buffer | Uint8Array | number[] | ArrayBuffer;
+
+interface FileResult<TFileType extends ZipFileType> {
+    readonly data: TFileType;
     readonly filename: string;
 }
 
@@ -18,7 +20,7 @@ export class ZipPackage {
         private readonly context?: ZipContext
     ) {}
 
-    addFile(filePath: string, data: any): void {
+    addFile(filePath: string, data: string | Blob | Buffer): void {
         this.jsZip.file(filePath, data);
     }
 
@@ -26,7 +28,9 @@ export class ZipPackage {
         this.jsZip.folder(name);
     }
 
-    async getAllFilesAsync<TReturnType>(type: JSZip.OutputType): Promise<FileResult<TReturnType>[]> {
+    async getAllFilesAsync<TReturnType extends ZipFileType>(
+        type: JSZip.OutputType
+    ): Promise<FileResult<TReturnType>[]> {
         const files: FileResult<TReturnType>[] = [];
 
         for (const file of Object.values(this.jsZip.files)) {
@@ -39,6 +43,7 @@ export class ZipPackage {
 
             files.push({
                 filename: file.name,
+                // eslint-disable-next-line
                 data: await file.async<any>(type)
             });
         }
@@ -100,19 +105,19 @@ export class ZipPackage {
             return 'nodebuffer';
         }
 
-        logErrorAndExit({
+        exitProgram({
             message: `Unsupported context '${context}'`
         });
     }
 
-    private getZipSizeInBytes(zipData: any): number {
+    private getZipSizeInBytes(zipData: Blob | Buffer): number {
         if (zipData instanceof Blob) {
             return zipData.size;
         } else if (zipData instanceof Buffer) {
             return zipData.byteLength;
         }
 
-        logErrorAndExit({
+        exitProgram({
             message: `Unrecognized zip data type '${typeof zipData}'`
         });
     }

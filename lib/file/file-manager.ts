@@ -20,7 +20,7 @@ export function fileManager(logger: Logger) {
         return file;
     };
 
-    const writeFileAsync = async (fileNameWithoutExtension: string, content: any) => {
+    const writeFileAsync = async (fileNameWithoutExtension: string, content: string | Buffer) => {
         const filePath = getFilePath(fileNameWithoutExtension);
 
         logger.log({

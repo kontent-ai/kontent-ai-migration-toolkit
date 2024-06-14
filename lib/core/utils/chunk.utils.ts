@@ -1,5 +1,6 @@
+import chalk from 'chalk';
 import { ItemInfo } from '../models/core.models.js';
-import { Logger, LogSpinnerData, getCountPrefix } from './log.utils.js';
+import { LogSpinnerData, Logger } from '../models/log.models.js';
 
 export interface Chunk<T> {
     readonly items: T[];
@@ -46,6 +47,10 @@ export async function processInChunksAsync<InputItem, OutputItem>(data: {
 
         return outputItems;
     });
+}
+
+function getCountPrefix(index: number, totalCount: number): string {
+    return `${chalk.cyan(`${index}/${totalCount}`)}`;
 }
 
 function splitArrayIntoChunks<T>(items: T[], chunkSize: number): Chunk<T>[] {

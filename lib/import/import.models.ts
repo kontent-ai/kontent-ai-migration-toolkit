@@ -55,7 +55,7 @@ export type ImportTransformFunc = (data: {
     readonly elementCodename: string;
     readonly importContext: ImportContext;
     readonly sourceItems: MigrationItem[];
-}) => Promise<ElementContracts.IContentItemElementContract>;
+}) => Promise<ElementContracts.IContentItemElementContract> | ElementContracts.IContentItemElementContract;
 
 export interface DefaultImportAdapterConfig {
     readonly logger: Logger;

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { MapiAction, MapiType } from '../models/core.models.js';
-import { LogMessage, Logger, logSpinnerOrDefaultAsync, LogSpinnerData } from './log.utils.js';
+import { LogMessage, LogSpinnerData, Logger } from '../models/log.models.js';
 
 export async function runMapiRequestAsync<TResult>(data: {
     readonly logger: Logger;
@@ -29,7 +29,7 @@ export async function runMapiRequestAsync<TResult>(data: {
         };
     }
 
-    await logSpinnerOrDefaultAsync({
+    logSpinnerOrDefault({
         logSpinner: data.logSpinner,
         logger: data.logger,
         logData: logData
@@ -43,7 +43,7 @@ export async function runMapiRequestAsync<TResult>(data: {
             type: data.action
         };
 
-        await logSpinnerOrDefaultAsync({
+        logSpinnerOrDefault({
             logSpinner: data.logSpinner,
             logger: data.logger,
             logData: logData
@@ -51,4 +51,16 @@ export async function runMapiRequestAsync<TResult>(data: {
     }
 
     return result;
+}
+
+function logSpinnerOrDefault(data: {
+    readonly logSpinner: LogSpinnerData | undefined;
+    readonly logData: LogMessage;
+    readonly logger: Logger;
+}): void {
+    if (data.logSpinner) {
+        data.logSpinner(data.logData);
+    } else {
+        data.logger.log(data.logData);
+    }
 }

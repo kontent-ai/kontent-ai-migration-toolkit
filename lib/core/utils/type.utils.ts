@@ -5,10 +5,11 @@ import {
     ManagementClient
 } from '@kontent-ai/management-sdk';
 import { FlattenedContentType, FlattenedContentTypeElement } from '../models/core.models.js';
-import { Logger, logErrorAndExit } from './log.utils.js';
 import chalk from 'chalk';
 import { runMapiRequestAsync } from './run.utils.js';
 import { MigrationElementType } from '../models/migration.models.js';
+import { exitProgram } from './global.utils.js';
+import { Logger } from '../models/log.models.js';
 
 export async function getFlattenedContentTypesAsync(
     managementClient: ManagementClient,
@@ -58,7 +59,7 @@ function getContentTypeElements(
         }
 
         if (element.type === 'snippet') {
-            const snippetElement = element as ContentTypeElements.ISnippetElement;
+            const snippetElement = element;
 
             // replace snippet element with actual elements
             const contentTypeSnippet = contentTypeSnippets.find(
@@ -66,7 +67,7 @@ function getContentTypeElements(
             );
 
             if (!contentTypeSnippet) {
-                logErrorAndExit({
+                exitProgram({
                     message: `Could not find content type snippet for element. This snippet is referenced in type '${chalk.red(
                         contentType.codename
                     )}'`

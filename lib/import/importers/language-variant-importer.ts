@@ -10,7 +10,7 @@ import {
     processInChunksAsync,
     runMapiRequestAsync,
     MigrationItem,
-    logErrorAndExit,
+    exitProgram,
     extractErrorData,
     LogSpinnerData,
     MigrationElement
@@ -73,7 +73,7 @@ export function languageVariantImporter(data: {
                         .upsertLanguageVariant()
                         .byItemCodename(preparedContentItem.codename)
                         .byLanguageCodename(migrationItem.system.language.codename)
-                        .withData((builder) => {
+                        .withData(() => {
                             return {
                                 elements: mappedElements,
                                 workflow: {
@@ -212,20 +212,18 @@ export function languageVariantImporter(data: {
     ) => {
         const flattenedElement = data.importContext.getElement(migrationItem.system.type.codename, elementCodename);
 
-        const importContract = await importTransforms[flattenedElement.type]({
+        const importTransformResult = importTransforms[flattenedElement.type]({
             elementCodename: elementCodename,
             importContext: data.importContext,
             sourceItems: data.importContext.contentItems,
             value: element.value
         });
 
-        if (!importContract) {
-            logErrorAndExit({
-                message: `Missing import contract for element '${chalk.red(elementCodename)}'`
-            });
+        if (importTransformResult instanceof Promise) {
+            return await importTransformResult;
         }
 
-        return importContract;
+        return importTransformResult;
     };
 
     const importAsync = async () => {
@@ -252,7 +250,7 @@ export function languageVariantImporter(data: {
                     );
 
                     if (!preparedContentItem) {
-                        logErrorAndExit({
+                        exitProgram({
                             message: `Invalid content item for codename '${chalk.red(migrationItem.system.codename)}'`
                         });
                     }

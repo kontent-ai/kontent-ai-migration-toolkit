@@ -27,5 +27,3 @@ export interface CommandOption {
     readonly description?: string;
     readonly type?: 'boolean' | 'number' | 'string';
 }
-
-export type Args = { [key: string]: string | unknown };

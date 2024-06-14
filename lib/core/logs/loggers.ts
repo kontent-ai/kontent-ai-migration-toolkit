@@ -1,6 +1,7 @@
+import chalk from 'chalk';
 import { EnvContext } from '../models/core.models.js';
+import { Logger, SpinnerLogData } from '../models/log.models.js';
 import { getCurrentEnvironment } from '../utils/global.utils.js';
-import { Logger, getLogDataMessage } from '../utils/log.utils.js';
 
 const originalWarn = console.warn;
 
@@ -35,7 +36,9 @@ const defaultNodeLogger: Logger = {
             // this often happens when JS SDK logs console.warn for
             // retried requests. Patching this ensures the flow is uninterrupted
             global.console.warn = (m) => {
-                spinner.text = m?.toString();
+                if (m) {
+                    spinner.text = (m as unknown)?.toString() ?? 'Invalid warn value';
+                }
             };
 
             const result = await func((data) => {
@@ -64,3 +67,24 @@ const defaultBrowserLogger: Logger = {
         });
     }
 };
+
+function getLogDataMessage(data: SpinnerLogData): string {
+    let typeColor = chalk.yellow;
+
+    if (data.type === 'info') {
+        typeColor = chalk.cyan;
+    } else if (
+        data.type === 'error' ||
+        data.type === 'errorData' ||
+        data.type === 'warning' ||
+        data.type === 'cancel'
+    ) {
+        typeColor = chalk.red;
+    } else if (data.type === 'completed') {
+        typeColor = chalk.green;
+    } else if (data.type === 'skip') {
+        typeColor = chalk.gray;
+    }
+
+    return `${typeColor(data.type)}: ${data.message}`;
+}

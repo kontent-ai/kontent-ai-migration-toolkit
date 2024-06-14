@@ -37,6 +37,7 @@
         "test:help": "tsx lib/node/cli/app --help",
         "test:help:command": "tsx lib/node/cli/app migrate --help",
         "lint": "npx eslint lib",
+        "lint:fix": "npx eslint lib --fix",
         "clean": "tsx scripts/clean.ts",
         "push:tags": "git push --tags",
         "update:version": "tsx ./scripts/version/update-version.ts"
@@ -55,27 +56,30 @@
         "@kontent-ai/management-sdk": "6.3.0",
         "browser-or-node": "3.0.0",
         "bytes": "3.1.2",
-        "dotenv": "16.4.5",
         "chalk": "5.3.0",
+        "dotenv": "16.4.5",
         "jszip": "3.10.1",
         "mime": "4.0.3",
-        "yargs": "17.7.2",
+        "ora": "8.0.1",
         "prompts": "2.4.2",
-        "ora": "8.0.1"
+        "yargs": "17.7.2"
     },
     "devDependencies": {
-        "@types/prompts": "2.4.9",
+        "@eslint/js": "^9.4.0",
+        "@types/browser-or-node": "1.3.2",
         "@types/bytes": "3.1.4",
+        "@types/eslint__js": "^8.42.3",
         "@types/jszip": "3.4.1",
         "@types/node": "20.14.2",
+        "@types/prompts": "2.4.9",
         "@types/yargs": "17.0.32",
-        "@types/browser-or-node": "1.3.2",
         "@typescript-eslint/eslint-plugin": "7.13.0",
         "@typescript-eslint/parser": "7.13.0",
         "eslint": "8.57.0",
         "standard-version": "9.5.0",
-        "tsx": "4.15.2",
         "tslib": "2.6.3",
-        "typescript": "5.4.5"
+        "tsx": "4.15.4",
+        "typescript": "5.4.5",
+        "typescript-eslint": "7.13.0"
     }
 }

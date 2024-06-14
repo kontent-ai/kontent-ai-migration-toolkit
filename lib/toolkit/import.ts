@@ -17,7 +17,7 @@ export async function importAsync(
     inputAdapterOrDefaultConfig: DefaultImportConfig | ImportAdapter,
     inputConfig?: ImportConfig
 ): Promise<void> {
-    const { adapter, config } = await getSetupAsync(inputAdapterOrDefaultConfig, inputConfig);
+    const { adapter, config } = getSetup(inputAdapterOrDefaultConfig, inputConfig);
 
     return await executeWithTrackingAsync({
         event: {
@@ -38,14 +38,14 @@ export async function importAsync(
     });
 }
 
-async function getSetupAsync<TConfig extends ImportConfig, TDefaultConfig extends DefaultImportConfig & TConfig>(
+function getSetup<TConfig extends ImportConfig, TDefaultConfig extends DefaultImportConfig & TConfig>(
     inputAdapterOrDefaultConfig: TDefaultConfig | ImportAdapter,
     inputConfig?: TConfig
-): Promise<{
+): {
     adapter: ImportAdapter;
     config: TConfig;
     logger: Logger;
-}> {
+} {
     let adapter: ImportAdapter;
     let config: TConfig;
     let logger: Logger;

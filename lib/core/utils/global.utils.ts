@@ -12,6 +12,10 @@ export function sleepAsync(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function exitProgram(data: { readonly message: string }): never {
+    throw Error(data.message);
+}
+
 export function parseAsMigrationReferencesArray(value: MigrationElementValue): MigrationReference[] {
     if (!value) {
         return [];

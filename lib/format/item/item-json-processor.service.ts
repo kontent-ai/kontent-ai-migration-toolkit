@@ -21,7 +21,7 @@ export class ItemJsonProcessorService extends BaseItemProcessorService {
             return [];
         }
 
-        const migrationItems: MigrationItem[] = JSON.parse(text);
+        const migrationItems: MigrationItem[] = JSON.parse(text) as MigrationItem[];
 
         return migrationItems;
     }

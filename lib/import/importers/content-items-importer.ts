@@ -5,7 +5,7 @@ import {
     runMapiRequestAsync,
     MigrationItem,
     extractErrorData,
-    logErrorAndExit,
+    exitProgram,
     LogSpinnerData
 } from '../../core/index.js';
 import chalk from 'chalk';
@@ -25,8 +25,8 @@ export function contentItemsImporter(data: {
         const collection = data.collections.find((m) => m.codename === migrationContentItem.system.collection.codename);
 
         if (!collection) {
-            logErrorAndExit({
-                message: `Invalid collection '${migrationContentItem.system.collection}'`
+            exitProgram({
+                message: `Invalid collection '${migrationContentItem.system.collection.codename}'`
             });
         }
         return (

@@ -1,6 +1,6 @@
 import { createManagementClient } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
-import { Logger } from './log.utils.js';
+import { Logger } from '../models/log.models.js';
 
 export async function confirmExportAsync(data: {
     readonly force: boolean;
