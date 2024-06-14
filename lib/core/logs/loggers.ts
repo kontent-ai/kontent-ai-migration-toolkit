@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { EnvContext } from '../models/core.models.js';
-import { Logger, SpinnerLogData } from '../models/log.models.js';
+import { Logger, LogSpinnerMessage } from '../models/log.models.js';
 import { getCurrentEnvironment } from '../utils/global.utils.js';
 
 const originalWarn = console.warn;
@@ -68,7 +68,7 @@ const defaultBrowserLogger: Logger = {
     }
 };
 
-function getLogDataMessage(data: SpinnerLogData): string {
+function getLogDataMessage(data: LogSpinnerMessage): string {
     let typeColor = chalk.yellow;
 
     if (data.type === 'info') {

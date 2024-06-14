@@ -18,23 +18,14 @@ export interface LogMessage {
     readonly message: string;
 }
 
-export interface SpinnerLogData extends LogMessage {
+export interface LogSpinnerMessage extends LogMessage {
     readonly prefix?: string;
 }
 
 export type LogData = (data: LogMessage) => void;
-export type LogSpinnerData = (data: SpinnerLogData) => void;
+export type LogSpinnerData = (data: LogSpinnerMessage) => void;
 
 export interface Logger {
     logWithSpinnerAsync<T>(func: (logData: LogSpinnerData) => Promise<T>): Promise<T>;
     log: LogData;
-}
-
-export interface LogSpinner {
-    withSpinnerAsync<T>(func: (logData: LogSpinnerData) => Promise<T>): Promise<T>;
-
-    nextItem(): void;
-    start(): Promise<void> | void;
-    stop(): Promise<void> | void;
-    log(data: LogMessage): Promise<void> | void;
 }
