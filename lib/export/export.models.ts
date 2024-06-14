@@ -49,7 +49,7 @@ export interface ExportContext {
 
 export interface ExportAdapter {
     readonly name: string;
-    exportAsync(): Promise<ExportAdapterResult>;
+    exportAsync(): Promise<ExportAdapterResult> | ExportAdapterResult;
 }
 
 export interface ExportAdapterResult {

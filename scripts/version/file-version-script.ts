@@ -2,16 +2,12 @@ import fs from 'fs';
 import chalk from 'chalk';
 import PackageJson from '../../package.json' assert { type: 'json' };
 
-export const createVersionFile = (date: Date, versionPath: string, propertyName: string) => {
-    console.log(chalk.cyan(`\nCreating version file at '${versionPath}' with prop '${propertyName}'`));
-    createFile(date, versionPath, propertyName);
-};
-
-function createFile(date: Date, filePath: string, propName: string) {
+export const createVersionFile = (date: Date, filePath: string, propertyName: string) => {
+    console.log(chalk.cyan(`\nCreating version file at '${filePath}' with prop '${propertyName}'`));
     const timestamp = date.toUTCString();
 
     const src = `
-export const ${propName} = {
+export const ${propertyName} = {
 	name: '${PackageJson.name}',
     timestamp: '${timestamp}',
     version: '${PackageJson.version}'
@@ -26,4 +22,4 @@ export const ${propName} = {
         console.log(chalk.green(`Updating version ${chalk.yellow(PackageJson.version)}`));
         console.log(`${chalk.green('Writing version to ')}${chalk.yellow(filePath)}\n`);
     });
-}
+};

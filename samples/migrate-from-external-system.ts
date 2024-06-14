@@ -25,7 +25,7 @@ interface ArticleElements extends MigrationElements {
  * */
 const adapter: ExportAdapter = {
     name: 'customExportAdapter',
-    exportAsync: async () => {
+    exportAsync: () => {
         const migrationItem: MigrationItem<ArticleElements> = {
             system: {
                 name: 'My article',

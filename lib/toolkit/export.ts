@@ -37,7 +37,13 @@ export async function exportAsync(
             }
         },
         func: async () => {
-            return await adapter.exportAsync();
+            const exportResult = adapter.exportAsync();
+
+            if (exportResult instanceof Promise) {
+                return await exportResult;
+            }
+
+            return exportResult;
         }
     });
 }
