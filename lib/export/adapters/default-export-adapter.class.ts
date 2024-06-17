@@ -3,7 +3,7 @@ import {
     ExportAdapterResult,
     ExportContext,
     DefaultExportAdapterConfig,
-    KontentAiPreparedExportItem,
+    ExportItem,
     ExportElementValue
 } from '../export.models.js';
 import chalk from 'chalk';
@@ -59,7 +59,7 @@ export class DefaultExportAdapter implements ExportAdapter {
     private getMigrationItems(context: ExportContext): MigrationItem[] {
         const migrationItems: MigrationItem[] = [];
 
-        for (const preparedItem of context.preparedExportItems) {
+        for (const preparedItem of context.exportItems) {
             try {
                 migrationItems.push({
                     system: {
@@ -92,7 +92,7 @@ export class DefaultExportAdapter implements ExportAdapter {
         return migrationItems;
     }
 
-    private getMigrationElements(exportItem: KontentAiPreparedExportItem, context: ExportContext): MigrationElements {
+    private getMigrationElements(exportItem: ExportItem, context: ExportContext): MigrationElements {
         const migrationModel: MigrationElements = {};
         const sortedContentTypeElements = exportItem.contentType.elements.sort((a, b) => {
             if (a.codename < b.codename) {
@@ -129,7 +129,7 @@ export class DefaultExportAdapter implements ExportAdapter {
     }
 
     private getValueToStoreFromElement(data: {
-        exportItem: KontentAiPreparedExportItem;
+        exportItem: ExportItem;
         typeElement: FlattenedContentTypeElement;
         value: ExportElementValue;
         context: ExportContext;

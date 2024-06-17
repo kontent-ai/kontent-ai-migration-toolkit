@@ -11,7 +11,7 @@ export function assetsImporter(data: {
 }) {
     const importAssetsChunkSize = 1;
     const getAssetsToUpload: () => MigrationAsset[] = () => {
-        return data.importContext.assets.filter((asset) => {
+        return data.importContext.categorizedImportData.assets.filter((asset) => {
             return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
         });
     };
@@ -19,11 +19,13 @@ export function assetsImporter(data: {
     const importAsync = async () => {
         data.logger.log({
             type: 'info',
-            message: `Categorizing '${chalk.yellow(data.importContext.assets.length.toString())}' assets`
+            message: `Categorizing '${chalk.yellow(
+                data.importContext.categorizedImportData.assets.length.toString()
+            )}' assets`
         });
 
         const assetsToUpload = getAssetsToUpload();
-        const skippedAssetsCount = data.importContext.assets.length - assetsToUpload.length;
+        const skippedAssetsCount = data.importContext.categorizedImportData.assets.length - assetsToUpload.length;
 
         if (skippedAssetsCount) {
             data.logger.log({

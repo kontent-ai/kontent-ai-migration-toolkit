@@ -1,7 +1,7 @@
 import { libMetadata } from '../metadata.js';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { ExternalIdGenerator, Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
-import { KontentAiExportRequestItem } from '../export/index.js';
+import { SourceExportItem } from '../export/index.js';
 import { exportAsync } from './export.js';
 import { importAsync } from './import.js';
 
@@ -11,7 +11,7 @@ export interface MigrationEnv {
 }
 
 export interface MigrationSource extends MigrationEnv {
-    readonly items: KontentAiExportRequestItem[];
+    readonly items: SourceExportItem[];
     readonly skipFailedItems?: boolean;
 }
 

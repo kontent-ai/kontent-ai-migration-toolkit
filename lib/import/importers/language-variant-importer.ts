@@ -215,7 +215,7 @@ export function languageVariantImporter(data: {
         const importTransformResult = importTransforms[flattenedElement.type]({
             elementCodename: elementCodename,
             importContext: data.importContext,
-            sourceItems: data.importContext.contentItems,
+            migrationItems: data.importContext.categorizedImportData.contentItems,
             value: element.value
         });
 
@@ -229,13 +229,13 @@ export function languageVariantImporter(data: {
     const importAsync = async () => {
         data.logger.log({
             type: 'info',
-            message: `Importing '${chalk.yellow(data.importContext.contentItems.length.toString())}' language variants`
+            message: `Importing '${chalk.yellow(data.importContext.categorizedImportData.contentItems.length.toString())}' language variants`
         });
 
         await processInChunksAsync<MigrationItem, void>({
             logger: data.logger,
             chunkSize: importContentItemChunkSize,
-            items: data.importContext.contentItems,
+            items: data.importContext.categorizedImportData.contentItems,
             itemInfo: (input) => {
                 return {
                     itemType: 'languageVariant',

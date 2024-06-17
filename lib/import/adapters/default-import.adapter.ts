@@ -57,7 +57,7 @@ export class DefaultImportAdapter implements ImportAdapter {
     }
 
     private async importAssetsAsync(importContext: ImportContext): Promise<void> {
-        if (!importContext.assets.length) {
+        if (!importContext.categorizedImportData.assets.length) {
             this.config.logger.log({
                 type: 'info',
                 message: `There are no assets to import`
@@ -73,7 +73,7 @@ export class DefaultImportAdapter implements ImportAdapter {
     }
 
     private async importContentItemsAsync(importContext: ImportContext): Promise<ContentItemModels.ContentItem[]> {
-        if (!importContext.contentItems.length) {
+        if (!importContext.categorizedImportData.contentItems.length) {
             this.config.logger.log({
                 type: 'info',
                 message: `There are no content items to import`
@@ -93,7 +93,7 @@ export class DefaultImportAdapter implements ImportAdapter {
         importContext: ImportContext,
         contentItems: ContentItemModels.ContentItem[]
     ): Promise<void> {
-        if (!importContext.contentItems.length) {
+        if (!importContext.categorizedImportData.contentItems.length) {
             this.config.logger.log({
                 type: 'info',
                 message: `There are no language variants to import`

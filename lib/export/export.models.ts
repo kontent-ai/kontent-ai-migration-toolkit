@@ -33,7 +33,7 @@ export interface ExportContextEnvironmentData {
 export type ExportElementValue = string | number | SharedModels.ReferenceObject[] | undefined;
 
 export type ExportTransformFunc = (data: {
-    readonly exportItem: KontentAiPreparedExportItem;
+    readonly exportItem: ExportItem;
     readonly typeElement: FlattenedContentTypeElement;
     readonly value: ExportElementValue;
     readonly context: ExportContext;
@@ -44,7 +44,7 @@ export interface ExportContext {
     readonly referencedData: ReferencedDataInLanguageVariants;
     readonly getItemStateInSourceEnvironment: (id: string) => ItemStateInSourceEnvironmentById;
     readonly getAssetStateInSourceEnvironment: (id: string) => AssetStateInSourceEnvironmentById;
-    readonly preparedExportItems: KontentAiPreparedExportItem[];
+    readonly exportItems: ExportItem[];
 }
 
 export interface ExportAdapter {
@@ -57,7 +57,7 @@ export interface ExportAdapterResult {
     readonly assets: MigrationAsset[];
 }
 
-export interface KontentAiExportRequestItem {
+export interface SourceExportItem {
     readonly itemCodename: string;
     readonly languageCodename: string;
 }
@@ -65,7 +65,7 @@ export interface KontentAiExportRequestItem {
 export interface DefaultExportAdapterConfig {
     readonly environmentId: string;
     readonly apiKey: string;
-    readonly exportItems: KontentAiExportRequestItem[];
+    readonly exportItems: SourceExportItem[];
     readonly logger: Logger;
 
     readonly baseUrl?: string;
@@ -75,17 +75,17 @@ export interface DefaultExportAdapterConfig {
 
 export interface DefaultExportContextConfig {
     readonly logger: Logger;
-    readonly exportItems: KontentAiExportRequestItem[];
+    readonly exportItems: SourceExportItem[];
     readonly managementClient: ManagementClient;
 }
 
-export interface KontentAiPreparedExportItem {
+export interface ExportItem {
     readonly languageVariant: LanguageVariantModels.ContentItemLanguageVariant;
     readonly contentItem: ContentItemModels.ContentItem;
     readonly collection: CollectionModels.Collection;
     readonly language: LanguageModels.LanguageModel;
     readonly workflow: WorkflowModels.Workflow;
     readonly workflowStepCodename: string;
-    readonly requestItem: KontentAiExportRequestItem;
+    readonly requestItem: SourceExportItem;
     readonly contentType: FlattenedContentType;
 }

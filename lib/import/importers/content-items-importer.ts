@@ -121,7 +121,7 @@ export function contentItemsImporter(data: {
 
     const importAsync = async () => {
         const preparedItems: ContentItemModels.ContentItem[] = [];
-        const contentItemsToImport = data.importContext.contentItems;
+        const contentItemsToImport = data.importContext.categorizedImportData.contentItems;
 
         data.logger.log({
             type: 'info',

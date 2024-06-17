@@ -5,11 +5,11 @@ import {
     parseAsMigrationReferencesArray,
     uniqueStringFilter
 } from '../../core/index.js';
-import { KontentAiPreparedExportItem } from '../../export/export.models.js';
+import { ExportItem } from '../../export/export.models.js';
 import { GetFlattenedElement } from '../../import/index.js';
 
 export function itemsExtractionProcessor() {
-    const extractReferencedDataFromExportItems = (items: KontentAiPreparedExportItem[]) => {
+    const extractReferencedDataFromExportItems = (items: ExportItem[]) => {
         const itemIds: string[] = [];
         const assetIds: string[] = [];
 

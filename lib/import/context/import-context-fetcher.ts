@@ -283,9 +283,11 @@ export function importContextFetcher(config: ImportContextConfig) {
         );
 
         const importContext: ImportContext = {
-            assets: config.importData.assets,
-            componentItems: contentItemComponents,
-            contentItems: contentItemsExcludingComponents,
+            categorizedImportData: {
+                assets: config.importData.assets,
+                componentItems: contentItemComponents,
+                contentItems: contentItemsExcludingComponents
+            },
             referencedData: referencedData,
             getItemStateInTargetEnvironment: (itemCodename) => {
                 const itemState = itemStates.find((m) => m.itemCodename === itemCodename);

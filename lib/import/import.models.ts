@@ -36,10 +36,14 @@ export interface ImportAdapter {
 
 export type GetFlattenedElement = (contentTypeCodename: string, elementCodename: string) => FlattenedContentTypeElement;
 
-export interface ImportContext {
+export interface CategorizedImportData {
     readonly assets: MigrationAsset[];
     readonly componentItems: MigrationItem[];
     readonly contentItems: MigrationItem[];
+}
+
+export interface ImportContext {
+    readonly categorizedImportData: CategorizedImportData;
     readonly referencedData: ReferencedDataInMigrationItems;
     readonly getItemStateInTargetEnvironment: (itemCodename: string) => ItemStateInTargetEnvironmentByCodename;
     readonly getLanguageVariantStateInTargetEnvironment: (
@@ -54,7 +58,7 @@ export type ImportTransformFunc = (data: {
     readonly value: MigrationElementValue;
     readonly elementCodename: string;
     readonly importContext: ImportContext;
-    readonly sourceItems: MigrationItem[];
+    readonly migrationItems: MigrationItem[];
 }) => Promise<ElementContracts.IContentItemElementContract> | ElementContracts.IContentItemElementContract;
 
 export interface DefaultImportAdapterConfig {

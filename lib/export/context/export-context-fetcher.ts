@@ -14,19 +14,19 @@ import {
     DefaultExportContextConfig,
     ExportContext,
     ExportContextEnvironmentData,
-    KontentAiExportRequestItem,
-    KontentAiPreparedExportItem
+    SourceExportItem,
+    ExportItem
 } from '../export.models.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
 
 export function exportContextFetcher(config: DefaultExportContextConfig) {
     const prepareExportItemsAsync = async (
         environmentData: ExportContextEnvironmentData,
-        exportItems: KontentAiExportRequestItem[]
+        exportItems: SourceExportItem[]
     ) => {
-        const items: KontentAiPreparedExportItem[] = await processInChunksAsync<
-            KontentAiExportRequestItem,
-            KontentAiPreparedExportItem
+        const items: ExportItem[] = await processInChunksAsync<
+            SourceExportItem,
+            ExportItem
         >({
             logger: config.logger,
             chunkSize: 1,
@@ -113,7 +113,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
                     );
                 }
 
-                const preparedItem: KontentAiPreparedExportItem = {
+                const preparedItem: ExportItem = {
                     contentItem: contentItem,
                     languageVariant: languageVariant,
                     contentType: contentType,
@@ -350,7 +350,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         const assetStates: AssetStateInSourceEnvironmentById[] = await getAssetStatesAsync(assetIdsToCheckInTargetEnv);
 
         const exportContext: ExportContext = {
-            preparedExportItems: preparedItems,
+            exportItems: preparedItems,
             environmentData: environmentData,
             referencedData: referencedData,
             getAssetStateInSourceEnvironment: (id) => {

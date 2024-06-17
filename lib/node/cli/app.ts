@@ -11,16 +11,16 @@ const run = async () => {
     const action = await cliArgs.getCliActionAsync();
 
     if (action === 'export') {
-        await exportActionAsync(cliArgs);
+        return await exportActionAsync(cliArgs);
     } else if (action === 'import') {
-        await importActionAsync(cliArgs);
+        return await importActionAsync(cliArgs);
     } else if (action === 'migrate') {
-        await migrateActionAsync(cliArgs);
-    } else {
-        exitProgram({
-            message: `Invalid action '${chalk.red(action)}'`
-        });
+        return await migrateActionAsync(cliArgs);
     }
+
+    exitProgram({
+        message: `Invalid action '${chalk.red(action)}'`
+    });
 };
 
 run().catch((err) => {
