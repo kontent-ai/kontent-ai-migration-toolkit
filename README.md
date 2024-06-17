@@ -264,8 +264,7 @@ within import / migrate functions.
    codenames.
 2. Assets element values are not preserved during migration because elements can be referenced only by id's and not
    codenames.
-3. Components embedded within Rich text elements are not exported
-4. Language variants in `Scheduled` workflow step do not preserve their workflow status because the API does not provide
+3. Language variants in `Scheduled` workflow step do not preserve their workflow status because the API does not provide
    an information about scheduled times
 
 ## Output / Input formats
