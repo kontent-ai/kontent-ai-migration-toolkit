@@ -20,9 +20,11 @@ export async function confirmExportAsync(data: {
             .toPromise()
     ).data.project;
 
-    const text: string = `Are you sure to export '${chalk.cyan(
+    const text: string = `Are you sure to export '${chalk.green(
         data.dataToExport.itemsCount
-    )}' content items from ${chalk.yellow(environment.name)} -> ${chalk.yellow(environment.environment)}?`;
+    )}' content ${getItemsPluralText(data.dataToExport.itemsCount)} from ${chalk.yellow(
+        environment.name
+    )} -> ${chalk.yellow(environment.environment)}?`;
 
     await confirmAsync({
         force: data.force,
@@ -33,16 +35,19 @@ export async function confirmExportAsync(data: {
 }
 
 export async function confirmMigrateAsync(data: {
-    force: boolean;
-    sourceEnvironment: {
+    readonly force: boolean;
+    readonly sourceEnvironment: {
         environmentId: string;
         apiKey: string;
     };
-    targetEnvironment: {
+    readonly targetEnvironment: {
         environmentId: string;
         apiKey: string;
     };
-    logger: Logger;
+    readonly logger: Logger;
+    readonly dataToMigrate: {
+        readonly itemsCount: number;
+    };
 }): Promise<void> {
     const sourceEnvironment = (
         await createManagementClient({
@@ -61,7 +66,9 @@ export async function confirmMigrateAsync(data: {
             .toPromise()
     ).data.project;
 
-    const text: string = `Are you sure to migrate data from ${chalk.yellow(sourceEnvironment.name)} -> ${chalk.yellow(
+    const text: string = `Are you sure to migrate '${chalk.green(data.dataToMigrate.itemsCount)}' ${getItemsPluralText(
+        data.dataToMigrate.itemsCount
+    )} from ${chalk.yellow(sourceEnvironment.name)} -> ${chalk.yellow(
         sourceEnvironment.environment
     )} to environment ${chalk.yellow(targetEnvironment.name)} -> ${chalk.yellow(targetEnvironment.environment)}?`;
 
@@ -74,10 +81,10 @@ export async function confirmMigrateAsync(data: {
 }
 
 export async function confirmImportAsync(data: {
-    force: boolean;
-    environmentId: string;
-    apiKey: string;
-    logger: Logger;
+    readonly force: boolean;
+    readonly environmentId: string;
+    readonly apiKey: string;
+    readonly logger: Logger;
 }): Promise<void> {
     const environment = (
         await createManagementClient({
@@ -100,7 +107,12 @@ export async function confirmImportAsync(data: {
     });
 }
 
-async function confirmAsync(data: { action: string; message: string; force: boolean; logger: Logger }): Promise<void> {
+async function confirmAsync(data: {
+    readonly action: string;
+    readonly message: string;
+    readonly force: boolean;
+    readonly logger: Logger;
+}): Promise<void> {
     // Prompts is imported dynamically because it's a node.js only module and would not work if user
     // tried using this library in a browser
     const prompts = await import('prompts');
@@ -121,4 +133,11 @@ async function confirmAsync(data: { action: string; message: string; force: bool
             throw Error(`Confirmation refused.`);
         }
     }
+}
+
+function getItemsPluralText(count: number): string {
+    if (count === 1) {
+        return 'item';
+    }
+    return 'items';
 }

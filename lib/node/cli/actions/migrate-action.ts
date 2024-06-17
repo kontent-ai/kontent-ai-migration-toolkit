@@ -1,6 +1,7 @@
 import { migrateAsync } from '../../../toolkit/index.js';
 import { confirmMigrateAsync, getDefaultLogger } from '../../../core/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
+import { SourceExportItem } from '../../../export/index.js';
 
 export async function migrateActionAsync(cliArgs: CliArgs): Promise<void> {
     const log = getDefaultLogger();
@@ -12,6 +13,12 @@ export async function migrateActionAsync(cliArgs: CliArgs): Promise<void> {
     const skipFailedItems = await cliArgs.getBooleanArgumentValueAsync('skipFailedItems', false);
     const items = (await cliArgs.getRequiredArgumentValueAsync('items'))?.split(',');
     const language = await cliArgs.getRequiredArgumentValueAsync('language');
+    const migrateItems: SourceExportItem[] = items.map((m) => {
+        return {
+            itemCodename: m,
+            languageCodename: language
+        };
+    });
 
     await confirmMigrateAsync({
         force: force,
@@ -23,7 +30,10 @@ export async function migrateActionAsync(cliArgs: CliArgs): Promise<void> {
             apiKey: targetApiKey,
             environmentId: targetEnvironmentId
         },
-        logger: log
+        logger: log,
+        dataToMigrate: {
+            itemsCount: migrateItems.length
+        }
     });
 
     await migrateAsync({
@@ -31,12 +41,7 @@ export async function migrateActionAsync(cliArgs: CliArgs): Promise<void> {
         sourceEnvironment: {
             id: sourceEnvironmentId,
             apiKey: sourceApiKey,
-            items: items.map((m) => {
-                return {
-                    itemCodename: m,
-                    languageCodename: language
-                };
-            })
+            items: migrateItems
         },
         targetEnvironment: {
             id: targetEnvironmentId,

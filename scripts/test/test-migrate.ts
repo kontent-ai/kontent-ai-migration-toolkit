@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { migrateAsync, confirmMigrateAsync, handleError, getDefaultLogger } from '../../lib/index.js';
+import { migrateAsync, confirmMigrateAsync, handleError, getDefaultLogger, SourceExportItem } from '../../lib/index.js';
 import { getEnvironmentRequiredValue } from './utils/test.utils.js';
 
 const run = async () => {
@@ -12,6 +12,12 @@ const run = async () => {
     const targetEnvironmentId = getEnvironmentRequiredValue('targetEnvironmentId');
     const targetApiKey = getEnvironmentRequiredValue('targetApiKey');
     const logger = getDefaultLogger();
+    const itemsToMigrate: SourceExportItem[] = [
+        {
+            itemCodename: getEnvironmentRequiredValue('item'),
+            languageCodename: getEnvironmentRequiredValue('language')
+        }
+    ];
 
     await confirmMigrateAsync({
         force: false,
@@ -23,7 +29,10 @@ const run = async () => {
             apiKey: targetApiKey,
             environmentId: targetEnvironmentId
         },
-        logger: logger
+        logger: logger,
+        dataToMigrate: {
+            itemsCount: itemsToMigrate.length
+        }
     });
 
     await migrateAsync({
@@ -31,12 +40,7 @@ const run = async () => {
         sourceEnvironment: {
             id: sourceEnvironmentId,
             apiKey: sourceApiKey,
-            items: [
-                {
-                    itemCodename: getEnvironmentRequiredValue('item'),
-                    languageCodename: getEnvironmentRequiredValue('language')
-                }
-            ]
+            items: itemsToMigrate
         },
         targetEnvironment: {
             id: targetEnvironmentId,
