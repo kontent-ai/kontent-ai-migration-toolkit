@@ -11,6 +11,10 @@ environments.
 
 This library can only be used as a library both in `node.js` & `browser` or as a `CLI` utility.
 
+> [!CAUTION]  
+> **This readme uses pre-release version of this library using `next` tag on NPM**. To install it you need to specify
+> version explicitely such as running `npm i @kontent-ai-consulting/migration-toolkit@1.0.0-24 -g`.
+
 # Getting started
 
 Use `--help` anytime to get information about available commands and their options.
