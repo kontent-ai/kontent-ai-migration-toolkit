@@ -7,6 +7,9 @@ export async function confirmExportAsync(data: {
     readonly environmentId: string;
     readonly apiKey: string;
     readonly logger: Logger;
+    readonly dataToExport: {
+        readonly itemsCount: number;
+    };
 }): Promise<void> {
     const environment = (
         await createManagementClient({
@@ -17,9 +20,9 @@ export async function confirmExportAsync(data: {
             .toPromise()
     ).data.project;
 
-    const text: string = `Are you sure to export data from ${chalk.yellow(environment.name)} -> ${chalk.yellow(
-        environment.environment
-    )}?`;
+    const text: string = `Are you sure to export '${chalk.cyan(
+        data.dataToExport.itemsCount
+    )}' content items from ${chalk.yellow(environment.name)} -> ${chalk.yellow(environment.environment)}?`;
 
     await confirmAsync({
         force: data.force,

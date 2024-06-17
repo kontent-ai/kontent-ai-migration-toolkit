@@ -1,5 +1,12 @@
 import * as dotenv from 'dotenv';
-import { confirmExportAsync, exportAsync, handleError, storeAsync, getDefaultLogger } from '../../lib/index.js';
+import {
+    confirmExportAsync,
+    exportAsync,
+    handleError,
+    storeAsync,
+    getDefaultLogger,
+    SourceExportItem
+} from '../../lib/index.js';
 import { getEnvironmentRequiredValue } from './utils/test.utils.js';
 
 const run = async () => {
@@ -10,12 +17,21 @@ const run = async () => {
     const environmentId = getEnvironmentRequiredValue('sourceEnvironmentId');
     const apiKey = getEnvironmentRequiredValue('sourceApiKey');
     const logger = getDefaultLogger();
+    const exportItem: SourceExportItem[] = [
+        {
+            itemCodename: getEnvironmentRequiredValue('item'),
+            languageCodename: getEnvironmentRequiredValue('language')
+        }
+    ];
 
     await confirmExportAsync({
         force: false,
         apiKey: apiKey,
         environmentId: environmentId,
-        logger: logger
+        logger: logger,
+        dataToExport: {
+            itemsCount: exportItem.length
+        }
     });
 
     const exportData = await exportAsync({
@@ -23,12 +39,7 @@ const run = async () => {
         adapterConfig: {
             environmentId: environmentId,
             apiKey: apiKey,
-            exportItems: [
-                {
-                    itemCodename: getEnvironmentRequiredValue('item'),
-                    languageCodename: getEnvironmentRequiredValue('language')
-                }
-            ]
+            exportItems: exportItem
         }
     });
 

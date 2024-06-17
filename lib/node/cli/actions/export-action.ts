@@ -19,7 +19,10 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
         force: force,
         apiKey: apiKey,
         environmentId: environmentId,
-        logger: logger
+        logger: logger, 
+        dataToExport: {
+            itemsCount: items.length
+        }
     });
 
     const exportedData = await exportAsync({
