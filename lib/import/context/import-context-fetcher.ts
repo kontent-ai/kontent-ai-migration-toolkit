@@ -11,8 +11,9 @@ import {
     runMapiRequestAsync,
     uniqueStringFilter
 } from '../../core/index.js';
-import { GetFlattenedElement, ImportContext, ImportContextConfig } from '../import.models.js';
+import { GetFlattenedElementByCodenames, ImportContext, ImportContextConfig } from '../import.models.js';
 import { itemsExtractionProcessor } from '../../translation/index.js';
+import chalk from 'chalk';
 
 interface LanguageVariantWrapper {
     readonly languageVariant: LanguageVariantModels.ContentItemLanguageVariant;
@@ -20,20 +21,18 @@ interface LanguageVariantWrapper {
 }
 
 export function importContextFetcher(config: ImportContextConfig) {
-    const getElementFuncAsync = async () => {
-        // get & flatten content type and its elements
-        const flattenedTypes: FlattenedContentType[] = await getFlattenedContentTypesAsync(
-            config.managementClient,
-            config.logger
-        );
-
-        const getFlattenedElement: GetFlattenedElement = (contentTypeCodename, elementCodename) => {
-            const contentType = flattenedTypes.find(
+    const getElement = (types: FlattenedContentType[]) => {
+        const getFlattenedElement: GetFlattenedElementByCodenames = (
+            contentTypeCodename,
+            elementCodename,
+            expectedType
+        ) => {
+            const contentType = types.find(
                 (m) => m.contentTypeCodename.toLowerCase() === contentTypeCodename.toLowerCase()
             );
 
             if (!contentType) {
-                throw Error(`Content type with codename '${contentType}' was not found.`);
+                throw Error(`Content type with codename '${chalk.red(contentType)}' was not found.`);
             }
 
             const element = contentType.elements.find(
@@ -42,7 +41,17 @@ export function importContextFetcher(config: ImportContextConfig) {
 
             if (!element) {
                 throw Error(
-                    `Element type with codename '${elementCodename}' was not found in content type '${contentTypeCodename}'.`
+                    `Element type with codename '${chalk.red(
+                        elementCodename
+                    )}' was not found in content type '${chalk.red(contentTypeCodename)}'.`
+                );
+            }
+
+            if (expectedType !== element.type) {
+                throw Error(
+                    `Element '${chalk.red(element.codename)}' in content type '${chalk.yellow(
+                        contentType.contentTypeCodename
+                    )}' is of type '${chalk.red(element.type)}', but expected type is '${chalk.yellow(expectedType)}'.`
                 );
             }
 
@@ -237,11 +246,20 @@ export function importContextFetcher(config: ImportContextConfig) {
     };
 
     const getImportContextAsync = async () => {
-        const getElement: GetFlattenedElement = await getElementFuncAsync();
+        const flattenedContentTypes: FlattenedContentType[] = await getFlattenedContentTypesAsync(
+            config.managementClient,
+            config.logger
+        );
+        const getElementByCodenames: GetFlattenedElementByCodenames = getElement(flattenedContentTypes);
 
         const referencedData = itemsExtractionProcessor().extractReferencedItemsFromMigrationItems(
-            config.importData.items,
-            getElement
+            config.importData.items.map((item) => {
+                return {
+                    contentTypeCodename: item.system.type.codename,
+                    elements: item.elements
+                };
+            }),
+            getElementByCodenames
         );
 
         // only items with workflow / step are standalone content items
@@ -294,7 +312,9 @@ export function importContextFetcher(config: ImportContextConfig) {
 
                 if (!itemState) {
                     throw Error(
-                        `Invalid state for item '${itemCodename}'. It is expected that all item states will be initialized`
+                        `Invalid state for item '${chalk.red(
+                            itemCodename
+                        )}'. It is expected that all item states will be initialized`
                     );
                 }
 
@@ -307,7 +327,9 @@ export function importContextFetcher(config: ImportContextConfig) {
 
                 if (!variantState) {
                     throw Error(
-                        `Invalid state for language variant '${itemCodename}' in language '${languageCodename}'. It is expected that all variant states will be initialized`
+                        `Invalid state for language variant '${chalk.red(itemCodename)}' in language '${chalk.red(
+                            languageCodename
+                        )}'. It is expected that all variant states will be initialized`
                     );
                 }
 
@@ -318,13 +340,15 @@ export function importContextFetcher(config: ImportContextConfig) {
 
                 if (!assetState) {
                     throw Error(
-                        `Invalid state for asset '${assetCodename}'. It is expected that all asset states will be initialized`
+                        `Invalid state for asset '${chalk.red(
+                            assetCodename
+                        )}'. It is expected that all asset states will be initialized`
                     );
                 }
 
                 return assetState;
             },
-            getElement: getElement
+            getElement: getElementByCodenames
         };
 
         return importContext;

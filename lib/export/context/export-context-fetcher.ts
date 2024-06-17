@@ -7,7 +7,8 @@ import {
     is404Error,
     ItemStateInSourceEnvironmentById,
     AssetStateInSourceEnvironmentById,
-    uniqueStringFilter
+    uniqueStringFilter,
+    FlattenedContentType
 } from '../../core/index.js';
 import { itemsExtractionProcessor } from '../../translation/index.js';
 import {
@@ -15,7 +16,8 @@ import {
     ExportContext,
     ExportContextEnvironmentData,
     SourceExportItem,
-    ExportItem
+    ExportItem,
+    GetFlattenedElementByIds
 } from '../export.models.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
 
@@ -24,10 +26,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         environmentData: ExportContextEnvironmentData,
         exportItems: SourceExportItem[]
     ) => {
-        const items: ExportItem[] = await processInChunksAsync<
-            SourceExportItem,
-            ExportItem
-        >({
+        const items: ExportItem[] = await processInChunksAsync<SourceExportItem, ExportItem>({
             logger: config.logger,
             chunkSize: 1,
             itemInfo: (input) => {
@@ -81,7 +80,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
                 const contentType = environmentData.contentTypes.find((m) => m.contentTypeId === contentItem.type.id);
 
                 if (!contentType) {
-                    throwErrorForItemRequest(exportItem, `Invalid content type '${chalk.yellow(contentItem.type.id)}'`);
+                    throwErrorForItemRequest(exportItem, `Invalid content type '${chalk.red(contentItem.type.id)}'`);
                 }
 
                 const language = environmentData.languages.find((m) => m.id === languageVariant.language.id);
@@ -89,7 +88,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
                 if (!language) {
                     throwErrorForItemRequest(
                         exportItem,
-                        `Invalid language '${chalk.yellow(languageVariant.language.id ?? '')}'`
+                        `Invalid language '${chalk.red(languageVariant.language.id ?? '')}'`
                     );
                 }
 
@@ -100,7 +99,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
                 if (!workflow) {
                     throwErrorForItemRequest(
                         exportItem,
-                        `Invalid workflow '${chalk.yellow(languageVariant.workflow.workflowIdentifier.id ?? '')}'`
+                        `Invalid workflow '${chalk.red(languageVariant.workflow.workflowIdentifier.id ?? '')}'`
                     );
                 }
 
@@ -109,7 +108,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
                 if (!workflowStepCodename) {
                     throwErrorForItemRequest(
                         exportItem,
-                        `Invalid workflow step '${chalk.yellow(languageVariant.workflow.stepIdentifier.id ?? '')}'`
+                        `Invalid workflow step '${chalk.red(languageVariant.workflow.stepIdentifier.id ?? '')}'`
                     );
                 }
 
@@ -313,6 +312,28 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         return assetStates;
     };
 
+    const getElementByIds = (types: FlattenedContentType[]): GetFlattenedElementByIds => {
+        return (contentTypeId: string, elementId: string) => {
+            const contentType = types.find((m) => m.contentTypeId === contentTypeId);
+
+            if (!contentType) {
+                throw Error(`Could not find content type with id '${chalk.red(contentTypeId)}'`);
+            }
+
+            const element = contentType.elements.find((m) => m.id === elementId);
+
+            if (!element) {
+                throw Error(
+                    `Could not find element with id '${chalk.red(elementId)}' in content type '${chalk.red(
+                        contentType.contentTypeCodename
+                    )}'`
+                );
+            }
+
+            return element;
+        };
+    };
+
     const getExportContextAsync = async () => {
         const environmentData = await getEnvironmentDataAsync();
 
@@ -327,7 +348,15 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
             message: `Extracting referenced items from content`
         });
 
-        const referencedData = itemsExtractionProcessor().extractReferencedDataFromExportItems(preparedItems);
+        const referencedData = itemsExtractionProcessor().extractReferencedDataFromExtractItems(
+            preparedItems.map((m) => {
+                return {
+                    contentTypeId: m.contentType.contentTypeId,
+                    elements: m.languageVariant.elements
+                };
+            }),
+            getElementByIds(environmentData.contentTypes)
+        );
 
         // fetch both referenced items and items that are set to be exported
         const itemIdsToCheckInTargetEnv: string[] = [
@@ -350,6 +379,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         const assetStates: AssetStateInSourceEnvironmentById[] = await getAssetStatesAsync(assetIdsToCheckInTargetEnv);
 
         const exportContext: ExportContext = {
+            getElement: getElementByIds(environmentData.contentTypes),
             exportItems: preparedItems,
             environmentData: environmentData,
             referencedData: referencedData,
@@ -357,7 +387,9 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
                 const assetSate = assetStates.find((m) => m.id === id);
 
                 if (!assetSate) {
-                    throw Error(`Invalid state for asset '${id}'. It is expected that all asset states will exist`);
+                    throw Error(
+                        `Invalid state for asset '${chalk.red(id)}'. It is expected that all asset states will exist`
+                    );
                 }
 
                 return assetSate;
@@ -366,7 +398,9 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
                 const itemState = itemStates.find((m) => m.id === id);
 
                 if (!itemState) {
-                    throw Error(`Invalid state for item '${id}'. It is expected that all item states will exist`);
+                    throw Error(
+                        `Invalid state for item '${chalk.red(id)}'. It is expected that all item states will exist`
+                    );
                 }
 
                 return itemState;

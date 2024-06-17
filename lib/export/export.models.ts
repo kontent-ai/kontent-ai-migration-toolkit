@@ -9,7 +9,9 @@ import {
     FlattenedContentTypeElement,
     ItemStateInSourceEnvironmentById,
     ReferencedDataInLanguageVariants,
-    MigrationElementValue
+    MigrationElementValue,
+    MigrationComponent,
+    MigrationUrlSlugMode
 } from '../core/index.js';
 import {
     LanguageVariantModels,
@@ -32,10 +34,15 @@ export interface ExportContextEnvironmentData {
 
 export type ExportElementValue = string | number | SharedModels.ReferenceObject[] | undefined;
 
-export type ExportTransformFunc = (data: {
-    readonly exportItem: ExportItem;
-    readonly typeElement: FlattenedContentTypeElement;
+export interface ExportElement {
     readonly value: ExportElementValue;
+    readonly components: MigrationComponent[];
+    readonly urlSlugMode: MigrationUrlSlugMode | undefined;
+}
+
+export type ExportTransformFunc = (data: {
+    readonly typeElement: FlattenedContentTypeElement;
+    readonly exportElement: ExportElement;
     readonly context: ExportContext;
 }) => MigrationElementValue;
 
@@ -45,6 +52,7 @@ export interface ExportContext {
     readonly getItemStateInSourceEnvironment: (id: string) => ItemStateInSourceEnvironmentById;
     readonly getAssetStateInSourceEnvironment: (id: string) => AssetStateInSourceEnvironmentById;
     readonly exportItems: ExportItem[];
+    readonly getElement: GetFlattenedElementByIds;
 }
 
 export interface ExportAdapter {
@@ -78,6 +86,8 @@ export interface DefaultExportContextConfig {
     readonly exportItems: SourceExportItem[];
     readonly managementClient: ManagementClient;
 }
+
+export type GetFlattenedElementByIds = (contentTypeId: string, elementId: string) => FlattenedContentTypeElement;
 
 export interface ExportItem {
     readonly languageVariant: LanguageVariantModels.ContentItemLanguageVariant;

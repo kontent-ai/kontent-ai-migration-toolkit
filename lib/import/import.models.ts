@@ -10,7 +10,8 @@ import {
     LanguageVariantStateInTargetEnvironmentByCodename,
     ExternalIdGenerator,
     FlattenedContentTypeElement,
-    MigrationElementValue
+    MigrationElementValue,
+    MigrationElementType
 } from '../core/index.js';
 import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 
@@ -34,7 +35,11 @@ export interface ImportAdapter {
     importAsync(data: ImportData): Promise<void>;
 }
 
-export type GetFlattenedElement = (contentTypeCodename: string, elementCodename: string) => FlattenedContentTypeElement;
+export type GetFlattenedElementByCodenames = (
+    contentTypeCodename: string,
+    elementCodename: string,
+    expectedElementType: MigrationElementType
+) => FlattenedContentTypeElement;
 
 export interface CategorizedImportData {
     readonly assets: MigrationAsset[];
@@ -51,7 +56,7 @@ export interface ImportContext {
         languageCodename: string
     ) => LanguageVariantStateInTargetEnvironmentByCodename;
     readonly getAssetStateInTargetEnvironment: (assetCodename: string) => AssetStateInTargetEnvironmentByCodename;
-    readonly getElement: GetFlattenedElement;
+    readonly getElement: GetFlattenedElementByCodenames;
 }
 
 export type ImportTransformFunc = (data: {
@@ -59,7 +64,7 @@ export type ImportTransformFunc = (data: {
     readonly elementCodename: string;
     readonly importContext: ImportContext;
     readonly migrationItems: MigrationItem[];
-}) => Promise<ElementContracts.IContentItemElementContract> | ElementContracts.IContentItemElementContract;
+}) => ElementContracts.IContentItemElementContract;
 
 export interface DefaultImportAdapterConfig {
     readonly logger: Logger;

@@ -61,7 +61,7 @@ export function languageVariantImporter(data: {
         const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] = [];
 
         for (const [codename, migrationElement] of Object.entries(migrationItem.elements)) {
-            mappedElements.push(await getElementContractAsync(migrationItem, migrationElement, codename));
+            mappedElements.push(getElementContract(migrationItem, migrationElement, codename));
         }
 
         // upsert language variant
@@ -205,12 +205,8 @@ export function languageVariantImporter(data: {
         return false;
     };
 
-    const getElementContractAsync = async (
-        migrationItem: MigrationItem,
-        element: MigrationElement,
-        elementCodename: string
-    ) => {
-        const flattenedElement = data.importContext.getElement(migrationItem.system.type.codename, elementCodename);
+    const getElementContract = (migrationItem: MigrationItem, element: MigrationElement, elementCodename: string) => {
+        const flattenedElement = data.importContext.getElement(migrationItem.system.type.codename, elementCodename, element.type);
 
         const importTransformResult = importTransforms[flattenedElement.type]({
             elementCodename: elementCodename,
@@ -219,17 +215,15 @@ export function languageVariantImporter(data: {
             value: element.value
         });
 
-        if (importTransformResult instanceof Promise) {
-            return await importTransformResult;
-        }
-
         return importTransformResult;
     };
 
     const importAsync = async () => {
         data.logger.log({
             type: 'info',
-            message: `Importing '${chalk.yellow(data.importContext.categorizedImportData.contentItems.length.toString())}' language variants`
+            message: `Importing '${chalk.yellow(
+                data.importContext.categorizedImportData.contentItems.length.toString()
+            )}' language variants`
         });
 
         await processInChunksAsync<MigrationItem, void>({

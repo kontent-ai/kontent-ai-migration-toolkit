@@ -3,11 +3,16 @@ import {
     ExportAdapterResult,
     ExportContext,
     DefaultExportAdapterConfig,
-    ExportItem,
-    ExportElementValue
+    ExportItem
 } from '../export.models.js';
 import chalk from 'chalk';
-import { AssetModels, CollectionModels, ManagementClient, createManagementClient } from '@kontent-ai/management-sdk';
+import {
+    AssetModels,
+    CollectionModels,
+    ElementModels,
+    ManagementClient,
+    createManagementClient
+} from '@kontent-ai/management-sdk';
 import {
     defaultRetryStrategy,
     MigrationAsset,
@@ -18,7 +23,9 @@ import {
     processInChunksAsync,
     getBinaryDataFromUrlAsync,
     MigrationElementValue,
-    MigrationElements
+    MigrationElements,
+    FlattenedContentType,
+    MigrationComponent
 } from '../../core/index.js';
 import { exportTransforms } from '../../translation/index.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
@@ -59,32 +66,19 @@ export class DefaultExportAdapter implements ExportAdapter {
     private getMigrationItems(context: ExportContext): MigrationItem[] {
         const migrationItems: MigrationItem[] = [];
 
-        for (const preparedItem of context.exportItems) {
+        for (const exportItem of context.exportItems) {
             try {
-                migrationItems.push({
-                    system: {
-                        name: preparedItem.contentItem.name,
-                        codename: preparedItem.contentItem.codename,
-                        language: { codename: preparedItem.language.codename },
-                        type: { codename: preparedItem.contentType.contentTypeCodename },
-                        collection: { codename: preparedItem.collection.codename },
-                        workflow: {
-                            codename: preparedItem.workflow.codename
-                        },
-                        workflow_step: { codename: preparedItem.workflowStepCodename }
-                    },
-                    elements: this.getMigrationElements(preparedItem, context)
-                });
+                migrationItems.push(this.mapToMigrationItem(context, exportItem));
             } catch (error) {
                 if (this.config.skipFailedItems) {
                     this.config.logger.log({
                         type: 'warning',
                         message: `Failed to export item '${chalk.yellow(
-                            preparedItem.requestItem.itemCodename
-                        )}' in language '${chalk.yellow(preparedItem.requestItem.languageCodename)}'`
+                            exportItem.requestItem.itemCodename
+                        )}' in language '${chalk.yellow(exportItem.requestItem.languageCodename)}'`
                     });
                 } else {
-                    throw error;
+                    throwErrorForItemRequest(exportItem.requestItem, extractErrorData(error).message);
                 }
             }
         }
@@ -92,9 +86,59 @@ export class DefaultExportAdapter implements ExportAdapter {
         return migrationItems;
     }
 
-    private getMigrationElements(exportItem: ExportItem, context: ExportContext): MigrationElements {
+    private mapToMigrationItem(context: ExportContext, exportItem: ExportItem): MigrationItem {
+        const migrationItem: MigrationItem = {
+            system: {
+                name: exportItem.contentItem.name,
+                codename: exportItem.contentItem.codename,
+                language: { codename: exportItem.language.codename },
+                type: { codename: exportItem.contentType.contentTypeCodename },
+                collection: { codename: exportItem.collection.codename },
+                workflow: {
+                    codename: exportItem.workflow.codename
+                },
+                workflow_step: { codename: exportItem.workflowStepCodename }
+            },
+            elements: this.getMigrationElements(context, exportItem.contentType, exportItem.languageVariant.elements)
+        };
+
+        return migrationItem;
+    }
+
+    private maToMigrationComponent(
+        context: ExportContext,
+        component: ElementModels.ContentItemElementComponent
+    ): MigrationComponent {
+        const componentType = context.environmentData.contentTypes.find((m) => m.contentTypeId === component.type.id);
+
+        if (!componentType) {
+            throw Error(
+                `Could not find content type with id '${chalk.red(component.type.id)}' for component '${chalk.red(
+                    component.id
+                )}'`
+            );
+        }
+
+        const migrationItem: MigrationComponent = {
+            system: {
+                id: component.id,
+                type: {
+                    codename: componentType.contentTypeCodename
+                }
+            },
+            elements: this.getMigrationElements(context, componentType, component.elements)
+        };
+
+        return migrationItem;
+    }
+
+    private getMigrationElements(
+        context: ExportContext,
+        contentType: FlattenedContentType,
+        elements: ElementModels.ContentItemElement[]
+    ): MigrationElements {
         const migrationModel: MigrationElements = {};
-        const sortedContentTypeElements = exportItem.contentType.elements.sort((a, b) => {
+        const sortedContentTypeElements = contentType.elements.sort((a, b) => {
             if (a.codename < b.codename) {
                 return -1;
             }
@@ -105,21 +149,18 @@ export class DefaultExportAdapter implements ExportAdapter {
         });
 
         for (const typeElement of sortedContentTypeElements) {
-            const itemElement = exportItem.languageVariant.elements.find((m) => m.element.id === typeElement.id);
+            const itemElement = elements.find((m) => m.element.id === typeElement.id);
 
             if (!itemElement) {
-                throwErrorForItemRequest(
-                    exportItem.requestItem,
-                    `Could not find element '${typeElement.codename}' in language variant'`
-                );
+                throw new Error(`Could not find element '${chalk.red(typeElement.codename)}'`);
             }
 
             migrationModel[typeElement.codename] = {
                 type: typeElement.type,
                 value: this.getValueToStoreFromElement({
                     context: context,
-                    exportItem: exportItem,
-                    value: itemElement.value,
+                    contentType: contentType,
+                    exportElement: itemElement,
                     typeElement: typeElement
                 })
             };
@@ -129,25 +170,34 @@ export class DefaultExportAdapter implements ExportAdapter {
     }
 
     private getValueToStoreFromElement(data: {
-        exportItem: ExportItem;
-        typeElement: FlattenedContentTypeElement;
-        value: ExportElementValue;
         context: ExportContext;
+        contentType: FlattenedContentType;
+        typeElement: FlattenedContentTypeElement;
+        exportElement: ElementModels.ContentItemElement;
     }): MigrationElementValue {
         try {
-            return exportTransforms[data.typeElement.type](data);
+            return exportTransforms[data.typeElement.type]({
+                context: data.context,
+                typeElement: data.typeElement,
+                exportElement: {
+                    components: data.exportElement.components.map((component) =>
+                        this.maToMigrationComponent(data.context, component)
+                    ),
+                    value: data.exportElement.value,
+                    urlSlugMode: data.exportElement.mode
+                }
+            });
         } catch (error) {
             const errorData = extractErrorData(error);
             let jsonValue = 'n/a';
 
             try {
-                jsonValue = JSON.stringify(data.value);
+                jsonValue = JSON.stringify(data.exportElement.value);
             } catch (jsonError) {
                 console.error(`Failed to convert json value`, jsonError);
             }
 
-            throwErrorForItemRequest(
-                data.exportItem.requestItem,
+            throw new Error(
                 `Failed to map value of element '${chalk.yellow(data.typeElement.codename)}' of type '${chalk.cyan(
                     data.typeElement.type
                 )}'. Value: ${chalk.bgMagenta(jsonValue)}. Message: ${errorData.message}`
@@ -213,7 +263,9 @@ export class DefaultExportAdapter implements ExportAdapter {
 
                         if (!language) {
                             throw Error(
-                                `Could not find language with id '${description.language.id}' requested by asset '${asset.codename}'`
+                                `Could not find language with id '${chalk.red(
+                                    description.language.id
+                                )}' requested by asset '${chalk.red(asset.codename)}'`
                             );
                         }
 

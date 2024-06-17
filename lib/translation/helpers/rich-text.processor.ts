@@ -26,7 +26,8 @@ const attributes = {
         dataIdAttributeName: 'data-id',
         dataExternalIdAttributeName: 'data-external-id',
         dataExternalAssetIdAttributeName: 'data-asset-external-id'
-    }
+    },
+    componentIdentifierAttribute: 'data-type="component"'
 } as const;
 
 const rteRegexes = {
@@ -66,6 +67,10 @@ export function richTextProcessor() {
         const itemIds: string[] = [];
 
         richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.objectTagRegex, (objectTag) => {
+            // skip processing for components
+            if (objectTag.includes(attributes.componentIdentifierAttribute)) {
+                return objectTag;
+            }
             const itemIdMatch = objectTag.match(rteRegexes.attrs.dataIdAttrRegex);
             if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
                 const itemId = itemIdMatch[1];

@@ -1,5 +1,12 @@
-import { SharedContracts, LanguageVariantElementsBuilder } from '@kontent-ai/management-sdk';
-import { parseAsMigrationReferencesArray, MigrationElementType, MigrationReference } from '../../core/index.js';
+import { SharedContracts, LanguageVariantElementsBuilder, LanguageVariantElements } from '@kontent-ai/management-sdk';
+import {
+    parseAsMigrationReferencesArray,
+    MigrationElementType,
+    MigrationReference,
+    MigrationRichTextElementValue,
+    MigrationItem,
+    MigrationUrlSlugElementValue
+} from '../../core/index.js';
 import { ImportContext, ImportTransformFunc } from '../../import/index.js';
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
 
@@ -114,13 +121,23 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         });
     },
     rich_text: (data) => {
-        const rteHtml = processImportRichTextHtmlValue(data.value?.toString(), data.importContext);
+        const rteElementValue = data.value as MigrationRichTextElementValue;
 
         return elementsBuilder.richTextElement({
             element: {
                 codename: data.elementCodename
             },
-            value: rteHtml ?? null
+            components: mapComponents({
+                importContext: data.importContext,
+                migrationItems: data.migrationItems,
+                rteValue: rteElementValue
+            }),
+            value:
+                processImportRichTextHtmlValue({
+                    element: rteElementValue,
+                    importContext: data.importContext,
+                    migrationItems: data.migrationItems
+                }) ?? null
         });
     },
     taxonomy: (data) => {
@@ -144,27 +161,59 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         });
     },
     url_slug: (data) => {
+        const urlSlugElementValue = data.value as MigrationUrlSlugElementValue;
+
         return elementsBuilder.urlSlugElement({
             element: {
                 codename: data.elementCodename
             },
-            value: data.value?.toString() ?? '',
-            mode: 'custom'
+            value: urlSlugElementValue.value?.toString() ?? '',
+            mode: urlSlugElementValue.mode
         });
     }
 };
 
-function processImportRichTextHtmlValue(
-    richTextHtml: string | undefined,
-    importContext: ImportContext
-): string | undefined {
-    if (!richTextHtml) {
-        return richTextHtml;
+function mapComponents(data: {
+    readonly rteValue: MigrationRichTextElementValue;
+    readonly importContext: ImportContext;
+    readonly migrationItems: MigrationItem[];
+}): LanguageVariantElements.IRichTextComponent[] {
+    return data.rteValue.components.map((component) => {
+        const mappedComponent: LanguageVariantElements.IRichTextComponent = {
+            id: component.system.id,
+            type: {
+                codename: component.system.type.codename
+            },
+            elements: Object.entries(component.elements).map(([key, element]) => {
+                const transformedElementValue = importTransforms[element.type]({
+                    elementCodename: key,
+                    importContext: data.importContext,
+                    migrationItems: data.migrationItems,
+                    value: element.value
+                });
+
+                return transformedElementValue;
+            })
+        };
+
+        return mappedComponent;
+    });
+}
+
+function processImportRichTextHtmlValue(data: {
+    readonly element: MigrationRichTextElementValue;
+    readonly importContext: ImportContext;
+    readonly migrationItems: MigrationItem[];
+}): string | undefined {
+    if (!data.element) {
+        return undefined;
     }
+
+    let richTextHtml: string = data.element.value ?? '';
 
     // replace item codenames with id or external_id
     richTextHtml = richTextProcessor().processRteItemCodenames(richTextHtml, (codename) => {
-        const itemState = importContext.getItemStateInTargetEnvironment(codename);
+        const itemState = data.importContext.getItemStateInTargetEnvironment(codename);
 
         if (itemState.state === 'exists' && itemState.item) {
             return {
@@ -179,7 +228,7 @@ function processImportRichTextHtmlValue(
 
     // replace link item codenames with id or external_id
     richTextHtml = richTextProcessor().processRteLinkItemCodenames(richTextHtml, (codename) => {
-        const itemState = importContext.getItemStateInTargetEnvironment(codename);
+        const itemState = data.importContext.getItemStateInTargetEnvironment(codename);
 
         if (itemState.state === 'exists' && itemState.item) {
             return {
@@ -194,7 +243,7 @@ function processImportRichTextHtmlValue(
 
     // replace asset codenames with id or external_id
     richTextHtml = richTextProcessor().processRteAssetCodenames(richTextHtml, (codename) => {
-        const assetState = importContext.getAssetStateInTargetEnvironment(codename);
+        const assetState = data.importContext.getAssetStateInTargetEnvironment(codename);
 
         if (assetState.state === 'exists' && assetState.asset) {
             return {
