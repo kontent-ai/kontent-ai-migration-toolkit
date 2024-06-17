@@ -2,6 +2,7 @@ import { MigrationElementType, MigrationReference } from '../../core/index.js';
 import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
 import { ExportTransformFunc, ExportContext } from '../../export/index.js';
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
+import chalk from 'chalk';
 
 /**
  * Element transforms used by Kontent.ai export adapter
@@ -47,7 +48,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
                 // reference asset by codename
                 assetReferences.push({ codename: assetState.asset.codename });
             } else {
-                throw Error(`Missing asset with id '${arrayVal.id}'`);
+                throw Error(`Missing asset with id '${chalk.red(arrayVal.id)}'`);
             }
         }
 
@@ -69,7 +70,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         const taxonomy = data.context.environmentData.taxonomies.find((m) => m.id === taxonomyGroupId);
 
         if (!taxonomy) {
-            throw Error(`Could not find taxonomy group with id '${taxonomyGroupId}'`);
+            throw Error(`Could not find taxonomy group with id '${chalk.red(taxonomyGroupId)}'`);
         }
 
         // translate item id to codename
@@ -85,7 +86,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
                 // reference taxonomy term by codename
                 taxonomyReferences.push({ codename: taxonomyTerm.codename });
             } else {
-                throw Error(`Missing taxonomy term with id '${arrayVal.id}'`);
+                throw Error(`Missing taxonomy term with id '${chalk.red(arrayVal.id)}'`);
             }
         }
 
@@ -113,7 +114,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
                 // reference item by codename
                 linkedItemReferences.push({ codename: itemState.item.codename });
             } else {
-                throw Error(`Missing item with id '${arrayVal.id}'`);
+                throw Error(`Missing item with id '${chalk.red(arrayVal.id)}'`);
             }
         }
 
@@ -142,7 +143,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
             const option = multipleChoiceElement.options.find((m) => m.id === arrayVal.id);
 
             if (!option?.codename) {
-                throw Error(`Could not find multiple choice element with option id '${arrayVal.id}'`);
+                throw Error(`Could not find multiple choice element with option id '${chalk.red(arrayVal.id)}'`);
             }
 
             choiceOptionReferences.push({ codename: option.codename });
@@ -171,7 +172,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
                 // reference item by codename
                 linkedItemReferences.push({ codename: itemState.item.codename });
             } else {
-                throw Error(`Missing item with id '${arrayVal.id}'`);
+                throw Error(`Missing item with id '${chalk.red(arrayVal.id)}'`);
             }
         }
 
@@ -206,7 +207,7 @@ function transformRichTextValue(richTextHtml: string | undefined, context: Expor
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
         if (!itemInEnv) {
-            throw Error(`Failed to get item with id '${id}'`);
+            throw Error(`Failed to get item with id '${chalk.red(id)}'`);
         }
 
         return {
@@ -219,7 +220,7 @@ function transformRichTextValue(richTextHtml: string | undefined, context: Expor
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
         if (!itemInEnv) {
-            throw Error(`Failed to get item with id '${id}'`);
+            throw Error(`Failed to get item with id '${chalk.red(id)}'`);
         }
 
         return {
@@ -232,7 +233,7 @@ function transformRichTextValue(richTextHtml: string | undefined, context: Expor
         const assetInEnv = context.getAssetStateInSourceEnvironment(id).asset;
 
         if (!assetInEnv) {
-            throw Error(`Failed to get asset with id '${id}'`);
+            throw Error(`Failed to get asset with id '${chalk.red(id)}'`);
         }
 
         return {
