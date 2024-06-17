@@ -24,8 +24,15 @@ export class ZipPackage {
         this.jsZip.file(filePath, data);
     }
 
-    addFolder(name: string): void {
-        this.jsZip.folder(name);
+    addFolder(name: string): ZipPackage {
+        const folder = this.jsZip.folder(name);
+
+        if (!folder) {
+            throw Error(`Failed to add folder '${name}'`);
+        }
+
+        const zipPackage = new ZipPackage(folder, this.logger, this.context);
+        return zipPackage;
     }
 
     async getAllFilesAsync<TReturnType extends ZipFileType>(
