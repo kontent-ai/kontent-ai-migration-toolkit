@@ -1,13 +1,7 @@
-import {
-    ContentTypeModels,
-    ContentTypeSnippetModels,
-    ContentTypeElements,
-    ManagementClient
-} from '@kontent-ai/management-sdk';
+import { ContentTypeModels, ContentTypeSnippetModels, ManagementClient } from '@kontent-ai/management-sdk';
 import { FlattenedContentType, FlattenedContentTypeElement } from '../models/core.models.js';
 import chalk from 'chalk';
 import { runMapiRequestAsync } from './run.utils.js';
-import { MigrationElementType } from '../models/migration.models.js';
 import { exitProgram } from './global.utils.js';
 import { Logger } from '../models/log.models.js';
 
@@ -46,73 +40,66 @@ function getContentTypeElements(
     contentType: ContentTypeModels.ContentType,
     contentTypeSnippets: ContentTypeSnippetModels.ContentTypeSnippet[]
 ): FlattenedContentTypeElement[] {
-    const elements: FlattenedContentTypeElement[] = [];
+    const elements: FlattenedContentTypeElement[] = contentType.elements
+        .flatMap((element) => {
+            if (!element.codename || !element.id) {
+                return undefined;
+            }
 
-    for (const element of contentType.elements) {
-        if (!element.codename || !element.id) {
-            continue;
-        }
+            if (element.type === 'guidelines') {
+                return undefined;
+            }
 
-        const migrationElementType = mapToMigrationElementType(element);
-        if (!migrationElementType) {
-            continue;
-        }
+            if (element.type === 'snippet') {
+                const snippetElement = element;
 
-        if (element.type === 'snippet') {
-            const snippetElement = element;
+                // replace snippet element with actual elements
+                const contentTypeSnippet = contentTypeSnippets.find(
+                    (m) => m.id.toLowerCase() === snippetElement.snippet.id?.toLowerCase()
+                );
 
-            // replace snippet element with actual elements
-            const contentTypeSnippet = contentTypeSnippets.find(
-                (m) => m.id.toLowerCase() === snippetElement.snippet.id?.toLowerCase()
-            );
+                if (!contentTypeSnippet) {
+                    exitProgram({
+                        message: `Could not find content type snippet for element. This snippet is referenced in type '${chalk.red(
+                            contentType.codename
+                        )}'`
+                    });
+                }
 
-            if (!contentTypeSnippet) {
-                exitProgram({
-                    message: `Could not find content type snippet for element. This snippet is referenced in type '${chalk.red(
-                        contentType.codename
-                    )}'`
+                return contentTypeSnippet.elements.map((snippetElement) => {
+                    if (snippetElement.type === 'guidelines' || snippetElement.type === 'snippet') {
+                        return undefined;
+                    }
+                    if (!snippetElement.codename || !snippetElement.id) {
+                        return undefined;
+                    }
+
+                    const flattenedElement: FlattenedContentTypeElement = {
+                        codename: snippetElement.codename,
+                        type: snippetElement.type,
+                        id: snippetElement.id,
+                        element: element
+                    };
+
+                    return flattenedElement;
                 });
             }
-
-            for (const snippetElement of contentTypeSnippet.elements) {
-                if (!snippetElement.codename || !snippetElement.id) {
-                    continue;
-                }
-
-                const migrationElementType = mapToMigrationElementType(snippetElement);
-                if (!migrationElementType) {
-                    continue;
-                }
-
-                const flattenedElement: FlattenedContentTypeElement = {
-                    codename: snippetElement.codename,
-                    type: migrationElementType,
-                    id: snippetElement.id,
-                    element: element
-                };
-
-                elements.push(flattenedElement);
-            }
-        } else {
             const flattenedElement: FlattenedContentTypeElement = {
                 codename: element.codename,
                 id: element.id,
-                type: migrationElementType,
+                type: element.type,
                 element: element
             };
 
-            elements.push(flattenedElement);
-        }
-    }
+            return flattenedElement;
+        })
+        .reduce<FlattenedContentTypeElement[]>((prev, current) => {
+            if (current) {
+                prev.push(current);
+            }
+
+            return prev;
+        }, []);
 
     return elements;
-}
-
-function mapToMigrationElementType(
-    element: ContentTypeElements.ContentTypeElementModel
-): MigrationElementType | undefined {
-    if (element.type === 'guidelines' || element.type === 'snippet') {
-        return undefined;
-    }
-    return element.type;
 }
