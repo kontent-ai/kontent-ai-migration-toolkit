@@ -15,8 +15,6 @@ import {
 } from '../core/index.js';
 import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 
-export type ImportSourceType = 'zip' | 'file';
-
 export interface ImportData {
     readonly items: MigrationItem[];
     readonly assets: MigrationAsset[];
@@ -27,12 +25,6 @@ export interface ImportContextConfig {
     readonly managementClient: ManagementClient;
     readonly externalIdGenerator: ExternalIdGenerator;
     readonly importData: ImportData;
-}
-
-export interface ImportAdapter {
-    readonly name: string;
-    readonly targetEnvironmentClient: ManagementClient;
-    importAsync(data: ImportData): Promise<void>;
 }
 
 export type GetFlattenedElementByCodenames = (
@@ -66,14 +58,15 @@ export type ImportTransformFunc = (data: {
     readonly migrationItems: MigrationItem[];
 }) => ElementContracts.IContentItemElementContract;
 
-export interface DefaultImportAdapterConfig {
-    readonly logger: Logger;
+export interface ImportConfig {
+    readonly data: ImportData;
     readonly environmentId: string;
     readonly apiKey: string;
     readonly skipFailedItems: boolean;
     readonly retryStrategy?: IRetryStrategyOptions;
     readonly externalIdGenerator?: ExternalIdGenerator;
     readonly baseUrl?: string;
+    readonly logger?: Logger;
 }
 
 export interface ImportAllResult {

@@ -37,12 +37,10 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     await importAsync({
         logger: log,
         data: importData,
-        adapterConfig: {
-            skipFailedItems: skipFailedItems,
-            baseUrl: baseUrl,
-            environmentId: environmentId,
-            apiKey: apiKey
-        }
+        skipFailedItems: skipFailedItems,
+        baseUrl: baseUrl,
+        environmentId: environmentId,
+        apiKey: apiKey
     });
 
     log.log({ type: 'completed', message: `Import has been successful` });

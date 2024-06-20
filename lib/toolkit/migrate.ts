@@ -58,13 +58,11 @@ export async function migrateAsync(config: MigrationConfig): Promise<void> {
             await importAsync({
                 logger: logger,
                 data: data,
-                adapterConfig: {
-                    environmentId: config.targetEnvironment.id,
-                    apiKey: config.targetEnvironment.apiKey,
-                    skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
-                    retryStrategy: config.retryStrategy,
-                    externalIdGenerator: config.externalIdGenerator
-                }
+                environmentId: config.targetEnvironment.id,
+                apiKey: config.targetEnvironment.apiKey,
+                skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
+                retryStrategy: config.retryStrategy,
+                externalIdGenerator: config.externalIdGenerator
             });
         }
     });

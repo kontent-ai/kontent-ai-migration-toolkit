@@ -28,11 +28,9 @@ const run = async () => {
     await importAsync({
         logger: log,
         data: data,
-        adapterConfig: {
-            environmentId: environmentId,
-            apiKey: apiKey,
-            skipFailedItems: false
-        }
+        environmentId: environmentId,
+        apiKey: apiKey,
+        skipFailedItems: false
     });
 };
 

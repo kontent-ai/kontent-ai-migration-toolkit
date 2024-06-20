@@ -216,14 +216,12 @@ Once you are happy with the data, you can import them to Kontent.ai using the `i
 
 ```typescript
 await importAsync({
+    environmentId: environmentId,
+    apiKey: apiKey,
+    skipFailedItems: false,
     data: {
         assets: [migrationAsset],
         items: [migrationItem]
-    },
-    adapterConfig: {
-        environmentId: environmentId,
-        apiKey: apiKey,
-        skipFailedItems: false
     }
 });
 ```

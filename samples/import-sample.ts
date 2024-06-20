@@ -17,9 +17,7 @@ const data = await extractAsync({
 // import data into your Kontent.ai environment
 await importAsync({
     data: data,
-    adapterConfig: {
-        environmentId: '<id>',
-        apiKey: '<mapiKey>',
-        skipFailedItems: false
-    }
+    environmentId: '<id>',
+    apiKey: '<mapiKey>',
+    skipFailedItems: false
 });
