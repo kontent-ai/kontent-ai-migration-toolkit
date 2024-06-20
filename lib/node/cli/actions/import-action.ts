@@ -1,15 +1,15 @@
 import { confirmImportAsync, getDefaultZipFilename, getDefaultLogger } from '../../../core/index.js';
 import { extractAsync, importAsync } from '../../../toolkit/index.js';
-import { CliArgs } from '../args/cli-args.class.js';
+import { CliArgumentsFetcher } from '../cli.models.js';
 
-export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
+export async function importActionAsync(argsFetcher: CliArgumentsFetcher): Promise<void> {
     const log = getDefaultLogger();
-    const environmentId = await cliArgs.getRequiredArgumentValueAsync('targetEnvironmentId');
-    const apiKey = await cliArgs.getRequiredArgumentValueAsync('targetApiKey');
-    const baseUrl = await cliArgs.getOptionalArgumentValueAsync('baseUrl');
-    const force = await cliArgs.getBooleanArgumentValueAsync('force', false);
-    const skipFailedItems = await cliArgs.getBooleanArgumentValueAsync('skipFailedItems', false);
-    const filename = (await cliArgs.getOptionalArgumentValueAsync('filename')) ?? getDefaultZipFilename();
+    const environmentId = argsFetcher.getRequiredArgumentValue('targetEnvironmentId');
+    const apiKey = argsFetcher.getRequiredArgumentValue('targetApiKey');
+    const baseUrl = argsFetcher.getOptionalArgumentValue('baseUrl');
+    const force = argsFetcher.getBooleanArgumentValue('force', false);
+    const skipFailedItems = argsFetcher.getBooleanArgumentValue('skipFailedItems', false);
+    const filename = argsFetcher.getOptionalArgumentValue('filename') ?? getDefaultZipFilename();
 
     await confirmImportAsync({
         force: force,

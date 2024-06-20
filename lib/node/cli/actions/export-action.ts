@@ -1,17 +1,17 @@
 import { confirmExportAsync, getDefaultZipFilename, getDefaultLogger } from '../../../core/index.js';
 import { exportAsync, storeAsync } from '../../../toolkit/index.js';
-import { CliArgs } from '../args/cli-args.class.js';
+import { CliArgumentsFetcher } from '../cli.models.js';
 
-export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
+export async function exportActionAsync(cliFetcher: CliArgumentsFetcher): Promise<void> {
     const logger = getDefaultLogger();
-    const language = await cliArgs.getRequiredArgumentValueAsync('language');
-    const environmentId = await cliArgs.getRequiredArgumentValueAsync('sourceEnvironmentId');
-    const apiKey = await cliArgs.getRequiredArgumentValueAsync('sourceApiKey');
-    const items = (await cliArgs.getRequiredArgumentValueAsync('items')).split(',');
-    const baseUrl = await cliArgs.getOptionalArgumentValueAsync('baseUrl');
-    const force = await cliArgs.getBooleanArgumentValueAsync('force', false);
-    const skipFailedItems = await cliArgs.getBooleanArgumentValueAsync('skipFailedItems', false);
-    const filename = (await cliArgs.getOptionalArgumentValueAsync('filename')) ?? getDefaultZipFilename();
+    const language =  cliFetcher.getRequiredArgumentValue('language');
+    const environmentId =  cliFetcher.getRequiredArgumentValue('sourceEnvironmentId');
+    const apiKey =  cliFetcher.getRequiredArgumentValue('sourceApiKey');
+    const items = ( cliFetcher.getRequiredArgumentValue('items')).split(',');
+    const baseUrl =  cliFetcher.getOptionalArgumentValue('baseUrl');
+    const force =  cliFetcher.getBooleanArgumentValue('force', false);
+    const skipFailedItems =  cliFetcher.getBooleanArgumentValue('skipFailedItems', false);
+    const filename = ( cliFetcher.getOptionalArgumentValue('filename')) ?? getDefaultZipFilename();
 
     await confirmExportAsync({
         force: force,

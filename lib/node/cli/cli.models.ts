@@ -27,3 +27,15 @@ export interface CommandOption {
     readonly description?: string;
     readonly type?: 'boolean' | 'number' | 'string';
 }
+
+export type CliArgumentsSetter = {
+    withCommand(command: Command): CliArgumentsSetter;
+    withOption(option: CommandOption): CliArgumentsSetter;
+};
+
+export type CliArgumentsFetcher = {
+    getCliAction(): CliAction;
+    getOptionalArgumentValue(argName: string): string | undefined;
+    getRequiredArgumentValue(argName: string): string;
+    getBooleanArgumentValue(argName: string, defaultValue: boolean): boolean;
+};

@@ -1,6 +1,6 @@
-import { getCliArgs } from './args/cli-args.class.js';
+import { argumentsSetter } from './args/args-setter.js';
 
-export const cliArgs = getCliArgs()
+export const cliArgs = argumentsSetter()
     .withCommand({
         name: 'export',
         description: 'Exports content (items & assets) from Kontent.ai environment',

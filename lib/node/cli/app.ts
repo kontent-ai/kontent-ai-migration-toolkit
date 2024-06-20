@@ -2,20 +2,21 @@
 import chalk from 'chalk';
 
 import { handleError, exitProgram } from '../../core/index.js';
-import { cliArgs } from './commands.js';
 import { exportActionAsync } from './actions/export-action.js';
 import { importActionAsync } from './actions/import-action.js';
 import { migrateActionAsync } from './actions/migrate-action.js';
+import { argumentsFetcherAsync } from './args/args-fetcher.js';
 
 const run = async () => {
-    const action = await cliArgs.getCliActionAsync();
+    const argsFetcher = await argumentsFetcherAsync();
+    const action = argsFetcher.getCliAction();
 
     if (action === 'export') {
-        return await exportActionAsync(cliArgs);
+        return await exportActionAsync(argsFetcher);
     } else if (action === 'import') {
-        return await importActionAsync(cliArgs);
+        return await importActionAsync(argsFetcher);
     } else if (action === 'migrate') {
-        return await migrateActionAsync(cliArgs);
+        return await migrateActionAsync(argsFetcher);
     }
 
     exitProgram({

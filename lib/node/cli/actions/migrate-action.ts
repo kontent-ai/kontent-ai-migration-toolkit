@@ -1,18 +1,18 @@
 import { migrateAsync } from '../../../toolkit/index.js';
 import { confirmMigrateAsync, getDefaultLogger } from '../../../core/index.js';
-import { CliArgs } from '../args/cli-args.class.js';
 import { SourceExportItem } from '../../../export/index.js';
+import { CliArgumentsFetcher } from '../cli.models.js';
 
-export async function migrateActionAsync(cliArgs: CliArgs): Promise<void> {
+export async function migrateActionAsync(argsFetcher: CliArgumentsFetcher): Promise<void> {
     const log = getDefaultLogger();
-    const sourceEnvironmentId = await cliArgs.getRequiredArgumentValueAsync('sourceEnvironmentId');
-    const sourceApiKey = await cliArgs.getRequiredArgumentValueAsync('sourceApiKey');
-    const targetEnvironmentId = await cliArgs.getRequiredArgumentValueAsync('targetEnvironmentId');
-    const targetApiKey = await cliArgs.getRequiredArgumentValueAsync('targetApiKey');
-    const force = await cliArgs.getBooleanArgumentValueAsync('force', false);
-    const skipFailedItems = await cliArgs.getBooleanArgumentValueAsync('skipFailedItems', false);
-    const items = (await cliArgs.getRequiredArgumentValueAsync('items'))?.split(',');
-    const language = await cliArgs.getRequiredArgumentValueAsync('language');
+    const sourceEnvironmentId = argsFetcher.getRequiredArgumentValue('sourceEnvironmentId');
+    const sourceApiKey = argsFetcher.getRequiredArgumentValue('sourceApiKey');
+    const targetEnvironmentId = argsFetcher.getRequiredArgumentValue('targetEnvironmentId');
+    const targetApiKey = argsFetcher.getRequiredArgumentValue('targetApiKey');
+    const force = argsFetcher.getBooleanArgumentValue('force', false);
+    const skipFailedItems = argsFetcher.getBooleanArgumentValue('skipFailedItems', false);
+    const items = argsFetcher.getRequiredArgumentValue('items')?.split(',');
+    const language = argsFetcher.getRequiredArgumentValue('language');
     const migrateItems: SourceExportItem[] = items.map((m) => {
         return {
             itemCodename: m,
