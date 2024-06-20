@@ -120,6 +120,6 @@ export interface OriginalManagementError {
         };
         data?: {
             error_code?: number;
-        }
+        };
     };
 }

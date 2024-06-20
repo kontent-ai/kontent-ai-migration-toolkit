@@ -254,7 +254,7 @@ export function importContextFetcher(config: ImportContextConfig) {
         const getElementByCodenames: GetFlattenedElementByCodenames = getElement(flattenedContentTypes);
 
         const referencedData = itemsExtractionProcessor().extractReferencedItemsFromMigrationItems(
-            config.importData.items.map((item) => {
+            config.migrationData.items.map((item) => {
                 return {
                     contentTypeCodename: item.system.type.codename,
                     elements: item.elements
@@ -264,12 +264,12 @@ export function importContextFetcher(config: ImportContextConfig) {
         );
 
         // only items with workflow / step are standalone content items
-        const contentItemsExcludingComponents = config.importData.items.filter(
+        const contentItemsExcludingComponents = config.migrationData.items.filter(
             (m) => m.system.workflow && m.system.workflow_step
         );
 
         // if content item does not have a workflow / step it means it is used as a component within Rich text element
-        const contentItemComponents = config.importData.items.filter(
+        const contentItemComponents = config.migrationData.items.filter(
             (m) => !m.system.workflow || m.system.workflow_step
         );
 
@@ -285,7 +285,7 @@ export function importContextFetcher(config: ImportContextConfig) {
         // check all assets, including referenced assets in content
         const assetCodenamesToCheckInTargetEnv: string[] = [
             ...referencedData.assetCodenames,
-            ...config.importData.assets.map((m) => m.codename).filter(uniqueStringFilter)
+            ...config.migrationData.assets.map((m) => m.codename).filter(uniqueStringFilter)
         ];
 
         // prepare state of objects in target environment
@@ -303,7 +303,7 @@ export function importContextFetcher(config: ImportContextConfig) {
 
         const importContext: ImportContext = {
             categorizedImportData: {
-                assets: config.importData.assets,
+                assets: config.migrationData.assets,
                 componentItems: contentItemComponents,
                 contentItems: contentItemsExcludingComponents
             },

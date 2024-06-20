@@ -1,4 +1,4 @@
-import { ExportContext, ExportConfig, ExportItem, ExportResult } from './export.models.js';
+import { ExportContext, ExportConfig, ExportItem } from './export.models.js';
 import chalk from 'chalk';
 import { AssetModels, CollectionModels, ElementModels, createManagementClient } from '@kontent-ai/management-sdk';
 import {
@@ -13,7 +13,8 @@ import {
     MigrationElements,
     FlattenedContentType,
     MigrationComponent,
-    getDefaultLogger
+    getDefaultLogger,
+    MigrationData
 } from '../core/index.js';
 import { exportTransforms } from '../translation/index.js';
 import { throwErrorForItemRequest } from './utils/export.utils.js';
@@ -255,12 +256,12 @@ export function exportManager(config: ExportConfig) {
                 managementClient: managementClient
             }).getExportContextAsync();
 
-            const exportResult: ExportResult = {
+            const migrationData: MigrationData = {
                 items: getMigrationItems(exportContext),
                 assets: await exportAssetsAsync(exportContext)
             };
 
-            return exportResult;
+            return migrationData;
         }
     };
 }

@@ -11,20 +11,16 @@ import {
     ExternalIdGenerator,
     FlattenedContentTypeElement,
     MigrationElementValue,
-    MigrationElementType
+    MigrationElementType,
+    MigrationData
 } from '../core/index.js';
 import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
-
-export interface ImportData {
-    readonly items: MigrationItem[];
-    readonly assets: MigrationAsset[];
-}
 
 export interface ImportContextConfig {
     readonly logger: Logger;
     readonly managementClient: ManagementClient;
     readonly externalIdGenerator: ExternalIdGenerator;
-    readonly importData: ImportData;
+    readonly migrationData: MigrationData;
 }
 
 export type GetFlattenedElementByCodenames = (
@@ -59,7 +55,7 @@ export type ImportTransformFunc = (data: {
 }) => ElementContracts.IContentItemElementContract;
 
 export interface ImportConfig {
-    readonly data: ImportData;
+    readonly data: MigrationData;
     readonly environmentId: string;
     readonly apiKey: string;
     readonly skipFailedItems: boolean;

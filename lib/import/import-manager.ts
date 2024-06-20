@@ -98,7 +98,7 @@ export function importManager(config: ImportConfig) {
     return {
         importAsync: async () => {
             const importContext = await importContextFetcher({
-                importData: config.data,
+                migrationData: config.data,
                 externalIdGenerator: config.externalIdGenerator ?? defaultExternalIdGenerator,
                 logger: logger,
                 managementClient: targetEnvironmentClient

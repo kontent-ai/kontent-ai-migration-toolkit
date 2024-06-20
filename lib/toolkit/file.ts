@@ -1,12 +1,16 @@
 import { fileManager } from '../file/index.js';
-import { Logger, executeWithTrackingAsync, getDefaultZipFilename, getDefaultLogger } from '../core/index.js';
-import { ExportResult } from '../export/index.js';
+import {
+    Logger,
+    executeWithTrackingAsync,
+    getDefaultZipFilename,
+    getDefaultLogger,
+    MigrationData
+} from '../core/index.js';
 import { ZipContext, zipManager } from '../zip/index.js';
 import { libMetadata } from '../metadata.js';
-import { ImportData } from '../import/index.js';
 
 export interface StoreConfig {
-    readonly data: ExportResult;
+    readonly data: MigrationData;
     readonly filename?: string;
     readonly zipContext?: ZipContext;
     readonly logger?: Logger;
@@ -45,7 +49,7 @@ export async function storeAsync(config: StoreConfig): Promise<void> {
     });
 }
 
-export async function extractAsync(config: ExtractConfig): Promise<ImportData> {
+export async function extractAsync(config: ExtractConfig): Promise<MigrationData> {
     const logger = config.logger ?? getDefaultLogger();
     const filename: string = getDefaultZipFilename();
 

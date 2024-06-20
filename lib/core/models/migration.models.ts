@@ -154,3 +154,8 @@ export interface MigrationAsset {
      */
     readonly descriptions?: MigrationAssetDescription[];
 }
+
+export interface MigrationData {
+    readonly items: MigrationItem[];
+    readonly assets: MigrationAsset[];
+}

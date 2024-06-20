@@ -1,8 +1,6 @@
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 
 import {
-    MigrationItem,
-    MigrationAsset,
     Logger,
     FlattenedContentType,
     AssetStateInSourceEnvironmentById,
@@ -53,11 +51,6 @@ export interface ExportContext {
     readonly getAssetStateInSourceEnvironment: (id: string) => AssetStateInSourceEnvironmentById;
     readonly exportItems: ExportItem[];
     readonly getElement: GetFlattenedElementByIds;
-}
-
-export interface ExportResult {
-    readonly items: MigrationItem[];
-    readonly assets: MigrationAsset[];
 }
 
 export interface SourceExportItem {
