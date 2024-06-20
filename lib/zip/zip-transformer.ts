@@ -1,10 +1,10 @@
-import { TransformData } from './zip.models.js';
-import { MigrationAsset, MigrationItem } from '../core/index.js';
-import { ZipPackage } from 'lib/zip/zip-package.class.js';
+import { TransformData, ZipPackager } from './zip.models.js';
+import { Logger, MigrationAsset, MigrationItem, getDefaultLogger } from '../core/index.js';
 
 type AssetRecord = Omit<MigrationAsset, 'binaryData'>;
 
-export function zipTransformer(zip: ZipPackage) {
+export function zipTransformer(zip: ZipPackager, logger?: Logger) {
+    const loggerToUse: Logger = logger ?? getDefaultLogger();
     const filename: string = 'items.json';
     const assetsFilename: string = 'assets.json';
     const assetsBinaryFolderName: string = 'binary_data';
@@ -73,7 +73,7 @@ export function zipTransformer(zip: ZipPackage) {
             transformItems(data.items);
             transformAssets(data.assets);
 
-            return await zip.generateZipAsync();
+            return await zip.generateZipAsync({ logger: loggerToUse });
         },
         parseAsync: async () => {
             const items = await parseItems();
