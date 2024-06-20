@@ -2,11 +2,13 @@ import chalk from 'chalk';
 import JSZip from 'jszip';
 import { ExportResult } from '../export/export.models.js';
 import { ImportData } from '../import/import.models.js';
-import { Logger, MigrationAsset, MigrationItem } from '../core/index.js';
+import { Logger, MigrationAsset, MigrationItem, getDefaultLogger } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
 import { ItemFormatService, AssetFormatService, ZipCompressionLevel, ZipContext } from './zip.models.js';
 
-export function zipManager(logger: Logger, zipContext?: ZipContext) {
+export function zipManager(logger?: Logger, zipContext?: ZipContext) {
+    const loggerToUse = logger ?? getDefaultLogger(zipContext);
+
     const parseZipAsync = async (data: {
         items?: {
             file: Buffer;
@@ -23,44 +25,44 @@ export function zipManager(logger: Logger, zipContext?: ZipContext) {
         };
 
         if (data.items) {
-            logger.log({
+            loggerToUse.log({
                 type: 'info',
                 message: 'Loading items zip file'
             });
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
 
-            logger.log({
+            loggerToUse.log({
                 type: 'info',
                 message: 'Parsing items zip data'
             });
 
             result.items.push(
                 ...(await data.items.formatService.parseAsync({
-                    zip: new ZipPackage(itemsZipFile, logger, zipContext)
+                    zip: new ZipPackage(itemsZipFile, loggerToUse, zipContext)
                 }))
             );
         }
 
         if (data.assets) {
-            logger.log({
+            loggerToUse.log({
                 type: 'info',
                 message: 'Loading assets zip file'
             });
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
 
-            logger.log({
+            loggerToUse.log({
                 type: 'info',
                 message: 'Parsing assets zip data'
             });
 
             result.assets.push(
                 ...(await data.assets.formatService.parseAsync({
-                    zip: new ZipPackage(assetsZipFile, logger, zipContext)
+                    zip: new ZipPackage(assetsZipFile, loggerToUse, zipContext)
                 }))
             );
         }
 
-        logger.log({
+        loggerToUse.log({
             type: 'info',
             message: `Parsing completed. Parsed '${chalk.yellow(
                 result.items.length.toString()
@@ -84,26 +86,26 @@ export function zipManager(logger: Logger, zipContext?: ZipContext) {
         let parsedAssets: MigrationAsset[] = [];
 
         if (data.items) {
-            logger.log({
+            loggerToUse.log({
                 type: 'info',
                 message: `Parsing items file with '${chalk.yellow(data.items.formatService.name)}' `
             });
 
             const itemsZipFile = await JSZip.loadAsync(data.items.file, {});
             parsedItems = await data.items.formatService.parseAsync({
-                zip: new ZipPackage(itemsZipFile, logger, zipContext)
+                zip: new ZipPackage(itemsZipFile, loggerToUse, zipContext)
             });
         }
 
         if (data.assets) {
-            logger.log({
+            loggerToUse.log({
                 type: 'info',
                 message: `Parsing assets file with '${chalk.yellow(data.assets.formatService.name)}' `
             });
 
             const assetsZipFile = await JSZip.loadAsync(data.assets.file, {});
             parsedAssets = await data.assets.formatService.parseAsync({
-                zip: new ZipPackage(assetsZipFile, logger, zipContext)
+                zip: new ZipPackage(assetsZipFile, loggerToUse, zipContext)
             });
         }
 
@@ -112,7 +114,7 @@ export function zipManager(logger: Logger, zipContext?: ZipContext) {
             assets: parsedAssets
         };
 
-        logger.log({
+        loggerToUse.log({
             type: 'info',
             message: `Parsing completed. Parsed '${chalk.yellow(
                 result.items.length.toString()
@@ -129,14 +131,14 @@ export function zipManager(logger: Logger, zipContext?: ZipContext) {
             compressionLevel?: ZipCompressionLevel;
         }
     ) => {
-        logger.log({
+        loggerToUse.log({
             type: 'info',
             message: `Creating items zip`
         });
 
         const zip = await config.itemFormatService.transformAsync({
             items: exportData.items,
-            zip: new ZipPackage(new JSZip(), logger, zipContext)
+            zip: new ZipPackage(new JSZip(), loggerToUse, zipContext)
         });
 
         return zip;
@@ -149,14 +151,14 @@ export function zipManager(logger: Logger, zipContext?: ZipContext) {
             compressionLevel?: ZipCompressionLevel;
         }
     ) => {
-        logger.log({
+        loggerToUse.log({
             type: 'info',
             message: `Creating assets zip`
         });
 
         const zip = await config.assetFormatService.transformAsync({
             assets: exportData.assets,
-            zip: new ZipPackage(new JSZip(), logger, zipContext)
+            zip: new ZipPackage(new JSZip(), loggerToUse, zipContext)
         });
 
         return zip;
