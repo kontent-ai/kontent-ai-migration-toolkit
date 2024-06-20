@@ -1,6 +1,5 @@
-import { EnvContext, Logger } from '../core/index.js';
+import { Logger } from '../core/index.js';
 
-export type ZipContext = EnvContext;
 export type FileBinaryData = Buffer | Blob;
 export type ZipCompressionLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 

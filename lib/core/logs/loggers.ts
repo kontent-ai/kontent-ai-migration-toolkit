@@ -1,29 +1,19 @@
 import chalk from 'chalk';
-import { EnvContext } from '../models/core.models.js';
 import { Logger, LogSpinnerMessage } from '../models/log.models.js';
 import { getCurrentEnvironment } from '../utils/global.utils.js';
 
 const originalWarn = console.warn;
 
-export function getDefaultLogger(context?: EnvContext): Logger {
-    if (!context) {
-        // automatically determine the env
-        const currentEnv = getCurrentEnvironment();
+export function getDefaultLogger(): Logger {
+    const currentEnv = getCurrentEnvironment();
 
-        if (currentEnv === 'node') {
-            return defaultNodeLogger;
-        }
-        if (currentEnv === 'browser') {
-            return defaultBrowserLogger;
-        }
-    }
-    if (context === 'node') {
+    if (currentEnv === 'node') {
         return defaultNodeLogger;
     }
-    if (context === 'browser') {
+    if (currentEnv === 'browser') {
         return defaultBrowserLogger;
     }
-    throw Error(`Invalid environment '${context}'`);
+    throw Error(`Invalid environment`);
 }
 
 const defaultNodeLogger: Logger = {

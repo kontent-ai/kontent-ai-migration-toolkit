@@ -1,11 +1,10 @@
 import JSZip from 'jszip';
 import { Logger, MigrationData, getDefaultLogger } from '../core/index.js';
-import { ZipContext } from './zip.models.js';
 import { zipTransformer } from './zip-transformer.js';
 import { zipPackager } from './zip-packager.js';
 
-export function zipManager(logger?: Logger, zipContext?: ZipContext) {
-    const loggerToUse = logger ?? getDefaultLogger(zipContext);
+export function zipManager(logger?: Logger) {
+    const loggerToUse = logger ?? getDefaultLogger();
 
     const createZipAsync = async (migrationData: MigrationData) => {
         loggerToUse.log({

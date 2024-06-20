@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
 import chalk from 'chalk';
 import { Logger, formatBytes, getCurrentEnvironment, exitProgram, getDefaultLogger } from '../core/index.js';
-import { FileBinaryData, ZipCompressionLevel, ZipContext, ZipPackager } from './zip.models.js';
+import { FileBinaryData, ZipCompressionLevel, ZipPackager } from './zip.models.js';
 
 export function zipPackager(jsZip: JSZip): ZipPackager {
-    const getZipOutputType: () => 'nodebuffer' | 'blob' = (context?: ZipContext) => {
+    const getZipOutputType: () => 'nodebuffer' | 'blob' = () => {
         const currentEnv = getCurrentEnvironment();
 
         if (currentEnv === 'browser') {
@@ -15,7 +15,7 @@ export function zipPackager(jsZip: JSZip): ZipPackager {
         }
 
         exitProgram({
-            message: `Unsupported context '${context}'`
+            message: `Unsupported context`
         });
     };
 
