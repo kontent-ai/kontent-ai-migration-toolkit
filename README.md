@@ -104,7 +104,7 @@ kontent-ai-migration-toolkit import --targetEnvironmentId=x --targetApiKey=x --i
 
 # Migrate from Kontent.ai
 
-There is a built-in `kontentAi` adapter that can be used to export content items & assets from Kontent.ai environments.
+This library can also be used to export content items & assets from Kontent.ai environments.
 However, when migration from 3rd party system you typically only use the `import` capabilities of this repository.
 
 ## Configuration

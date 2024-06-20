@@ -2,16 +2,14 @@ import { getDefaultLogger, exportAsync, storeAsync } from '../lib/index.js';
 
 const exportData = await exportAsync({
     logger: getDefaultLogger(),
-    adapterConfig: {
-        environmentId: '<id>',
-        apiKey: '<apiKey>',
-        exportItems: [
-            {
-                itemCodename: '<itemCodename>',
-                languageCodename: '<languageCodename>'
-            }
-        ]
-    }
+    environmentId: '<id>',
+    apiKey: '<apiKey>',
+    exportItems: [
+        {
+            itemCodename: '<itemCodename>',
+            languageCodename: '<languageCodename>'
+        }
+    ]
 });
 
 // stores data on FS for later use

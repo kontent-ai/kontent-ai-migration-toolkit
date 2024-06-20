@@ -19,7 +19,7 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
         force: force,
         apiKey: apiKey,
         environmentId: environmentId,
-        logger: logger, 
+        logger: logger,
         dataToExport: {
             itemsCount: items.length
         }
@@ -27,18 +27,16 @@ export async function exportActionAsync(cliArgs: CliArgs): Promise<void> {
 
     const exportedData = await exportAsync({
         logger: logger,
-        adapterConfig: {
-            environmentId: environmentId,
-            apiKey: apiKey,
-            baseUrl: baseUrl,
-            skipFailedItems: skipFailedItems,
-            exportItems: items.map((m) => {
-                return {
-                    itemCodename: m,
-                    languageCodename: language
-                };
-            })
-        }
+        environmentId: environmentId,
+        apiKey: apiKey,
+        baseUrl: baseUrl,
+        skipFailedItems: skipFailedItems,
+        exportItems: items.map((m) => {
+            return {
+                itemCodename: m,
+                languageCodename: language
+            };
+        })
     });
 
     await storeAsync({

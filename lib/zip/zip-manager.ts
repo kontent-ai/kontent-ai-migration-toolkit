@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import JSZip from 'jszip';
-import { ExportAdapterResult } from '../export/export.models.js';
+import { ExportResult } from '../export/export.models.js';
 import { ImportData } from '../import/import.models.js';
 import { Logger, MigrationAsset, MigrationItem } from '../core/index.js';
 import { ZipPackage } from './zip-package.class.js';
@@ -123,7 +123,7 @@ export function zipManager(logger: Logger, zipContext?: ZipContext) {
     };
 
     const createItemsZipAsync = async (
-        exportData: ExportAdapterResult,
+        exportData: ExportResult,
         config: {
             itemFormatService: ItemFormatService;
             compressionLevel?: ZipCompressionLevel;
@@ -143,7 +143,7 @@ export function zipManager(logger: Logger, zipContext?: ZipContext) {
     };
 
     const createAssetsZipAsync = async (
-        exportData: ExportAdapterResult,
+        exportData: ExportResult,
         config: {
             assetFormatService: AssetFormatService;
             compressionLevel?: ZipCompressionLevel;

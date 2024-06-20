@@ -9,9 +9,6 @@ import { ExportTransformFunc, ExportContext, ExportElement } from '../../export/
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
 import chalk from 'chalk';
 
-/**
- * Element transforms used by Kontent.ai export adapter
- */
 export const exportTransforms: Readonly<Record<MigrationElementType, ExportTransformFunc>> = {
     text: (data) => data.exportElement.value?.toString(),
     number: (data) => {

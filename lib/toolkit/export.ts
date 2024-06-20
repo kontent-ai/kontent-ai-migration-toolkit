@@ -1,28 +1,8 @@
 import { libMetadata } from '../metadata.js';
-import { Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
-import {
-    DefaultExportAdapter,
-    DefaultExportAdapterConfig,
-    ExportAdapter,
-    ExportAdapterResult
-} from '../export/index.js';
+import { executeWithTrackingAsync } from '../core/index.js';
+import { ExportResult, ExportConfig, exportManager } from '../export/index.js';
 
-export interface ExportConfig {
-    readonly logger?: Logger;
-}
-
-export interface DefaultExportConfig extends ExportConfig {
-    readonly adapterConfig: Omit<DefaultExportAdapterConfig, 'logger'>;
-}
-
-export async function exportAsync(config: DefaultExportConfig): Promise<ExportAdapterResult>;
-export async function exportAsync(adapter: ExportAdapter, config?: ExportConfig): Promise<ExportAdapterResult>;
-export async function exportAsync(
-    inputAdapterOrDefaultConfig: DefaultExportConfig | ExportAdapter,
-    inputConfig?: ExportConfig
-): Promise<ExportAdapterResult> {
-    const { adapter } = getSetup(inputAdapterOrDefaultConfig, inputConfig);
-
+export async function exportAsync(config: ExportConfig): Promise<ExportResult> {
     return await executeWithTrackingAsync({
         event: {
             tool: 'migrationToolkit',
@@ -32,51 +12,10 @@ export async function exportAsync(
             },
             action: 'export',
             relatedEnvironmentId: undefined,
-            details: {
-                adapter: adapter.name
-            }
+            details: {}
         },
         func: async () => {
-            const exportResult = adapter.exportAsync();
-
-            if (exportResult instanceof Promise) {
-                return await exportResult;
-            }
-
-            return exportResult;
+            return await exportManager(config).exportAsync();
         }
     });
-}
-
-function getSetup<TConfig extends ExportConfig, TDefaultConfig extends DefaultExportConfig & TConfig>(
-    inputAdapterOrDefaultConfig: TDefaultConfig | ExportAdapter,
-    inputConfig?: TConfig
-): {
-    adapter: ExportAdapter;
-    config: TConfig;
-    logger: Logger;
-} {
-    let adapter: ExportAdapter;
-    let config: TConfig;
-    let logger: Logger;
-
-    if ((inputAdapterOrDefaultConfig as ExportAdapter)?.name) {
-        adapter = inputAdapterOrDefaultConfig as ExportAdapter;
-        config = (inputConfig as TConfig) ?? {};
-        logger = config.logger ?? getDefaultLogger();
-    } else {
-        config = (inputAdapterOrDefaultConfig as TDefaultConfig) ?? {};
-        logger = config.logger ?? getDefaultLogger();
-
-        adapter = new DefaultExportAdapter({
-            ...(inputAdapterOrDefaultConfig as TDefaultConfig).adapterConfig,
-            logger: logger
-        });
-    }
-
-    return {
-        adapter,
-        config,
-        logger
-    };
 }

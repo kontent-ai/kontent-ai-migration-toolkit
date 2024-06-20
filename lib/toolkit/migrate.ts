@@ -46,13 +46,11 @@ export async function migrateAsync(config: MigrationConfig): Promise<void> {
         func: async () => {
             const data = await exportAsync({
                 logger: logger,
-                adapterConfig: {
-                    environmentId: config.sourceEnvironment.id,
-                    apiKey: config.sourceEnvironment.apiKey,
-                    exportItems: config.sourceEnvironment.items,
-                    retryStrategy: config.retryStrategy,
-                    skipFailedItems: config.sourceEnvironment.skipFailedItems ?? false
-                }
+                environmentId: config.sourceEnvironment.id,
+                apiKey: config.sourceEnvironment.apiKey,
+                exportItems: config.sourceEnvironment.items,
+                retryStrategy: config.retryStrategy,
+                skipFailedItems: config.sourceEnvironment.skipFailedItems ?? false
             });
 
             await importAsync({

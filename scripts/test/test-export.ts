@@ -36,11 +36,9 @@ const run = async () => {
 
     const exportData = await exportAsync({
         logger: logger,
-        adapterConfig: {
-            environmentId: environmentId,
-            apiKey: apiKey,
-            exportItems: exportItem
-        }
+        environmentId: environmentId,
+        apiKey: apiKey,
+        exportItems: exportItem
     });
 
     await storeAsync({

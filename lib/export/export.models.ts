@@ -55,12 +55,7 @@ export interface ExportContext {
     readonly getElement: GetFlattenedElementByIds;
 }
 
-export interface ExportAdapter {
-    readonly name: string;
-    exportAsync(): Promise<ExportAdapterResult> | ExportAdapterResult;
-}
-
-export interface ExportAdapterResult {
+export interface ExportResult {
     readonly items: MigrationItem[];
     readonly assets: MigrationAsset[];
 }
@@ -70,12 +65,12 @@ export interface SourceExportItem {
     readonly languageCodename: string;
 }
 
-export interface DefaultExportAdapterConfig {
+export interface ExportConfig {
     readonly environmentId: string;
     readonly apiKey: string;
     readonly exportItems: SourceExportItem[];
-    readonly logger: Logger;
 
+    readonly logger?: Logger;
     readonly baseUrl?: string;
     readonly skipFailedItems?: boolean;
     readonly retryStrategy?: IRetryStrategyOptions;
