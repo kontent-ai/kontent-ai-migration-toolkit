@@ -7,7 +7,7 @@ export interface CliFileConfig {
     readonly items?: string[];
     readonly skipFailedItems: boolean;
     readonly action: CliAction;
-    readonly itemsFilename?: string;
+    readonly filename?: string;
     readonly assetsFilename?: string;
     readonly baseUrl?: string;
     readonly force: boolean;

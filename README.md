@@ -89,8 +89,7 @@ kontent-ai-migration-toolkit migrate --targetEnvironmentId=x --targetApiKey=x --
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **targetEnvironmentId** | Id of Kontent.ai environment **(required)**                                                                                                             |
 | **targetApiKey**        | Management API key **(required)**                                                                                                                       |
-| **itemsFilename**       | Name of the items file that will be used to parse items **(required)**                                                                                  |
-| assetsFilename          | Name of the items file that will be used to parse assets                                                                                                |
+| **filename**            | Name of the zip file **(required)**                                                                                                                     |
 | baseUrl                 | Custom base URL for Kontent.ai API calls                                                                                                                |
 | skipFailedItems         | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
 | force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
@@ -99,13 +98,13 @@ kontent-ai-migration-toolkit migrate --targetEnvironmentId=x --targetApiKey=x --
 
 ```bash
 # Import into target environment
-kontent-ai-migration-toolkit import --targetEnvironmentId=x --targetApiKey=x --itemsFilename=items.zip --assetsFilename=assets.zip
+kontent-ai-migration-toolkit import --targetEnvironmentId=x --targetApiKey=x --filename=data.zip
 ```
 
 # Migrate from Kontent.ai
 
-This library can also be used to export content items & assets from Kontent.ai environments.
-However, when migration from 3rd party system you typically only use the `import` capabilities of this repository.
+This library can also be used to export content items & assets from Kontent.ai environments. However, when migration
+from 3rd party system you typically only use the `import` capabilities of this repository.
 
 ## Configuration
 
@@ -115,8 +114,7 @@ However, when migration from 3rd party system you typically only use the `import
 | **sourceApiKey**        | Management API key of Kontent.ai environment **(required)**                                                |
 | **language**            | Codename of language that items will be exported in **(required)**                                         |
 | **items**               | Comma separated list of items that will be exported **(required)**                                         |
-| itemsFilename           | Name of the items file that will be created in folder where script is run                                  |
-| assetsFilename          | Name of the assets file that will be created in folder where script is run. Only zip is supported.         |
+| filename                | Name of the zip file                                                                                       |
 | skipFailedItems         | Indicates export skips items that fail to export. Available options: `true` & `false`. Detaults to `false` |
 | baseUrl                 | Custom base URL for Kontent.ai API calls                                                                   |
 
@@ -264,18 +262,6 @@ within import / migrate functions.
    codenames.
 3. Language variants in `Scheduled` workflow step do not preserve their workflow status because the API does not provide
    an information about scheduled times
-
-## Output / Input formats
-
-This library provides `json` format out of the box. However, you can create your own format by implementing
-`IFormatService`. This is useful if you need to support additional formats such as `xliff`, `xlxs`, `xml`, `csv` or
-others.
-
-Default formatting services:
-
-| Type   | Service                     | Link                                                                                                                                                  |
-| ------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `json` | `ItemJsonProcessorService ` | https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/lib/file-processor/item-formats/item-json-joined-processor.service.ts |
 
 ## FAQ
 

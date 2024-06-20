@@ -33,7 +33,7 @@ export const cliArgs = getCliArgs()
                 isRequired: true
             },
             {
-                name: `itemsFilename`,
+                name: `filename`,
                 description: `Name of items file to export / import`,
                 type: 'string',
                 isRequired: false
@@ -63,7 +63,7 @@ export const cliArgs = getCliArgs()
         name: 'import',
         description: 'Imports content (items & assets) into Kontent.ai environment',
         examples: [
-            `kontent-ai-migration-toolkit import --targetEnvironmentId=x --targetApiKey=x --itemsFilename=items.zip --assetsFilename=assets.zip`
+            `kontent-ai-migration-toolkit import --targetEnvironmentId=x --targetApiKey=x --filename=items.zip --assetsFilename=assets.zip`
         ],
         options: [
             {
@@ -79,7 +79,7 @@ export const cliArgs = getCliArgs()
                 isRequired: true
             },
             {
-                name: `itemsFilename`,
+                name: `filename`,
                 description: `Name of items file to export / import`,
                 type: 'string',
                 isRequired: false

@@ -15,14 +15,5 @@ const exportData = await exportAsync({
 // stores data on FS for later use
 await storeAsync({
     data: exportData,
-    files: {
-        items: {
-            filename: 'items-export.zip',
-            format: 'json'
-        },
-        assets: {
-            filename: 'assets-export.zip',
-            format: 'json'
-        }
-    }
+    filename: 'data.zip'
 });

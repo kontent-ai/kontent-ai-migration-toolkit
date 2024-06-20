@@ -90,16 +90,7 @@ await storeAsync({
         items: [migrationItem],
         assets: [migrationAsset]
     },
-    files: {
-        items: {
-            filename: 'items-export.zip',
-            format: 'json'
-        },
-        assets: {
-            filename: 'assets-export.zip',
-            format: 'json'
-        }
-    }
+    filename: 'data.zip'
 });
 
 // and import to Kontent.ai

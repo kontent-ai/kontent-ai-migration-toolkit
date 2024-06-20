@@ -41,8 +41,8 @@ export function uniqueStringFilter(value: string, index: number, self: string[])
     return self.indexOf(value) === index;
 }
 
-export function getDefaultFilename(type: 'items' | 'assets'): string {
-    return `${type}.zip`;
+export function getDefaultZipFilename(): string {
+    return `data.zip`;
 }
 
 export async function executeWithTrackingAsync<TResult>(data: {

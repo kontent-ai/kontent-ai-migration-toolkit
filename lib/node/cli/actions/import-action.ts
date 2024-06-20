@@ -1,4 +1,4 @@
-import { confirmImportAsync, getDefaultFilename, getDefaultLogger } from '../../../core/index.js';
+import { confirmImportAsync, getDefaultZipFilename, getDefaultLogger } from '../../../core/index.js';
 import { extractAsync, importAsync } from '../../../toolkit/index.js';
 import { CliArgs } from '../args/cli-args.class.js';
 
@@ -9,9 +9,7 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
     const baseUrl = await cliArgs.getOptionalArgumentValueAsync('baseUrl');
     const force = await cliArgs.getBooleanArgumentValueAsync('force', false);
     const skipFailedItems = await cliArgs.getBooleanArgumentValueAsync('skipFailedItems', false);
-    const itemsFilename = (await cliArgs.getOptionalArgumentValueAsync('itemsFilename')) ?? getDefaultFilename('items');
-    const assetsFilename =
-        (await cliArgs.getOptionalArgumentValueAsync('assetsFilename')) ?? getDefaultFilename('assets');
+    const filename = (await cliArgs.getOptionalArgumentValueAsync('filename')) ?? getDefaultZipFilename();
 
     await confirmImportAsync({
         force: force,
@@ -22,16 +20,7 @@ export async function importActionAsync(cliArgs: CliArgs): Promise<void> {
 
     const importData = await extractAsync({
         logger: log,
-        files: {
-            items: {
-                filename: itemsFilename,
-                format: 'json'
-            },
-            assets: {
-                filename: assetsFilename,
-                format: 'json'
-            }
-        }
+        filename: filename
     });
 
     await importAsync({
