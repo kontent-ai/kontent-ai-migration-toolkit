@@ -70,3 +70,14 @@ export async function executeWithTrackingAsync<TResult>(data: {
         throw error;
     }
 }
+
+export async function mapAsync<Input, Result>(
+    array: Input[],
+    callbackAsync: (item: Input, index: number, array: Input[]) => Promise<Result>
+): Promise<Result[]> {
+    const results: Result[] = [];
+    for (let i = 0; i < array.length; i++) {
+        results.push(await callbackAsync(array[i], i, array));
+    }
+    return results;
+}

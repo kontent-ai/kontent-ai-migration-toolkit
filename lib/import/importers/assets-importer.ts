@@ -1,5 +1,5 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { MigrationAsset, Logger, processInChunksAsync, runMapiRequestAsync } from '../../core/index.js';
+import { MigrationAsset, Logger, processSetAsync, runMapiRequestAsync } from '../../core/index.js';
 import mime from 'mime';
 import chalk from 'chalk';
 import { ImportContext } from '../import.models.js';
@@ -9,7 +9,6 @@ export function assetsImporter(data: {
     readonly client: ManagementClient;
     readonly importContext: ImportContext;
 }) {
-    const importAssetsChunkSize = 1;
     const getAssetsToUpload: () => MigrationAsset[] = () => {
         return data.importContext.categorizedImportData.assets.filter((asset) => {
             return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
@@ -41,9 +40,10 @@ export function assetsImporter(data: {
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
         });
 
-        await processInChunksAsync<MigrationAsset, void>({
+        await processSetAsync<MigrationAsset, void>({
+            action: 'Uploading assets',
             logger: data.logger,
-            chunkSize: importAssetsChunkSize,
+            parallelLimit: 3,
             items: assetsToUpload,
             itemInfo: (input) => {
                 return {

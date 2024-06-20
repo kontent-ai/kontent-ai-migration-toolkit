@@ -8,18 +8,15 @@ export function argumentsSetter(): CliArgumentsSetter {
     return {
         withCommand(command: Command): CliArgumentsSetter {
             argv.command(command.name, command.description, (yargs) => {
-                for (const example of command.examples) {
-                    yargs.example(command.name, example);
-                }
-
-                for (const option of command.options) {
+                command.examples.forEach((example) => yargs.example(command.name, example));
+                command.options.forEach((option) => {
                     yargs.positional(option.name, {
                         alias: option.alias,
                         describe: option.description,
                         type: option.type,
                         demandOption: option.isRequired
                     });
-                }
+                });
             });
 
             return this;

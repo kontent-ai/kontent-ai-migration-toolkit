@@ -1,5 +1,5 @@
 export * from './utils/global.utils.js';
-export * from './utils/chunk.utils.js';
+export * from './utils/processing-utils.js';
 export * from './utils/type.utils.js';
 export * from './utils/http.utils.js';
 export * from './utils/confirm.utils.js';

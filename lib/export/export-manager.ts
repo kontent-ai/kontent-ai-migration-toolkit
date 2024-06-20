@@ -8,7 +8,7 @@ import {
     defaultHttpService,
     FlattenedContentTypeElement,
     extractErrorData,
-    processInChunksAsync,
+    processSetAsync,
     getBinaryDataFromUrlAsync,
     MigrationElements,
     FlattenedContentType,
@@ -29,11 +29,9 @@ export function exportManager(config: ExportConfig) {
     });
 
     const getMigrationItems = (context: ExportContext) => {
-        const migrationItems: MigrationItem[] = [];
-
-        for (const exportItem of context.exportItems) {
+        return context.exportItems.reduce<MigrationItem[]>((result, exportItem) => {
             try {
-                migrationItems.push(mapToMigrationItem(context, exportItem));
+                result.push(mapToMigrationItem(context, exportItem));
             } catch (error) {
                 if (config.skipFailedItems) {
                     logger.log({
@@ -46,9 +44,9 @@ export function exportManager(config: ExportConfig) {
                     throwErrorForItemRequest(exportItem.requestItem, extractErrorData(error).message);
                 }
             }
-        }
 
-        return migrationItems;
+            return result;
+        }, []);
     };
 
     const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem) => {
@@ -99,7 +97,6 @@ export function exportManager(config: ExportConfig) {
         contentType: FlattenedContentType,
         elements: ElementModels.ContentItemElement[]
     ) => {
-        const migrationModel: MigrationElements = {};
         const sortedContentTypeElements = contentType.elements.sort((a, b) => {
             if (a.codename < b.codename) {
                 return -1;
@@ -110,14 +107,14 @@ export function exportManager(config: ExportConfig) {
             return 0;
         });
 
-        for (const typeElement of sortedContentTypeElements) {
+        return sortedContentTypeElements.reduce<MigrationElements>((model, typeElement) => {
             const itemElement = elements.find((m) => m.element.id === typeElement.id);
 
             if (!itemElement) {
                 throw new Error(`Could not find element '${chalk.red(typeElement.codename)}'`);
             }
 
-            migrationModel[typeElement.codename] = {
+            model[typeElement.codename] = {
                 type: typeElement.type,
                 value: getValueToStoreFromElement({
                     context: context,
@@ -126,9 +123,9 @@ export function exportManager(config: ExportConfig) {
                     typeElement: typeElement
                 })
             };
-        }
 
-        return migrationModel;
+            return model;
+        }, {});
     };
 
     const getValueToStoreFromElement = (data: {
@@ -168,15 +165,15 @@ export function exportManager(config: ExportConfig) {
     };
 
     const exportAssetsAsync = async (context: ExportContext) => {
-        const assets: AssetModels.Asset[] = [];
-
-        for (const assetId of context.referencedData.assetIds) {
+        const assets = context.referencedData.assetIds.reduce<AssetModels.Asset[]>((result, assetId) => {
             const assetState = context.getAssetStateInSourceEnvironment(assetId);
 
             if (assetState.asset) {
-                assets.push(assetState.asset);
+                result.push(assetState.asset);
             }
-        }
+
+            return result;
+        }, []);
 
         return await getMigrationAssetsWithBinaryDataAsync(assets, context);
     };
@@ -187,9 +184,10 @@ export function exportManager(config: ExportConfig) {
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });
 
-        const exportedAssets: MigrationAsset[] = await processInChunksAsync<AssetModels.Asset, MigrationAsset>({
+        const exportedAssets: MigrationAsset[] = await processSetAsync<AssetModels.Asset, MigrationAsset>({
+            action: 'Downloading assets',
             logger: logger,
-            chunkSize: 1,
+            parallelLimit: 1,
             itemInfo: (input) => {
                 return {
                     title: input.codename,
@@ -257,7 +255,7 @@ export function exportManager(config: ExportConfig) {
                 managementClient: managementClient
             }).getExportContextAsync();
 
-            const exportResult: ExportResult =  {
+            const exportResult: ExportResult = {
                 items: getMigrationItems(exportContext),
                 assets: await exportAssetsAsync(exportContext)
             };

@@ -72,39 +72,21 @@ export function workflowImporter(logger: Logger) {
         stepCodename: string,
         workflows: WorkflowModels.Workflow[]
     ) => {
-        for (const workflow of workflows) {
-            if (workflow.publishedStep.codename === stepCodename) {
-                return true;
-            }
-        }
-
-        return false;
+        return workflows.find((workflow) => workflow.publishedStep.codename === stepCodename) ? true : false;
     };
 
     const doesWorkflowStepCodenameRepresentArchivedStep = (
-        workflowStepCodename: string,
+        stepCodename: string,
         workflows: WorkflowModels.Workflow[]
     ) => {
-        for (const workflow of workflows) {
-            if (workflow.archivedStep.codename === workflowStepCodename) {
-                return true;
-            }
-        }
-
-        return false;
+        return workflows.find((workflow) => workflow.archivedStep.codename === stepCodename) ? true : false;
     };
 
     const doesWorkflowStepCodenameRepresentScheduledStep = (
         stepCodename: string,
         workflows: WorkflowModels.Workflow[]
     ) => {
-        for (const workflow of workflows) {
-            if (workflow.scheduledStep.codename === stepCodename) {
-                return true;
-            }
-        }
-
-        return false;
+        return workflows.find((workflow) => workflow.scheduledStep.codename === stepCodename) ? true : false;
     };
 
     const setWorkflowOfLanguageVariantAsync = async (

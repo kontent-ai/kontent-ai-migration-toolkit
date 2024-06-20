@@ -38,23 +38,20 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate asset id to codename
-        const assetReferences: MigrationReference[] = [];
-        for (const arrayVal of data.exportElement.value) {
-            if (!arrayVal.id) {
-                continue;
+        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
+            if (value.id) {
+                const assetState = data.context.getAssetStateInSourceEnvironment(value.id);
+
+                if (assetState.asset) {
+                    // reference asset by codename
+                    references.push({ codename: assetState.asset.codename });
+                } else {
+                    throw Error(`Missing asset with id '${chalk.red(value.id)}'`);
+                }
             }
 
-            const assetState = data.context.getAssetStateInSourceEnvironment(arrayVal.id);
-
-            if (assetState.asset) {
-                // reference asset by codename
-                assetReferences.push({ codename: assetState.asset.codename });
-            } else {
-                throw Error(`Missing asset with id '${chalk.red(arrayVal.id)}'`);
-            }
-        }
-
-        return assetReferences;
+            return references;
+        }, []);
     },
     taxonomy: (data) => {
         if (!data.exportElement.value) {
@@ -75,24 +72,21 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
             throw Error(`Could not find taxonomy group with id '${chalk.red(taxonomyGroupId)}'`);
         }
 
-        // translate item id to codename
-        const taxonomyReferences: MigrationReference[] = [];
-        for (const arrayVal of data.exportElement.value) {
-            if (!arrayVal.id) {
-                continue;
+        // translate taxonomy term to codename
+        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
+            if (value.id) {
+                const taxonomyTerm = findTaxonomy(value.id, taxonomy);
+
+                if (taxonomyTerm) {
+                    // reference taxonomy term by codename
+                    references.push({ codename: taxonomyTerm.codename });
+                } else {
+                    throw Error(`Missing taxonomy term with id '${chalk.red(value.id)}'`);
+                }
             }
 
-            const taxonomyTerm = findTaxonomy(arrayVal.id, taxonomy);
-
-            if (taxonomyTerm) {
-                // reference taxonomy term by codename
-                taxonomyReferences.push({ codename: taxonomyTerm.codename });
-            } else {
-                throw Error(`Missing taxonomy term with id '${chalk.red(arrayVal.id)}'`);
-            }
-        }
-
-        return taxonomyReferences;
+            return references;
+        }, []);
     },
     modular_content: (data) => {
         if (!data.exportElement.value) {
@@ -104,23 +98,19 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate item id to codename
-        const linkedItemReferences: MigrationReference[] = [];
-        for (const arrayVal of data.exportElement.value) {
-            if (!arrayVal.id) {
-                continue;
+        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
+            if (value.id) {
+                const itemState = data.context.getItemStateInSourceEnvironment(value.id);
+
+                if (itemState.item) {
+                    // reference item by codename
+                    references.push({ codename: itemState.item.codename });
+                } else {
+                    throw Error(`Missing item with id '${chalk.red(value.id)}'`);
+                }
             }
-
-            const itemState = data.context.getItemStateInSourceEnvironment(arrayVal.id);
-
-            if (itemState.item) {
-                // reference item by codename
-                linkedItemReferences.push({ codename: itemState.item.codename });
-            } else {
-                throw Error(`Missing item with id '${chalk.red(arrayVal.id)}'`);
-            }
-        }
-
-        return linkedItemReferences;
+            return references;
+        }, []);
     },
     custom: (data) => data.exportElement.value?.toString(),
     url_slug: (data) => {
@@ -142,23 +132,19 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
 
         // translate multiple choice option id to codename
         const multipleChoiceElement = data.typeElement.element as ContentTypeElements.IMultipleChoiceElement;
-        const choiceOptionReferences: MigrationReference[] = [];
 
-        for (const arrayVal of data.exportElement.value) {
-            if (!arrayVal.id) {
-                continue;
+        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
+            if (value.id) {
+                const option = multipleChoiceElement.options.find((m) => m.id === value.id);
+
+                if (option?.codename) {
+                    references.push({ codename: option.codename });
+                } else {
+                    throw Error(`Could not find multiple choice element with option id '${chalk.red(value.id)}'`);
+                }
             }
-
-            const option = multipleChoiceElement.options.find((m) => m.id === arrayVal.id);
-
-            if (!option?.codename) {
-                throw Error(`Could not find multiple choice element with option id '${chalk.red(arrayVal.id)}'`);
-            }
-
-            choiceOptionReferences.push({ codename: option.codename });
-        }
-
-        return choiceOptionReferences;
+            return references;
+        }, []);
     },
     subpages: (data) => {
         if (!data.exportElement.value) {
@@ -169,23 +155,19 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate item id to codename
-        const linkedItemReferences: MigrationReference[] = [];
-        for (const arrayVal of data.exportElement.value) {
-            if (!arrayVal.id) {
-                continue;
+        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
+            if (value.id) {
+                const itemState = data.context.getItemStateInSourceEnvironment(value.id);
+
+                if (itemState.item) {
+                    // reference item by codename
+                    references.push({ codename: itemState.item.codename });
+                } else {
+                    throw Error(`Missing item with id '${chalk.red(value.id)}'`);
+                }
             }
-
-            const itemState = data.context.getItemStateInSourceEnvironment(arrayVal.id);
-
-            if (itemState.item) {
-                // reference item by codename
-                linkedItemReferences.push({ codename: itemState.item.codename });
-            } else {
-                throw Error(`Missing item with id '${chalk.red(arrayVal.id)}'`);
-            }
-        }
-
-        return linkedItemReferences;
+            return references;
+        }, []);
     }
 };
 
@@ -195,11 +177,10 @@ function findTaxonomy(termId: string, taxonomy: TaxonomyModels.Taxonomy): Taxono
     }
 
     if (taxonomy.terms) {
-        for (const taxonomyTerm of taxonomy.terms) {
-            const foundTerm = findTaxonomy(termId, taxonomyTerm);
-            if (foundTerm) {
-                return foundTerm;
-            }
+        const foundTerm = taxonomy.terms.find((term) => findTaxonomy(term.id, term));
+
+        if (foundTerm) {
+            return foundTerm;
         }
     }
 

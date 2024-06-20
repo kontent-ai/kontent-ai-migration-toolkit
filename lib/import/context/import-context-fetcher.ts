@@ -7,7 +7,7 @@ import {
     MigrationItem,
     getFlattenedContentTypesAsync,
     is404Error,
-    processInChunksAsync,
+    processSetAsync,
     runMapiRequestAsync,
     uniqueStringFilter
 } from '../../core/index.js';
@@ -25,7 +25,7 @@ export function importContextFetcher(config: ImportContextConfig) {
         const getFlattenedElement: GetFlattenedElementByCodenames = (
             contentTypeCodename,
             elementCodename,
-            expectedType
+            sourceType
         ) => {
             const contentType = types.find(
                 (m) => m.contentTypeCodename.toLowerCase() === contentTypeCodename.toLowerCase()
@@ -36,22 +36,26 @@ export function importContextFetcher(config: ImportContextConfig) {
             }
 
             const element = contentType.elements.find(
-                (m) => m.codename.toLowerCase() === elementCodename.toLowerCase()
+                (contentTypeElement) => contentTypeElement.codename.toLowerCase() === elementCodename.toLowerCase()
             );
 
             if (!element) {
                 throw Error(
                     `Element type with codename '${chalk.red(
                         elementCodename
-                    )}' was not found in content type '${chalk.red(contentTypeCodename)}'.`
+                    )}' was not found in content type '${chalk.red(
+                        contentTypeCodename
+                    )}'. Available elements are '${contentType.elements
+                        .map((element) => chalk.yellow(element.codename))
+                        .join(', ')}'`
                 );
             }
 
-            if (expectedType !== element.type) {
+            if (sourceType !== element.type) {
                 throw Error(
                     `Element '${chalk.red(element.codename)}' in content type '${chalk.yellow(
                         contentType.contentTypeCodename
-                    )}' is of type '${chalk.red(element.type)}', but expected type is '${chalk.yellow(expectedType)}'.`
+                    )}' is of type '${chalk.red(element.type)}', but source type is '${chalk.yellow(sourceType)}'.`
                 );
             }
 
@@ -64,9 +68,10 @@ export function importContextFetcher(config: ImportContextConfig) {
     const getLanguageVariantsAsync = async (migrationItems: MigrationItem[]) => {
         const languageVariants: LanguageVariantWrapper[] = [];
 
-        await processInChunksAsync<MigrationItem, void>({
+        await processSetAsync<MigrationItem, void>({
+            action: 'Fetching language variants',
             logger: config.logger,
-            chunkSize: 1,
+            parallelLimit: 1,
             items: migrationItems,
             itemInfo: (item) => {
                 return {
@@ -110,9 +115,10 @@ export function importContextFetcher(config: ImportContextConfig) {
     const getContentItemsByCodenamesAsync = async (itemCodenames: string[]) => {
         const contentItems: ContentItemModels.ContentItem[] = [];
 
-        await processInChunksAsync<string, void>({
+        await processSetAsync<string, void>({
+            action: 'Fetching content items',
             logger: config.logger,
-            chunkSize: 1,
+            parallelLimit: 1,
             items: itemCodenames,
             itemInfo: (codename) => {
                 return {
@@ -149,9 +155,10 @@ export function importContextFetcher(config: ImportContextConfig) {
     const getAssetsByCodenamesAsync = async (assetCodenames: string[]) => {
         const assets: AssetModels.Asset[] = [];
 
-        await processInChunksAsync<string, void>({
+        await processSetAsync<string, void>({
+            action: 'Fetching assets',
             logger: config.logger,
-            chunkSize: 1,
+            parallelLimit: 1,
             items: assetCodenames,
             itemInfo: (codename) => {
                 return {
@@ -187,62 +194,56 @@ export function importContextFetcher(config: ImportContextConfig) {
 
     const getVariantStatesAsync = async (migrationItems: MigrationItem[]) => {
         const variants = await getLanguageVariantsAsync(migrationItems);
-        const variantStates: LanguageVariantStateInTargetEnvironmentByCodename[] = [];
-
-        for (const migrationItem of migrationItems) {
+        return migrationItems.reduce<LanguageVariantStateInTargetEnvironmentByCodename[]>((result, migrationItem) => {
             const variant = variants.find(
                 (m) =>
                     m.migrationItem.system.codename === migrationItem.system.codename &&
                     m.migrationItem.system.language === migrationItem.system.language
             );
 
-            variantStates.push({
+            result.push({
                 itemCodename: migrationItem.system.codename,
                 languageCodename: migrationItem.system.language.codename,
                 languageVariant: variant?.languageVariant,
                 state: variant ? 'exists' : 'doesNotExists'
             });
-        }
 
-        return variantStates;
+            return result;
+        }, []);
     };
 
     const getItemStatesAsync = async (itemCodenames: string[]) => {
         const items = await getContentItemsByCodenamesAsync(itemCodenames);
-        const itemStates: ItemStateInTargetEnvironmentByCodename[] = [];
-
-        for (const codename of itemCodenames) {
+        return itemCodenames.reduce<ItemStateInTargetEnvironmentByCodename[]>((result, codename) => {
             const item = items.find((m) => m.codename === codename);
             const externalId = config.externalIdGenerator.contentItemExternalId(codename);
 
-            itemStates.push({
+            result.push({
                 itemCodename: codename,
                 item: item,
                 state: item ? 'exists' : 'doesNotExists',
                 externalIdToUse: externalId
             });
-        }
 
-        return itemStates;
+            return result;
+        }, []);
     };
 
     const getAssetStatesAsync = async (assetCodenames: string[]) => {
         const assets = await getAssetsByCodenamesAsync(assetCodenames);
-        const assetStates: AssetStateInTargetEnvironmentByCodename[] = [];
-
-        for (const assetCodename of assetCodenames) {
+        return assetCodenames.reduce<AssetStateInTargetEnvironmentByCodename[]>((result, assetCodename) => {
             const asset = assets.find((m) => m.codename === assetCodename);
             const externalId = config.externalIdGenerator.assetExternalId(assetCodename);
 
-            assetStates.push({
+            result.push({
                 assetCodename: assetCodename,
                 asset: asset,
                 state: asset ? 'exists' : 'doesNotExists',
                 externalIdToUse: externalId
             });
-        }
 
-        return assetStates;
+            return result;
+        }, []);
     };
 
     const getImportContextAsync = async () => {

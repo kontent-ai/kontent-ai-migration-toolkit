@@ -7,7 +7,7 @@ import {
 } from '@kontent-ai/management-sdk';
 import {
     Logger,
-    processInChunksAsync,
+    processSetAsync,
     runMapiRequestAsync,
     MigrationItem,
     exitProgram,
@@ -28,8 +28,6 @@ export function languageVariantImporter(data: {
     readonly client: ManagementClient;
     readonly skipFailedItems: boolean;
 }) {
-    const importContentItemChunkSize = 1;
-
     const importLanguageVariantAsync = async (
         logSpinner: LogSpinnerData,
         migrationItem: MigrationItem,
@@ -58,11 +56,13 @@ export function languageVariantImporter(data: {
         });
 
         // prepare & map elements
-        const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] = [];
+        const mappedElements = Object.entries(migrationItem.elements).reduce<
+            LanguageVariantElements.ILanguageVariantElementBase[]
+        >((result, [codename, migrationElement]) => {
+            result.push(getElementContract(migrationItem, migrationElement, codename));
 
-        for (const [codename, migrationElement] of Object.entries(migrationItem.elements)) {
-            mappedElements.push(getElementContract(migrationItem, migrationElement, codename));
-        }
+            return result;
+        }, []);
 
         // upsert language variant
         await runMapiRequestAsync({
@@ -183,30 +183,26 @@ export function languageVariantImporter(data: {
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
         workflows: WorkflowModels.Workflow[]
     ) => {
-        for (const workflow of workflows) {
-            if (workflow.publishedStep.id === languageVariant.workflow.stepIdentifier.id) {
-                return true;
-            }
-        }
-
-        return false;
+        return workflows.find((workflow) => workflow.publishedStep.id === languageVariant.workflow.stepIdentifier.id)
+            ? true
+            : false;
     };
 
     const isLanguageVariantArchived = (
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
         workflows: WorkflowModels.Workflow[]
     ) => {
-        for (const workflow of workflows) {
-            if (workflow.archivedStep.id === languageVariant.workflow.stepIdentifier.id) {
-                return true;
-            }
-        }
-
-        return false;
+        return workflows.find((workflow) => workflow.archivedStep.id === languageVariant.workflow.stepIdentifier.id)
+            ? true
+            : false;
     };
 
     const getElementContract = (migrationItem: MigrationItem, element: MigrationElement, elementCodename: string) => {
-        const flattenedElement = data.importContext.getElement(migrationItem.system.type.codename, elementCodename, element.type);
+        const flattenedElement = data.importContext.getElement(
+            migrationItem.system.type.codename,
+            elementCodename,
+            element.type
+        );
 
         const importTransformResult = importTransforms[flattenedElement.type]({
             elementCodename: elementCodename,
@@ -226,9 +222,10 @@ export function languageVariantImporter(data: {
             )}' language variants`
         });
 
-        await processInChunksAsync<MigrationItem, void>({
+        await processSetAsync<MigrationItem, void>({
+            action: 'Importing language variants',
             logger: data.logger,
-            chunkSize: importContentItemChunkSize,
+            parallelLimit: 1,
             items: data.importContext.categorizedImportData.contentItems,
             itemInfo: (input) => {
                 return {

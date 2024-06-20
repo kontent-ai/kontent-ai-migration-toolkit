@@ -2,7 +2,6 @@ import { SharedContracts, LanguageVariantElementsBuilder, LanguageVariantElement
 import {
     parseAsMigrationReferencesArray,
     MigrationElementType,
-    MigrationReference,
     MigrationRichTextElementValue,
     MigrationItem,
     MigrationUrlSlugElementValue
@@ -30,25 +29,27 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         });
     },
     asset: (data) => {
-        const assetReferences: SharedContracts.IReferenceObjectContract[] = [];
-
-        for (const assetReference of parseAsMigrationReferencesArray(data.value)) {
+        const assetReferences = parseAsMigrationReferencesArray(data.value).reduce<
+            SharedContracts.IReferenceObjectContract[]
+        >((references, value) => {
             // check if asset already exists in target env
-            const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(assetReference.codename);
+            const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(value.codename);
 
             if (assetStateInTargetEnv.state === 'exists' && assetStateInTargetEnv.asset) {
                 // asset exists, use its id as a reference
                 // (API currently only supports referencing assets by ids only, not by codenames)
-                assetReferences.push({
+                references.push({
                     id: assetStateInTargetEnv.asset.id
                 });
             } else {
                 // reference it via external id otherwise
-                assetReferences.push({
+                references.push({
                     external_id: assetStateInTargetEnv.externalIdToUse
                 });
             }
-        }
+
+            return references;
+        }, []);
 
         return elementsBuilder.assetElement({
             element: {
@@ -74,30 +75,31 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         });
     },
     modular_content: (data) => {
-        const value: SharedContracts.IReferenceObjectContract[] = [];
-        const linkedItemReferences: MigrationReference[] = parseAsMigrationReferencesArray(data.value);
-
-        for (const linkedItemReference of linkedItemReferences) {
-            const itemState = data.importContext.getItemStateInTargetEnvironment(linkedItemReference.codename);
+        const linkedItemReferences = parseAsMigrationReferencesArray(data.value).reduce<
+            SharedContracts.IReferenceObjectContract[]
+        >((references, value) => {
+            const itemState = data.importContext.getItemStateInTargetEnvironment(value.codename);
 
             if (itemState.item) {
                 // linked item already exists in target environment
-                value.push({
+                references.push({
                     codename: itemState.itemCodename
                 });
             } else {
                 // linked item is new, reference it with external id
-                value.push({
+                references.push({
                     external_id: itemState.externalIdToUse
                 });
             }
-        }
+
+            return references;
+        }, []);
 
         return elementsBuilder.linkedItemsElement({
             element: {
                 codename: data.elementCodename
             },
-            value: value
+            value: linkedItemReferences
         });
     },
     multiple_choice: (data) => {

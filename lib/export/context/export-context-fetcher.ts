@@ -1,7 +1,7 @@
 import { WorkflowModels, LanguageVariantModels, ContentItemModels, AssetModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import {
-    processInChunksAsync,
+    processSetAsync,
     runMapiRequestAsync,
     getFlattenedContentTypesAsync,
     is404Error,
@@ -26,9 +26,10 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         environmentData: ExportContextEnvironmentData,
         exportItems: SourceExportItem[]
     ) => {
-        const items: ExportItem[] = await processInChunksAsync<SourceExportItem, ExportItem>({
+        const items: ExportItem[] = await processSetAsync<SourceExportItem, ExportItem>({
             logger: config.logger,
-            chunkSize: 1,
+            action: 'Preparing content items & language variants',
+            parallelLimit: 1,
             itemInfo: (input) => {
                 return {
                     title: `${input.itemCodename} (${input.languageCodename})`,
@@ -136,10 +137,10 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     ) => {
         const variantStepId = languageVariant.workflow.stepIdentifier.id;
 
-        for (const step of workflow.steps) {
-            if (step.id === variantStepId) {
-                return step.codename;
-            }
+        const workflowStep = workflow.steps.find((step) => step.id === variantStepId);
+
+        if (workflowStep) {
+            return workflowStep.id;
         }
 
         if (workflow.archivedStep.id === variantStepId) {
@@ -208,9 +209,10 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     const getContentItemsByIdsAsync = async (itemIds: string[]) => {
         const contentItems: ContentItemModels.ContentItem[] = [];
 
-        await processInChunksAsync<string, void>({
+        await processSetAsync<string, void>({
             logger: config.logger,
-            chunkSize: 1,
+            action: 'Fetching content items',
+            parallelLimit: 1,
             items: itemIds,
             itemInfo: (id) => {
                 return {
@@ -247,9 +249,10 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     const getAssetsByIdsAsync = async (itemIds: string[]) => {
         const assets: AssetModels.Asset[] = [];
 
-        await processInChunksAsync<string, void>({
+        await processSetAsync<string, void>({
             logger: config.logger,
-            chunkSize: 1,
+            action: 'Fetching assets',
+            parallelLimit: 1,
             items: itemIds,
             itemInfo: (id) => {
                 return {
@@ -282,34 +285,30 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
 
     const getItemStatesAsync = async (itemIds: string[]) => {
         const items = await getContentItemsByIdsAsync(itemIds);
-        const itemStates: ItemStateInSourceEnvironmentById[] = [];
-
-        for (const itemId of itemIds) {
+        return itemIds.reduce<ItemStateInSourceEnvironmentById[]>((result, itemId) => {
             const item = items.find((m) => m.id === itemId);
-            itemStates.push({
+            result.push({
                 id: itemId,
                 item: item,
                 state: item ? 'exists' : 'doesNotExists'
             });
-        }
 
-        return itemStates;
+            return result;
+        }, []);
     };
 
     const getAssetStatesAsync = async (assetIds: string[]) => {
         const assets = await getAssetsByIdsAsync(assetIds);
-        const assetStates: AssetStateInSourceEnvironmentById[] = [];
-
-        for (const assetId of assetIds) {
+        return assetIds.reduce<AssetStateInSourceEnvironmentById[]>((result, assetId) => {
             const asset = assets.find((m) => m.id === assetId);
-            assetStates.push({
+            result.push({
                 id: assetId,
                 asset: asset,
                 state: asset ? 'exists' : 'doesNotExists'
             });
-        }
 
-        return assetStates;
+            return result;
+        }, []);
     };
 
     const getElementByIds = (types: FlattenedContentType[]): GetFlattenedElementByIds => {
