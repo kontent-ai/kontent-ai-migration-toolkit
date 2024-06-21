@@ -45,13 +45,13 @@ export interface ErrorData {
 }
 
 export interface ReferencedDataInMigrationItems {
-    readonly itemCodenames: string[];
-    readonly assetCodenames: string[];
+    readonly itemCodenames: Set<string>;
+    readonly assetCodenames: Set<string>;
 }
 
 export interface ReferencedDataInLanguageVariants {
-    readonly itemIds: string[];
-    readonly assetIds: string[];
+    readonly itemIds: Set<string>;
+    readonly assetIds: Set<string>;
 }
 
 export interface ItemStateInSourceEnvironmentById {

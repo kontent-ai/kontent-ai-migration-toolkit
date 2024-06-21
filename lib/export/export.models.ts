@@ -65,7 +65,6 @@ export interface ExportConfig {
 
     readonly logger?: Logger;
     readonly baseUrl?: string;
-    readonly skipFailedItems?: boolean;
     readonly retryStrategy?: IRetryStrategyOptions;
 }
 

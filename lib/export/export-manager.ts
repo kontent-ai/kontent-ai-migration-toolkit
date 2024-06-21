@@ -14,10 +14,10 @@ import {
     FlattenedContentType,
     MigrationComponent,
     getDefaultLogger,
-    MigrationData
+    MigrationData,
+    isNotUndefined
 } from '../core/index.js';
 import { exportTransforms } from '../translation/index.js';
-import { throwErrorForItemRequest } from './utils/export.utils.js';
 import { exportContextFetcher } from './context/export-context-fetcher.js';
 
 export function exportManager(config: ExportConfig) {
@@ -30,24 +30,7 @@ export function exportManager(config: ExportConfig) {
     });
 
     const getMigrationItems = (context: ExportContext) => {
-        return context.exportItems.reduce<MigrationItem[]>((result, exportItem) => {
-            try {
-                result.push(mapToMigrationItem(context, exportItem));
-            } catch (error) {
-                if (config.skipFailedItems) {
-                    logger.log({
-                        type: 'warning',
-                        message: `Failed to export item '${chalk.yellow(
-                            exportItem.requestItem.itemCodename
-                        )}' in language '${chalk.yellow(exportItem.requestItem.languageCodename)}'`
-                    });
-                } else {
-                    throwErrorForItemRequest(exportItem.requestItem, extractErrorData(error).message);
-                }
-            }
-
-            return result;
-        }, []);
+        return context.exportItems.map<MigrationItem>((exportItem) => mapToMigrationItem(context, exportItem));
     };
 
     const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem) => {
@@ -98,35 +81,35 @@ export function exportManager(config: ExportConfig) {
         contentType: FlattenedContentType,
         elements: ElementModels.ContentItemElement[]
     ) => {
-        const sortedContentTypeElements = contentType.elements.sort((a, b) => {
-            if (a.codename < b.codename) {
-                return -1;
-            }
-            if (a.codename > b.codename) {
-                return 1;
-            }
-            return 0;
-        });
+        return contentType.elements
+            .sort((a, b) => {
+                if (a.codename < b.codename) {
+                    return -1;
+                }
+                if (a.codename > b.codename) {
+                    return 1;
+                }
+                return 0;
+            })
+            .reduce<MigrationElements>((model, typeElement) => {
+                const itemElement = elements.find((m) => m.element.id === typeElement.id);
 
-        return sortedContentTypeElements.reduce<MigrationElements>((model, typeElement) => {
-            const itemElement = elements.find((m) => m.element.id === typeElement.id);
+                if (!itemElement) {
+                    throw new Error(`Could not find element '${chalk.red(typeElement.codename)}'`);
+                }
 
-            if (!itemElement) {
-                throw new Error(`Could not find element '${chalk.red(typeElement.codename)}'`);
-            }
+                model[typeElement.codename] = {
+                    type: typeElement.type,
+                    value: getValueToStoreFromElement({
+                        context: context,
+                        contentType: contentType,
+                        exportElement: itemElement,
+                        typeElement: typeElement
+                    })
+                };
 
-            model[typeElement.codename] = {
-                type: typeElement.type,
-                value: getValueToStoreFromElement({
-                    context: context,
-                    contentType: contentType,
-                    exportElement: itemElement,
-                    typeElement: typeElement
-                })
-            };
-
-            return model;
-        }, {});
+                return model;
+            }, {});
     };
 
     const getValueToStoreFromElement = (data: {
@@ -166,15 +149,9 @@ export function exportManager(config: ExportConfig) {
     };
 
     const exportAssetsAsync = async (context: ExportContext) => {
-        const assets = context.referencedData.assetIds.reduce<AssetModels.Asset[]>((result, assetId) => {
-            const assetState = context.getAssetStateInSourceEnvironment(assetId);
-
-            if (assetState.asset) {
-                result.push(assetState.asset);
-            }
-
-            return result;
-        }, []);
+        const assets = Array.from(context.referencedData.assetIds)
+            .map<AssetModels.Asset | undefined>((assetId) => context.getAssetStateInSourceEnvironment(assetId).asset)
+            .filter(isNotUndefined);
 
         return await getMigrationAssetsWithBinaryDataAsync(assets, context);
     };

@@ -194,56 +194,53 @@ export function importContextFetcher(config: ImportContextConfig) {
 
     const getVariantStatesAsync = async (migrationItems: MigrationItem[]) => {
         const variants = await getLanguageVariantsAsync(migrationItems);
-        return migrationItems.reduce<LanguageVariantStateInTargetEnvironmentByCodename[]>((result, migrationItem) => {
+
+        return migrationItems.map<LanguageVariantStateInTargetEnvironmentByCodename>((migrationItem) => {
             const variant = variants.find(
                 (m) =>
                     m.migrationItem.system.codename === migrationItem.system.codename &&
                     m.migrationItem.system.language === migrationItem.system.language
             );
 
-            result.push({
+            return {
                 itemCodename: migrationItem.system.codename,
                 languageCodename: migrationItem.system.language.codename,
                 languageVariant: variant?.languageVariant,
                 state: variant ? 'exists' : 'doesNotExists'
-            });
-
-            return result;
-        }, []);
+            };
+        });
     };
 
     const getItemStatesAsync = async (itemCodenames: string[]) => {
         const items = await getContentItemsByCodenamesAsync(itemCodenames);
-        return itemCodenames.reduce<ItemStateInTargetEnvironmentByCodename[]>((result, codename) => {
+
+        return itemCodenames.map<ItemStateInTargetEnvironmentByCodename>((codename) => {
             const item = items.find((m) => m.codename === codename);
             const externalId = config.externalIdGenerator.contentItemExternalId(codename);
 
-            result.push({
+            return {
                 itemCodename: codename,
                 item: item,
                 state: item ? 'exists' : 'doesNotExists',
                 externalIdToUse: externalId
-            });
-
-            return result;
-        }, []);
+            };
+        });
     };
 
     const getAssetStatesAsync = async (assetCodenames: string[]) => {
         const assets = await getAssetsByCodenamesAsync(assetCodenames);
-        return assetCodenames.reduce<AssetStateInTargetEnvironmentByCodename[]>((result, assetCodename) => {
-            const asset = assets.find((m) => m.codename === assetCodename);
-            const externalId = config.externalIdGenerator.assetExternalId(assetCodename);
 
-            result.push({
-                assetCodename: assetCodename,
+        return assetCodenames.map<AssetStateInTargetEnvironmentByCodename>((codename) => {
+            const asset = assets.find((m) => m.codename === codename);
+            const externalId = config.externalIdGenerator.assetExternalId(codename);
+
+            return {
+                assetCodename: codename,
                 asset: asset,
                 state: asset ? 'exists' : 'doesNotExists',
                 externalIdToUse: externalId
-            });
-
-            return result;
-        }, []);
+            };
+        });
     };
 
     const getImportContextAsync = async () => {

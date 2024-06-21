@@ -4,8 +4,7 @@ import {
     MigrationElements,
     ReferencedDataInLanguageVariants,
     ReferencedDataInMigrationItems,
-    parseAsMigrationReferencesArray,
-    uniqueStringFilter
+    parseAsMigrationReferencesArray
 } from '../../core/index.js';
 import { GetFlattenedElementByCodenames } from '../../import/index.js';
 import { ElementModels } from '@kontent-ai/management-sdk';
@@ -31,13 +30,19 @@ export function itemsExtractionProcessor() {
                     if (typeElement.type === 'rich_text') {
                         const rteValue = itemElement.value?.toString();
 
-                        extractedIds.itemIds.push(
-                            ...[
-                                ...richTextProcessor().processDataIds(rteValue ?? '').ids,
-                                ...richTextProcessor().processLinkItemIds(rteValue ?? '').ids
-                            ]
-                        );
-                        extractedIds.assetIds.push(...richTextProcessor().processAssetIds(rteValue ?? '').ids);
+                        // extract referenced items
+                        richTextProcessor()
+                            .processDataIds(rteValue ?? '')
+                            .ids.forEach((id) => extractedIds.itemIds.add(id));
+
+                        richTextProcessor()
+                            .processLinkItemIds(rteValue ?? '')
+                            .ids.forEach((id) => extractedIds.itemIds.add(id));
+
+                        // extract referenced assets
+                        richTextProcessor()
+                            .processAssetIds(rteValue ?? '')
+                            .ids.forEach((id) => extractedIds.assetIds.add(id));
 
                         // recursively extract data from components as well because they may reference additional assets & content items
                         const extractedComponents = extractReferencedDataFromExtractItems(
@@ -50,29 +55,27 @@ export function itemsExtractionProcessor() {
                             getElement
                         );
 
-                        extractedIds.itemIds.push(...extractedComponents.itemIds);
-                        extractedIds.assetIds.push(...extractedComponents.assetIds);
+                        extractedComponents.itemIds.forEach((id) => extractedIds.itemIds.add(id));
+                        extractedComponents.assetIds.forEach((id) => extractedIds.assetIds.add(id));
                     } else if (typeElement.type === 'modular_content' || typeElement.type === 'subpages') {
                         if (itemElement.value && Array.isArray(itemElement.value)) {
-                            itemElement.value.forEach((value) => (value.id ? extractedIds.itemIds.push(value.id) : {}));
+                            itemElement.value.forEach((value) => (value.id ? extractedIds.itemIds.add(value.id) : {}));
                         }
                     } else if (typeElement.type === 'asset') {
                         if (itemElement.value && Array.isArray(itemElement.value)) {
-                            itemElement.value.forEach((value) =>
-                                value.id ? extractedIds.assetIds.push(value.id) : {}
-                            );
+                            itemElement.value.forEach((value) => (value.id ? extractedIds.assetIds.add(value.id) : {}));
                         }
                     }
 
                     return childExtractedIds;
                 }, extractedIds);
             },
-            { itemIds: [], assetIds: [] }
+            { itemIds: new Set(), assetIds: new Set() }
         );
 
         return <ReferencedDataInLanguageVariants>{
-            itemIds: extractedIds.itemIds.filter(uniqueStringFilter),
-            assetIds: extractedIds.assetIds.filter(uniqueStringFilter)
+            itemIds: extractedIds.itemIds,
+            assetIds: extractedIds.assetIds
         };
     };
 
@@ -95,15 +98,19 @@ export function itemsExtractionProcessor() {
 
                             const richTextHtml = richTextElementValue.value?.value ?? '';
 
-                            childExtractedCodenames.itemCodenames.push(
-                                ...[
-                                    ...richTextProcessor().processRteItemCodenames(richTextHtml).codenames,
-                                    ...richTextProcessor().processRteLinkItemCodenames(richTextHtml).codenames
-                                ]
-                            );
-                            childExtractedCodenames.assetCodenames.push(
-                                ...richTextProcessor().processRteAssetCodenames(richTextHtml).codenames
-                            );
+                            // items
+                            richTextProcessor()
+                                .processRteItemCodenames(richTextHtml)
+                                .codenames.forEach((codename) => childExtractedCodenames.itemCodenames.add(codename));
+
+                            richTextProcessor()
+                                .processRteLinkItemCodenames(richTextHtml)
+                                .codenames.forEach((codename) => childExtractedCodenames.itemCodenames.add(codename));
+
+                            // assets
+                            richTextProcessor()
+                                .processRteAssetCodenames(richTextHtml)
+                                .codenames.forEach((codename) => childExtractedCodenames.assetCodenames.add(codename));
 
                             // recursively extract data from components as well because they may reference additional assets & content items
                             const extractedComponents = extractReferencedItemsFromMigrationItems(
@@ -118,19 +125,23 @@ export function itemsExtractionProcessor() {
                                 getElement
                             );
 
-                            childExtractedCodenames.itemCodenames.push(...extractedComponents.itemCodenames);
-                            childExtractedCodenames.assetCodenames.push(...extractedComponents.assetCodenames);
+                            extractedComponents.itemCodenames.forEach((codename) =>
+                                childExtractedCodenames.itemCodenames.add(codename)
+                            );
+                            extractedComponents.assetCodenames.forEach((codename) =>
+                                childExtractedCodenames.assetCodenames.add(codename)
+                            );
                         } else if (
                             flattenedElement.type === 'modular_content' ||
                             flattenedElement.type === 'subpages'
                         ) {
-                            childExtractedCodenames.itemCodenames.push(
-                                ...parseAsMigrationReferencesArray(element.value).map((m) => m.codename)
-                            );
+                            parseAsMigrationReferencesArray(element.value)
+                                .map((m) => m.codename)
+                                .forEach((codename) => childExtractedCodenames.itemCodenames.add(codename));
                         } else if (flattenedElement.type === 'asset') {
-                            childExtractedCodenames.assetCodenames.push(
-                                ...parseAsMigrationReferencesArray(element.value).map((m) => m.codename)
-                            );
+                            parseAsMigrationReferencesArray(element.value)
+                                .map((m) => m.codename)
+                                .forEach((codename) => childExtractedCodenames.assetCodenames.add(codename));
                         }
 
                         return childExtractedCodenames;
@@ -139,14 +150,14 @@ export function itemsExtractionProcessor() {
                 );
             },
             {
-                itemCodenames: [],
-                assetCodenames: []
+                itemCodenames: new Set(),
+                assetCodenames: new Set()
             }
         );
 
         return <ReferencedDataInMigrationItems>{
-            itemCodenames: extractedCodenames.itemCodenames.filter(uniqueStringFilter),
-            assetCodenames: extractedCodenames.assetCodenames.filter(uniqueStringFilter)
+            itemCodenames: extractedCodenames.itemCodenames,
+            assetCodenames: extractedCodenames.assetCodenames
         };
     };
 

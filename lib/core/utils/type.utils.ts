@@ -2,7 +2,7 @@ import { ContentTypeModels, ContentTypeSnippetModels, ManagementClient } from '@
 import { FlattenedContentType, FlattenedContentTypeElement } from '../models/core.models.js';
 import chalk from 'chalk';
 import { runMapiRequestAsync } from './run.utils.js';
-import { exitProgram } from './global.utils.js';
+import { exitProgram, isNotUndefined } from './global.utils.js';
 import { Logger } from '../models/log.models.js';
 
 export async function getFlattenedContentTypesAsync(
@@ -93,13 +93,7 @@ function getContentTypeElements(
 
             return flattenedElement;
         })
-        .reduce<FlattenedContentTypeElement[]>((prev, current) => {
-            if (current) {
-                prev.push(current);
-            }
-
-            return prev;
-        }, []);
+        .filter(isNotUndefined);
 
     return elements;
 }

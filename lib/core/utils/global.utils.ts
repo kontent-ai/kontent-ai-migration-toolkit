@@ -4,6 +4,8 @@ import { isBrowser, isNode, isWebWorker } from 'browser-or-node';
 import { EnvContext } from '../models/core.models.js';
 import { MigrationElementValue, MigrationReference } from '../models/migration.models.js';
 
+export const isNotUndefined = <T>(item: T | undefined): item is T => item !== undefined;
+
 export function formatBytes(bytes: number): string {
     return format(bytes);
 }

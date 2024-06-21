@@ -56,13 +56,11 @@ export function languageVariantImporter(data: {
         });
 
         // prepare & map elements
-        const mappedElements = Object.entries(migrationItem.elements).reduce<
-            LanguageVariantElements.ILanguageVariantElementBase[]
-        >((result, [codename, migrationElement]) => {
-            result.push(getElementContract(migrationItem, migrationElement, codename));
-
-            return result;
-        }, []);
+        const mappedElements: LanguageVariantElements.ILanguageVariantElementBase[] = Object.entries(
+            migrationItem.elements
+        ).map(([codename, migrationElement]) => {
+            return getElementContract(migrationItem, migrationElement, codename);
+        });
 
         // upsert language variant
         await runMapiRequestAsync({

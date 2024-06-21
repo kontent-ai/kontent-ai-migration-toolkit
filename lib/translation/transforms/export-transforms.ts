@@ -2,7 +2,8 @@ import {
     MigrationElementType,
     MigrationReference,
     MigrationRichTextElementValue,
-    MigrationUrlSlugElementValue
+    MigrationUrlSlugElementValue,
+    isNotUndefined
 } from '../../core/index.js';
 import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
 import { ExportTransformFunc, ExportContext, ExportElement } from '../../export/index.js';
@@ -38,20 +39,19 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate asset id to codename
-        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
-            if (value.id) {
-                const assetState = data.context.getAssetStateInSourceEnvironment(value.id);
+        return data.exportElement.value
+            .map((m) => m.id)
+            .filter(isNotUndefined)
+            .map<MigrationReference>((id) => {
+                const assetState = data.context.getAssetStateInSourceEnvironment(id);
 
                 if (assetState.asset) {
                     // reference asset by codename
-                    references.push({ codename: assetState.asset.codename });
+                    return { codename: assetState.asset.codename };
                 } else {
-                    throw Error(`Missing asset with id '${chalk.red(value.id)}'`);
+                    throw Error(`Missing asset with id '${chalk.red(id)}'`);
                 }
-            }
-
-            return references;
-        }, []);
+            });
     },
     taxonomy: (data) => {
         if (!data.exportElement.value) {
@@ -73,20 +73,19 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate taxonomy term to codename
-        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
-            if (value.id) {
-                const taxonomyTerm = findTaxonomy(value.id, taxonomy);
+        return data.exportElement.value
+            .map((m) => m.id)
+            .filter(isNotUndefined)
+            .map<MigrationReference>((id) => {
+                const taxonomyTerm = findTaxonomy(id, taxonomy);
 
                 if (taxonomyTerm) {
                     // reference taxonomy term by codename
-                    references.push({ codename: taxonomyTerm.codename });
+                    return { codename: taxonomyTerm.codename };
                 } else {
-                    throw Error(`Missing taxonomy term with id '${chalk.red(value.id)}'`);
+                    throw Error(`Missing taxonomy term with id '${chalk.red(id)}'`);
                 }
-            }
-
-            return references;
-        }, []);
+            });
     },
     modular_content: (data) => {
         if (!data.exportElement.value) {
@@ -98,19 +97,19 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate item id to codename
-        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
-            if (value.id) {
-                const itemState = data.context.getItemStateInSourceEnvironment(value.id);
+        return data.exportElement.value
+            .map((m) => m.id)
+            .filter(isNotUndefined)
+            .map<MigrationReference>((id) => {
+                const itemState = data.context.getItemStateInSourceEnvironment(id);
 
                 if (itemState.item) {
                     // reference item by codename
-                    references.push({ codename: itemState.item.codename });
+                    return { codename: itemState.item.codename };
                 } else {
-                    throw Error(`Missing item with id '${chalk.red(value.id)}'`);
+                    throw Error(`Missing item with id '${chalk.red(id)}'`);
                 }
-            }
-            return references;
-        }, []);
+            });
     },
     custom: (data) => data.exportElement.value?.toString(),
     url_slug: (data) => {
@@ -133,18 +132,18 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         // translate multiple choice option id to codename
         const multipleChoiceElement = data.typeElement.element as ContentTypeElements.IMultipleChoiceElement;
 
-        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
-            if (value.id) {
-                const option = multipleChoiceElement.options.find((m) => m.id === value.id);
+        return data.exportElement.value
+            .map((m) => m.id)
+            .filter(isNotUndefined)
+            .map<MigrationReference>((id) => {
+                const option = multipleChoiceElement.options.find((m) => m.id === id);
 
                 if (option?.codename) {
-                    references.push({ codename: option.codename });
+                    return { codename: option.codename };
                 } else {
-                    throw Error(`Could not find multiple choice element with option id '${chalk.red(value.id)}'`);
+                    throw Error(`Could not find multiple choice element with option id '${chalk.red(id)}'`);
                 }
-            }
-            return references;
-        }, []);
+            });
     },
     subpages: (data) => {
         if (!data.exportElement.value) {
@@ -155,19 +154,19 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate item id to codename
-        return data.exportElement.value.reduce<MigrationReference[]>((references, value) => {
-            if (value.id) {
-                const itemState = data.context.getItemStateInSourceEnvironment(value.id);
+        return data.exportElement.value
+            .map((m) => m.id)
+            .filter(isNotUndefined)
+            .map<MigrationReference>((id) => {
+                const itemState = data.context.getItemStateInSourceEnvironment(id);
 
                 if (itemState.item) {
                     // reference item by codename
-                    references.push({ codename: itemState.item.codename });
+                    return { codename: itemState.item.codename };
                 } else {
-                    throw Error(`Missing item with id '${chalk.red(value.id)}'`);
+                    throw Error(`Missing item with id '${chalk.red(id)}'`);
                 }
-            }
-            return references;
-        }, []);
+            });
     }
 };
 

@@ -285,30 +285,28 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
 
     const getItemStatesAsync = async (itemIds: string[]) => {
         const items = await getContentItemsByIdsAsync(itemIds);
-        return itemIds.reduce<ItemStateInSourceEnvironmentById[]>((result, itemId) => {
+
+        return itemIds.map<ItemStateInSourceEnvironmentById>((itemId) => {
             const item = items.find((m) => m.id === itemId);
-            result.push({
+            return {
                 id: itemId,
                 item: item,
                 state: item ? 'exists' : 'doesNotExists'
-            });
-
-            return result;
-        }, []);
+            };
+        });
     };
 
     const getAssetStatesAsync = async (assetIds: string[]) => {
         const assets = await getAssetsByIdsAsync(assetIds);
-        return assetIds.reduce<AssetStateInSourceEnvironmentById[]>((result, assetId) => {
+
+        return assetIds.map<AssetStateInSourceEnvironmentById>((assetId) => {
             const asset = assets.find((m) => m.id === assetId);
-            result.push({
+            return {
                 id: assetId,
                 asset: asset,
                 state: asset ? 'exists' : 'doesNotExists'
-            });
-
-            return result;
-        }, []);
+            };
+        });
     };
 
     const getElementByIds = (types: FlattenedContentType[]): GetFlattenedElementByIds => {
