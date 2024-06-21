@@ -11,17 +11,20 @@ import { ElementModels } from '@kontent-ai/management-sdk';
 import { GetFlattenedElementByIds } from 'lib/export/export.models.js';
 
 interface ExtractItemById {
-    elements: ElementModels.ContentItemElement[];
-    contentTypeId: string;
+    readonly elements: ElementModels.ContentItemElement[];
+    readonly contentTypeId: string;
 }
 
 interface ExtractItemByCodename {
-    elements: MigrationElements;
-    contentTypeCodename: string;
+    readonly elements: MigrationElements;
+    readonly contentTypeCodename: string;
 }
 
 export function itemsExtractionProcessor() {
-    const extractReferencedDataFromExtractItems = (items: ExtractItemById[], getElement: GetFlattenedElementByIds) => {
+    const extractReferencedDataFromExtractItems = (
+        items: readonly ExtractItemById[],
+        getElement: GetFlattenedElementByIds
+    ) => {
         const extractedIds = items.reduce<ReferencedDataInLanguageVariants>(
             (extractedIds, item) => {
                 return item.elements.reduce<ReferencedDataInLanguageVariants>((childExtractedIds, itemElement) => {
@@ -80,7 +83,7 @@ export function itemsExtractionProcessor() {
     };
 
     const extractReferencedItemsFromMigrationItems = (
-        items: ExtractItemByCodename[],
+        items: readonly ExtractItemByCodename[],
         getElement: GetFlattenedElementByCodenames
     ) => {
         const extractedCodenames = items.reduce<ReferencedDataInMigrationItems>(

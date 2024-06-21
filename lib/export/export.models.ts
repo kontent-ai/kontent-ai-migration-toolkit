@@ -23,18 +23,18 @@ import {
 } from '@kontent-ai/management-sdk';
 
 export interface ExportContextEnvironmentData {
-    readonly languages: LanguageModels.LanguageModel[];
-    readonly contentTypes: FlattenedContentType[];
-    readonly collections: CollectionModels.Collection[];
-    readonly workflows: WorkflowModels.Workflow[];
-    readonly taxonomies: TaxonomyModels.Taxonomy[];
+    readonly languages: readonly LanguageModels.LanguageModel[];
+    readonly contentTypes: readonly FlattenedContentType[];
+    readonly collections: readonly CollectionModels.Collection[];
+    readonly workflows: readonly WorkflowModels.Workflow[];
+    readonly taxonomies: readonly TaxonomyModels.Taxonomy[];
 }
 
 export type ExportElementValue = string | number | SharedModels.ReferenceObject[] | undefined;
 
 export interface ExportElement {
     readonly value: ExportElementValue;
-    readonly components: MigrationComponent[];
+    readonly components: readonly MigrationComponent[];
     readonly urlSlugMode: MigrationUrlSlugMode | undefined;
 }
 
@@ -49,7 +49,7 @@ export interface ExportContext {
     readonly referencedData: ReferencedDataInLanguageVariants;
     readonly getItemStateInSourceEnvironment: (id: string) => ItemStateInSourceEnvironmentById;
     readonly getAssetStateInSourceEnvironment: (id: string) => AssetStateInSourceEnvironmentById;
-    readonly exportItems: ExportItem[];
+    readonly exportItems: readonly ExportItem[];
     readonly getElement: GetFlattenedElementByIds;
 }
 
@@ -61,28 +61,28 @@ export interface SourceExportItem {
 export interface ExportConfig {
     readonly environmentId: string;
     readonly apiKey: string;
-    readonly exportItems: SourceExportItem[];
+    readonly exportItems: readonly SourceExportItem[];
 
     readonly logger?: Logger;
     readonly baseUrl?: string;
-    readonly retryStrategy?: IRetryStrategyOptions;
+    readonly retryStrategy?: Readonly<IRetryStrategyOptions>;
 }
 
 export interface DefaultExportContextConfig {
     readonly logger: Logger;
-    readonly exportItems: SourceExportItem[];
-    readonly managementClient: ManagementClient;
+    readonly exportItems: readonly SourceExportItem[];
+    readonly managementClient: Readonly<ManagementClient>;
 }
 
 export type GetFlattenedElementByIds = (contentTypeId: string, elementId: string) => FlattenedContentTypeElement;
 
 export interface ExportItem {
-    readonly languageVariant: LanguageVariantModels.ContentItemLanguageVariant;
-    readonly contentItem: ContentItemModels.ContentItem;
-    readonly collection: CollectionModels.Collection;
-    readonly language: LanguageModels.LanguageModel;
-    readonly workflow: WorkflowModels.Workflow;
+    readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
+    readonly contentItem: Readonly<ContentItemModels.ContentItem>;
+    readonly collection: Readonly<CollectionModels.Collection>;
+    readonly language: Readonly<LanguageModels.LanguageModel>;
+    readonly workflow: Readonly<WorkflowModels.Workflow>;
     readonly workflowStepCodename: string;
     readonly requestItem: SourceExportItem;
-    readonly contentType: FlattenedContentType;
+    readonly contentType: Readonly<FlattenedContentType>;
 }

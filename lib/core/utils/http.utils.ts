@@ -4,11 +4,11 @@ import { OriginalManagementError } from '../models/core.models.js';
 const rateExceededErrorCode: number = 10000;
 const notFoundErrorCode: number = 10000;
 
-export const defaultHttpService: HttpService = new HttpService({
+export const defaultHttpService: Readonly<HttpService> = new HttpService({
     logErrorsToConsole: false
 });
 
-export const defaultRetryStrategy: IRetryStrategyOptions = {
+export const defaultRetryStrategy: Readonly<IRetryStrategyOptions> = {
     addJitter: true,
     canRetryError: (err) => {
         const originalError = err as OriginalManagementError | undefined;

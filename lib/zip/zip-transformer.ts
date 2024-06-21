@@ -14,11 +14,11 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
         return { subfolder: subfolder, fullPath: `${assetsBinaryFolderName}/${subfolder}/${asset._zipFilename}` };
     };
 
-    const transformItems = (items: MigrationItem[]) => {
+    const transformItems = (items: readonly MigrationItem[]) => {
         zip.addFile(filename, items.length ? JSON.stringify(items) : '[]');
     };
 
-    const transformAssets = (assets: MigrationAsset[]) => {
+    const transformAssets = (assets: readonly MigrationAsset[]) => {
         const assetRecords: AssetWithoutBinaryData[] = [];
         const binaryDataFolder = zip.addFolder(assetsBinaryFolderName);
 
@@ -55,7 +55,7 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
             return [];
         }
 
-        const assetRecords: AssetWithoutBinaryData[] = JSON.parse(text) as AssetWithoutBinaryData[];
+        const assetRecords = JSON.parse(text) as AssetWithoutBinaryData[];
 
         return await mapAsync(assetRecords, async (assetRecord) => {
             const migrationAsset: MigrationAsset = {

@@ -22,8 +22,8 @@ import { workflowImporter } from './workflow-importer.js';
 
 export function languageVariantImporter(data: {
     readonly logger: Logger;
-    readonly workflows: WorkflowModels.Workflow[];
-    readonly preparedContentItems: ContentItemModels.ContentItem[];
+    readonly workflows: readonly WorkflowModels.Workflow[];
+    readonly preparedContentItems: readonly ContentItemModels.ContentItem[];
     readonly importContext: ImportContext;
     readonly client: ManagementClient;
     readonly skipFailedItems: boolean;
@@ -179,7 +179,7 @@ export function languageVariantImporter(data: {
 
     const isLanguageVariantPublished = (
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
-        workflows: WorkflowModels.Workflow[]
+        workflows: readonly WorkflowModels.Workflow[]
     ) => {
         return workflows.find((workflow) => workflow.publishedStep.id === languageVariant.workflow.stepIdentifier.id)
             ? true
@@ -188,7 +188,7 @@ export function languageVariantImporter(data: {
 
     const isLanguageVariantArchived = (
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
-        workflows: WorkflowModels.Workflow[]
+        workflows: readonly WorkflowModels.Workflow[]
     ) => {
         return workflows.find((workflow) => workflow.archivedStep.id === languageVariant.workflow.stepIdentifier.id)
             ? true

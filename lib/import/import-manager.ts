@@ -58,7 +58,7 @@ export function importManager(config: ImportConfig) {
 
     const importLanguageVariantsAsync = async (
         importContext: ImportContext,
-        contentItems: ContentItemModels.ContentItem[]
+        contentItems: readonly ContentItemModels.ContentItem[]
     ) => {
         if (!importContext.categorizedImportData.contentItems.length) {
             logger.log({

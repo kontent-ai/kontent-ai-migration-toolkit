@@ -16,11 +16,11 @@ type SetAction =
 export async function processSetAsync<InputItem, OutputItem>(data: {
     readonly action: SetAction;
     readonly logger: Logger;
-    readonly items: InputItem[];
+    readonly items: Readonly<InputItem[]>;
     readonly parallelLimit: number;
     readonly processAsync: (item: InputItem, logSpinner: LogSpinnerData) => Promise<OutputItem>;
     readonly itemInfo: (item: InputItem) => ItemInfo;
-}): Promise<OutputItem[]> {
+}): Promise<readonly OutputItem[]> {
     if (!data.items.length) {
         return [];
     }
@@ -29,7 +29,7 @@ export async function processSetAsync<InputItem, OutputItem>(data: {
         const limit = pLimit(data.parallelLimit);
         let index: number = 1;
 
-        const requests2: Promise<OutputItem>[] = data.items.map((item) =>
+        const requests: Promise<OutputItem>[] = data.items.map((item) =>
             limit(() => {
                 const itemInfo = data.itemInfo(item);
                 const countPrefix = getCountPrefix(index, data.items.length);
@@ -49,7 +49,7 @@ export async function processSetAsync<InputItem, OutputItem>(data: {
         );
 
         // Only '<parallelLimit>' promises at a time
-        const outputItems = await Promise.all(requests2);
+        const outputItems = await Promise.all(requests);
 
         logSpinner({ type: 'info', message: `Action '${chalk.yellow(data.action)}' finished successfully` });
 

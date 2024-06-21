@@ -11,7 +11,7 @@ export interface MigrationEnv {
 }
 
 export interface MigrationSource extends MigrationEnv {
-    readonly items: SourceExportItem[];
+    readonly items: readonly SourceExportItem[];
 }
 
 export interface MigrationTarget extends MigrationEnv {

@@ -161,7 +161,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
 function mapComponents(data: {
     readonly rteValue: MigrationRichTextElementValue;
     readonly importContext: ImportContext;
-    readonly migrationItems: MigrationItem[];
+    readonly migrationItems: readonly MigrationItem[];
 }): LanguageVariantElements.IRichTextComponent[] {
     return data.rteValue.components.map((component) => {
         const mappedComponent: LanguageVariantElements.IRichTextComponent = {
@@ -188,7 +188,7 @@ function mapComponents(data: {
 function processImportRichTextHtmlValue(data: {
     readonly element: MigrationRichTextElementValue;
     readonly importContext: ImportContext;
-    readonly migrationItems: MigrationItem[];
+    readonly migrationItems: readonly MigrationItem[];
 }): string | undefined {
     if (!data.element) {
         return undefined;

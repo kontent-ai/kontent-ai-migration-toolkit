@@ -3,7 +3,7 @@ import { CliAction } from '../../core/index.js';
 export interface Command {
     readonly name: string;
     readonly description: string;
-    readonly options: CommandOption[];
+    readonly options: readonly CommandOption[];
     readonly examples: string[];
 }
 

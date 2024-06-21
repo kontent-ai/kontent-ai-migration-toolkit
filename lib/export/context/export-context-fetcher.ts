@@ -7,7 +7,6 @@ import {
     is404Error,
     ItemStateInSourceEnvironmentById,
     AssetStateInSourceEnvironmentById,
-    uniqueStringFilter,
     FlattenedContentType,
     isNotUndefined
 } from '../../core/index.js';
@@ -25,9 +24,9 @@ import { throwErrorForItemRequest } from '../utils/export.utils.js';
 export function exportContextFetcher(config: DefaultExportContextConfig) {
     const prepareExportItemsAsync = async (
         environmentData: ExportContextEnvironmentData,
-        exportItems: SourceExportItem[]
+        exportItems: readonly SourceExportItem[]
     ) => {
-        const items: ExportItem[] = await processSetAsync<SourceExportItem, ExportItem>({
+        return await processSetAsync<SourceExportItem, ExportItem>({
             logger: config.logger,
             action: 'Preparing content items & language variants',
             parallelLimit: 1,
@@ -128,8 +127,6 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
                 return preparedItem;
             }
         });
-
-        return items;
     };
 
     const getWorkflowStepCodename = (
@@ -207,13 +204,13 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
     };
 
-    const getContentItemsByIdsAsync = async (itemIds: string[]) => {
+    const getContentItemsByIdsAsync = async (itemIds: ReadonlySet<string>) => {
         return (
             await processSetAsync<string, ContentItemModels.ContentItem | undefined>({
                 logger: config.logger,
                 action: 'Fetching content items',
                 parallelLimit: 1,
-                items: itemIds,
+                items: Array.from(itemIds),
                 itemInfo: (id) => {
                     return {
                         itemType: 'contentItem',
@@ -245,13 +242,13 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getAssetsByIdsAsync = async (itemIds: string[]) => {
+    const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>) => {
         return (
             await processSetAsync<string, AssetModels.Asset | undefined>({
                 logger: config.logger,
                 action: 'Fetching assets',
                 parallelLimit: 1,
-                items: itemIds,
+                items: Array.from(itemIds),
                 itemInfo: (id) => {
                     return {
                         itemType: 'asset',
@@ -283,10 +280,10 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getItemStatesAsync = async (itemIds: string[]) => {
+    const getItemStatesAsync = async (itemIds: ReadonlySet<string>) => {
         const items = await getContentItemsByIdsAsync(itemIds);
 
-        return itemIds.map<ItemStateInSourceEnvironmentById>((itemId) => {
+        return Array.from(itemIds).map<ItemStateInSourceEnvironmentById>((itemId) => {
             const item = items.find((m) => m.id === itemId);
             return {
                 id: itemId,
@@ -296,10 +293,10 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
     };
 
-    const getAssetStatesAsync = async (assetIds: string[]) => {
+    const getAssetStatesAsync = async (assetIds: ReadonlySet<string>) => {
         const assets = await getAssetsByIdsAsync(assetIds);
 
-        return assetIds.map<AssetStateInSourceEnvironmentById>((assetId) => {
+        return Array.from(assetIds).map<AssetStateInSourceEnvironmentById>((assetId) => {
             const asset = assets.find((m) => m.id === assetId);
             return {
                 id: assetId,
@@ -309,7 +306,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
     };
 
-    const getElementByIds = (types: FlattenedContentType[]): GetFlattenedElementByIds => {
+    const getElementByIds = (types: readonly FlattenedContentType[]): GetFlattenedElementByIds => {
         return (contentTypeId: string, elementId: string) => {
             const contentType = types.find((m) => m.contentTypeId === contentTypeId);
 
@@ -356,24 +353,28 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         );
 
         // fetch both referenced items and items that are set to be exported
-        const itemIdsToCheckInTargetEnv: string[] = [
+        const itemIdsToCheckInTargetEnv = new Set<string>([
             ...referencedData.itemIds,
             ...preparedItems.map((m) => m.contentItem.id)
-        ].filter(uniqueStringFilter);
+        ]);
 
-        const assetIdsToCheckInTargetEnv: string[] = [...referencedData.assetIds];
+        const assetIdsToCheckInTargetEnv = new Set<string>([...referencedData.assetIds]);
 
         config.logger.log({
             type: 'info',
             message: `Fetching referenced items`
         });
-        const itemStates: ItemStateInSourceEnvironmentById[] = await getItemStatesAsync(itemIdsToCheckInTargetEnv);
+        const itemStates: readonly ItemStateInSourceEnvironmentById[] = await getItemStatesAsync(
+            itemIdsToCheckInTargetEnv
+        );
 
         config.logger.log({
             type: 'info',
             message: `Fetching referenced assets`
         });
-        const assetStates: AssetStateInSourceEnvironmentById[] = await getAssetStatesAsync(assetIdsToCheckInTargetEnv);
+        const assetStates: readonly AssetStateInSourceEnvironmentById[] = await getAssetStatesAsync(
+            assetIdsToCheckInTargetEnv
+        );
 
         const exportContext: ExportContext = {
             getElement: getElementByIds(environmentData.contentTypes),

@@ -9,7 +9,7 @@ export function assetsImporter(data: {
     readonly client: ManagementClient;
     readonly importContext: ImportContext;
 }) {
-    const getAssetsToUpload: () => MigrationAsset[] = () => {
+    const getAssetsToUpload: () => readonly MigrationAsset[] = () => {
         return data.importContext.categorizedImportData.assets.filter((asset) => {
             return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
         });

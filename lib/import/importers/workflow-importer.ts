@@ -37,7 +37,7 @@ export function workflowImporter(logger: Logger) {
     const getWorkflowAndStep = (data: {
         readonly workflowStepCodename: string;
         readonly workflowCodename: string;
-        readonly workflows: WorkflowModels.Workflow[];
+        readonly workflows: readonly WorkflowModels.Workflow[];
     }) => {
         const workflow = data.workflows.find((m) => m.codename?.toLowerCase() === data.workflowCodename.toLowerCase());
 
@@ -70,21 +70,21 @@ export function workflowImporter(logger: Logger) {
 
     const doesWorkflowStepCodenameRepresentPublishedStep = (
         stepCodename: string,
-        workflows: WorkflowModels.Workflow[]
+        workflows: readonly WorkflowModels.Workflow[]
     ) => {
         return workflows.find((workflow) => workflow.publishedStep.codename === stepCodename) ? true : false;
     };
 
     const doesWorkflowStepCodenameRepresentArchivedStep = (
         stepCodename: string,
-        workflows: WorkflowModels.Workflow[]
+        workflows: readonly WorkflowModels.Workflow[]
     ) => {
         return workflows.find((workflow) => workflow.archivedStep.codename === stepCodename) ? true : false;
     };
 
     const doesWorkflowStepCodenameRepresentScheduledStep = (
         stepCodename: string,
-        workflows: WorkflowModels.Workflow[]
+        workflows: readonly WorkflowModels.Workflow[]
     ) => {
         return workflows.find((workflow) => workflow.scheduledStep.codename === stepCodename) ? true : false;
     };
@@ -95,7 +95,7 @@ export function workflowImporter(logger: Logger) {
         workflowCodename: string,
         workflowStepCodename: string,
         migrationItem: MigrationItem,
-        workflows: WorkflowModels.Workflow[]
+        workflows: readonly WorkflowModels.Workflow[]
     ) => {
         const { workflow, step } = getWorkflowAndStep({
             workflows: workflows,

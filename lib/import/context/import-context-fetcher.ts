@@ -9,8 +9,7 @@ import {
     is404Error,
     isNotUndefined,
     processSetAsync,
-    runMapiRequestAsync,
-    uniqueStringFilter
+    runMapiRequestAsync
 } from '../../core/index.js';
 import { GetFlattenedElementByCodenames, ImportContext, ImportContextConfig } from '../import.models.js';
 import { itemsExtractionProcessor } from '../../translation/index.js';
@@ -22,7 +21,7 @@ interface LanguageVariantWrapper {
 }
 
 export function importContextFetcher(config: ImportContextConfig) {
-    const getElement = (types: FlattenedContentType[]) => {
+    const getElement = (types: readonly FlattenedContentType[]) => {
         const getFlattenedElement: GetFlattenedElementByCodenames = (
             contentTypeCodename,
             elementCodename,
@@ -66,7 +65,7 @@ export function importContextFetcher(config: ImportContextConfig) {
         return getFlattenedElement;
     };
 
-    const getLanguageVariantsAsync = async (migrationItems: MigrationItem[]) => {
+    const getLanguageVariantsAsync = async (migrationItems: readonly MigrationItem[]) => {
         return (
             await processSetAsync<MigrationItem, LanguageVariantWrapper | undefined>({
                 action: 'Fetching language variants',
@@ -113,13 +112,13 @@ export function importContextFetcher(config: ImportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getContentItemsByCodenamesAsync = async (itemCodenames: string[]) => {
+    const getContentItemsByCodenamesAsync = async (itemCodenames: ReadonlySet<string>) => {
         return (
             await processSetAsync<string, ContentItemModels.ContentItem | undefined>({
                 action: 'Fetching content items',
                 logger: config.logger,
                 parallelLimit: 1,
-                items: itemCodenames,
+                items: Array.from(itemCodenames),
                 itemInfo: (codename) => {
                     return {
                         itemType: 'contentItem',
@@ -151,13 +150,13 @@ export function importContextFetcher(config: ImportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getAssetsByCodenamesAsync = async (assetCodenames: string[]) => {
+    const getAssetsByCodenamesAsync = async (assetCodenames: ReadonlySet<string>) => {
         return (
             await processSetAsync<string, AssetModels.Asset | undefined>({
                 action: 'Fetching assets',
                 logger: config.logger,
                 parallelLimit: 1,
-                items: assetCodenames,
+                items: Array.from(assetCodenames),
                 itemInfo: (codename) => {
                     return {
                         itemType: 'asset',
@@ -189,7 +188,7 @@ export function importContextFetcher(config: ImportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getVariantStatesAsync = async (migrationItems: MigrationItem[]) => {
+    const getVariantStatesAsync = async (migrationItems: readonly MigrationItem[]) => {
         const variants = await getLanguageVariantsAsync(migrationItems);
 
         return migrationItems.map<LanguageVariantStateInTargetEnvironmentByCodename>((migrationItem) => {
@@ -208,10 +207,10 @@ export function importContextFetcher(config: ImportContextConfig) {
         });
     };
 
-    const getItemStatesAsync = async (itemCodenames: string[]) => {
+    const getItemStatesAsync = async (itemCodenames: ReadonlySet<string>) => {
         const items = await getContentItemsByCodenamesAsync(itemCodenames);
 
-        return itemCodenames.map<ItemStateInTargetEnvironmentByCodename>((codename) => {
+        return Array.from(itemCodenames).map<ItemStateInTargetEnvironmentByCodename>((codename) => {
             const item = items.find((m) => m.codename === codename);
             const externalId = config.externalIdGenerator.contentItemExternalId(codename);
 
@@ -224,10 +223,10 @@ export function importContextFetcher(config: ImportContextConfig) {
         });
     };
 
-    const getAssetStatesAsync = async (assetCodenames: string[]) => {
+    const getAssetStatesAsync = async (assetCodenames: ReadonlySet<string>) => {
         const assets = await getAssetsByCodenamesAsync(assetCodenames);
 
-        return assetCodenames.map<AssetStateInTargetEnvironmentByCodename>((codename) => {
+        return Array.from(assetCodenames).map<AssetStateInTargetEnvironmentByCodename>((codename) => {
             const asset = assets.find((m) => m.codename === codename);
             const externalId = config.externalIdGenerator.assetExternalId(codename);
 
@@ -241,7 +240,7 @@ export function importContextFetcher(config: ImportContextConfig) {
     };
 
     const getImportContextAsync = async () => {
-        const flattenedContentTypes: FlattenedContentType[] = await getFlattenedContentTypesAsync(
+        const flattenedContentTypes: readonly FlattenedContentType[] = await getFlattenedContentTypesAsync(
             config.managementClient,
             config.logger
         );
@@ -268,30 +267,27 @@ export function importContextFetcher(config: ImportContextConfig) {
         );
 
         // check all items, including referenced items in content
-        const itemCodenamesToCheckInTargetEnv: string[] = [
+        const itemCodenamesToCheckInTargetEnv = new Set<string>([
             ...referencedData.itemCodenames,
             ...contentItemsExcludingComponents.map((m) => m.system.codename)
-        ].filter(uniqueStringFilter);
-
-        // only load language variants for items to migrate, no need to get it for referenced items
-        const languageVariantToCheckInTargetEnv: MigrationItem[] = contentItemsExcludingComponents;
+        ]);
 
         // check all assets, including referenced assets in content
-        const assetCodenamesToCheckInTargetEnv: string[] = [
+        const assetCodenamesToCheckInTargetEnv = new Set<string>([
             ...referencedData.assetCodenames,
-            ...config.migrationData.assets.map((m) => m.codename).filter(uniqueStringFilter)
-        ];
+            ...config.migrationData.assets.map((m) => m.codename)
+        ]);
 
         // prepare state of objects in target environment
-        const itemStates: ItemStateInTargetEnvironmentByCodename[] = await getItemStatesAsync(
+        const itemStates: readonly ItemStateInTargetEnvironmentByCodename[] = await getItemStatesAsync(
             itemCodenamesToCheckInTargetEnv
         );
 
-        const variantStates: LanguageVariantStateInTargetEnvironmentByCodename[] = await getVariantStatesAsync(
-            languageVariantToCheckInTargetEnv
+        const variantStates: readonly LanguageVariantStateInTargetEnvironmentByCodename[] = await getVariantStatesAsync(
+            contentItemsExcludingComponents
         );
 
-        const assetStates: AssetStateInTargetEnvironmentByCodename[] = await getAssetStatesAsync(
+        const assetStates: readonly AssetStateInTargetEnvironmentByCodename[] = await getAssetStatesAsync(
             assetCodenamesToCheckInTargetEnv
         );
 

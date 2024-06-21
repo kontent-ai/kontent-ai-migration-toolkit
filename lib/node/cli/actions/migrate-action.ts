@@ -13,7 +13,7 @@ export async function migrateActionAsync(argsFetcher: CliArgumentsFetcher): Prom
     const skipFailedItems = argsFetcher.getBooleanArgumentValue('skipFailedItems', false);
     const items = argsFetcher.getRequiredArgumentValue('items')?.split(',');
     const language = argsFetcher.getRequiredArgumentValue('language');
-    const migrateItems: SourceExportItem[] = items.map((m) => {
+    const migrateItems: readonly SourceExportItem[] = items.map((m) => {
         return {
             itemCodename: m,
             languageCodename: language

@@ -18,7 +18,7 @@ import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
 
 export interface ImportContextConfig {
     readonly logger: Logger;
-    readonly managementClient: ManagementClient;
+    readonly managementClient: Readonly<ManagementClient>;
     readonly externalIdGenerator: ExternalIdGenerator;
     readonly migrationData: MigrationData;
 }
@@ -30,9 +30,9 @@ export type GetFlattenedElementByCodenames = (
 ) => FlattenedContentTypeElement;
 
 export interface CategorizedImportData {
-    readonly assets: MigrationAsset[];
-    readonly componentItems: MigrationItem[];
-    readonly contentItems: MigrationItem[];
+    readonly assets: readonly MigrationAsset[];
+    readonly componentItems: readonly MigrationItem[];
+    readonly contentItems: readonly MigrationItem[];
 }
 
 export interface ImportContext {
@@ -51,7 +51,7 @@ export type ImportTransformFunc = (data: {
     readonly value: MigrationElementValue;
     readonly elementCodename: string;
     readonly importContext: ImportContext;
-    readonly migrationItems: MigrationItem[];
+    readonly migrationItems: readonly MigrationItem[];
 }) => ElementContracts.IContentItemElementContract;
 
 export interface ImportConfig {
@@ -59,7 +59,7 @@ export interface ImportConfig {
     readonly environmentId: string;
     readonly apiKey: string;
     readonly skipFailedItems?: boolean;
-    readonly retryStrategy?: IRetryStrategyOptions;
+    readonly retryStrategy?: Readonly<IRetryStrategyOptions>;
     readonly externalIdGenerator?: ExternalIdGenerator;
     readonly baseUrl?: string;
     readonly logger?: Logger;

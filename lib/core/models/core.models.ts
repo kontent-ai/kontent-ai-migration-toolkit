@@ -45,31 +45,31 @@ export interface ErrorData {
 }
 
 export interface ReferencedDataInMigrationItems {
-    readonly itemCodenames: ReadonlySet<string>;
-    readonly assetCodenames: ReadonlySet<string>;
+    readonly itemCodenames: Set<string>;
+    readonly assetCodenames: Set<string>;
 }
 
 export interface ReferencedDataInLanguageVariants {
-    readonly itemIds: ReadonlySet<string>;
-    readonly assetIds: ReadonlySet<string>;
+    readonly itemIds: Set<string>;
+    readonly assetIds: Set<string>;
 }
 
 export interface ItemStateInSourceEnvironmentById {
     readonly state: TargetItemState;
     readonly id: string;
-    readonly item: ContentItemModels.ContentItem | undefined;
+    readonly item: Readonly<ContentItemModels.ContentItem> | undefined;
 }
 
 export interface AssetStateInSourceEnvironmentById {
     readonly state: TargetItemState;
     readonly id: string;
-    readonly asset: AssetModels.Asset | undefined;
+    readonly asset: Readonly<AssetModels.Asset> | undefined;
 }
 
 export interface ItemStateInTargetEnvironmentByCodename {
     readonly state: TargetItemState;
     readonly itemCodename: string;
-    readonly item: ContentItemModels.ContentItem | undefined;
+    readonly item: Readonly<ContentItemModels.ContentItem> | undefined;
     readonly externalIdToUse: string;
 }
 
@@ -77,13 +77,13 @@ export interface LanguageVariantStateInTargetEnvironmentByCodename {
     readonly state: TargetItemState;
     readonly itemCodename: string;
     readonly languageCodename: string;
-    readonly languageVariant: LanguageVariantModels.ContentItemLanguageVariant | undefined;
+    readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
 }
 
 export interface AssetStateInTargetEnvironmentByCodename {
     readonly state: TargetItemState;
     readonly assetCodename: string;
-    readonly asset: AssetModels.Asset | undefined;
+    readonly asset: Readonly<AssetModels.Asset> | undefined;
     readonly externalIdToUse: string;
 }
 
@@ -102,13 +102,13 @@ export interface FlattenedContentTypeElement {
     readonly codename: string;
     readonly id: string;
     readonly type: MigrationElementType;
-    readonly element: ContentTypeElements.ContentTypeElementModel;
+    readonly element: Readonly<ContentTypeElements.ContentTypeElementModel>;
 }
 
 export interface FlattenedContentType {
     readonly contentTypeCodename: string;
     readonly contentTypeId: string;
-    readonly elements: FlattenedContentTypeElement[];
+    readonly elements: readonly FlattenedContentTypeElement[];
 }
 
 export interface OriginalManagementError {

@@ -6,9 +6,9 @@ import { exitProgram, isNotUndefined } from './global.utils.js';
 import { Logger } from '../models/log.models.js';
 
 export async function getFlattenedContentTypesAsync(
-    managementClient: ManagementClient,
+    managementClient: Readonly<ManagementClient>,
     logger: Logger
-): Promise<FlattenedContentType[]> {
+): Promise<readonly FlattenedContentType[]> {
     const contentTypes = await runMapiRequestAsync({
         logger: logger,
         func: async () => (await managementClient.listContentTypes().toAllPromise()).data.items,
@@ -38,9 +38,9 @@ export async function getFlattenedContentTypesAsync(
 
 function getContentTypeElements(
     contentType: ContentTypeModels.ContentType,
-    contentTypeSnippets: ContentTypeSnippetModels.ContentTypeSnippet[]
-): FlattenedContentTypeElement[] {
-    const elements: FlattenedContentTypeElement[] = contentType.elements
+    contentTypeSnippets: readonly ContentTypeSnippetModels.ContentTypeSnippet[]
+): readonly FlattenedContentTypeElement[] {
+    return contentType.elements
         .flatMap((element) => {
             if (!element.codename || !element.id) {
                 return undefined;
@@ -94,6 +94,4 @@ function getContentTypeElements(
             return flattenedElement;
         })
         .filter(isNotUndefined);
-
-    return elements;
 }

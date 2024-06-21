@@ -79,10 +79,10 @@ export function exportManager(config: ExportConfig) {
     const getMigrationElements = (
         context: ExportContext,
         contentType: FlattenedContentType,
-        elements: ElementModels.ContentItemElement[]
+        elements: readonly ElementModels.ContentItemElement[]
     ) => {
         return contentType.elements
-            .sort((a, b) => {
+            .toSorted((a, b) => {
                 if (a.codename < b.codename) {
                     return -1;
                 }
@@ -162,7 +162,7 @@ export function exportManager(config: ExportConfig) {
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });
 
-        const exportedAssets: MigrationAsset[] = await processSetAsync<AssetModels.Asset, MigrationAsset>({
+        return await processSetAsync<AssetModels.Asset, MigrationAsset>({
             action: 'Downloading assets',
             logger: logger,
             parallelLimit: 1,
@@ -216,8 +216,6 @@ export function exportManager(config: ExportConfig) {
                 return migrationAsset;
             }
         });
-
-        return exportedAssets;
     };
 
     return {

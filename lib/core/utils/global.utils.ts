@@ -18,7 +18,7 @@ export function exitProgram(data: { readonly message: string }): never {
     throw Error(data.message);
 }
 
-export function parseAsMigrationReferencesArray(value: MigrationElementValue): MigrationReference[] {
+export function parseAsMigrationReferencesArray(value: MigrationElementValue): readonly MigrationReference[] {
     if (!value) {
         return [];
     }
@@ -37,10 +37,6 @@ export function getCurrentEnvironment(): EnvContext {
     }
 
     throw Error(`Invalid current environment. This library can be used in node.js or in browsers.`);
-}
-
-export function uniqueStringFilter(value: string, index: number, self: string[]): boolean {
-    return self.indexOf(value) === index;
 }
 
 export function getDefaultZipFilename(): string {
@@ -74,9 +70,9 @@ export async function executeWithTrackingAsync<TResult>(data: {
 }
 
 export async function mapAsync<Input, Result>(
-    array: Input[],
-    callbackAsync: (item: Input, index: number, array: Input[]) => Promise<Result>
-): Promise<Result[]> {
+    array: readonly Input[],
+    callbackAsync: (item: Input, index: number, array: readonly Input[]) => Promise<Readonly<Result>>
+): Promise<Readonly<Result[]>> {
     const results: Result[] = [];
     for (let i = 0; i < array.length; i++) {
         results.push(await callbackAsync(array[i], i, array));

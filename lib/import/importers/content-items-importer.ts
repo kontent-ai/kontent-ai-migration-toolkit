@@ -16,7 +16,7 @@ export function contentItemsImporter(data: {
     readonly logger: Logger;
     readonly client: ManagementClient;
     readonly skipFailedItems: boolean;
-    readonly collections: CollectionModels.Collection[];
+    readonly collections: readonly CollectionModels.Collection[];
     readonly importContext: ImportContext;
 }) {
     const shouldUpdateContentItem = (
