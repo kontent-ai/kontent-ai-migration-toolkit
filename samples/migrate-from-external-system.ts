@@ -100,6 +100,5 @@ await importAsync({
         assets: [migrationAsset]
     },
     apiKey: '<apiKey>',
-    environmentId: '<envId>',
-    skipFailedItems: false
+    environmentId: '<envId>'
 });

@@ -108,15 +108,14 @@ from 3rd party system you typically only use the `import` capabilities of this r
 
 ## Configuration
 
-| Config                  | Value                                                                                                      |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **sourceEnvironmentId** | Id of Kontent.ai environment **(required)**                                                                |
-| **sourceApiKey**        | Management API key of Kontent.ai environment **(required)**                                                |
-| **language**            | Codename of language that items will be exported in **(required)**                                         |
-| **items**               | Comma separated list of items that will be exported **(required)**                                         |
-| filename                | Name of the zip file                                                                                       |
-| skipFailedItems         | Indicates export skips items that fail to export. Available options: `true` & `false`. Detaults to `false` |
-| baseUrl                 | Custom base URL for Kontent.ai API calls                                                                   |
+| Config                  | Value                                                              |
+| ----------------------- | ------------------------------------------------------------------ |
+| **sourceEnvironmentId** | Id of Kontent.ai environment **(required)**                        |
+| **sourceApiKey**        | Management API key of Kontent.ai environment **(required)**        |
+| **language**            | Codename of language that items will be exported in **(required)** |
+| **items**               | Comma separated list of items that will be exported **(required)** |
+| filename                | Name of the zip file                                               |
+| baseUrl                 | Custom base URL for Kontent.ai API calls                           |
 
 ## Export CLI
 

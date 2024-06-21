@@ -6,7 +6,8 @@ import {
     MigrationItem,
     extractErrorData,
     exitProgram,
-    LogSpinnerData
+    LogSpinnerData,
+    isNotUndefined
 } from '../../core/index.js';
 import chalk from 'chalk';
 import { ImportContext } from '../import.models.js';
@@ -120,7 +121,6 @@ export function contentItemsImporter(data: {
     };
 
     const importAsync = async () => {
-        const preparedItems: ContentItemModels.ContentItem[] = [];
         const contentItemsToImport = data.importContext.categorizedImportData.contentItems;
 
         data.logger.log({
@@ -128,36 +128,38 @@ export function contentItemsImporter(data: {
             message: `Importing '${chalk.yellow(contentItemsToImport.length.toString())}' content items`
         });
 
-        await processSetAsync<MigrationItem, void>({
-            action: 'Importing content items',
-            logger: data.logger,
-            parallelLimit: 1,
-            items: contentItemsToImport,
-            itemInfo: (item) => {
-                return {
-                    itemType: 'contentItem',
-                    title: `${item.system.codename} -> ${item.system.language.codename}`
-                };
-            },
-            processAsync: async (item, logSpinner) => {
-                try {
-                    preparedItems.push(await importContentItemAsync(logSpinner, item));
-                } catch (error) {
-                    if (data.skipFailedItems) {
-                        data.logger.log({
-                            type: 'error',
-                            message: `Failed to import content item '${item.system.name}'. ${
-                                extractErrorData(error).message
-                            }`
-                        });
-                    } else {
-                        throw error;
+        return (
+            await processSetAsync<MigrationItem, ContentItemModels.ContentItem | undefined>({
+                action: 'Importing content items',
+                logger: data.logger,
+                parallelLimit: 1,
+                items: contentItemsToImport,
+                itemInfo: (item) => {
+                    return {
+                        itemType: 'contentItem',
+                        title: `${item.system.codename} -> ${item.system.language.codename}`
+                    };
+                },
+                processAsync: async (item, logSpinner) => {
+                    try {
+                        return await importContentItemAsync(logSpinner, item);
+                    } catch (error) {
+                        if (data.skipFailedItems) {
+                            data.logger.log({
+                                type: 'error',
+                                message: `Failed to import content item '${item.system.name}'. ${
+                                    extractErrorData(error).message
+                                }`
+                            });
+
+                            return undefined;
+                        } else {
+                            throw error;
+                        }
                     }
                 }
-            }
-        });
-
-        return preparedItems;
+            })
+        ).filter(isNotUndefined);
     };
 
     return {

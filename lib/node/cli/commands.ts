@@ -49,12 +49,6 @@ export const cliArgs = argumentsSetter()
                 description: `Custom base URL`,
                 type: 'string',
                 isRequired: false
-            },
-            {
-                name: `skipFailedItems`,
-                description: `Indicates export skips items that fail to export. `,
-                type: 'boolean',
-                isRequired: false
             }
         ]
     })

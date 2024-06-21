@@ -58,7 +58,7 @@ export interface ImportConfig {
     readonly data: MigrationData;
     readonly environmentId: string;
     readonly apiKey: string;
-    readonly skipFailedItems: boolean;
+    readonly skipFailedItems?: boolean;
     readonly retryStrategy?: IRetryStrategyOptions;
     readonly externalIdGenerator?: ExternalIdGenerator;
     readonly baseUrl?: string;

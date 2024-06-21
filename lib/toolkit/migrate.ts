@@ -12,7 +12,6 @@ export interface MigrationEnv {
 
 export interface MigrationSource extends MigrationEnv {
     readonly items: SourceExportItem[];
-    readonly skipFailedItems?: boolean;
 }
 
 export interface MigrationTarget extends MigrationEnv {
@@ -49,8 +48,7 @@ export async function migrateAsync(config: MigrationConfig): Promise<void> {
                 environmentId: config.sourceEnvironment.id,
                 apiKey: config.sourceEnvironment.apiKey,
                 exportItems: config.sourceEnvironment.items,
-                retryStrategy: config.retryStrategy,
-                skipFailedItems: config.sourceEnvironment.skipFailedItems ?? false
+                retryStrategy: config.retryStrategy
             });
 
             await importAsync({

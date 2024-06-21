@@ -4,14 +4,13 @@ import { CliArgumentsFetcher } from '../cli.models.js';
 
 export async function exportActionAsync(cliFetcher: CliArgumentsFetcher): Promise<void> {
     const logger = getDefaultLogger();
-    const language =  cliFetcher.getRequiredArgumentValue('language');
-    const environmentId =  cliFetcher.getRequiredArgumentValue('sourceEnvironmentId');
-    const apiKey =  cliFetcher.getRequiredArgumentValue('sourceApiKey');
-    const items = ( cliFetcher.getRequiredArgumentValue('items')).split(',');
-    const baseUrl =  cliFetcher.getOptionalArgumentValue('baseUrl');
-    const force =  cliFetcher.getBooleanArgumentValue('force', false);
-    const skipFailedItems =  cliFetcher.getBooleanArgumentValue('skipFailedItems', false);
-    const filename = ( cliFetcher.getOptionalArgumentValue('filename')) ?? getDefaultZipFilename();
+    const language = cliFetcher.getRequiredArgumentValue('language');
+    const environmentId = cliFetcher.getRequiredArgumentValue('sourceEnvironmentId');
+    const apiKey = cliFetcher.getRequiredArgumentValue('sourceApiKey');
+    const items = cliFetcher.getRequiredArgumentValue('items').split(',');
+    const baseUrl = cliFetcher.getOptionalArgumentValue('baseUrl');
+    const force = cliFetcher.getBooleanArgumentValue('force', false);
+    const filename = cliFetcher.getOptionalArgumentValue('filename') ?? getDefaultZipFilename();
 
     await confirmExportAsync({
         force: force,
@@ -28,7 +27,6 @@ export async function exportActionAsync(cliFetcher: CliArgumentsFetcher): Promis
         environmentId: environmentId,
         apiKey: apiKey,
         baseUrl: baseUrl,
-        skipFailedItems: skipFailedItems,
         exportItems: items.map((m) => {
             return {
                 itemCodename: m,

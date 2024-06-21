@@ -1,18 +1,5 @@
 import { CliAction } from '../../core/index.js';
 
-export interface CliFileConfig {
-    readonly environmentId?: string;
-    readonly apiKey?: string;
-    readonly language?: string;
-    readonly items?: string[];
-    readonly skipFailedItems: boolean;
-    readonly action: CliAction;
-    readonly filename?: string;
-    readonly assetsFilename?: string;
-    readonly baseUrl?: string;
-    readonly force: boolean;
-}
-
 export interface Command {
     readonly name: string;
     readonly description: string;

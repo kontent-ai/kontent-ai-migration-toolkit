@@ -7,6 +7,7 @@ import {
     MigrationItem,
     getFlattenedContentTypesAsync,
     is404Error,
+    isNotUndefined,
     processSetAsync,
     runMapiRequestAsync,
     uniqueStringFilter
@@ -66,130 +67,126 @@ export function importContextFetcher(config: ImportContextConfig) {
     };
 
     const getLanguageVariantsAsync = async (migrationItems: MigrationItem[]) => {
-        const languageVariants: LanguageVariantWrapper[] = [];
+        return (
+            await processSetAsync<MigrationItem, LanguageVariantWrapper | undefined>({
+                action: 'Fetching language variants',
+                logger: config.logger,
+                parallelLimit: 1,
+                items: migrationItems,
+                itemInfo: (item) => {
+                    return {
+                        itemType: 'languageVariant',
+                        title: `${item.system.codename} (${item.system.language.codename})`
+                    };
+                },
+                processAsync: async (item, logSpinner) => {
+                    try {
+                        const languageVariant = await runMapiRequestAsync({
+                            logger: config.logger,
+                            func: async () =>
+                                (
+                                    await config.managementClient
+                                        .viewLanguageVariant()
+                                        .byItemCodename(item.system.codename)
+                                        .byLanguageCodename(item.system.language.codename)
+                                        .toPromise()
+                                ).data,
+                            action: 'view',
+                            type: 'languageVariant',
+                            logSpinner: logSpinner,
+                            itemName: `codename -> ${item.system.codename} (${item.system.language.codename})`
+                        });
 
-        await processSetAsync<MigrationItem, void>({
-            action: 'Fetching language variants',
-            logger: config.logger,
-            parallelLimit: 1,
-            items: migrationItems,
-            itemInfo: (item) => {
-                return {
-                    itemType: 'languageVariant',
-                    title: `${item.system.codename} (${item.system.language.codename})`
-                };
-            },
-            processAsync: async (item, logSpinner) => {
-                try {
-                    const variant = await runMapiRequestAsync({
-                        logger: config.logger,
-                        func: async () =>
-                            (
-                                await config.managementClient
-                                    .viewLanguageVariant()
-                                    .byItemCodename(item.system.codename)
-                                    .byLanguageCodename(item.system.language.codename)
-                                    .toPromise()
-                            ).data,
-                        action: 'view',
-                        type: 'languageVariant',
-                        logSpinner: logSpinner,
-                        itemName: `codename -> ${item.system.codename} (${item.system.language.codename})`
-                    });
+                        return {
+                            languageVariant: languageVariant,
+                            migrationItem: item
+                        };
+                    } catch (error) {
+                        if (!is404Error(error)) {
+                            throw error;
+                        }
 
-                    languageVariants.push({
-                        languageVariant: variant,
-                        migrationItem: item
-                    });
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
+                        return undefined;
                     }
                 }
-            }
-        });
-
-        return languageVariants;
+            })
+        ).filter(isNotUndefined);
     };
 
     const getContentItemsByCodenamesAsync = async (itemCodenames: string[]) => {
-        const contentItems: ContentItemModels.ContentItem[] = [];
+        return (
+            await processSetAsync<string, ContentItemModels.ContentItem | undefined>({
+                action: 'Fetching content items',
+                logger: config.logger,
+                parallelLimit: 1,
+                items: itemCodenames,
+                itemInfo: (codename) => {
+                    return {
+                        itemType: 'contentItem',
+                        title: codename
+                    };
+                },
+                processAsync: async (codename, logSpinner) => {
+                    try {
+                        return await runMapiRequestAsync({
+                            logger: config.logger,
+                            func: async () =>
+                                (
+                                    await config.managementClient.viewContentItem().byItemCodename(codename).toPromise()
+                                ).data,
+                            action: 'view',
+                            type: 'contentItem',
+                            logSpinner: logSpinner,
+                            itemName: `codename -> ${codename}`
+                        });
+                    } catch (error) {
+                        if (!is404Error(error)) {
+                            throw error;
+                        }
 
-        await processSetAsync<string, void>({
-            action: 'Fetching content items',
-            logger: config.logger,
-            parallelLimit: 1,
-            items: itemCodenames,
-            itemInfo: (codename) => {
-                return {
-                    itemType: 'contentItem',
-                    title: codename
-                };
-            },
-            processAsync: async (codename, logSpinner) => {
-                try {
-                    const contentItem = await runMapiRequestAsync({
-                        logger: config.logger,
-                        func: async () =>
-                            (
-                                await config.managementClient.viewContentItem().byItemCodename(codename).toPromise()
-                            ).data,
-                        action: 'view',
-                        type: 'contentItem',
-                        logSpinner: logSpinner,
-                        itemName: `codename -> ${codename}`
-                    });
-
-                    contentItems.push(contentItem);
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
+                        return undefined;
                     }
                 }
-            }
-        });
-
-        return contentItems;
+            })
+        ).filter(isNotUndefined);
     };
 
     const getAssetsByCodenamesAsync = async (assetCodenames: string[]) => {
-        const assets: AssetModels.Asset[] = [];
+        return (
+            await processSetAsync<string, AssetModels.Asset | undefined>({
+                action: 'Fetching assets',
+                logger: config.logger,
+                parallelLimit: 1,
+                items: assetCodenames,
+                itemInfo: (codename) => {
+                    return {
+                        itemType: 'asset',
+                        title: codename
+                    };
+                },
+                processAsync: async (codename, logSpinner) => {
+                    try {
+                        return await runMapiRequestAsync({
+                            logger: config.logger,
+                            func: async () =>
+                                (
+                                    await config.managementClient.viewAsset().byAssetCodename(codename).toPromise()
+                                ).data,
+                            action: 'view',
+                            type: 'asset',
+                            logSpinner: logSpinner,
+                            itemName: `codename -> ${codename}`
+                        });
+                    } catch (error) {
+                        if (!is404Error(error)) {
+                            throw error;
+                        }
 
-        await processSetAsync<string, void>({
-            action: 'Fetching assets',
-            logger: config.logger,
-            parallelLimit: 1,
-            items: assetCodenames,
-            itemInfo: (codename) => {
-                return {
-                    itemType: 'asset',
-                    title: codename
-                };
-            },
-            processAsync: async (codename, logSpinner) => {
-                try {
-                    const asset = await runMapiRequestAsync({
-                        logger: config.logger,
-                        func: async () =>
-                            (
-                                await config.managementClient.viewAsset().byAssetCodename(codename).toPromise()
-                            ).data,
-                        action: 'view',
-                        type: 'asset',
-                        logSpinner: logSpinner,
-                        itemName: `codename -> ${codename}`
-                    });
-
-                    assets.push(asset);
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
+                        return undefined;
                     }
                 }
-            }
-        });
-
-        return assets;
+            })
+        ).filter(isNotUndefined);
     };
 
     const getVariantStatesAsync = async (migrationItems: MigrationItem[]) => {

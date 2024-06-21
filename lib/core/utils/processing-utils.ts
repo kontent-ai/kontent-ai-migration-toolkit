@@ -25,13 +25,11 @@ export async function processSetAsync<InputItem, OutputItem>(data: {
         return [];
     }
 
-    const outputItems: OutputItem[] = [];
-    const limit = pLimit(data.parallelLimit);
-
     return await data.logger.logWithSpinnerAsync(async (logSpinner) => {
+        const limit = pLimit(data.parallelLimit);
         let index: number = 1;
 
-        const requests = data.items.map((item) =>
+        const requests2: Promise<OutputItem>[] = data.items.map((item) =>
             limit(() => {
                 const itemInfo = data.itemInfo(item);
                 const countPrefix = getCountPrefix(index, data.items.length);
@@ -45,13 +43,13 @@ export async function processSetAsync<InputItem, OutputItem>(data: {
                 index++;
 
                 return data.processAsync(item, logSpinner).then((output) => {
-                    outputItems.push(output);
+                    return output;
                 });
             })
         );
 
         // Only '<parallelLimit>' promises at a time
-        await Promise.all(requests);
+        const outputItems = await Promise.all(requests2);
 
         logSpinner({ type: 'info', message: `Action '${chalk.yellow(data.action)}' finished successfully` });
 

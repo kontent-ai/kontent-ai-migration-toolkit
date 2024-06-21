@@ -8,7 +8,8 @@ import {
     ItemStateInSourceEnvironmentById,
     AssetStateInSourceEnvironmentById,
     uniqueStringFilter,
-    FlattenedContentType
+    FlattenedContentType,
+    isNotUndefined
 } from '../../core/index.js';
 import { itemsExtractionProcessor } from '../../translation/index.js';
 import {
@@ -207,80 +208,79 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     };
 
     const getContentItemsByIdsAsync = async (itemIds: string[]) => {
-        const contentItems: ContentItemModels.ContentItem[] = [];
+        return (
+            await processSetAsync<string, ContentItemModels.ContentItem | undefined>({
+                logger: config.logger,
+                action: 'Fetching content items',
+                parallelLimit: 1,
+                items: itemIds,
+                itemInfo: (id) => {
+                    return {
+                        itemType: 'contentItem',
+                        title: id
+                    };
+                },
+                processAsync: async (id, logSpinner) => {
+                    try {
+                        return await runMapiRequestAsync({
+                            logSpinner: logSpinner,
+                            logger: config.logger,
+                            func: async () =>
+                                (
+                                    await config.managementClient.viewContentItem().byItemId(id).toPromise()
+                                ).data,
+                            action: 'view',
+                            type: 'contentItem',
+                            itemName: `id -> ${id}`
+                        });
+                    } catch (error) {
+                        if (!is404Error(error)) {
+                            throw error;
+                        }
 
-        await processSetAsync<string, void>({
-            logger: config.logger,
-            action: 'Fetching content items',
-            parallelLimit: 1,
-            items: itemIds,
-            itemInfo: (id) => {
-                return {
-                    itemType: 'contentItem',
-                    title: id
-                };
-            },
-            processAsync: async (id, logSpinner) => {
-                try {
-                    const contentItem = await runMapiRequestAsync({
-                        logSpinner: logSpinner,
-                        logger: config.logger,
-                        func: async () =>
-                            (
-                                await config.managementClient.viewContentItem().byItemId(id).toPromise()
-                            ).data,
-                        action: 'view',
-                        type: 'contentItem',
-                        itemName: `id -> ${id}`
-                    });
-
-                    contentItems.push(contentItem);
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
+                        return undefined;
                     }
                 }
-            }
-        });
-
-        return contentItems;
+            })
+        ).filter(isNotUndefined);
     };
 
     const getAssetsByIdsAsync = async (itemIds: string[]) => {
-        const assets: AssetModels.Asset[] = [];
+        return (
+            await processSetAsync<string, AssetModels.Asset | undefined>({
+                logger: config.logger,
+                action: 'Fetching assets',
+                parallelLimit: 1,
+                items: itemIds,
+                itemInfo: (id) => {
+                    return {
+                        itemType: 'asset',
+                        title: id
+                    };
+                },
+                processAsync: async (id, logSpinner) => {
+                    try {
+                        return await runMapiRequestAsync({
+                            logger: config.logger,
+                            logSpinner: logSpinner,
+                            func: async () =>
+                                (
+                                    await config.managementClient.viewAsset().byAssetId(id).toPromise()
+                                ).data,
+                            action: 'view',
+                            type: 'asset',
+                            itemName: `id -> ${id}`
+                        });
+                    } catch (error) {
+                        if (!is404Error(error)) {
+                            throw error;
+                        }
 
-        await processSetAsync<string, void>({
-            logger: config.logger,
-            action: 'Fetching assets',
-            parallelLimit: 1,
-            items: itemIds,
-            itemInfo: (id) => {
-                return {
-                    itemType: 'asset',
-                    title: id
-                };
-            },
-            processAsync: async (id, logSpinner) => {
-                try {
-                    const asset = await runMapiRequestAsync({
-                        logger: config.logger,
-                        logSpinner: logSpinner,
-                        func: async () => (await config.managementClient.viewAsset().byAssetId(id).toPromise()).data,
-                        action: 'view',
-                        type: 'asset',
-                        itemName: `id -> ${id}`
-                    });
-
-                    assets.push(asset);
-                } catch (error) {
-                    if (!is404Error(error)) {
-                        throw error;
+                        return undefined;
                     }
                 }
-            }
-        });
-
-        return assets;
+            })
+        ).filter(isNotUndefined);
     };
 
     const getItemStatesAsync = async (itemIds: string[]) => {

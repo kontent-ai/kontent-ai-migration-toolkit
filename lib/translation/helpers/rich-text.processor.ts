@@ -2,12 +2,12 @@ type CodenameReplaceFunc = (codename: string) => { external_id?: string; id?: st
 type IdReplaceFunc = (id: string) => { codename: string };
 
 interface ProcessCodenamesResult {
-    readonly codenames: string[];
+    readonly codenames: Set<string>;
     readonly html: string;
 }
 
 interface ProcessIdsResult {
-    readonly ids: string[];
+    readonly ids: Set<string>;
     readonly html: string;
 }
 
@@ -57,14 +57,14 @@ export function richTextProcessor() {
         richTextHtml: string,
         replaceFunc?: IdReplaceFunc
     ) => {
+        const itemIds = new Set<string>();
+
         if (!richTextHtml) {
             return {
                 html: richTextHtml,
-                ids: []
+                ids: itemIds
             };
         }
-
-        const itemIds: string[] = [];
 
         richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.objectTagRegex, (objectTag) => {
             // skip processing for components
@@ -75,7 +75,7 @@ export function richTextProcessor() {
             if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
                 const itemId = itemIdMatch[1];
 
-                itemIds.push(itemId);
+                itemIds.add(itemId);
 
                 if (replaceFunc) {
                     const { codename } = replaceFunc(itemId);
@@ -100,21 +100,21 @@ export function richTextProcessor() {
         richTextHtml,
         replaceFunc
     ) => {
+        const assetIds = new Set<string>();
+
         if (!richTextHtml) {
             return {
                 html: richTextHtml,
-                ids: []
+                ids: assetIds
             };
         }
-
-        const assetIds: string[] = [];
 
         richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.figureTagRegex, (figureTag) => {
             const assetIdMatch = figureTag.match(rteRegexes.attrs.dataAssetIdAttrRegex);
             if (assetIdMatch && (assetIdMatch?.length ?? 0) >= 2) {
                 const assetId = assetIdMatch[1];
 
-                assetIds.push(assetId);
+                assetIds.add(assetId);
 
                 if (replaceFunc) {
                     const { codename } = replaceFunc(assetId);
@@ -139,20 +139,20 @@ export function richTextProcessor() {
         richTextHtml,
         replaceFunc
     ) => {
+        const linkItemIds = new Set<string>();
+
         if (!richTextHtml) {
             return {
                 html: richTextHtml,
-                ids: []
+                ids: linkItemIds
             };
         }
-
-        const linkItemIds: string[] = [];
 
         richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.linkTagRegex, (linkTag) => {
             const itemIdMatch = linkTag.match(rteRegexes.attrs.dataItemIdAttrRegex);
             if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
                 const itemId = itemIdMatch[1];
-                linkItemIds.push(itemId);
+                linkItemIds.add(itemId);
 
                 if (replaceFunc) {
                     const { codename } = replaceFunc(itemId);
@@ -177,21 +177,21 @@ export function richTextProcessor() {
         richTextHtml: string,
         replaceFunc?: CodenameReplaceFunc
     ) => ProcessCodenamesResult = (richTextHtml, replaceFunc) => {
+        const itemCodenames = new Set<string>();
+
         if (!richTextHtml) {
             return {
-                codenames: [],
+                codenames: itemCodenames,
                 html: richTextHtml
             };
         }
-
-        const itemCodenames: string[] = [];
 
         richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.objectTagRegex, (objectTag) => {
             const codenameMatch = objectTag.match(rteRegexes.rteCodenames.rteItemCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
-                itemCodenames.push(codename);
+                itemCodenames.add(codename);
 
                 if (replaceFunc) {
                     const { external_id, id } = replaceFunc(codename);
@@ -224,21 +224,21 @@ export function richTextProcessor() {
         richTextHtml: string,
         replaceFunc?: CodenameReplaceFunc
     ) => ProcessCodenamesResult = (richTextHtml, replaceFunc) => {
+        const itemCodenames = new Set<string>();
+
         if (!richTextHtml) {
             return {
-                codenames: [],
+                codenames: itemCodenames,
                 html: richTextHtml
             };
         }
-
-        const itemCodenames: string[] = [];
 
         richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.linkTagRegex, (linkTag) => {
             const codenameMatch = linkTag.match(rteRegexes.rteCodenames.rteLinkItemCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
-                itemCodenames.push(codename);
+                itemCodenames.add(codename);
 
                 if (replaceFunc) {
                     const { external_id, id } = replaceFunc(codename);
@@ -271,21 +271,21 @@ export function richTextProcessor() {
         richTextHtml: string,
         replaceFunc?: CodenameReplaceFunc
     ) => ProcessCodenamesResult = (richTextHtml, replaceFunc) => {
+        const assetCodenames = new Set<string>();
+
         if (!richTextHtml) {
             return {
-                codenames: [],
+                codenames: assetCodenames,
                 html: richTextHtml
             };
         }
-
-        const assetCodenames: string[] = [];
 
         richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.figureTagRegex, (figureTag) => {
             const codenameMatch = figureTag.match(rteRegexes.rteCodenames.rteAssetCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
-                assetCodenames.push(codename);
+                assetCodenames.add(codename);
 
                 if (replaceFunc) {
                     const { external_id, id } = replaceFunc(codename);

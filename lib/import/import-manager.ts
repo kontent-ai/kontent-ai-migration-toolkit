@@ -52,7 +52,7 @@ export function importManager(config: ImportConfig) {
             collections: await getCollectionsAsync(),
             importContext: importContext,
             logger: logger,
-            skipFailedItems: config.skipFailedItems
+            skipFailedItems: config.skipFailedItems ?? false
         }).importAsync();
     };
 
@@ -72,7 +72,7 @@ export function importManager(config: ImportConfig) {
             importContext: importContext,
             logger: logger,
             preparedContentItems: contentItems,
-            skipFailedItems: config.skipFailedItems,
+            skipFailedItems: config.skipFailedItems ?? false,
             workflows: await getWorkflowsAsync()
         }).importAsync();
     };
