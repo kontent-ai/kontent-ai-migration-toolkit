@@ -2,12 +2,12 @@ type CodenameReplaceFunc = (codename: string) => { external_id?: string; id?: st
 type IdReplaceFunc = (id: string) => { codename: string };
 
 interface ProcessCodenamesResult {
-    readonly codenames: Set<string>;
+    readonly codenames: ReadonlySet<string>;
     readonly html: string;
 }
 
 interface ProcessIdsResult {
-    readonly ids: Set<string>;
+    readonly ids: ReadonlySet<string>;
     readonly html: string;
 }
 
