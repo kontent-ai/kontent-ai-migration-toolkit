@@ -43,10 +43,7 @@ const run = async () => {
 
     await storeAsync({
         data: exportData,
-        files: {
-            assets: { filename: 'assets.zip', format: 'json' },
-            items: { filename: 'items.zip', format: 'json' }
-        }
+        filename: 'data.zip'
     });
 };
 
