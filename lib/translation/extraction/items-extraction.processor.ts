@@ -20,14 +20,24 @@ interface ExtractItemByCodename {
     readonly contentTypeCodename: string;
 }
 
+interface ReferencedDataInMigrationItemsLocal {
+    readonly itemCodenames: Set<string>;
+    readonly assetCodenames: Set<string>;
+}
+
+interface ReferencedDataInLanguageVariantsLocal {
+    readonly itemIds: Set<string>;
+    readonly assetIds: Set<string>;
+}
+
 export function itemsExtractionProcessor() {
     const extractReferencedDataFromExtractItems = (
         items: readonly ExtractItemById[],
         getElement: GetFlattenedElementByIds
-    ) => {
-        const extractedIds = items.reduce<ReferencedDataInLanguageVariants>(
+    ): ReferencedDataInLanguageVariants => {
+        const extractedIds = items.reduce<ReferencedDataInLanguageVariantsLocal>(
             (extractedIds, item) => {
-                return item.elements.reduce<ReferencedDataInLanguageVariants>((childExtractedIds, itemElement) => {
+                return item.elements.reduce<ReferencedDataInLanguageVariantsLocal>((childExtractedIds, itemElement) => {
                     const typeElement = getElement(item.contentTypeId, itemElement.element.id ?? '');
 
                     if (typeElement.type === 'rich_text') {
@@ -85,10 +95,10 @@ export function itemsExtractionProcessor() {
     const extractReferencedItemsFromMigrationItems = (
         items: readonly ExtractItemByCodename[],
         getElement: GetFlattenedElementByCodenames
-    ) => {
-        const extractedCodenames = items.reduce<ReferencedDataInMigrationItems>(
+    ): ReferencedDataInMigrationItems => {
+        const extractedCodenames = items.reduce<ReferencedDataInMigrationItemsLocal>(
             (extractedCodenames, item) => {
-                return Object.entries(item.elements).reduce<ReferencedDataInMigrationItems>(
+                return Object.entries(item.elements).reduce<ReferencedDataInMigrationItemsLocal>(
                     (childExtractedCodenames, [elementCodename, element]) => {
                         const flattenedElement = getElement(item.contentTypeCodename, elementCodename, element.type);
 

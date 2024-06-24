@@ -1,4 +1,12 @@
-import { WorkflowModels, LanguageVariantModels, ContentItemModels, AssetModels } from '@kontent-ai/management-sdk';
+import {
+    WorkflowModels,
+    LanguageVariantModels,
+    ContentItemModels,
+    AssetModels,
+    LanguageModels,
+    CollectionModels,
+    TaxonomyModels
+} from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import {
     processSetAsync,
@@ -25,7 +33,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     const prepareExportItemsAsync = async (
         environmentData: ExportContextEnvironmentData,
         exportItems: readonly SourceExportItem[]
-    ) => {
+    ): Promise<readonly ExportItem[]> => {
         return await processSetAsync<SourceExportItem, ExportItem>({
             logger: config.logger,
             action: 'Preparing content items & language variants',
@@ -130,9 +138,9 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     };
 
     const getWorkflowStepCodename = (
-        workflow: WorkflowModels.Workflow,
-        languageVariant: LanguageVariantModels.ContentItemLanguageVariant
-    ) => {
+        workflow: Readonly<WorkflowModels.Workflow>,
+        languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>
+    ): string | undefined => {
         const variantStepId = languageVariant.workflow.stepIdentifier.id;
 
         const workflowStep = workflow.steps.find((step) => step.id === variantStepId);
@@ -156,7 +164,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         return undefined;
     };
 
-    const getEnvironmentDataAsync = async () => {
+    const getEnvironmentDataAsync = async (): Promise<ExportContextEnvironmentData> => {
         const environmentData: ExportContextEnvironmentData = {
             collections: await getAllCollectionsAsync(),
             contentTypes: await getFlattenedContentTypesAsync(config.managementClient, config.logger),
@@ -168,7 +176,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         return environmentData;
     };
 
-    const getAllLanguagesAsync = async () => {
+    const getAllLanguagesAsync = async (): Promise<readonly LanguageModels.LanguageModel[]> => {
         return await runMapiRequestAsync({
             logger: config.logger,
             func: async () => (await config.managementClient.listLanguages().toAllPromise()).data.items,
@@ -177,7 +185,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
     };
 
-    const getAllCollectionsAsync = async () => {
+    const getAllCollectionsAsync = async (): Promise<readonly CollectionModels.Collection[]> => {
         return await runMapiRequestAsync({
             logger: config.logger,
             func: async () => (await config.managementClient.listCollections().toPromise()).data.collections,
@@ -186,7 +194,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
     };
 
-    const getAllWorkflowsAsync = async () => {
+    const getAllWorkflowsAsync = async (): Promise<readonly WorkflowModels.Workflow[]> => {
         return await runMapiRequestAsync({
             logger: config.logger,
             func: async () => (await config.managementClient.listWorkflows().toPromise()).data,
@@ -195,7 +203,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
     };
 
-    const getAllTaxonomiesAsync = async () => {
+    const getAllTaxonomiesAsync = async (): Promise<readonly TaxonomyModels.Taxonomy[]> => {
         return await runMapiRequestAsync({
             logger: config.logger,
             func: async () => (await config.managementClient.listTaxonomies().toAllPromise()).data.items,
@@ -204,7 +212,9 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
     };
 
-    const getContentItemsByIdsAsync = async (itemIds: ReadonlySet<string>) => {
+    const getContentItemsByIdsAsync = async (
+        itemIds: ReadonlySet<string>
+    ): Promise<readonly ContentItemModels.ContentItem[]> => {
         return (
             await processSetAsync<string, ContentItemModels.ContentItem | undefined>({
                 logger: config.logger,
@@ -242,7 +252,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>) => {
+    const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly AssetModels.Asset[]> => {
         return (
             await processSetAsync<string, AssetModels.Asset | undefined>({
                 logger: config.logger,
@@ -280,7 +290,9 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getItemStatesAsync = async (itemIds: ReadonlySet<string>) => {
+    const getItemStatesAsync = async (
+        itemIds: ReadonlySet<string>
+    ): Promise<readonly ItemStateInSourceEnvironmentById[]> => {
         const items = await getContentItemsByIdsAsync(itemIds);
 
         return Array.from(itemIds).map<ItemStateInSourceEnvironmentById>((itemId) => {
@@ -293,7 +305,9 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
     };
 
-    const getAssetStatesAsync = async (assetIds: ReadonlySet<string>) => {
+    const getAssetStatesAsync = async (
+        assetIds: ReadonlySet<string>
+    ): Promise<readonly AssetStateInSourceEnvironmentById[]> => {
         const assets = await getAssetsByIdsAsync(assetIds);
 
         return Array.from(assetIds).map<AssetStateInSourceEnvironmentById>((assetId) => {
@@ -307,7 +321,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     };
 
     const getElementByIds = (types: readonly FlattenedContentType[]): GetFlattenedElementByIds => {
-        return (contentTypeId: string, elementId: string) => {
+        const getFunc: GetFlattenedElementByIds = (contentTypeId: string, elementId: string) => {
             const contentType = types.find((m) => m.contentTypeId === contentTypeId);
 
             if (!contentType) {
@@ -326,9 +340,11 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
 
             return element;
         };
+
+        return getFunc;
     };
 
-    const getExportContextAsync = async () => {
+    const getExportContextAsync = async (): Promise<ExportContext> => {
         const environmentData = await getEnvironmentDataAsync();
 
         config.logger.log({

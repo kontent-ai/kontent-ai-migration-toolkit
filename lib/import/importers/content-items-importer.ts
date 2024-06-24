@@ -14,15 +14,15 @@ import { ImportContext } from '../import.models.js';
 
 export function contentItemsImporter(data: {
     readonly logger: Logger;
-    readonly client: ManagementClient;
+    readonly client: Readonly<ManagementClient>;
     readonly skipFailedItems: boolean;
     readonly collections: readonly CollectionModels.Collection[];
     readonly importContext: ImportContext;
 }) {
     const shouldUpdateContentItem = (
         migrationContentItem: MigrationItem,
-        contentItem: ContentItemModels.ContentItem
-    ) => {
+        contentItem: Readonly<ContentItemModels.ContentItem>
+    ): boolean => {
         const collection = data.collections.find((m) => m.codename === migrationContentItem.system.collection.codename);
 
         if (!collection) {
@@ -36,13 +36,10 @@ export function contentItemsImporter(data: {
         );
     };
 
-    const prepareContentItemAsync: (
+    const prepareContentItemAsync = async (
         logSpinner: LogSpinnerData,
         migrationContentItem: MigrationItem
-    ) => Promise<{ contentItem: ContentItemModels.ContentItem; status: 'created' | 'itemAlreadyExists' }> = async (
-        logSpinner,
-        migrationContentItem
-    ) => {
+    ): Promise<{ contentItem: Readonly<ContentItemModels.ContentItem>; status: 'created' | 'itemAlreadyExists' }> => {
         const itemStateInTargetEnv = data.importContext.getItemStateInTargetEnvironment(
             migrationContentItem.system.codename
         );
@@ -88,7 +85,7 @@ export function contentItemsImporter(data: {
     const importContentItemAsync = async (
         logSpinner: LogSpinnerData,
         migrationItem: MigrationItem
-    ): Promise<ContentItemModels.ContentItem> => {
+    ): Promise<Readonly<ContentItemModels.ContentItem>> => {
         const preparedContentItemResult = await prepareContentItemAsync(logSpinner, migrationItem);
 
         // check if name should be updated, no other changes are supported
@@ -120,7 +117,7 @@ export function contentItemsImporter(data: {
         return preparedContentItemResult.contentItem;
     };
 
-    const importAsync = async () => {
+    const importAsync = async (): Promise<readonly ContentItemModels.ContentItem[]> => {
         const contentItemsToImport = data.importContext.categorizedImportData.contentItems;
 
         data.logger.log({

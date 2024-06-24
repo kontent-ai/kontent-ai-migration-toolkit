@@ -1,5 +1,6 @@
 import {
     ContentItemModels,
+    ElementContracts,
     LanguageVariantElements,
     LanguageVariantModels,
     ManagementClient,
@@ -32,7 +33,7 @@ export function languageVariantImporter(data: {
         logSpinner: LogSpinnerData,
         migrationItem: MigrationItem,
         preparedContentItem: ContentItemModels.ContentItem
-    ) => {
+    ): Promise<void> => {
         await prepareLanguageVariantForImportAsync(logSpinner, migrationItem);
 
         const migrationItemWorkflowStep = migrationItem.system.workflow_step;
@@ -103,7 +104,10 @@ export function languageVariantImporter(data: {
         );
     };
 
-    const prepareLanguageVariantForImportAsync = async (logSpinner: LogSpinnerData, migrationItem: MigrationItem) => {
+    const prepareLanguageVariantForImportAsync = async (
+        logSpinner: LogSpinnerData,
+        migrationItem: MigrationItem
+    ): Promise<void> => {
         const languageVariantState = data.importContext.getLanguageVariantStateInTargetEnvironment(
             migrationItem.system.codename,
             migrationItem.system.language.codename
@@ -180,7 +184,7 @@ export function languageVariantImporter(data: {
     const isLanguageVariantPublished = (
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
         workflows: readonly WorkflowModels.Workflow[]
-    ) => {
+    ): boolean => {
         return workflows.find((workflow) => workflow.publishedStep.id === languageVariant.workflow.stepIdentifier.id)
             ? true
             : false;
@@ -189,13 +193,17 @@ export function languageVariantImporter(data: {
     const isLanguageVariantArchived = (
         languageVariant: LanguageVariantModels.ContentItemLanguageVariant,
         workflows: readonly WorkflowModels.Workflow[]
-    ) => {
+    ): boolean => {
         return workflows.find((workflow) => workflow.archivedStep.id === languageVariant.workflow.stepIdentifier.id)
             ? true
             : false;
     };
 
-    const getElementContract = (migrationItem: MigrationItem, element: MigrationElement, elementCodename: string) => {
+    const getElementContract = (
+        migrationItem: MigrationItem,
+        element: MigrationElement,
+        elementCodename: string
+    ): Readonly<ElementContracts.IContentItemElementContract> => {
         const flattenedElement = data.importContext.getElement(
             migrationItem.system.type.codename,
             elementCodename,
@@ -212,7 +220,7 @@ export function languageVariantImporter(data: {
         return importTransformResult;
     };
 
-    const importAsync = async () => {
+    const importAsync = async (): Promise<void> => {
         data.logger.log({
             type: 'info',
             message: `Importing '${chalk.yellow(

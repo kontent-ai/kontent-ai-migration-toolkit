@@ -4,7 +4,7 @@ import { Logger, formatBytes, getCurrentEnvironment, exitProgram, getDefaultLogg
 import { FileBinaryData, ZipCompressionLevel, ZipPackager } from './zip.models.js';
 
 export function zipPackager(jsZip: JSZip): ZipPackager {
-    const getZipOutputType: () => 'nodebuffer' | 'blob' = () => {
+    const getZipOutputType = (): 'nodebuffer' | 'blob' => {
         const currentEnv = getCurrentEnvironment();
 
         if (currentEnv === 'browser') {
@@ -19,7 +19,7 @@ export function zipPackager(jsZip: JSZip): ZipPackager {
         });
     };
 
-    const getZipSizeInBytes = (zipData: FileBinaryData) => {
+    const getZipSizeInBytes = (zipData: FileBinaryData): number => {
         if (zipData instanceof Blob) {
             return zipData.size;
         } else if (zipData instanceof Buffer) {

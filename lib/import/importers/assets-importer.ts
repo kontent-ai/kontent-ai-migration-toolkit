@@ -9,13 +9,13 @@ export function assetsImporter(data: {
     readonly client: ManagementClient;
     readonly importContext: ImportContext;
 }) {
-    const getAssetsToUpload: () => readonly MigrationAsset[] = () => {
+    const getAssetsToUpload = (): readonly MigrationAsset[] => {
         return data.importContext.categorizedImportData.assets.filter((asset) => {
             return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
         });
     };
 
-    const importAsync = async () => {
+    const importAsync = async (): Promise<void> => {
         data.logger.log({
             type: 'info',
             message: `Categorizing '${chalk.yellow(

@@ -1,99 +1,99 @@
 import { MigrationElementModels } from '../core/index.js';
 
 export function elementsBuilder() {
-    const textElement: (data: Omit<MigrationElementModels.TextElement, 'type'>) => MigrationElementModels.TextElement = (
-        data
-    ) => {
+    const textElement = (
+        data: Omit<MigrationElementModels.TextElement, 'type'>
+    ): MigrationElementModels.TextElement => {
         return {
             ...data,
             type: 'text'
         };
     };
 
-    const assetElement: (data: Omit<MigrationElementModels.AssetElement, 'type'>) => MigrationElementModels.AssetElement = (
-        data
-    ) => {
+    const assetElement = (
+        data: Omit<MigrationElementModels.AssetElement, 'type'>
+    ): MigrationElementModels.AssetElement => {
         return {
             ...data,
             type: 'asset'
         };
     };
 
-    const customElement: (data: Omit<MigrationElementModels.CustomElement, 'type'>) => MigrationElementModels.CustomElement = (
-        data
-    ) => {
+    const customElement = (
+        data: Omit<MigrationElementModels.CustomElement, 'type'>
+    ): MigrationElementModels.CustomElement => {
         return {
             ...data,
             type: 'custom'
         };
     };
 
-    const dateTimeElement: (
+    const dateTimeElement = (
         data: Omit<MigrationElementModels.DateTimeElement, 'type'>
-    ) => MigrationElementModels.DateTimeElement = (data) => {
+    ): MigrationElementModels.DateTimeElement => {
         return {
             ...data,
             type: 'date_time'
         };
     };
 
-    const linkedItemsElement: (
+    const linkedItemsElement = (
         data: Omit<MigrationElementModels.LinkedItemsElement, 'type'>
-    ) => MigrationElementModels.LinkedItemsElement = (data) => {
+    ): MigrationElementModels.LinkedItemsElement => {
         return {
             ...data,
             type: 'modular_content'
         };
     };
 
-    const multipleChoiceElement: (
+    const multipleChoiceElement = (
         data: Omit<MigrationElementModels.MultipleChoiceElement, 'type'>
-    ) => MigrationElementModels.MultipleChoiceElement = (data) => {
+    ): MigrationElementModels.MultipleChoiceElement => {
         return {
             ...data,
             type: 'multiple_choice'
         };
     };
 
-    const numberElement: (data: Omit<MigrationElementModels.NumberElement, 'type'>) => MigrationElementModels.NumberElement = (
-        data
-    ) => {
+    const numberElement = (
+        data: Omit<MigrationElementModels.NumberElement, 'type'>
+    ): MigrationElementModels.NumberElement => {
         return {
             ...data,
             type: 'number'
         };
     };
 
-    const richTextElement: (
+    const richTextElement = (
         data: Omit<MigrationElementModels.RichTextElement, 'type'>
-    ) => MigrationElementModels.RichTextElement = (data) => {
+    ): MigrationElementModels.RichTextElement => {
         return {
             ...data,
             type: 'rich_text'
         };
     };
 
-    const subpagesElement: (
+    const subpagesElement = (
         data: Omit<MigrationElementModels.SubpagesElement, 'type'>
-    ) => MigrationElementModels.SubpagesElement = (data) => {
+    ): MigrationElementModels.SubpagesElement => {
         return {
             ...data,
             type: 'subpages'
         };
     };
 
-    const taxonomyElement: (
+    const taxonomyElement = (
         data: Omit<MigrationElementModels.TaxonomyElement, 'type'>
-    ) => MigrationElementModels.TaxonomyElement = (data) => {
+    ): MigrationElementModels.TaxonomyElement => {
         return {
             ...data,
             type: 'taxonomy'
         };
     };
 
-    const urlSlugElement: (data: Omit<MigrationElementModels.UrlSlugElement, 'type'>) => MigrationElementModels.UrlSlugElement = (
-        data
-    ) => {
+    const urlSlugElement = (
+        data: Omit<MigrationElementModels.UrlSlugElement, 'type'>
+    ): MigrationElementModels.UrlSlugElement => {
         return {
             ...data,
             type: 'url_slug'

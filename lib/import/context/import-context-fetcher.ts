@@ -16,7 +16,7 @@ import { itemsExtractionProcessor } from '../../translation/index.js';
 import chalk from 'chalk';
 
 interface LanguageVariantWrapper {
-    readonly languageVariant: LanguageVariantModels.ContentItemLanguageVariant;
+    readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
     readonly migrationItem: MigrationItem;
 }
 
@@ -65,7 +65,9 @@ export function importContextFetcher(config: ImportContextConfig) {
         return getFlattenedElement;
     };
 
-    const getLanguageVariantsAsync = async (migrationItems: readonly MigrationItem[]) => {
+    const getLanguageVariantsAsync = async (
+        migrationItems: readonly MigrationItem[]
+    ): Promise<readonly LanguageVariantWrapper[]> => {
         return (
             await processSetAsync<MigrationItem, LanguageVariantWrapper | undefined>({
                 action: 'Fetching language variants',
@@ -112,7 +114,9 @@ export function importContextFetcher(config: ImportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getContentItemsByCodenamesAsync = async (itemCodenames: ReadonlySet<string>) => {
+    const getContentItemsByCodenamesAsync = async (
+        itemCodenames: ReadonlySet<string>
+    ): Promise<readonly ContentItemModels.ContentItem[]> => {
         return (
             await processSetAsync<string, ContentItemModels.ContentItem | undefined>({
                 action: 'Fetching content items',
@@ -150,7 +154,9 @@ export function importContextFetcher(config: ImportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getAssetsByCodenamesAsync = async (assetCodenames: ReadonlySet<string>) => {
+    const getAssetsByCodenamesAsync = async (
+        assetCodenames: ReadonlySet<string>
+    ): Promise<readonly AssetModels.Asset[]> => {
         return (
             await processSetAsync<string, AssetModels.Asset | undefined>({
                 action: 'Fetching assets',
@@ -188,7 +194,9 @@ export function importContextFetcher(config: ImportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getVariantStatesAsync = async (migrationItems: readonly MigrationItem[]) => {
+    const getVariantStatesAsync = async (
+        migrationItems: readonly MigrationItem[]
+    ): Promise<readonly LanguageVariantStateInTargetEnvironmentByCodename[]> => {
         const variants = await getLanguageVariantsAsync(migrationItems);
 
         return migrationItems.map<LanguageVariantStateInTargetEnvironmentByCodename>((migrationItem) => {
@@ -207,7 +215,9 @@ export function importContextFetcher(config: ImportContextConfig) {
         });
     };
 
-    const getItemStatesAsync = async (itemCodenames: ReadonlySet<string>) => {
+    const getItemStatesAsync = async (
+        itemCodenames: ReadonlySet<string>
+    ): Promise<readonly ItemStateInTargetEnvironmentByCodename[]> => {
         const items = await getContentItemsByCodenamesAsync(itemCodenames);
 
         return Array.from(itemCodenames).map<ItemStateInTargetEnvironmentByCodename>((codename) => {
@@ -223,7 +233,9 @@ export function importContextFetcher(config: ImportContextConfig) {
         });
     };
 
-    const getAssetStatesAsync = async (assetCodenames: ReadonlySet<string>) => {
+    const getAssetStatesAsync = async (
+        assetCodenames: ReadonlySet<string>
+    ): Promise<readonly AssetStateInTargetEnvironmentByCodename[]> => {
         const assets = await getAssetsByCodenamesAsync(assetCodenames);
 
         return Array.from(assetCodenames).map<AssetStateInTargetEnvironmentByCodename>((codename) => {
@@ -239,7 +251,7 @@ export function importContextFetcher(config: ImportContextConfig) {
         });
     };
 
-    const getImportContextAsync = async () => {
+    const getImportContextAsync = async (): Promise<ImportContext> => {
         const flattenedContentTypes: readonly FlattenedContentType[] = await getFlattenedContentTypesAsync(
             config.managementClient,
             config.logger

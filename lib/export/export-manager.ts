@@ -15,7 +15,8 @@ import {
     MigrationComponent,
     getDefaultLogger,
     MigrationData,
-    isNotUndefined
+    isNotUndefined,
+    MigrationElementValue
 } from '../core/index.js';
 import { exportTransforms } from '../translation/index.js';
 import { exportContextFetcher } from './context/export-context-fetcher.js';
@@ -29,11 +30,11 @@ export function exportManager(config: ExportConfig) {
         apiKey: config.apiKey
     });
 
-    const getMigrationItems = (context: ExportContext) => {
+    const getMigrationItems = (context: ExportContext): readonly MigrationItem[] => {
         return context.exportItems.map<MigrationItem>((exportItem) => mapToMigrationItem(context, exportItem));
     };
 
-    const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem) => {
+    const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem): MigrationItem => {
         const migrationItem: MigrationItem = {
             system: {
                 name: exportItem.contentItem.name,
@@ -52,7 +53,10 @@ export function exportManager(config: ExportConfig) {
         return migrationItem;
     };
 
-    const mapToMigrationComponent = (context: ExportContext, component: ElementModels.ContentItemElementComponent) => {
+    const mapToMigrationComponent = (
+        context: ExportContext,
+        component: ElementModels.ContentItemElementComponent
+    ): MigrationComponent => {
         const componentType = context.environmentData.contentTypes.find((m) => m.contentTypeId === component.type.id);
 
         if (!componentType) {
@@ -80,7 +84,7 @@ export function exportManager(config: ExportConfig) {
         context: ExportContext,
         contentType: FlattenedContentType,
         elements: readonly ElementModels.ContentItemElement[]
-    ) => {
+    ): MigrationElements => {
         return contentType.elements
             .toSorted((a, b) => {
                 if (a.codename < b.codename) {
@@ -117,7 +121,7 @@ export function exportManager(config: ExportConfig) {
         contentType: FlattenedContentType;
         typeElement: FlattenedContentTypeElement;
         exportElement: ElementModels.ContentItemElement;
-    }) => {
+    }): MigrationElementValue => {
         try {
             return exportTransforms[data.typeElement.type]({
                 context: data.context,
@@ -148,7 +152,7 @@ export function exportManager(config: ExportConfig) {
         }
     };
 
-    const exportAssetsAsync = async (context: ExportContext) => {
+    const exportAssetsAsync = async (context: ExportContext): Promise<readonly MigrationAsset[]> => {
         const assets = Array.from(context.referencedData.assetIds)
             .map<AssetModels.Asset | undefined>((assetId) => context.getAssetStateInSourceEnvironment(assetId).asset)
             .filter(isNotUndefined);
@@ -156,7 +160,10 @@ export function exportManager(config: ExportConfig) {
         return await getMigrationAssetsWithBinaryDataAsync(assets, context);
     };
 
-    const getMigrationAssetsWithBinaryDataAsync = async (assets: AssetModels.Asset[], context: ExportContext) => {
+    const getMigrationAssetsWithBinaryDataAsync = async (
+        assets: AssetModels.Asset[],
+        context: ExportContext
+    ): Promise<readonly MigrationAsset[]> => {
         logger.log({
             type: 'info',
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
@@ -219,7 +226,7 @@ export function exportManager(config: ExportConfig) {
     };
 
     return {
-        exportAsync: async () => {
+        async exportAsync(): Promise<MigrationData> {
             logger.log({
                 type: 'info',
                 message: `Preparing to export data`

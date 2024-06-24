@@ -2,8 +2,16 @@ import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/mana
 import { Logger, runMapiRequestAsync, LogSpinnerData, MigrationItem } from '../../core/index.js';
 import chalk from 'chalk';
 
+type WorkflowStep = {
+    codename: string;
+    id: string;
+};
+
 export function workflowImporter(logger: Logger) {
-    const getWorkflowStep = (workflow: WorkflowModels.Workflow, stepCodename: string) => {
+    const getWorkflowStep = (
+        workflow: Readonly<WorkflowModels.Workflow>,
+        stepCodename: string
+    ): WorkflowStep | undefined => {
         if (workflow.archivedStep.codename === stepCodename) {
             return {
                 codename: workflow.archivedStep.codename,
@@ -38,7 +46,7 @@ export function workflowImporter(logger: Logger) {
         readonly workflowStepCodename: string;
         readonly workflowCodename: string;
         readonly workflows: readonly WorkflowModels.Workflow[];
-    }) => {
+    }): { step: WorkflowStep; workflow: WorkflowModels.Workflow } => {
         const workflow = data.workflows.find((m) => m.codename?.toLowerCase() === data.workflowCodename.toLowerCase());
 
         if (!workflow) {
@@ -71,21 +79,21 @@ export function workflowImporter(logger: Logger) {
     const doesWorkflowStepCodenameRepresentPublishedStep = (
         stepCodename: string,
         workflows: readonly WorkflowModels.Workflow[]
-    ) => {
+    ): boolean => {
         return workflows.find((workflow) => workflow.publishedStep.codename === stepCodename) ? true : false;
     };
 
     const doesWorkflowStepCodenameRepresentArchivedStep = (
         stepCodename: string,
         workflows: readonly WorkflowModels.Workflow[]
-    ) => {
+    ): boolean => {
         return workflows.find((workflow) => workflow.archivedStep.codename === stepCodename) ? true : false;
     };
 
     const doesWorkflowStepCodenameRepresentScheduledStep = (
         stepCodename: string,
         workflows: readonly WorkflowModels.Workflow[]
-    ) => {
+    ): boolean => {
         return workflows.find((workflow) => workflow.scheduledStep.codename === stepCodename) ? true : false;
     };
 
@@ -96,7 +104,7 @@ export function workflowImporter(logger: Logger) {
         workflowStepCodename: string,
         migrationItem: MigrationItem,
         workflows: readonly WorkflowModels.Workflow[]
-    ) => {
+    ): Promise<void> => {
         const { workflow, step } = getWorkflowAndStep({
             workflows: workflows,
             workflowCodename: workflowCodename,

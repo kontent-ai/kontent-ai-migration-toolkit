@@ -1,4 +1,10 @@
-import { ContentItemModels, ManagementClient, createManagementClient } from '@kontent-ai/management-sdk';
+import {
+    CollectionModels,
+    ContentItemModels,
+    ManagementClient,
+    WorkflowModels,
+    createManagementClient
+} from '@kontent-ai/management-sdk';
 
 import {
     defaultRetryStrategy,
@@ -24,7 +30,7 @@ export function importManager(config: ImportConfig) {
         retryStrategy: config.retryStrategy ?? defaultRetryStrategy
     });
 
-    const importAssetsAsync = async (importContext: ImportContext) => {
+    const importAssetsAsync = async (importContext: ImportContext): Promise<void> => {
         if (!importContext.categorizedImportData.assets.length) {
             logger.log({
                 type: 'info',
@@ -39,7 +45,9 @@ export function importManager(config: ImportConfig) {
             logger: logger
         }).importAsync();
     };
-    const importContentItemsAsync = async (importContext: ImportContext) => {
+    const importContentItemsAsync = async (
+        importContext: ImportContext
+    ): Promise<readonly ContentItemModels.ContentItem[]> => {
         if (!importContext.categorizedImportData.contentItems.length) {
             logger.log({
                 type: 'info',
@@ -59,7 +67,7 @@ export function importManager(config: ImportConfig) {
     const importLanguageVariantsAsync = async (
         importContext: ImportContext,
         contentItems: readonly ContentItemModels.ContentItem[]
-    ) => {
+    ): Promise<void> => {
         if (!importContext.categorizedImportData.contentItems.length) {
             logger.log({
                 type: 'info',
@@ -77,7 +85,7 @@ export function importManager(config: ImportConfig) {
         }).importAsync();
     };
 
-    const getWorkflowsAsync = async () => {
+    const getWorkflowsAsync = async (): Promise<readonly WorkflowModels.Workflow[]> => {
         return await runMapiRequestAsync({
             logger: logger,
             func: async () => (await targetEnvironmentClient.listWorkflows().toPromise()).data,
@@ -86,7 +94,7 @@ export function importManager(config: ImportConfig) {
         });
     };
 
-    const getCollectionsAsync = async () => {
+    const getCollectionsAsync = async (): Promise<readonly CollectionModels.Collection[]> => {
         return await runMapiRequestAsync({
             logger: logger,
             func: async () => (await targetEnvironmentClient.listCollections().toPromise()).data.collections,
@@ -96,7 +104,7 @@ export function importManager(config: ImportConfig) {
     };
 
     return {
-        importAsync: async () => {
+        async importAsync(): Promise<void> {
             const importContext = await importContextFetcher({
                 migrationData: config.data,
                 externalIdGenerator: config.externalIdGenerator ?? defaultExternalIdGenerator,

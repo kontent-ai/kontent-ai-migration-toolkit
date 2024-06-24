@@ -1,4 +1,4 @@
-import { ZipPackager } from './zip.models.js';
+import { FileBinaryData, ZipPackager } from './zip.models.js';
 import { Logger, MigrationAsset, MigrationData, MigrationItem, getDefaultLogger, mapAsync } from '../core/index.js';
 
 type AssetWithoutBinaryData = Omit<MigrationAsset, 'binaryData'>;
@@ -9,16 +9,16 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
     const assetsFilename: string = 'assets.json';
     const assetsBinaryFolderName: string = 'binary_data';
 
-    const getAssetFolderConfig = (asset: MigrationAsset) => {
+    const getAssetFolderConfig = (asset: MigrationAsset): { subfolder: string; fullPath: string } => {
         const subfolder: string = asset.filename.slice(0, 3);
         return { subfolder: subfolder, fullPath: `${assetsBinaryFolderName}/${subfolder}/${asset._zipFilename}` };
     };
 
-    const transformItems = (items: readonly MigrationItem[]) => {
+    const transformItems = (items: readonly MigrationItem[]): void => {
         zip.addFile(filename, items.length ? JSON.stringify(items) : '[]');
     };
 
-    const transformAssets = (assets: readonly MigrationAsset[]) => {
+    const transformAssets = (assets: readonly MigrationAsset[]): void => {
         const assetRecords: AssetWithoutBinaryData[] = [];
         const binaryDataFolder = zip.addFolder(assetsBinaryFolderName);
 
@@ -68,13 +68,13 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
     };
 
     return {
-        transformAsync: async (data: MigrationData) => {
+        async transformAsync(data: MigrationData): Promise<FileBinaryData> {
             transformItems(data.items);
             transformAssets(data.assets);
 
             return await zip.generateZipAsync({ logger: loggerToUse });
         },
-        parseAsync: async () => {
+        async parseAsync(): Promise<MigrationData> {
             const items = await parseItems();
             const assets = await parseAssets();
 

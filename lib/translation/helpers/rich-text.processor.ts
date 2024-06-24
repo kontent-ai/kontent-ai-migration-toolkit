@@ -53,10 +53,7 @@ const rteRegexes = {
 } as const;
 
 export function richTextProcessor() {
-    const processDataIds: (richTextHtml: string, replaceFunc?: IdReplaceFunc) => ProcessIdsResult = (
-        richTextHtml: string,
-        replaceFunc?: IdReplaceFunc
-    ) => {
+    const processDataIds = (richTextHtml: string, replaceFunc?: IdReplaceFunc): ProcessIdsResult => {
         const itemIds = new Set<string>();
 
         if (!richTextHtml) {
@@ -96,10 +93,7 @@ export function richTextProcessor() {
         };
     };
 
-    const processAssetIds: (richTextHtml: string, replaceFunc?: IdReplaceFunc) => ProcessIdsResult = (
-        richTextHtml,
-        replaceFunc
-    ) => {
+    const processAssetIds = (richTextHtml: string, replaceFunc?: IdReplaceFunc): ProcessIdsResult => {
         const assetIds = new Set<string>();
 
         if (!richTextHtml) {
@@ -135,10 +129,7 @@ export function richTextProcessor() {
         };
     };
 
-    const processLinkItemIds: (richTextHtml: string, replaceFunc?: IdReplaceFunc) => ProcessIdsResult = (
-        richTextHtml,
-        replaceFunc
-    ) => {
+    const processLinkItemIds = (richTextHtml: string, replaceFunc?: IdReplaceFunc): ProcessIdsResult => {
         const linkItemIds = new Set<string>();
 
         if (!richTextHtml) {
@@ -173,10 +164,10 @@ export function richTextProcessor() {
         };
     };
 
-    const processRteItemCodenames: (
+    const processRteItemCodenames = (
         richTextHtml: string,
         replaceFunc?: CodenameReplaceFunc
-    ) => ProcessCodenamesResult = (richTextHtml, replaceFunc) => {
+    ): ProcessCodenamesResult => {
         const itemCodenames = new Set<string>();
 
         if (!richTextHtml) {
@@ -220,10 +211,10 @@ export function richTextProcessor() {
         };
     };
 
-    const processRteLinkItemCodenames: (
+    const processRteLinkItemCodenames = (
         richTextHtml: string,
         replaceFunc?: CodenameReplaceFunc
-    ) => ProcessCodenamesResult = (richTextHtml, replaceFunc) => {
+    ): ProcessCodenamesResult => {
         const itemCodenames = new Set<string>();
 
         if (!richTextHtml) {
@@ -267,10 +258,10 @@ export function richTextProcessor() {
         };
     };
 
-    const processRteAssetCodenames: (
+    const processRteAssetCodenames = (
         richTextHtml: string,
         replaceFunc?: CodenameReplaceFunc
-    ) => ProcessCodenamesResult = (richTextHtml, replaceFunc) => {
+    ): ProcessCodenamesResult => {
         const assetCodenames = new Set<string>();
 
         if (!richTextHtml) {
