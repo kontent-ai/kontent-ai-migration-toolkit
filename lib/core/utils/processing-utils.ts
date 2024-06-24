@@ -25,28 +25,37 @@ export async function processSetAsync<InputItem, OutputItem>(data: {
         return [];
     }
 
+    const firstItemInfo = data.itemInfo(data.items[0]);
+
     return await data.logger.logWithSpinnerAsync(async (logSpinner) => {
         const limit = pLimit(data.parallelLimit);
-        let index: number = 1;
+        let processedItemsCount: number = 1;
 
         const requests: Promise<OutputItem>[] = data.items.map((item) =>
             limit(() => {
-                const itemInfo = data.itemInfo(item);
-                const countPrefix = getCountPrefix(index, data.items.length);
-
-                logSpinner({
-                    prefix: countPrefix,
-                    message: itemInfo.title,
-                    type: itemInfo.itemType
-                });
-
-                index++;
-
                 return data.processAsync(item, logSpinner).then((output) => {
+                    const itemInfo = data.itemInfo(item);
+                    const prefix = getPercentagePrefix(processedItemsCount, data.items.length);
+
+                    logSpinner({
+                        prefix: prefix,
+                        message: itemInfo.title,
+                        type: itemInfo.itemType
+                    });
+
+                    processedItemsCount++;
+
                     return output;
                 });
             })
         );
+
+        // log processing of first item as progress is set after each item finishes
+        logSpinner({
+            prefix: getPercentagePrefix(0, data.items.length),
+            message: firstItemInfo.title,
+            type: firstItemInfo.itemType
+        });
 
         // Only '<parallelLimit>' promises at a time
         const outputItems = await Promise.all(requests);
@@ -57,6 +66,6 @@ export async function processSetAsync<InputItem, OutputItem>(data: {
     });
 }
 
-function getCountPrefix(index: number, totalCount: number): string {
-    return `${chalk.cyan(`${index}/${totalCount}`)}`;
+function getPercentagePrefix(processedItems: number, totalCount: number): string {
+    return chalk.gray(`${Math.round((processedItems / totalCount) * 100)}%`);
 }
