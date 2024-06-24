@@ -18,8 +18,8 @@ export async function processSetAsync<InputItem, OutputItem>(data: {
     readonly logger: Logger;
     readonly items: Readonly<InputItem[]>;
     readonly parallelLimit: number;
-    readonly processAsync: (item: InputItem, logSpinner: LogSpinnerData) => Promise<OutputItem>;
-    readonly itemInfo: (item: InputItem) => ItemInfo;
+    readonly processAsync: (item: Readonly<InputItem>, logSpinner: LogSpinnerData) => Promise<Readonly<OutputItem>>;
+    readonly itemInfo: (item: Readonly<InputItem>) => ItemInfo;
 }): Promise<readonly OutputItem[]> {
     if (!data.items.length) {
         return [];

@@ -37,12 +37,12 @@ export async function confirmExportAsync(data: {
 export async function confirmMigrateAsync(data: {
     readonly force: boolean;
     readonly sourceEnvironment: {
-        environmentId: string;
-        apiKey: string;
+        readonly environmentId: string;
+        readonly apiKey: string;
     };
     readonly targetEnvironment: {
-        environmentId: string;
-        apiKey: string;
+        readonly environmentId: string;
+        readonly apiKey: string;
     };
     readonly logger: Logger;
     readonly dataToMigrate: {

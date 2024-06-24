@@ -44,9 +44,9 @@ export function getDefaultZipFilename(): string {
 }
 
 export async function executeWithTrackingAsync<TResult>(data: {
-    func: () => Promise<TResult>;
-    event: ITrackingEventData;
-}): Promise<TResult> {
+    func: () => Promise<TResult extends void ? void : Readonly<TResult>>;
+    event: Readonly<ITrackingEventData>;
+}): Promise<TResult extends void ? void : Readonly<TResult>> {
     const trackingService = getTrackingService();
     const event = await trackingService.trackEventAsync(data.event);
 
@@ -71,7 +71,7 @@ export async function executeWithTrackingAsync<TResult>(data: {
 
 export async function mapAsync<Input, Result>(
     array: readonly Input[],
-    callbackAsync: (item: Input, index: number, array: readonly Input[]) => Promise<Readonly<Result>>
+    callbackAsync: (item: Readonly<Input>, index: number, array: readonly Input[]) => Promise<Readonly<Result>>
 ): Promise<Readonly<Result[]>> {
     const results: Result[] = [];
     for (let i = 0; i < array.length; i++) {

@@ -24,7 +24,7 @@ export async function storeAsync(config: StoreConfig): Promise<void> {
     const logger = config.logger ?? getDefaultLogger();
     const filename: string = getDefaultZipFilename();
 
-    await executeWithTrackingAsync({
+    await executeWithTrackingAsync<void>({
         event: {
             tool: 'migrationToolkit',
             package: {

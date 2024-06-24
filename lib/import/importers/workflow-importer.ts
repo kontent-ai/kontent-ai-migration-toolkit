@@ -99,7 +99,7 @@ export function workflowImporter(logger: Logger) {
 
     const setWorkflowOfLanguageVariantAsync = async (
         logSpinner: LogSpinnerData,
-        managementClient: ManagementClient,
+        managementClient: Readonly<ManagementClient>,
         workflowCodename: string,
         workflowStepCodename: string,
         migrationItem: MigrationItem,

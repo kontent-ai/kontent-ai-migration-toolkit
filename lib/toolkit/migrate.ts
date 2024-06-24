@@ -1,9 +1,16 @@
 import { libMetadata } from '../metadata.js';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
-import { ExternalIdGenerator, Logger, executeWithTrackingAsync, getDefaultLogger } from '../core/index.js';
+import {
+    ExternalIdGenerator,
+    Logger,
+    MigrationData,
+    executeWithTrackingAsync,
+    getDefaultLogger
+} from '../core/index.js';
 import { SourceExportItem } from '../export/index.js';
 import { exportAsync } from './export.js';
 import { importAsync } from './import.js';
+import { ImportResult } from '../import/index.js';
 
 export interface MigrationEnv {
     readonly id: string;
@@ -26,7 +33,12 @@ export interface MigrationConfig {
     readonly targetEnvironment: MigrationTarget;
 }
 
-export async function migrateAsync(config: MigrationConfig): Promise<void> {
+export interface MigrationResult {
+    readonly migrationData: MigrationData;
+    readonly importResult: ImportResult;
+}
+
+export async function migrateAsync(config: MigrationConfig): Promise<MigrationResult> {
     const logger = config.logger ?? getDefaultLogger();
 
     return await executeWithTrackingAsync({
@@ -43,7 +55,7 @@ export async function migrateAsync(config: MigrationConfig): Promise<void> {
             }
         },
         func: async () => {
-            const data = await exportAsync({
+            const migrationData = await exportAsync({
                 logger: logger,
                 environmentId: config.sourceEnvironment.id,
                 apiKey: config.sourceEnvironment.apiKey,
@@ -51,15 +63,20 @@ export async function migrateAsync(config: MigrationConfig): Promise<void> {
                 retryStrategy: config.retryStrategy
             });
 
-            await importAsync({
+            const importResult = await importAsync({
                 logger: logger,
-                data: data,
+                data: migrationData,
                 environmentId: config.targetEnvironment.id,
                 apiKey: config.targetEnvironment.apiKey,
                 skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
                 retryStrategy: config.retryStrategy,
                 externalIdGenerator: config.externalIdGenerator
             });
+
+            return {
+                importResult,
+                migrationData
+            };
         }
     });
 }

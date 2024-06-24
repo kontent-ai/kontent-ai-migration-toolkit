@@ -34,7 +34,7 @@ export function exportManager(config: ExportConfig) {
         return context.exportItems.map<MigrationItem>((exportItem) => mapToMigrationItem(context, exportItem));
     };
 
-    const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem): MigrationItem => {
+    const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem): Readonly<MigrationItem> => {
         const migrationItem: MigrationItem = {
             system: {
                 name: exportItem.contentItem.name,

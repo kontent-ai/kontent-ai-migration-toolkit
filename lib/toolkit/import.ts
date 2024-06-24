@@ -1,8 +1,8 @@
 import { executeWithTrackingAsync } from '../core/index.js';
-import { ImportConfig, importManager } from '../import/index.js';
+import { ImportConfig, ImportResult, importManager } from '../import/index.js';
 import { libMetadata } from '../metadata.js';
 
-export async function importAsync(config: ImportConfig): Promise<void> {
+export async function importAsync(config: ImportConfig): Promise<ImportResult> {
     return await executeWithTrackingAsync({
         event: {
             tool: 'migrationToolkit',
@@ -15,7 +15,7 @@ export async function importAsync(config: ImportConfig): Promise<void> {
             details: {}
         },
         func: async () => {
-            await importManager(config).importAsync();
+            return await importManager(config).importAsync();
         }
     });
 }

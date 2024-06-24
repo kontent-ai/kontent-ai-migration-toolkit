@@ -14,7 +14,8 @@ import {
     exitProgram,
     extractErrorData,
     LogSpinnerData,
-    MigrationElement
+    MigrationElement,
+    isNotUndefined
 } from '../../core/index.js';
 import chalk from 'chalk';
 import { ImportContext } from '../import.models.js';
@@ -26,14 +27,14 @@ export function languageVariantImporter(data: {
     readonly workflows: readonly WorkflowModels.Workflow[];
     readonly preparedContentItems: readonly ContentItemModels.ContentItem[];
     readonly importContext: ImportContext;
-    readonly client: ManagementClient;
+    readonly client: Readonly<ManagementClient>;
     readonly skipFailedItems: boolean;
 }) {
     const importLanguageVariantAsync = async (
         logSpinner: LogSpinnerData,
         migrationItem: MigrationItem,
-        preparedContentItem: ContentItemModels.ContentItem
-    ): Promise<void> => {
+        preparedContentItem: Readonly<ContentItemModels.ContentItem>
+    ): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant>> => {
         await prepareLanguageVariantForImportAsync(logSpinner, migrationItem);
 
         const migrationItemWorkflowStep = migrationItem.system.workflow_step;
@@ -64,7 +65,7 @@ export function languageVariantImporter(data: {
         });
 
         // upsert language variant
-        await runMapiRequestAsync({
+        const languageVariant = await runMapiRequestAsync({
             logger: data.logger,
             func: async () =>
                 (
@@ -102,6 +103,8 @@ export function languageVariantImporter(data: {
             migrationItem,
             data.workflows
         );
+
+        return languageVariant;
     };
 
     const prepareLanguageVariantForImportAsync = async (
@@ -220,7 +223,7 @@ export function languageVariantImporter(data: {
         return importTransformResult;
     };
 
-    const importAsync = async (): Promise<void> => {
+    const importAsync = async (): Promise<readonly LanguageVariantModels.ContentItemLanguageVariant[]> => {
         data.logger.log({
             type: 'info',
             message: `Importing '${chalk.yellow(
@@ -228,47 +231,53 @@ export function languageVariantImporter(data: {
             )}' language variants`
         });
 
-        await processSetAsync<MigrationItem, void>({
-            action: 'Importing language variants',
-            logger: data.logger,
-            parallelLimit: 1,
-            items: data.importContext.categorizedImportData.contentItems,
-            itemInfo: (input) => {
-                return {
-                    itemType: 'languageVariant',
-                    title: input.system.name,
-                    partA: input.system.language.codename
-                };
-            },
-            processAsync: async (migrationItem, logSpinner) => {
-                try {
-                    const preparedContentItem = data.preparedContentItems.find(
-                        (m) => m.codename === migrationItem.system.codename
-                    );
+        return (
+            await processSetAsync<MigrationItem, LanguageVariantModels.ContentItemLanguageVariant | undefined>({
+                action: 'Importing language variants',
+                logger: data.logger,
+                parallelLimit: 1,
+                items: data.importContext.categorizedImportData.contentItems,
+                itemInfo: (input) => {
+                    return {
+                        itemType: 'languageVariant',
+                        title: input.system.name,
+                        partA: input.system.language.codename
+                    };
+                },
+                processAsync: async (migrationItem, logSpinner) => {
+                    try {
+                        const preparedContentItem = data.preparedContentItems.find(
+                            (m) => m.codename === migrationItem.system.codename
+                        );
 
-                    if (!preparedContentItem) {
-                        exitProgram({
-                            message: `Invalid content item for codename '${chalk.red(migrationItem.system.codename)}'`
-                        });
-                    }
+                        if (!preparedContentItem) {
+                            exitProgram({
+                                message: `Invalid content item for codename '${chalk.red(
+                                    migrationItem.system.codename
+                                )}'`
+                            });
+                        }
 
-                    await importLanguageVariantAsync(logSpinner, migrationItem, preparedContentItem);
-                } catch (error) {
-                    if (data.skipFailedItems) {
-                        data.logger.log({
-                            type: 'error',
-                            message: `Failed to import language variant '${chalk.red(
-                                migrationItem.system.name
-                            )}' in language '${chalk.red(migrationItem.system.language.codename)}'. Error: ${
-                                extractErrorData(error).message
-                            }`
-                        });
-                    } else {
+                        return await importLanguageVariantAsync(logSpinner, migrationItem, preparedContentItem);
+                    } catch (error) {
+                        if (data.skipFailedItems) {
+                            data.logger.log({
+                                type: 'error',
+                                message: `Failed to import language variant '${chalk.red(
+                                    migrationItem.system.name
+                                )}' in language '${chalk.red(migrationItem.system.language.codename)}'. Error: ${
+                                    extractErrorData(error).message
+                                }`
+                            });
+
+                            return undefined;
+                        }
+
                         throw error;
                     }
                 }
-            }
-        });
+            })
+        ).filter(isNotUndefined);
     };
 
     return {

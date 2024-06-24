@@ -279,13 +279,13 @@ export function importContextFetcher(config: ImportContextConfig) {
         );
 
         // check all items, including referenced items in content
-        const itemCodenamesToCheckInTargetEnv = new Set<string>([
+        const itemCodenamesToCheckInTargetEnv: ReadonlySet<string> = new Set<string>([
             ...referencedData.itemCodenames,
             ...contentItemsExcludingComponents.map((m) => m.system.codename)
         ]);
 
         // check all assets, including referenced assets in content
-        const assetCodenamesToCheckInTargetEnv = new Set<string>([
+        const assetCodenamesToCheckInTargetEnv: ReadonlySet<string> = new Set<string>([
             ...referencedData.assetCodenames,
             ...config.migrationData.assets.map((m) => m.codename)
         ]);

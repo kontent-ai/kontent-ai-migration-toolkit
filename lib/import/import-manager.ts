@@ -1,6 +1,7 @@
 import {
     CollectionModels,
     ContentItemModels,
+    LanguageVariantModels,
     ManagementClient,
     WorkflowModels,
     createManagementClient
@@ -14,7 +15,7 @@ import {
     Logger,
     getDefaultLogger
 } from '../core/index.js';
-import { ImportConfig, ImportContext } from './import.models.js';
+import { ImportConfig, ImportContext, ImportResult } from './import.models.js';
 import { assetsImporter } from './importers/assets-importer.js';
 import { contentItemsImporter } from './importers/content-items-importer.js';
 import { languageVariantImporter } from './importers/language-variant-importer.js';
@@ -67,7 +68,7 @@ export function importManager(config: ImportConfig) {
     const importLanguageVariantsAsync = async (
         importContext: ImportContext,
         contentItems: readonly ContentItemModels.ContentItem[]
-    ): Promise<void> => {
+    ): Promise<readonly LanguageVariantModels.ContentItemLanguageVariant[]> => {
         if (!importContext.categorizedImportData.contentItems.length) {
             logger.log({
                 type: 'info',
@@ -75,7 +76,7 @@ export function importManager(config: ImportConfig) {
             });
         }
 
-        await languageVariantImporter({
+        return await languageVariantImporter({
             client: targetEnvironmentClient,
             importContext: importContext,
             logger: logger,
@@ -104,7 +105,7 @@ export function importManager(config: ImportConfig) {
     };
 
     return {
-        async importAsync(): Promise<void> {
+        async importAsync(): Promise<ImportResult> {
             const importContext = await importContextFetcher({
                 migrationData: config.data,
                 externalIdGenerator: config.externalIdGenerator ?? defaultExternalIdGenerator,
@@ -120,12 +121,17 @@ export function importManager(config: ImportConfig) {
             const contentItems = await importContentItemsAsync(importContext);
 
             // #3 Language variants
-            await importLanguageVariantsAsync(importContext, contentItems);
+            const languageVariants = await importLanguageVariantsAsync(importContext, contentItems);
 
             logger.log({
                 type: 'info',
                 message: `Finished import`
             });
+
+            return {
+                contentItems,
+                languageVariants
+            };
         }
     };
 }

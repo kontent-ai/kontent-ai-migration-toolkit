@@ -14,7 +14,12 @@ import {
     MigrationElementType,
     MigrationData
 } from '../core/index.js';
-import { ElementContracts, ManagementClient } from '@kontent-ai/management-sdk';
+import {
+    ContentItemModels,
+    ElementContracts,
+    LanguageVariantModels,
+    ManagementClient
+} from '@kontent-ai/management-sdk';
 
 export interface ImportContextConfig {
     readonly logger: Logger;
@@ -65,15 +70,7 @@ export interface ImportConfig {
     readonly logger?: Logger;
 }
 
-export interface ImportAllResult {
-    readonly metadata: {
-        readonly timestamp: Date;
-        readonly environmentId: string;
-    };
-}
-
-export interface FlattenedFolder {
-    readonly name: string;
-    readonly id: string;
-    readonly externalId?: string;
+export interface ImportResult {
+    readonly contentItems: readonly ContentItemModels.ContentItem[];
+    readonly languageVariants: readonly LanguageVariantModels.ContentItemLanguageVariant[];
 }
