@@ -172,7 +172,7 @@ export function exportManager(config: ExportConfig) {
         return await processSetAsync<AssetModels.Asset, MigrationAsset>({
             action: 'Downloading assets',
             logger: logger,
-            parallelLimit: 1,
+            parallelLimit: 5,
             itemInfo: (input) => {
                 return {
                     title: input.codename,
