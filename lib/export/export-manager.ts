@@ -243,6 +243,11 @@ export function exportManager(config: ExportConfig) {
                 assets: await exportAssetsAsync(exportContext)
             };
 
+            logger.log({
+                type: 'completed',
+                message: `Finished export`
+            });
+
             return migrationData;
         }
     };

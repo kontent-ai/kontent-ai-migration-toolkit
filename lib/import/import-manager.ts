@@ -124,7 +124,7 @@ export function importManager(config: ImportConfig) {
             const languageVariants = await importLanguageVariantsAsync(importContext, contentItems);
 
             logger.log({
-                type: 'info',
+                type: 'completed',
                 message: `Finished import`
             });
 

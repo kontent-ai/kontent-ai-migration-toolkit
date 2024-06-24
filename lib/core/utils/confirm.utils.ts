@@ -20,7 +20,7 @@ export async function confirmExportAsync(data: {
             .toPromise()
     ).data.project;
 
-    const text: string = `Are you sure to export '${chalk.green(
+    const text: string = `Are you sure to export '${chalk.cyan(
         data.dataToExport.itemsCount
     )}' content ${getItemsPluralText(data.dataToExport.itemsCount)} from ${chalk.yellow(
         environment.name
