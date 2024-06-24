@@ -26,6 +26,6 @@ export type LogData = (data: LogMessage) => void;
 export type LogSpinnerData = (data: LogSpinnerMessage) => void;
 
 export interface Logger {
-    logWithSpinnerAsync<T>(func: (logData: LogSpinnerData) => Promise<T>): Promise<T>;
+    readonly logWithSpinnerAsync: <T>(func: (logData: LogSpinnerData) => Promise<T>) => Promise<T>;
     readonly log: LogData;
 }
