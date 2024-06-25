@@ -122,10 +122,6 @@ export interface MigrationAssetDescription {
 
 export interface MigrationAsset {
     /**
-     * Name of the file used in zip package. Only used for purposes of this library.
-     */
-    readonly _zipFilename: string;
-    /**
      * Codename of the asset
      */
     readonly codename: string;

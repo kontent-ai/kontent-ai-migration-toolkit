@@ -1,7 +1,9 @@
 import { FileBinaryData, ZipPackager } from './zip.models.js';
 import { Logger, MigrationAsset, MigrationData, MigrationItem, getDefaultLogger, mapAsync } from '../core/index.js';
 
-type AssetWithoutBinaryData = Omit<MigrationAsset, 'binaryData'>;
+type ZipAssetRecord = Omit<MigrationAsset, 'binaryData'> & {
+    _zipFilename: string;
+};
 
 export function zipTransformer(zip: ZipPackager, logger?: Logger) {
     const loggerToUse: Logger = logger ?? getDefaultLogger();
@@ -9,9 +11,12 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
     const assetsFilename: string = 'assets.json';
     const assetsBinaryFolderName: string = 'binary_data';
 
-    const getAssetFolderConfig = (asset: MigrationAsset): { subfolder: string; fullPath: string } => {
-        const subfolder: string = asset.filename.slice(0, 3);
-        return { subfolder: subfolder, fullPath: `${assetsBinaryFolderName}/${subfolder}/${asset._zipFilename}` };
+    const getAssetFolderConfig = (asset: MigrationAsset): { partialColder: string; fullPath: string } => {
+        const codenamePartialFolder: string = asset.codename.slice(0, 2);
+        return {
+            partialColder: codenamePartialFolder,
+            fullPath: `${assetsBinaryFolderName}/${codenamePartialFolder}/${asset.codename}/${asset.filename}`
+        };
     };
 
     const transformItems = (items: readonly MigrationItem[]): void => {
@@ -19,12 +24,13 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
     };
 
     const transformAssets = (assets: readonly MigrationAsset[]): void => {
-        const assetRecords: AssetWithoutBinaryData[] = [];
+        const assetRecords: ZipAssetRecord[] = [];
         const binaryDataFolder = zip.addFolder(assetsBinaryFolderName);
 
         assets.forEach((asset) => {
             const folderConfig = getAssetFolderConfig(asset);
-            const subfolder = binaryDataFolder.addFolder(folderConfig.subfolder);
+            const partialFolder = binaryDataFolder.addFolder(folderConfig.partialColder);
+            const codenameFolder = partialFolder.addFolder(asset.codename);
 
             assetRecords.push({
                 _zipFilename: folderConfig.fullPath,
@@ -36,7 +42,7 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
             });
 
             if (asset.binaryData) {
-                subfolder.addFile(asset.filename, asset.binaryData);
+                codenameFolder.addFile(asset.filename, asset.binaryData);
             }
         });
 
@@ -55,11 +61,15 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
             return [];
         }
 
-        const assetRecords = JSON.parse(text) as AssetWithoutBinaryData[];
+        const assetRecords = JSON.parse(text) as ZipAssetRecord[];
 
         return await mapAsync(assetRecords, async (assetRecord) => {
             const migrationAsset: MigrationAsset = {
-                ...assetRecord,
+                codename: assetRecord.codename,
+                filename: assetRecord.filename,
+                collection: assetRecord.collection,
+                title: assetRecord.title,
+                descriptions: assetRecord.descriptions,
                 binaryData: await zip.getBinaryDataAsync(`${assetRecord._zipFilename}`)
             };
 

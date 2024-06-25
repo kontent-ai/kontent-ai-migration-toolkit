@@ -59,8 +59,6 @@ const migrationItem: MigrationItem<ArticleElements> = {
 };
 
 const migrationAsset: MigrationAsset = {
-    // _zipFilename is a name of the file within the export .zip package. It is used only for identifying the file within export
-    _zipFilename: 'article_teaser.jpg',
     // codename of the asset - Used for validating whether asset exists in target env
     codename: 'article_teaser',
     // filename will be used in K.ai asset as a filename

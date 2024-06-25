@@ -192,7 +192,6 @@ export function exportManager(config: ExportConfig) {
                 const binaryData = await getBinaryDataFromUrlAsync(asset.url);
 
                 const migrationAsset: MigrationAsset = {
-                    _zipFilename: asset.codename,
                     filename: asset.fileName,
                     title: asset.title ?? '',
                     codename: asset.codename,
