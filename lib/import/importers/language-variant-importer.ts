@@ -39,6 +39,11 @@ export function languageVariantImporter(data: {
 
         const migrationItemWorkflowStep = migrationItem.system.workflow_step;
         const migrationItemWorkflow = migrationItem.system.workflow;
+        const workflowImporterObj = workflowImporter({
+            logger: data.logger,
+            managementClient: data.client,
+            workflows: data.workflows
+        });
 
         if (!migrationItemWorkflow) {
             throw Error(`Content item '${chalk.red(migrationItem.system.codename)}' does not have a workflow assigned`);
@@ -51,10 +56,9 @@ export function languageVariantImporter(data: {
         }
 
         // validate workflow
-        const { workflow } = workflowImporter(data.logger).getWorkflowAndStep({
+        const { workflow } = workflowImporterObj.getWorkflowAndStep({
             workflowCodename: migrationItemWorkflow.codename,
-            workflowStepCodename: migrationItemWorkflowStep.codename,
-            workflows: data.workflows
+            workflowStepCodename: migrationItemWorkflowStep.codename
         });
 
         // prepare & map elements
@@ -95,14 +99,12 @@ export function languageVariantImporter(data: {
         });
 
         // set workflow of language variant
-        await workflowImporter(data.logger).setWorkflowOfLanguageVariantAsync(
-            logSpinner,
-            data.client,
-            migrationItemWorkflow.codename,
-            migrationItemWorkflowStep.codename,
-            migrationItem,
-            data.workflows
-        );
+        await workflowImporterObj.setWorkflowOfLanguageVariantAsync({
+            logSpinner: logSpinner,
+            workflowCodename: migrationItemWorkflow.codename,
+            workflowStepCodename: migrationItemWorkflowStep.codename,
+            migrationItem: migrationItem
+        });
 
         return languageVariant;
     };
@@ -135,8 +137,11 @@ export function languageVariantImporter(data: {
             throw Error(`Item with codename '${migrationItem.system.codename}' does not have workflow step assigned`);
         }
 
-        const { workflow } = workflowImporter(data.logger).getWorkflowAndStep({
-            workflows: data.workflows,
+        const { workflow } = workflowImporter({
+            logger: data.logger,
+            managementClient: data.client,
+            workflows: data.workflows
+        }).getWorkflowAndStep({
             workflowCodename: migrationItemWorkflow.codename,
             workflowStepCodename: migrationItemWorkflowStep.codename
         });
