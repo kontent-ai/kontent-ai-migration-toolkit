@@ -1,116 +1,84 @@
 import { MigrationElementModels } from '../core/index.js';
 
-export function elementsBuilder() {
-    const textElement = (
-        data: Omit<MigrationElementModels.TextElement, 'type'>
-    ): MigrationElementModels.TextElement => {
+export const elementsBuilder = {
+    textElement: (data: Omit<MigrationElementModels.TextElement, 'type'>): MigrationElementModels.TextElement => {
         return {
             ...data,
             type: 'text'
         };
-    };
-
-    const assetElement = (
-        data: Omit<MigrationElementModels.AssetElement, 'type'>
-    ): MigrationElementModels.AssetElement => {
+    },
+    assetElement: (data: Omit<MigrationElementModels.AssetElement, 'type'>): MigrationElementModels.AssetElement => {
         return {
             ...data,
             type: 'asset'
         };
-    };
-
-    const customElement = (
-        data: Omit<MigrationElementModels.CustomElement, 'type'>
-    ): MigrationElementModels.CustomElement => {
+    },
+    customElement: (data: Omit<MigrationElementModels.CustomElement, 'type'>): MigrationElementModels.CustomElement => {
         return {
             ...data,
             type: 'custom'
         };
-    };
-
-    const dateTimeElement = (
+    },
+    dateTimeElement: (
         data: Omit<MigrationElementModels.DateTimeElement, 'type'>
     ): MigrationElementModels.DateTimeElement => {
         return {
             ...data,
             type: 'date_time'
         };
-    };
-
-    const linkedItemsElement = (
+    },
+    linkedItemsElement: (
         data: Omit<MigrationElementModels.LinkedItemsElement, 'type'>
     ): MigrationElementModels.LinkedItemsElement => {
         return {
             ...data,
             type: 'modular_content'
         };
-    };
-
-    const multipleChoiceElement = (
+    },
+    multipleChoiceElement: (
         data: Omit<MigrationElementModels.MultipleChoiceElement, 'type'>
     ): MigrationElementModels.MultipleChoiceElement => {
         return {
             ...data,
             type: 'multiple_choice'
         };
-    };
-
-    const numberElement = (
-        data: Omit<MigrationElementModels.NumberElement, 'type'>
-    ): MigrationElementModels.NumberElement => {
+    },
+    numberElement: (data: Omit<MigrationElementModels.NumberElement, 'type'>): MigrationElementModels.NumberElement => {
         return {
             ...data,
             type: 'number'
         };
-    };
-
-    const richTextElement = (
+    },
+    richTextElement: (
         data: Omit<MigrationElementModels.RichTextElement, 'type'>
     ): MigrationElementModels.RichTextElement => {
         return {
             ...data,
             type: 'rich_text'
         };
-    };
-
-    const subpagesElement = (
+    },
+    subpagesElement: (
         data: Omit<MigrationElementModels.SubpagesElement, 'type'>
     ): MigrationElementModels.SubpagesElement => {
         return {
             ...data,
             type: 'subpages'
         };
-    };
-
-    const taxonomyElement = (
+    },
+    taxonomyElement: (
         data: Omit<MigrationElementModels.TaxonomyElement, 'type'>
     ): MigrationElementModels.TaxonomyElement => {
         return {
             ...data,
             type: 'taxonomy'
         };
-    };
-
-    const urlSlugElement = (
+    },
+    urlSlugElement: (
         data: Omit<MigrationElementModels.UrlSlugElement, 'type'>
     ): MigrationElementModels.UrlSlugElement => {
         return {
             ...data,
             type: 'url_slug'
         };
-    };
-
-    return {
-        textElement,
-        assetElement,
-        customElement,
-        richTextElement,
-        numberElement,
-        subpagesElement,
-        multipleChoiceElement,
-        urlSlugElement,
-        taxonomyElement,
-        linkedItemsElement,
-        dateTimeElement
-    };
-}
+    }
+};

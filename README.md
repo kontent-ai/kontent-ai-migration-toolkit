@@ -165,9 +165,9 @@ const migrationItem: MigrationItem<ArticleElements> = {
         }
     },
     elements: {
-        title: elementsBuilder().textElement({ value: 'Title of the article' }),
-        rating: elementsBuilder().numberElement({ value: 5 }),
-        related_pages: elementsBuilder().linkedItemsElement({
+        title: elementsBuilder.textElement({ value: 'Title of the article' }),
+        rating: elementsBuilder.numberElement({ value: 5 }),
+        related_pages: elementsBuilder.linkedItemsElement({
             value: [
                 {
                     codename: 'pageA'
@@ -178,7 +178,7 @@ const migrationItem: MigrationItem<ArticleElements> = {
             ]
         }),
         // assets are referenced by their codename
-        teaser_image: elementsBuilder().assetElement({ value: [{ codename: 'article_teaser' }] })
+        teaser_image: elementsBuilder.assetElement({ value: [{ codename: 'article_teaser' }] })
     }
 };
 
