@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-29](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v1.0.0-28...v1.0.0-29) (2024-06-27)
+
 ## [1.0.0-28](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v1.0.0-27...v1.0.0-28) (2024-06-25)
 
 ## [1.0.0-27](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/compare/v1.0.0-26...v1.0.0-27) (2024-06-24)
