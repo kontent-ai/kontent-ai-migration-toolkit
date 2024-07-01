@@ -1,4 +1,6 @@
-type CodenameReplaceFunc = (codename: string) => { external_id?: string; id?: string };
+import { AssetStateInTargetEnvironmentByCodename, ItemStateInTargetEnvironmentByCodename } from 'lib/core/index.js';
+
+type CodenameReplaceFunc<T> = (codename: string) => T;
 type IdReplaceFunc = (id: string) => { codename: string };
 
 interface ProcessCodenamesResult {
@@ -12,43 +14,38 @@ interface ProcessIdsResult {
 }
 
 const attributes = {
-    rteCodenames: {
-        rteItemCodenameAttribute: 'migration-item-codename',
-        rteLinkItemCodenameAttribute: 'migration-link-item-codename',
-        rteAssetCodenameAttribute: 'migration-asset-codename'
+    codenames: {
+        itemCodenameAttribute: 'data-codename',
+        linkItemCodenameAttribute: 'data-item-codename',
+        assetCodenameAttribute: 'data-asset-codename'
     },
-    data: {
-        dataNewWindowAttributeName: 'data-new-window',
-        dataAssetIdAttributeName: 'data-asset-id',
-        dataItemIdAttributeName: 'data-item-id',
-        dataCodenameAttributeName: 'data-codename',
-        dataItemExternalIdAttributeName: 'data-item-external-id',
-        dataIdAttributeName: 'data-id',
-        dataExternalIdAttributeName: 'data-external-id',
-        dataExternalAssetIdAttributeName: 'data-asset-external-id'
+    ids: {
+        assetIdAttributeName: 'data-asset-id',
+        itemIdAttributeName: 'data-item-id',
+        itemExternalIdAttributeName: 'data-item-external-id',
+        idAttributeName: 'data-id',
+        externalIdAttributeName: 'data-external-id',
+        externalAssetIdAttributeName: 'data-asset-external-id'
     },
     componentIdentifierAttribute: 'data-type="component"'
 } as const;
 
 const rteRegexes = {
-    tags: {
+    elements: {
         objectTagRegex: new RegExp(`<object(.+?)</object>`, 'g'),
         imgTagRegex: new RegExp(`<img(.+?)</img>`, 'g'),
         figureTagRegex: new RegExp(`<figure(.+?)</figure>`, 'g'),
         linkTagRegex: new RegExp(`<a(.+?)</a>`, 'g')
     },
-
-    attrs: {
-        dataCodenameAttrRegex: new RegExp(`${attributes.data.dataCodenameAttributeName}=\\"(.+?)\\"`),
-        dataItemIdAttrRegex: new RegExp(`${attributes.data.dataItemIdAttributeName}=\\"(.+?)\\"`),
-        dataAssetIdAttrRegex: new RegExp(`${attributes.data.dataAssetIdAttributeName}=\\"(.+?)\\"`),
-        dataIdAttrRegex: new RegExp(`${attributes.data.dataIdAttributeName}=\\"(.+?)\\"`)
+    ids: {
+        dataItemIdAttrRegex: new RegExp(`${attributes.ids.itemIdAttributeName}=\\"(.+?)\\"`),
+        dataAssetIdAttrRegex: new RegExp(`${attributes.ids.assetIdAttributeName}=\\"(.+?)\\"`),
+        dataIdAttrRegex: new RegExp(`${attributes.ids.idAttributeName}=\\"(.+?)\\"`)
     },
-
-    rteCodenames: {
-        rteItemCodenameRegex: new RegExp(`${attributes.rteCodenames.rteItemCodenameAttribute}=\\"(.+?)\\"`),
-        rteLinkItemCodenameRegex: new RegExp(`${attributes.rteCodenames.rteLinkItemCodenameAttribute}=\\"(.+?)\\"`),
-        rteAssetCodenameRegex: new RegExp(`${attributes.rteCodenames.rteAssetCodenameAttribute}=\\"(.+?)\\"`)
+    codenames: {
+        rteItemCodenameRegex: new RegExp(`${attributes.codenames.itemCodenameAttribute}=\\"(.+?)\\"`),
+        rteLinkItemCodenameRegex: new RegExp(`${attributes.codenames.linkItemCodenameAttribute}=\\"(.+?)\\"`),
+        rteAssetCodenameRegex: new RegExp(`${attributes.codenames.assetCodenameAttribute}=\\"(.+?)\\"`)
     }
 } as const;
 
@@ -63,12 +60,12 @@ export function richTextProcessor() {
             };
         }
 
-        richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.objectTagRegex, (objectTag) => {
+        richTextHtml = richTextHtml.replaceAll(rteRegexes.elements.objectTagRegex, (objectTag) => {
             // skip processing for components
             if (objectTag.includes(attributes.componentIdentifierAttribute)) {
                 return objectTag;
             }
-            const itemIdMatch = objectTag.match(rteRegexes.attrs.dataIdAttrRegex);
+            const itemIdMatch = objectTag.match(rteRegexes.ids.dataIdAttrRegex);
             if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
                 const itemId = itemIdMatch[1];
 
@@ -78,8 +75,8 @@ export function richTextProcessor() {
                     const { codename } = replaceFunc(itemId);
 
                     return objectTag.replaceAll(
-                        `${attributes.data.dataIdAttributeName}="${itemId}"`,
-                        `${attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`
+                        `${attributes.ids.idAttributeName}="${itemId}"`,
+                        `${attributes.codenames.itemCodenameAttribute}="${codename}"`
                     );
                 }
             }
@@ -103,8 +100,8 @@ export function richTextProcessor() {
             };
         }
 
-        richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.figureTagRegex, (figureTag) => {
-            const assetIdMatch = figureTag.match(rteRegexes.attrs.dataAssetIdAttrRegex);
+        richTextHtml = richTextHtml.replaceAll(rteRegexes.elements.figureTagRegex, (figureTag) => {
+            const assetIdMatch = figureTag.match(rteRegexes.ids.dataAssetIdAttrRegex);
             if (assetIdMatch && (assetIdMatch?.length ?? 0) >= 2) {
                 const assetId = assetIdMatch[1];
 
@@ -114,8 +111,8 @@ export function richTextProcessor() {
                     const { codename } = replaceFunc(assetId);
 
                     return figureTag.replaceAll(
-                        `${attributes.data.dataAssetIdAttributeName}="${assetId}"`,
-                        `${attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`
+                        `${attributes.ids.assetIdAttributeName}="${assetId}"`,
+                        `${attributes.codenames.assetCodenameAttribute}="${codename}"`
                     );
                 }
             }
@@ -139,8 +136,8 @@ export function richTextProcessor() {
             };
         }
 
-        richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.linkTagRegex, (linkTag) => {
-            const itemIdMatch = linkTag.match(rteRegexes.attrs.dataItemIdAttrRegex);
+        richTextHtml = richTextHtml.replaceAll(rteRegexes.elements.linkTagRegex, (linkTag) => {
+            const itemIdMatch = linkTag.match(rteRegexes.ids.dataItemIdAttrRegex);
             if (itemIdMatch && (itemIdMatch?.length ?? 0) >= 2) {
                 const itemId = itemIdMatch[1];
                 linkItemIds.add(itemId);
@@ -149,8 +146,8 @@ export function richTextProcessor() {
                     const { codename } = replaceFunc(itemId);
 
                     return linkTag.replaceAll(
-                        `${attributes.data.dataItemIdAttributeName}="${itemId}"`,
-                        `${attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`
+                        `${attributes.ids.itemIdAttributeName}="${itemId}"`,
+                        `${attributes.codenames.linkItemCodenameAttribute}="${codename}"`
                     );
                 }
             }
@@ -164,9 +161,9 @@ export function richTextProcessor() {
         };
     };
 
-    const processRteItemCodenames = (
+    const processItemCodenames = (
         richTextHtml: string,
-        replaceFunc?: CodenameReplaceFunc
+        replaceFunc?: CodenameReplaceFunc<ItemStateInTargetEnvironmentByCodename>
     ): ProcessCodenamesResult => {
         const itemCodenames = new Set<string>();
 
@@ -177,28 +174,25 @@ export function richTextProcessor() {
             };
         }
 
-        richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.objectTagRegex, (objectTag) => {
-            const codenameMatch = objectTag.match(rteRegexes.rteCodenames.rteItemCodenameRegex);
+        richTextHtml = richTextHtml.replaceAll(rteRegexes.elements.objectTagRegex, (objectTag) => {
+            const codenameMatch = objectTag.match(rteRegexes.codenames.rteItemCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
                 itemCodenames.add(codename);
 
                 if (replaceFunc) {
-                    const { external_id, id } = replaceFunc(codename);
+                    const itemState = replaceFunc(codename);
 
-                    if (id) {
-                        return objectTag.replaceAll(
-                            `${attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`,
-                            `${attributes.data.dataIdAttributeName}="${id}"`
-                        );
+                    if (itemState.item && itemState.state === 'exists') {
+                        // no need to replace codename attribute
+                        return objectTag;
                     }
-                    if (external_id) {
-                        return objectTag.replaceAll(
-                            `${attributes.rteCodenames.rteItemCodenameAttribute}="${codename}"`,
-                            `${attributes.data.dataExternalIdAttributeName}="${external_id}"`
-                        );
-                    }
+
+                    return objectTag.replaceAll(
+                        `${attributes.codenames.itemCodenameAttribute}="${codename}"`,
+                        `${attributes.ids.externalIdAttributeName}="${itemState.externalIdToUse}"`
+                    );
                 }
             }
 
@@ -211,9 +205,9 @@ export function richTextProcessor() {
         };
     };
 
-    const processRteLinkItemCodenames = (
+    const processLinkItemCodenames = (
         richTextHtml: string,
-        replaceFunc?: CodenameReplaceFunc
+        replaceFunc?: CodenameReplaceFunc<ItemStateInTargetEnvironmentByCodename>
     ): ProcessCodenamesResult => {
         const itemCodenames = new Set<string>();
 
@@ -224,28 +218,23 @@ export function richTextProcessor() {
             };
         }
 
-        richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.linkTagRegex, (linkTag) => {
-            const codenameMatch = linkTag.match(rteRegexes.rteCodenames.rteLinkItemCodenameRegex);
+        richTextHtml = richTextHtml.replaceAll(rteRegexes.elements.linkTagRegex, (linkTag) => {
+            const codenameMatch = linkTag.match(rteRegexes.codenames.rteLinkItemCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
                 itemCodenames.add(codename);
 
                 if (replaceFunc) {
-                    const { external_id, id } = replaceFunc(codename);
+                    const itemState = replaceFunc(codename);
 
-                    if (id) {
-                        return linkTag.replaceAll(
-                            `${attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`,
-                            `${attributes.data.dataItemIdAttributeName}="${id}"`
-                        );
+                    if (itemState.item && itemState.state === 'exists') {
+                        return linkTag;
                     }
-                    if (external_id) {
-                        return linkTag.replaceAll(
-                            `${attributes.rteCodenames.rteLinkItemCodenameAttribute}="${codename}"`,
-                            `${attributes.data.dataItemExternalIdAttributeName}="${external_id}"`
-                        );
-                    }
+                    return linkTag.replaceAll(
+                        `${attributes.codenames.linkItemCodenameAttribute}="${codename}"`,
+                        `${attributes.ids.itemExternalIdAttributeName}="${itemState.externalIdToUse}"`
+                    );
                 }
             }
 
@@ -258,9 +247,9 @@ export function richTextProcessor() {
         };
     };
 
-    const processRteAssetCodenames = (
+    const processAssetCodenames = (
         richTextHtml: string,
-        replaceFunc?: CodenameReplaceFunc
+        replaceFunc?: CodenameReplaceFunc<AssetStateInTargetEnvironmentByCodename>
     ): ProcessCodenamesResult => {
         const assetCodenames = new Set<string>();
 
@@ -271,28 +260,23 @@ export function richTextProcessor() {
             };
         }
 
-        richTextHtml = richTextHtml.replaceAll(rteRegexes.tags.figureTagRegex, (figureTag) => {
-            const codenameMatch = figureTag.match(rteRegexes.rteCodenames.rteAssetCodenameRegex);
+        richTextHtml = richTextHtml.replaceAll(rteRegexes.elements.figureTagRegex, (figureTag) => {
+            const codenameMatch = figureTag.match(rteRegexes.codenames.rteAssetCodenameRegex);
             if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
                 const codename = codenameMatch[1];
 
                 assetCodenames.add(codename);
 
                 if (replaceFunc) {
-                    const { external_id, id } = replaceFunc(codename);
+                    const assetState = replaceFunc(codename);
 
-                    if (id) {
-                        return figureTag.replaceAll(
-                            `${attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`,
-                            `${attributes.data.dataAssetIdAttributeName}="${id}"`
-                        );
+                    if (assetState.asset && assetState.state === 'exists') {
+                        return figureTag;
                     }
-                    if (external_id) {
-                        return figureTag.replaceAll(
-                            `${attributes.rteCodenames.rteAssetCodenameAttribute}="${codename}"`,
-                            `${attributes.data.dataExternalAssetIdAttributeName}="${external_id}"`
-                        );
-                    }
+                    return figureTag.replaceAll(
+                        `${attributes.codenames.assetCodenameAttribute}="${codename}"`,
+                        `${attributes.ids.externalAssetIdAttributeName}="${assetState.externalIdToUse}"`
+                    );
                 }
             }
 
@@ -309,8 +293,8 @@ export function richTextProcessor() {
         processAssetIds,
         processDataIds,
         processLinkItemIds,
-        processRteAssetCodenames,
-        processRteItemCodenames,
-        processRteLinkItemCodenames
+        processAssetCodenames,
+        processItemCodenames,
+        processLinkItemCodenames
     };
 }

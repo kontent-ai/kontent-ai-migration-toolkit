@@ -113,16 +113,16 @@ export function itemsExtractionProcessor() {
 
                             // items
                             richTextProcessor()
-                                .processRteItemCodenames(richTextHtml)
+                                .processItemCodenames(richTextHtml)
                                 .codenames.forEach((codename) => childExtractedCodenames.itemCodenames.add(codename));
 
                             richTextProcessor()
-                                .processRteLinkItemCodenames(richTextHtml)
+                                .processLinkItemCodenames(richTextHtml)
                                 .codenames.forEach((codename) => childExtractedCodenames.itemCodenames.add(codename));
 
                             // assets
                             richTextProcessor()
-                                .processRteAssetCodenames(richTextHtml)
+                                .processAssetCodenames(richTextHtml)
                                 .codenames.forEach((codename) => childExtractedCodenames.assetCodenames.add(codename));
 
                             // recursively extract data from components as well because they may reference additional assets & content items

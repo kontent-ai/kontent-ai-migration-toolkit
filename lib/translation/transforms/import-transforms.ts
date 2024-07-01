@@ -196,49 +196,19 @@ function processImportRichTextHtmlValue(data: {
 
     let richTextHtml: string = data.element.value ?? '';
 
-    // replace item codenames with id or external_id
-    richTextHtml = richTextProcessor().processRteItemCodenames(richTextHtml, (codename) => {
-        const itemState = data.importContext.getItemStateInTargetEnvironment(codename);
-
-        if (itemState.state === 'exists' && itemState.item) {
-            return {
-                id: itemState.item.id
-            };
-        } else {
-            return {
-                external_id: itemState.externalIdToUse
-            };
-        }
+    // replace item codenames with existing codename or external_id
+    richTextHtml = richTextProcessor().processItemCodenames(richTextHtml, (codename) => {
+        return data.importContext.getItemStateInTargetEnvironment(codename);
     }).html;
 
-    // replace link item codenames with id or external_id
-    richTextHtml = richTextProcessor().processRteLinkItemCodenames(richTextHtml, (codename) => {
-        const itemState = data.importContext.getItemStateInTargetEnvironment(codename);
-
-        if (itemState.state === 'exists' && itemState.item) {
-            return {
-                id: itemState.item.id
-            };
-        } else {
-            return {
-                external_id: itemState.externalIdToUse
-            };
-        }
+    // replace link item codenames with existing codename or external_id
+    richTextHtml = richTextProcessor().processLinkItemCodenames(richTextHtml, (codename) => {
+        return data.importContext.getItemStateInTargetEnvironment(codename);
     }).html;
 
-    // replace asset codenames with id or external_id
-    richTextHtml = richTextProcessor().processRteAssetCodenames(richTextHtml, (codename) => {
-        const assetState = data.importContext.getAssetStateInTargetEnvironment(codename);
-
-        if (assetState.state === 'exists' && assetState.asset) {
-            return {
-                id: assetState.asset.id
-            };
-        } else {
-            return {
-                external_id: assetState.externalIdToUse
-            };
-        }
+    // replace asset codenames with existing codename or external_id
+    richTextHtml = richTextProcessor().processAssetCodenames(richTextHtml, (codename) => {
+        return data.importContext.getAssetStateInTargetEnvironment(codename);
     }).html;
 
     return richTextHtml;
