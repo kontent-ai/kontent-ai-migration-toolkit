@@ -4,7 +4,7 @@ await migrateAsync({
     logger: getDefaultLogger(),
     sourceEnvironment: {
         apiKey: '<key>',
-        id: '<id>',
+        environmentId: '<id>',
         // array of items to migrate from one environment to another
         items: [
             {
@@ -15,6 +15,6 @@ await migrateAsync({
     },
     targetEnvironment: {
         apiKey: '<key>',
-        id: '<id>'
+        environmentId: '<id>'
     }
 });
