@@ -1,22 +1,14 @@
-import {
-    WorkflowModels,
-    LanguageVariantModels,
-    ContentItemModels,
-    AssetModels,
-    LanguageModels,
-    CollectionModels,
-    TaxonomyModels
-} from '@kontent-ai/management-sdk';
+import { WorkflowModels, LanguageVariantModels, ContentItemModels, AssetModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import {
     processSetAsync,
     runMapiRequestAsync,
-    getFlattenedContentTypesAsync,
     is404Error,
     ItemStateInSourceEnvironmentById,
     AssetStateInSourceEnvironmentById,
     FlattenedContentType,
-    isNotUndefined
+    isNotUndefined,
+    managementClientUtils
 } from '../../core/index.js';
 import { itemsExtractionProcessor } from '../../translation/index.js';
 import {
@@ -165,51 +157,16 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     };
 
     const getEnvironmentDataAsync = async (): Promise<ExportContextEnvironmentData> => {
+        const mapiUtils = managementClientUtils(config.managementClient, config.logger);
         const environmentData: ExportContextEnvironmentData = {
-            collections: await getAllCollectionsAsync(),
-            contentTypes: await getFlattenedContentTypesAsync(config.managementClient, config.logger),
-            languages: await getAllLanguagesAsync(),
-            workflows: await getAllWorkflowsAsync(),
-            taxonomies: await getAllTaxonomiesAsync()
+            collections: await mapiUtils.getAllCollectionsAsync(),
+            contentTypes: await mapiUtils.getFlattenedContentTypesAsync(),
+            languages: await mapiUtils.getAllLanguagesAsync(),
+            workflows: await mapiUtils.getAllWorkflowsAsync(),
+            taxonomies: await mapiUtils.getAllTaxonomiesAsync()
         };
 
         return environmentData;
-    };
-
-    const getAllLanguagesAsync = async (): Promise<readonly LanguageModels.LanguageModel[]> => {
-        return await runMapiRequestAsync({
-            logger: config.logger,
-            func: async () => (await config.managementClient.listLanguages().toAllPromise()).data.items,
-            action: 'list',
-            type: 'language'
-        });
-    };
-
-    const getAllCollectionsAsync = async (): Promise<readonly CollectionModels.Collection[]> => {
-        return await runMapiRequestAsync({
-            logger: config.logger,
-            func: async () => (await config.managementClient.listCollections().toPromise()).data.collections,
-            action: 'list',
-            type: 'collection'
-        });
-    };
-
-    const getAllWorkflowsAsync = async (): Promise<readonly WorkflowModels.Workflow[]> => {
-        return await runMapiRequestAsync({
-            logger: config.logger,
-            func: async () => (await config.managementClient.listWorkflows().toPromise()).data,
-            action: 'list',
-            type: 'workflow'
-        });
-    };
-
-    const getAllTaxonomiesAsync = async (): Promise<readonly TaxonomyModels.Taxonomy[]> => {
-        return await runMapiRequestAsync({
-            logger: config.logger,
-            func: async () => (await config.managementClient.listTaxonomies().toAllPromise()).data.items,
-            action: 'list',
-            type: 'taxonomy'
-        });
     };
 
     const getContentItemsByIdsAsync = async (

@@ -15,8 +15,10 @@ import {
     MigrationData
 } from '../core/index.js';
 import {
+    CollectionModels,
     ContentItemModels,
     ElementContracts,
+    LanguageModels,
     LanguageVariantModels,
     ManagementClient
 } from '@kontent-ai/management-sdk';
@@ -26,6 +28,11 @@ export interface ImportContextConfig {
     readonly managementClient: Readonly<ManagementClient>;
     readonly externalIdGenerator: ExternalIdGenerator;
     readonly migrationData: MigrationData;
+}
+
+export interface ImportContextEnvironmentData {
+    readonly languages: readonly LanguageModels.LanguageModel[];
+    readonly collections: readonly CollectionModels.Collection[];
 }
 
 export type GetFlattenedElementByCodenames = (
@@ -43,6 +50,7 @@ export interface CategorizedImportData {
 export interface ImportContext {
     readonly categorizedImportData: CategorizedImportData;
     readonly referencedData: ReferencedDataInMigrationItems;
+    readonly environmentData: ImportContextEnvironmentData;
     readonly getItemStateInTargetEnvironment: (itemCodename: string) => ItemStateInTargetEnvironmentByCodename;
     readonly getLanguageVariantStateInTargetEnvironment: (
         itemCodename: string,

@@ -3,17 +3,15 @@ import {
     ContentItemModels,
     LanguageVariantModels,
     ManagementClient,
-    WorkflowModels,
-    createManagementClient
+    WorkflowModels
 } from '@kontent-ai/management-sdk';
 
 import {
-    defaultRetryStrategy,
-    defaultHttpService,
     runMapiRequestAsync,
     defaultExternalIdGenerator,
     Logger,
-    getDefaultLogger
+    getDefaultLogger,
+    getMigrationManagementClient
 } from '../core/index.js';
 import { ImportConfig, ImportContext, ImportResult } from './import.models.js';
 import { assetsImporter } from './importers/assets-importer.js';
@@ -23,12 +21,10 @@ import { importContextFetcher } from './context/import-context-fetcher.js';
 
 export function importManager(config: ImportConfig) {
     const logger: Logger = config.logger ?? getDefaultLogger();
-    const targetEnvironmentClient: ManagementClient = createManagementClient({
-        apiKey: config.apiKey,
-        baseUrl: config.baseUrl,
+    const targetEnvironmentClient: ManagementClient = getMigrationManagementClient({
         environmentId: config.environmentId,
-        httpService: defaultHttpService,
-        retryStrategy: config.retryStrategy ?? defaultRetryStrategy
+        retryStrategy: config.retryStrategy,
+        apiKey: config.apiKey
     });
 
     const importAssetsAsync = async (importContext: ImportContext): Promise<void> => {

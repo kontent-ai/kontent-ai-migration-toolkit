@@ -11,6 +11,7 @@ type SetAction =
     | 'Importing content items'
     | 'Importing language variants'
     | 'Fetching language variants'
+    | 'Upserting assets'
     | 'Uploading assets';
 
 export async function processSetAsync<InputItem, OutputItem>(data: {

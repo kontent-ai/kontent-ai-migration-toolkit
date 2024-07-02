@@ -1,12 +1,20 @@
 import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
-import { MigrationAsset, Logger, processSetAsync, runMapiRequestAsync } from '../../core/index.js';
+import {
+    MigrationAsset,
+    Logger,
+    processSetAsync,
+    runMapiRequestAsync,
+    MigrationAssetDescription,
+    MigrationReference
+} from '../../core/index.js';
 import mime from 'mime';
 import chalk from 'chalk';
 import { ImportContext } from '../import.models.js';
+import { shouldUpdateAsset } from '../comparers/asset-comparer.js';
 
 export function assetsImporter(data: {
     readonly logger: Logger;
-    readonly client: ManagementClient;
+    readonly client: Readonly<ManagementClient>;
     readonly importContext: ImportContext;
 }) {
     const getAssetsToUpload = (): readonly MigrationAsset[] => {
@@ -15,26 +23,94 @@ export function assetsImporter(data: {
         });
     };
 
-    const importAsync = async (): Promise<void> => {
+    const getAssetsToEdit = (): readonly MigrationAsset[] => {
+        return data.importContext.categorizedImportData.assets.filter((migrationAsset) => {
+            const assetState = data.importContext.getAssetStateInTargetEnvironment(migrationAsset.codename);
+
+            if (!assetState.asset || assetState.state === 'doesNotExists') {
+                return false;
+            }
+
+            return shouldUpdateAsset({
+                collections: data.importContext.environmentData.collections,
+                languages: data.importContext.environmentData.languages,
+                migrationAsset: migrationAsset,
+                targetAsset: assetState.asset
+            });
+        });
+    };
+
+    const editAssets = async (assetsToEdit: readonly MigrationAsset[]): Promise<void> => {
         data.logger.log({
-            type: 'info',
-            message: `Categorizing '${chalk.yellow(
-                data.importContext.categorizedImportData.assets.length.toString()
-            )}' assets`
+            type: 'upsert',
+            message: `Upserting '${chalk.yellow(assetsToEdit.length.toString())}' assets`
         });
 
-        const assetsToUpload = getAssetsToUpload();
-        const skippedAssetsCount = data.importContext.categorizedImportData.assets.length - assetsToUpload.length;
+        await processSetAsync<MigrationAsset, void>({
+            action: 'Upserting assets',
+            logger: data.logger,
+            parallelLimit: 1,
+            items: assetsToEdit,
+            itemInfo: (input) => {
+                return {
+                    itemType: 'asset',
+                    title: input.title
+                };
+            },
+            processAsync: async (asset, logSpinner) => {
+                await runMapiRequestAsync({
+                    logger: data.logger,
+                    func: async () =>
+                        (
+                            await data.client
+                                .upsertAsset()
+                                .byAssetCodename(asset.codename)
+                                .withData(() => {
+                                    return {
+                                        title: asset.title,
+                                        descriptions: mapAssetDescriptions(asset.descriptions),
+                                        collection: mapAssetCollection(asset.collection)
+                                    };
+                                })
+                                .toPromise()
+                        ).data,
+                    action: 'upload',
+                    type: 'binaryFile',
+                    logSpinner: logSpinner,
+                    itemName: `${asset.title ?? asset.filename}`
+                });
+            }
+        });
+    };
 
-        if (skippedAssetsCount) {
-            data.logger.log({
-                type: 'skip',
-                message: `Skipping upload for '${chalk.yellow(
-                    skippedAssetsCount.toString()
-                )}' assets as they already exist`
-            });
-        }
+    const mapAssetCollection = (
+        migrationCollection: MigrationReference | undefined
+    ): AssetModels.IAssetCollectionReferenceObject | undefined => {
+        return migrationCollection
+            ? {
+                  reference: {
+                      codename: migrationCollection.codename
+                  }
+              }
+            : undefined;
+    };
 
+    const mapAssetDescriptions = (
+        migrationDescription: readonly MigrationAssetDescription[] | undefined
+    ): AssetModels.IAssetFileDescription[] => {
+        return (migrationDescription ?? []).map((m) => {
+            const assetDescription: AssetModels.IAssetFileDescription = {
+                description: m.description ?? '',
+                language: {
+                    codename: m.language.codename
+                }
+            };
+
+            return assetDescription;
+        });
+    };
+
+    const uploadAssets = async (assetsToUpload: readonly MigrationAsset[]): Promise<void> => {
         data.logger.log({
             type: 'upload',
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
@@ -90,25 +166,8 @@ export function assetsImporter(data: {
                                         codename: asset.codename,
                                         title: asset.title,
                                         external_id: assetStateInTargetEnv.externalIdToUse,
-                                        collection: asset.collection
-                                            ? {
-                                                  reference: {
-                                                      codename: asset.collection.codename
-                                                  }
-                                              }
-                                            : undefined,
-                                        descriptions: asset.descriptions
-                                            ? asset.descriptions.map((m) => {
-                                                  const assetDescription: AssetModels.IAssetFileDescription = {
-                                                      description: m.description ?? '',
-                                                      language: {
-                                                          codename: m.language.codename
-                                                      }
-                                                  };
-
-                                                  return assetDescription;
-                                              })
-                                            : []
+                                        collection: mapAssetCollection(asset.collection),
+                                        descriptions: mapAssetDescriptions(asset.descriptions)
                                     };
                                     return assetRequestData;
                                 })
@@ -121,6 +180,18 @@ export function assetsImporter(data: {
                 });
             }
         });
+    };
+
+    const importAsync = async (): Promise<void> => {
+        data.logger.log({
+            type: 'info',
+            message: `Categorizing '${chalk.yellow(
+                data.importContext.categorizedImportData.assets.length.toString()
+            )}' assets`
+        });
+
+        await uploadAssets(getAssetsToUpload());
+        await editAssets(getAssetsToEdit());
     };
 
     return {

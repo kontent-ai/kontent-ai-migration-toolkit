@@ -1,6 +1,6 @@
-import { createManagementClient } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import { Logger } from '../models/log.models.js';
+import { getMigrationManagementClient, managementClientUtils } from './management-client-utils.js';
 
 export async function confirmExportAsync(data: {
     readonly force: boolean;
@@ -11,14 +11,13 @@ export async function confirmExportAsync(data: {
         readonly itemsCount: number;
     };
 }): Promise<void> {
-    const environment = (
-        await createManagementClient({
-            apiKey: data.apiKey,
-            environmentId: data.environmentId
-        })
-            .environmentInformation()
-            .toPromise()
-    ).data.project;
+    const environment = await managementClientUtils(
+        getMigrationManagementClient({
+            environmentId: data.environmentId,
+            apiKey: data.apiKey
+        }),
+        data.logger
+    ).getEnvironmentAsync();
 
     const text: string = `Are you sure to export '${chalk.cyan(
         data.dataToExport.itemsCount
@@ -49,22 +48,20 @@ export async function confirmMigrateAsync(data: {
         readonly itemsCount: number;
     };
 }): Promise<void> {
-    const sourceEnvironment = (
-        await createManagementClient({
-            apiKey: data.sourceEnvironment.apiKey,
-            environmentId: data.sourceEnvironment.environmentId
-        })
-            .environmentInformation()
-            .toPromise()
-    ).data.project;
-    const targetEnvironment = (
-        await createManagementClient({
-            apiKey: data.targetEnvironment.apiKey,
-            environmentId: data.targetEnvironment.environmentId
-        })
-            .environmentInformation()
-            .toPromise()
-    ).data.project;
+    const sourceEnvironment = await managementClientUtils(
+        getMigrationManagementClient({
+            environmentId: data.sourceEnvironment.environmentId,
+            apiKey: data.sourceEnvironment.apiKey
+        }),
+        data.logger
+    ).getEnvironmentAsync();
+    const targetEnvironment = await managementClientUtils(
+        getMigrationManagementClient({
+            environmentId: data.targetEnvironment.environmentId,
+            apiKey: data.targetEnvironment.apiKey
+        }),
+        data.logger
+    ).getEnvironmentAsync();
 
     const text: string = `Are you sure to migrate '${chalk.cyan(data.dataToMigrate.itemsCount)}' ${getItemsPluralText(
         data.dataToMigrate.itemsCount
@@ -86,14 +83,13 @@ export async function confirmImportAsync(data: {
     readonly apiKey: string;
     readonly logger: Logger;
 }): Promise<void> {
-    const environment = (
-        await createManagementClient({
-            apiKey: data.apiKey,
-            environmentId: data.environmentId
-        })
-            .environmentInformation()
-            .toPromise()
-    ).data.project;
+    const environment = await managementClientUtils(
+        getMigrationManagementClient({
+            environmentId: data.environmentId,
+            apiKey: data.apiKey
+        }),
+        data.logger
+    ).getEnvironmentAsync();
 
     const text: string = `Are you sure to import data into ${chalk.yellow(environment.name)} (${chalk.yellow(
         environment.environment

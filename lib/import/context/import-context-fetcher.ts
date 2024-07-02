@@ -5,13 +5,18 @@ import {
     ItemStateInTargetEnvironmentByCodename,
     LanguageVariantStateInTargetEnvironmentByCodename,
     MigrationItem,
-    getFlattenedContentTypesAsync,
     is404Error,
     isNotUndefined,
+    managementClientUtils,
     processSetAsync,
     runMapiRequestAsync
 } from '../../core/index.js';
-import { GetFlattenedElementByCodenames, ImportContext, ImportContextConfig } from '../import.models.js';
+import {
+    GetFlattenedElementByCodenames,
+    ImportContext,
+    ImportContextConfig,
+    ImportContextEnvironmentData
+} from '../import.models.js';
 import { itemsExtractionProcessor } from '../../translation/index.js';
 import chalk from 'chalk';
 
@@ -21,6 +26,8 @@ interface LanguageVariantWrapper {
 }
 
 export function importContextFetcher(config: ImportContextConfig) {
+    const mapiUtils = managementClientUtils(config.managementClient, config.logger);
+
     const getElement = (types: readonly FlattenedContentType[]) => {
         const getFlattenedElement: GetFlattenedElementByCodenames = (
             contentTypeCodename,
@@ -252,10 +259,7 @@ export function importContextFetcher(config: ImportContextConfig) {
     };
 
     const getImportContextAsync = async (): Promise<ImportContext> => {
-        const flattenedContentTypes: readonly FlattenedContentType[] = await getFlattenedContentTypesAsync(
-            config.managementClient,
-            config.logger
-        );
+        const flattenedContentTypes: readonly FlattenedContentType[] = await mapiUtils.getFlattenedContentTypesAsync();
         const getElementByCodenames: GetFlattenedElementByCodenames = getElement(flattenedContentTypes);
 
         const referencedData = itemsExtractionProcessor().extractReferencedItemsFromMigrationItems(
@@ -303,7 +307,16 @@ export function importContextFetcher(config: ImportContextConfig) {
             assetCodenamesToCheckInTargetEnv
         );
 
+        const getEnvironmentDataAsync = async (): Promise<ImportContextEnvironmentData> => {
+            const environmentData: ImportContextEnvironmentData = {
+                collections: await mapiUtils.getAllCollectionsAsync(),
+                languages: await mapiUtils.getAllLanguagesAsync()
+            };
+
+            return environmentData;
+        };
         const importContext: ImportContext = {
+            environmentData: await getEnvironmentDataAsync(),
             categorizedImportData: {
                 assets: config.migrationData.assets,
                 componentItems: contentItemComponents,

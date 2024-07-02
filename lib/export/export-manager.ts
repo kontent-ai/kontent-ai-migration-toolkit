@@ -1,11 +1,9 @@
 import { ExportContext, ExportConfig, ExportItem } from './export.models.js';
 import chalk from 'chalk';
-import { AssetModels, CollectionModels, ElementModels, createManagementClient } from '@kontent-ai/management-sdk';
+import { AssetModels, CollectionModels, ElementModels } from '@kontent-ai/management-sdk';
 import {
-    defaultRetryStrategy,
     MigrationAsset,
     MigrationItem,
-    defaultHttpService,
     FlattenedContentTypeElement,
     extractErrorData,
     processSetAsync,
@@ -16,17 +14,17 @@ import {
     getDefaultLogger,
     MigrationData,
     isNotUndefined,
-    MigrationElementValue
+    MigrationElementValue,
+    getMigrationManagementClient
 } from '../core/index.js';
 import { exportTransforms } from '../translation/index.js';
 import { exportContextFetcher } from './context/export-context-fetcher.js';
 
 export function exportManager(config: ExportConfig) {
     const logger = config.logger ?? getDefaultLogger();
-    const managementClient = createManagementClient({
+    const managementClient = getMigrationManagementClient({
         environmentId: config.environmentId,
-        retryStrategy: config.retryStrategy ?? defaultRetryStrategy,
-        httpService: defaultHttpService,
+        retryStrategy: config.retryStrategy,
         apiKey: config.apiKey
     });
 
