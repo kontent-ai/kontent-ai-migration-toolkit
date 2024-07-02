@@ -21,11 +21,7 @@ import { importContextFetcher } from './context/import-context-fetcher.js';
 
 export function importManager(config: ImportConfig) {
     const logger: Logger = config.logger ?? getDefaultLogger();
-    const targetEnvironmentClient: ManagementClient = getMigrationManagementClient({
-        environmentId: config.environmentId,
-        retryStrategy: config.retryStrategy,
-        apiKey: config.apiKey
-    });
+    const targetEnvironmentClient: ManagementClient = getMigrationManagementClient(config);
 
     const importAssetsAsync = async (importContext: ImportContext): Promise<void> => {
         if (!importContext.categorizedImportData.assets.length) {

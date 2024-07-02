@@ -3,6 +3,7 @@ import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import {
     ExternalIdGenerator,
     Logger,
+    ManagementClientConfig,
     MigrationData,
     executeWithTrackingAsync,
     getDefaultLogger
@@ -12,16 +13,11 @@ import { exportAsync } from './export.js';
 import { importAsync } from './import.js';
 import { ImportResult } from '../import/index.js';
 
-export interface MigrationEnv {
-    readonly id: string;
-    readonly apiKey: string;
-}
-
-export interface MigrationSource extends MigrationEnv {
+export interface MigrationSource extends ManagementClientConfig {
     readonly items: readonly SourceExportItem[];
 }
 
-export interface MigrationTarget extends MigrationEnv {
+export interface MigrationTarget extends ManagementClientConfig {
     readonly skipFailedItems?: boolean;
 }
 
@@ -56,20 +52,16 @@ export async function migrateAsync(config: MigrationConfig): Promise<MigrationRe
         },
         func: async () => {
             const migrationData = await exportAsync({
+                ...config.sourceEnvironment,
                 logger: logger,
-                environmentId: config.sourceEnvironment.id,
-                apiKey: config.sourceEnvironment.apiKey,
-                exportItems: config.sourceEnvironment.items,
-                retryStrategy: config.retryStrategy
+                exportItems: config.sourceEnvironment.items
             });
 
             const importResult = await importAsync({
+                ...config.targetEnvironment,
                 logger: logger,
                 data: migrationData,
-                environmentId: config.targetEnvironment.id,
-                apiKey: config.targetEnvironment.apiKey,
                 skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
-                retryStrategy: config.retryStrategy,
                 externalIdGenerator: config.externalIdGenerator
             });
 

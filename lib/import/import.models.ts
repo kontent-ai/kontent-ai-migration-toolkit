@@ -1,5 +1,3 @@
-import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
-
 import {
     MigrationItem,
     MigrationAsset,
@@ -12,7 +10,8 @@ import {
     FlattenedContentTypeElement,
     MigrationElementValue,
     MigrationElementType,
-    MigrationData
+    MigrationData,
+    ManagementClientConfig
 } from '../core/index.js';
 import {
     CollectionModels,
@@ -67,14 +66,10 @@ export type ImportTransformFunc = (data: {
     readonly migrationItems: readonly MigrationItem[];
 }) => ElementContracts.IContentItemElementContract;
 
-export interface ImportConfig {
+export interface ImportConfig extends ManagementClientConfig {
     readonly data: MigrationData;
-    readonly environmentId: string;
-    readonly apiKey: string;
     readonly skipFailedItems?: boolean;
-    readonly retryStrategy?: Readonly<IRetryStrategyOptions>;
     readonly externalIdGenerator?: ExternalIdGenerator;
-    readonly baseUrl?: string;
     readonly logger?: Logger;
 }
 

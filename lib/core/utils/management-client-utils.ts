@@ -17,7 +17,7 @@ import { exitProgram, isNotUndefined } from './global.utils.js';
 import chalk from 'chalk';
 import { defaultHttpService, defaultRetryStrategy } from './http.utils.js';
 
-interface ManagementClientConfig {
+export interface ManagementClientConfig {
     readonly environmentId: string;
     readonly apiKey: string;
     readonly retryStrategy?: Readonly<IRetryStrategyOptions>;

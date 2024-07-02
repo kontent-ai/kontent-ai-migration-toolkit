@@ -1,5 +1,3 @@
-import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
-
 import {
     Logger,
     FlattenedContentType,
@@ -9,7 +7,8 @@ import {
     ReferencedDataInLanguageVariants,
     MigrationElementValue,
     MigrationComponent,
-    MigrationUrlSlugMode
+    MigrationUrlSlugMode,
+    ManagementClientConfig
 } from '../core/index.js';
 import {
     LanguageVariantModels,
@@ -58,14 +57,9 @@ export interface SourceExportItem {
     readonly languageCodename: string;
 }
 
-export interface ExportConfig {
-    readonly environmentId: string;
-    readonly apiKey: string;
+export interface ExportConfig extends ManagementClientConfig {
     readonly exportItems: readonly SourceExportItem[];
-
     readonly logger?: Logger;
-    readonly baseUrl?: string;
-    readonly retryStrategy?: Readonly<IRetryStrategyOptions>;
 }
 
 export interface DefaultExportContextConfig {

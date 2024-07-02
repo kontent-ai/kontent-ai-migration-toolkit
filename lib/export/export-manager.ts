@@ -22,11 +22,7 @@ import { exportContextFetcher } from './context/export-context-fetcher.js';
 
 export function exportManager(config: ExportConfig) {
     const logger = config.logger ?? getDefaultLogger();
-    const managementClient = getMigrationManagementClient({
-        environmentId: config.environmentId,
-        retryStrategy: config.retryStrategy,
-        apiKey: config.apiKey
-    });
+    const managementClient = getMigrationManagementClient(config);
 
     const getMigrationItems = (context: ExportContext): readonly MigrationItem[] => {
         return context.exportItems.map<MigrationItem>((exportItem) => mapToMigrationItem(context, exportItem));

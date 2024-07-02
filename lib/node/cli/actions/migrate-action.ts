@@ -39,12 +39,12 @@ export async function migrateActionAsync(argsFetcher: CliArgumentsFetcher): Prom
     await migrateAsync({
         logger: log,
         sourceEnvironment: {
-            id: sourceEnvironmentId,
+            environmentId: sourceEnvironmentId,
             apiKey: sourceApiKey,
             items: migrateItems
         },
         targetEnvironment: {
-            id: targetEnvironmentId,
+            environmentId: targetEnvironmentId,
             apiKey: targetApiKey,
             skipFailedItems: skipFailedItems
         }
