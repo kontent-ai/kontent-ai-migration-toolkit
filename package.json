@@ -12,7 +12,7 @@
         "url": "https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit"
     },
     "engines": {
-        "node": ">=18"
+        "node": ">=20"
     },
     "author": "Richard Sustek",
     "exports": "./dist/es2022/index.js",
