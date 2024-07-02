@@ -97,11 +97,11 @@ export interface MigrationItem<TElements extends MigrationElements = MigrationEl
         readonly collection: MigrationReference;
 
         /**
-         * Undefined only if migration item represents components in RTE
+         * Workflow of the item
          */
         readonly workflow: MigrationReference;
         /**
-         * Undefined only if migration item represents components in RTE
+         * Workflow step of the item
          */
         readonly workflow_step: MigrationReference;
     };
