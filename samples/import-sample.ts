@@ -9,6 +9,5 @@ const data = await extractAsync({
 await importAsync({
     data: data,
     environmentId: '<id>',
-    apiKey: '<mapiKey>',
-    skipFailedItems: false
+    apiKey: '<mapiKey>'
 });

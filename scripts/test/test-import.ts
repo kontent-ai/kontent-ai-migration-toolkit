@@ -26,8 +26,7 @@ const run = async () => {
         logger: log,
         data: data,
         environmentId: environmentId,
-        apiKey: apiKey,
-        skipFailedItems: false
+        apiKey: apiKey
     });
 };
 

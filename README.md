@@ -53,16 +53,15 @@ You may migrate content (items & asset) between Kontent.ai environments. For mig
 
 ## Configuration
 
-| Config                  | Value                                                                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **sourceEnvironmentId** | Id of source environment **(required)**                                                                                                                 |
-| **sourceApiKey**        | Management API key of source environment **(required)**                                                                                                 |
-| **targetEnvironmentId** | Id of target environment **(required)**                                                                                                                 |
-| **targetApiKey**        | Management API key of target environment **(required)**                                                                                                 |
-| **language**            | Codename of language that items will be exported in **(required)**                                                                                      |
-| **items**               | Comma separated list of items that will be exported **(required)**                                                                                      |
-| skipFailedItems         | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
-| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
+| Config                  | Value                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| **sourceEnvironmentId** | Id of source environment **(required)**                                                               |
+| **sourceApiKey**        | Management API key of source environment **(required)**                                               |
+| **targetEnvironmentId** | Id of target environment **(required)**                                                               |
+| **targetApiKey**        | Management API key of target environment **(required)**                                               |
+| **language**            | Codename of language that items will be exported in **(required)**                                    |
+| **items**               | Comma separated list of items that will be exported **(required)**                                    |
+| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false` |
 
 ## Migrate CLI
 
@@ -85,14 +84,13 @@ kontent-ai-migration-toolkit migrate --targetEnvironmentId=x --targetApiKey=x --
 
 ## Configuration
 
-| Config                  | Value                                                                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **targetEnvironmentId** | Id of Kontent.ai environment **(required)**                                                                                                             |
-| **targetApiKey**        | Management API key **(required)**                                                                                                                       |
-| **filename**            | Name of the zip file **(required)**                                                                                                                     |
-| baseUrl                 | Custom base URL for Kontent.ai API calls                                                                                                                |
-| skipFailedItems         | Indicates if failed content items & language variants should be skipped if their import fails. Available options: `true` & `false`. Detaults to `false` |
-| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false`                                                   |
+| Config                  | Value                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| **targetEnvironmentId** | Id of Kontent.ai environment **(required)**                                                           |
+| **targetApiKey**        | Management API key **(required)**                                                                     |
+| **filename**            | Name of the zip file **(required)**                                                                   |
+| baseUrl                 | Custom base URL for Kontent.ai API calls                                                              |
+| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false` |
 
 ## Import CLI
 
@@ -213,7 +211,6 @@ Once you are happy with the data, you can import them to Kontent.ai using the `i
 await importAsync({
     environmentId: environmentId,
     apiKey: apiKey,
-    skipFailedItems: false,
     data: {
         assets: [migrationAsset],
         items: [migrationItem]

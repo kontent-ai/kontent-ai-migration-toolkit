@@ -67,7 +67,6 @@ export type ImportTransformFunc = (data: {
 
 export interface ImportConfig extends ManagementClientConfig {
     readonly data: MigrationData;
-    readonly skipFailedItems?: boolean;
     readonly externalIdGenerator?: ExternalIdGenerator;
     readonly logger?: Logger;
 }

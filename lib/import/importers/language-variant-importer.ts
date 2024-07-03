@@ -11,7 +11,6 @@ import {
     runMapiRequestAsync,
     MigrationItem,
     exitProgram,
-    extractErrorData,
     LogSpinnerData,
     MigrationElement,
     MigrationItemVersion
@@ -29,7 +28,6 @@ export function languageVariantImporter(config: {
     readonly preparedContentItems: readonly ContentItemModels.ContentItem[];
     readonly importContext: ImportContext;
     readonly client: Readonly<ManagementClient>;
-    readonly skipFailedItems: boolean;
 }) {
     const upsertLanguageVariantAsync = async (data: {
         workflow: Readonly<WorkflowModels.Workflow>;
@@ -325,36 +323,19 @@ export function languageVariantImporter(config: {
                     };
                 },
                 processAsync: async (migrationItem, logSpinner) => {
-                    try {
-                        const preparedContentItem = config.preparedContentItems.find(
-                            (m) => m.codename === migrationItem.system.codename
-                        );
+                    const preparedContentItem = config.preparedContentItems.find(
+                        (m) => m.codename === migrationItem.system.codename
+                    );
 
-                        if (!preparedContentItem) {
-                            exitProgram({
-                                message: `Missing content item with codename '${chalk.red(
-                                    migrationItem.system.codename
-                                )}'. Content item should have been prepepared.`
-                            });
-                        }
-
-                        return await importLanguageVariantAsync(logSpinner, migrationItem, preparedContentItem);
-                    } catch (error) {
-                        if (config.skipFailedItems) {
-                            config.logger.log({
-                                type: 'error',
-                                message: `Failed to import language variant '${chalk.red(
-                                    migrationItem.system.name
-                                )}' in language '${chalk.red(migrationItem.system.language.codename)}'. Error: ${
-                                    extractErrorData(error).message
-                                }`
-                            });
-
-                            return [];
-                        }
-
-                        throw error;
+                    if (!preparedContentItem) {
+                        exitProgram({
+                            message: `Missing content item with codename '${chalk.red(
+                                migrationItem.system.codename
+                            )}'. Content item should have been prepepared.`
+                        });
                     }
+
+                    return await importLanguageVariantAsync(logSpinner, migrationItem, preparedContentItem);
                 }
             })
         ).flatMap((m) => m.map((s) => s));

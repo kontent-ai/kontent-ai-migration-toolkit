@@ -17,9 +17,7 @@ export interface MigrationSource extends ManagementClientConfig {
     readonly items: readonly SourceExportItem[];
 }
 
-export interface MigrationTarget extends ManagementClientConfig {
-    readonly skipFailedItems?: boolean;
-}
+export interface MigrationTarget extends ManagementClientConfig {}
 
 export interface MigrationConfig {
     readonly retryStrategy?: IRetryStrategyOptions;
@@ -61,7 +59,6 @@ export async function migrateAsync(config: MigrationConfig): Promise<MigrationRe
                 ...config.targetEnvironment,
                 logger: logger,
                 data: migrationData,
-                skipFailedItems: config.targetEnvironment.skipFailedItems ?? false,
                 externalIdGenerator: config.externalIdGenerator
             });
 

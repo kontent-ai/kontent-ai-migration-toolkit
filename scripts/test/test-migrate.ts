@@ -44,8 +44,7 @@ const run = async () => {
         },
         targetEnvironment: {
             environmentId: targetEnvironmentId,
-            apiKey: targetApiKey,
-            skipFailedItems: false
+            apiKey: targetApiKey
         }
     });
 };

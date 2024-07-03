@@ -4,7 +4,6 @@ import {
     processSetAsync,
     runMapiRequestAsync,
     MigrationItem,
-    extractErrorData,
     exitProgram,
     LogSpinnerData,
     isNotUndefined
@@ -15,7 +14,6 @@ import { ImportContext } from '../import.models.js';
 export function contentItemsImporter(data: {
     readonly logger: Logger;
     readonly client: Readonly<ManagementClient>;
-    readonly skipFailedItems: boolean;
     readonly collections: readonly CollectionModels.Collection[];
     readonly importContext: ImportContext;
 }) {
@@ -138,22 +136,7 @@ export function contentItemsImporter(data: {
                     };
                 },
                 processAsync: async (item, logSpinner) => {
-                    try {
-                        return await importContentItemAsync(logSpinner, item);
-                    } catch (error) {
-                        if (data.skipFailedItems) {
-                            data.logger.log({
-                                type: 'error',
-                                message: `Failed to import content item '${item.system.name}'. ${
-                                    extractErrorData(error).message
-                                }`
-                            });
-
-                            return undefined;
-                        } else {
-                            throw error;
-                        }
-                    }
+                    return await importContentItemAsync(logSpinner, item);
                 }
             })
         ).filter(isNotUndefined);

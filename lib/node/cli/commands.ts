@@ -85,12 +85,6 @@ export const cliArgs = argumentsSetter()
                 isRequired: false
             },
             {
-                name: `skipFailedItems`,
-                description: `Indicates whether the import should continue even if some item fails to import`,
-                type: 'boolean',
-                isRequired: false
-            },
-            {
                 name: `baseUrl`,
                 description: `Custom base URL`,
                 type: 'string',
@@ -142,12 +136,6 @@ export const cliArgs = argumentsSetter()
                 description: `Environment id of the target environment`,
                 type: 'string',
                 isRequired: true
-            },
-            {
-                name: `skipFailedItems`,
-                description: `Indicates whether the import should continue even if some item fails to import`,
-                type: 'boolean',
-                isRequired: false
             },
             {
                 name: `baseUrl`,

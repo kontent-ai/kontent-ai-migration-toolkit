@@ -8,7 +8,6 @@ export async function importActionAsync(argsFetcher: CliArgumentsFetcher): Promi
     const apiKey = argsFetcher.getRequiredArgumentValue('targetApiKey');
     const baseUrl = argsFetcher.getOptionalArgumentValue('baseUrl');
     const force = argsFetcher.getBooleanArgumentValue('force', false);
-    const skipFailedItems = argsFetcher.getBooleanArgumentValue('skipFailedItems', false);
     const filename = argsFetcher.getOptionalArgumentValue('filename') ?? getDefaultZipFilename();
 
     await confirmImportAsync({
@@ -26,7 +25,6 @@ export async function importActionAsync(argsFetcher: CliArgumentsFetcher): Promi
     await importAsync({
         logger: log,
         data: importData,
-        skipFailedItems: skipFailedItems,
         baseUrl: baseUrl,
         environmentId: environmentId,
         apiKey: apiKey

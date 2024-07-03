@@ -52,8 +52,7 @@ export function importManager(config: ImportConfig) {
             client: targetEnvironmentClient,
             collections: await getCollectionsAsync(),
             importContext: importContext,
-            logger: logger,
-            skipFailedItems: config.skipFailedItems ?? false
+            logger: logger
         }).importAsync();
     };
 
@@ -73,7 +72,6 @@ export function importManager(config: ImportConfig) {
             importContext: importContext,
             logger: logger,
             preparedContentItems: contentItems,
-            skipFailedItems: config.skipFailedItems ?? false,
             workflows: await getWorkflowsAsync()
         }).importAsync();
     };
