@@ -1,18 +1,6 @@
-import {
-    CollectionModels,
-    ContentItemModels,
-    LanguageVariantModels,
-    ManagementClient,
-    WorkflowModels
-} from '@kontent-ai/management-sdk';
+import { ContentItemModels, LanguageVariantModels, ManagementClient } from '@kontent-ai/management-sdk';
 
-import {
-    runMapiRequestAsync,
-    defaultExternalIdGenerator,
-    Logger,
-    getDefaultLogger,
-    getMigrationManagementClient
-} from '../core/index.js';
+import { defaultExternalIdGenerator, Logger, getDefaultLogger, getMigrationManagementClient } from '../core/index.js';
 import { ImportConfig, ImportContext, ImportResult } from './import.models.js';
 import { assetsImporter } from './importers/assets-importer.js';
 import { contentItemsImporter } from './importers/content-items-importer.js';
@@ -50,7 +38,6 @@ export function importManager(config: ImportConfig) {
 
         return await contentItemsImporter({
             client: targetEnvironmentClient,
-            collections: await getCollectionsAsync(),
             importContext: importContext,
             logger: logger
         }).importAsync();
@@ -71,27 +58,8 @@ export function importManager(config: ImportConfig) {
             client: targetEnvironmentClient,
             importContext: importContext,
             logger: logger,
-            preparedContentItems: contentItems,
-            workflows: await getWorkflowsAsync()
+            preparedContentItems: contentItems
         }).importAsync();
-    };
-
-    const getWorkflowsAsync = async (): Promise<readonly WorkflowModels.Workflow[]> => {
-        return await runMapiRequestAsync({
-            logger: logger,
-            func: async () => (await targetEnvironmentClient.listWorkflows().toPromise()).data,
-            action: 'list',
-            type: 'workflow'
-        });
-    };
-
-    const getCollectionsAsync = async (): Promise<readonly CollectionModels.Collection[]> => {
-        return await runMapiRequestAsync({
-            logger: logger,
-            func: async () => (await targetEnvironmentClient.listCollections().toPromise()).data.collections,
-            action: 'list',
-            type: 'collection'
-        });
     };
 
     return {

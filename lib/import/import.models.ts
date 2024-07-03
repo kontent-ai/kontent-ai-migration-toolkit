@@ -19,7 +19,8 @@ import {
     ElementContracts,
     LanguageModels,
     LanguageVariantModels,
-    ManagementClient
+    ManagementClient,
+    WorkflowModels
 } from '@kontent-ai/management-sdk';
 
 export interface ImportContextConfig {
@@ -32,6 +33,7 @@ export interface ImportContextConfig {
 export interface ImportContextEnvironmentData {
     readonly languages: readonly LanguageModels.LanguageModel[];
     readonly collections: readonly CollectionModels.Collection[];
+    readonly workflows: readonly WorkflowModels.Workflow[];
 }
 
 export type GetFlattenedElementByCodenames = (

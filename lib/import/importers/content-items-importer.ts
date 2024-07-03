@@ -1,4 +1,4 @@
-import { CollectionModels, ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
+import { ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 import {
     Logger,
     processSetAsync,
@@ -14,7 +14,6 @@ import { ImportContext } from '../import.models.js';
 export function contentItemsImporter(data: {
     readonly logger: Logger;
     readonly client: Readonly<ManagementClient>;
-    readonly collections: readonly CollectionModels.Collection[];
     readonly importContext: ImportContext;
 }) {
     const shouldUpdateContentItem = (
@@ -22,7 +21,7 @@ export function contentItemsImporter(data: {
         contentItem: Readonly<ContentItemModels.ContentItem>
     ): boolean => {
         const collection = findRequired(
-            data.collections,
+            data.importContext.environmentData.collections,
             (collection) => collection.codename === migrationContentItem.system.collection.codename,
             `Invalid collection '${migrationContentItem.system.collection.codename}'`
         );

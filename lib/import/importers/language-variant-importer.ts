@@ -24,7 +24,6 @@ import { throwErrorForMigrationItem } from '../utils/import.utils.js';
 
 export function languageVariantImporter(config: {
     readonly logger: Logger;
-    readonly workflows: readonly WorkflowModels.Workflow[];
     readonly preparedContentItems: readonly ContentItemModels.ContentItem[];
     readonly importContext: ImportContext;
     readonly client: Readonly<ManagementClient>;
@@ -73,7 +72,9 @@ export function languageVariantImporter(config: {
     const categorizeVersions = (
         migrationItem: MigrationItem
     ): { publishedVersion: MigrationItemVersion | undefined; draftVersion: MigrationItemVersion | undefined } => {
-        const workflow = workflowHelper(config.workflows).getWorkflowByCodename(migrationItem.system.workflow.codename);
+        const workflow = workflowHelper(config.importContext.environmentData.workflows).getWorkflowByCodename(
+            migrationItem.system.workflow.codename
+        );
 
         const publishedVersions = migrationItem.versions.filter((version) =>
             isPublishedWorkflowStep(version.workflow_step.codename, workflow)
@@ -110,7 +111,9 @@ export function languageVariantImporter(config: {
         readonly workflowStepCodenameInTargetEnvironment: string | undefined;
     }): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant>> => {
         // validate workflow
-        const { step, workflow } = workflowHelper(config.workflows).getWorkflowAndStepByCodenames({
+        const { step, workflow } = workflowHelper(
+            config.importContext.environmentData.workflows
+        ).getWorkflowAndStepByCodenames({
             workflowCodename: data.migrationItem.system.workflow.codename,
             stepCodename: data.migrationItemVersion.workflow_step.codename
         });
@@ -138,7 +141,7 @@ export function languageVariantImporter(config: {
         await workflowImporter({
             logger: config.logger,
             managementClient: config.client,
-            workflows: config.workflows
+            workflows: config.importContext.environmentData.workflows
         }).setWorkflowOfLanguageVariantAsync({
             logSpinner: data.logSpinner,
             migrationItem: data.migrationItem,
@@ -159,7 +162,9 @@ export function languageVariantImporter(config: {
         let draftLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
         let lastWorkflowStepCodenameInTargetEnvironment: string | undefined;
 
-        const workflow = workflowHelper(config.workflows).getWorkflowByCodename(migrationItem.system.workflow.codename);
+        const workflow = workflowHelper(config.importContext.environmentData.workflows).getWorkflowByCodename(
+            migrationItem.system.workflow.codename
+        );
 
         // get initial state of language variant from target env
         const languageVariantState = config.importContext.getLanguageVariantStateInTargetEnvironment(
@@ -170,7 +175,7 @@ export function languageVariantImporter(config: {
         if (languageVariantState.languageVariant) {
             const stepId = languageVariantState.languageVariant?.workflow.stepIdentifier.id;
 
-            const step = workflowHelper(config.workflows).getWorkflowStep(workflow, {
+            const step = workflowHelper(config.importContext.environmentData.workflows).getWorkflowStep(workflow, {
                 errorMessage: `Could not workflow step with id '${chalk.red(stepId)}' in workflow '${chalk.yellow(
                     workflow.codename
                 )}'`,

@@ -297,7 +297,8 @@ export function importContextFetcher(config: ImportContextConfig) {
         const getEnvironmentDataAsync = async (): Promise<ImportContextEnvironmentData> => {
             const environmentData: ImportContextEnvironmentData = {
                 collections: await mapiUtils.getAllCollectionsAsync(),
-                languages: await mapiUtils.getAllLanguagesAsync()
+                languages: await mapiUtils.getAllLanguagesAsync(),
+                workflows: await mapiUtils.getAllWorkflowsAsync()
             };
 
             return environmentData;
