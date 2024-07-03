@@ -5,6 +5,7 @@ import {
     ItemStateInTargetEnvironmentByCodename,
     LanguageVariantStateInTargetEnvironmentByCodename,
     MigrationItem,
+    findRequired,
     is404Error,
     isNotUndefined,
     managementClientUtils,
@@ -34,29 +35,21 @@ export function importContextFetcher(config: ImportContextConfig) {
             elementCodename,
             sourceType
         ) => {
-            const contentType = types.find(
-                (m) => m.contentTypeCodename.toLowerCase() === contentTypeCodename.toLowerCase()
+            const contentType = findRequired(
+                types,
+                (type) => type.contentTypeCodename === contentTypeCodename,
+                `Content type with codename '${chalk.red(contentTypeCodename)}' was not found.`
             );
 
-            if (!contentType) {
-                throw Error(`Content type with codename '${chalk.red(contentType)}' was not found.`);
-            }
-
-            const element = contentType.elements.find(
-                (contentTypeElement) => contentTypeElement.codename.toLowerCase() === elementCodename.toLowerCase()
+            const element = findRequired(
+                contentType.elements,
+                (element) => element.codename === elementCodename,
+                `Element type with codename '${chalk.red(elementCodename)}' was not found in content type '${chalk.red(
+                    contentTypeCodename
+                )}'. Available elements are '${contentType.elements
+                    .map((element) => chalk.yellow(element.codename))
+                    .join(', ')}'`
             );
-
-            if (!element) {
-                throw Error(
-                    `Element type with codename '${chalk.red(
-                        elementCodename
-                    )}' was not found in content type '${chalk.red(
-                        contentTypeCodename
-                    )}'. Available elements are '${contentType.elements
-                        .map((element) => chalk.yellow(element.codename))
-                        .join(', ')}'`
-                );
-            }
 
             if (sourceType !== element.type) {
                 throw Error(
@@ -229,13 +222,11 @@ export function importContextFetcher(config: ImportContextConfig) {
 
         return Array.from(itemCodenames).map<ItemStateInTargetEnvironmentByCodename>((codename) => {
             const item = items.find((m) => m.codename === codename);
-            const externalId = config.externalIdGenerator.contentItemExternalId(codename);
-
             return {
                 itemCodename: codename,
                 item: item,
                 state: item ? 'exists' : 'doesNotExists',
-                externalIdToUse: externalId
+                externalIdToUse: config.externalIdGenerator.contentItemExternalId(codename)
             };
         });
     };
@@ -247,13 +238,11 @@ export function importContextFetcher(config: ImportContextConfig) {
 
         return Array.from(assetCodenames).map<AssetStateInTargetEnvironmentByCodename>((codename) => {
             const asset = assets.find((m) => m.codename === codename);
-            const externalId = config.externalIdGenerator.assetExternalId(codename);
-
             return {
                 assetCodename: codename,
                 asset: asset,
                 state: asset ? 'exists' : 'doesNotExists',
-                externalIdToUse: externalId
+                externalIdToUse: config.externalIdGenerator.assetExternalId(codename)
             };
         });
     };
@@ -321,45 +310,31 @@ export function importContextFetcher(config: ImportContextConfig) {
             },
             referencedData: referencedData,
             getItemStateInTargetEnvironment: (itemCodename) => {
-                const itemState = itemStates.find((m) => m.itemCodename === itemCodename);
-
-                if (!itemState) {
-                    throw Error(
-                        `Invalid state for item '${chalk.red(
-                            itemCodename
-                        )}'. It is expected that all item states will be initialized`
-                    );
-                }
-
-                return itemState;
+                return findRequired(
+                    itemStates,
+                    (state) => state.itemCodename === itemCodename,
+                    `Invalid state for item '${chalk.red(
+                        itemCodename
+                    )}'. It is expected that all item states will be initialized`
+                );
             },
             getLanguageVariantStateInTargetEnvironment: (itemCodename, languageCodename) => {
-                const variantState = variantStates.find(
-                    (m) => m.itemCodename === itemCodename && m.languageCodename === languageCodename
+                return findRequired(
+                    variantStates,
+                    (state) => state.itemCodename === itemCodename && state.languageCodename === languageCodename,
+                    `Invalid state for language variant '${chalk.red(itemCodename)}' in language '${chalk.red(
+                        languageCodename
+                    )}'. It is expected that all variant states will be initialized`
                 );
-
-                if (!variantState) {
-                    throw Error(
-                        `Invalid state for language variant '${chalk.red(itemCodename)}' in language '${chalk.red(
-                            languageCodename
-                        )}'. It is expected that all variant states will be initialized`
-                    );
-                }
-
-                return variantState;
             },
             getAssetStateInTargetEnvironment: (assetCodename) => {
-                const assetState = assetStates.find((m) => m.assetCodename === assetCodename);
-
-                if (!assetState) {
-                    throw Error(
-                        `Invalid state for asset '${chalk.red(
-                            assetCodename
-                        )}'. It is expected that all asset states will be initialized`
-                    );
-                }
-
-                return assetState;
+                return findRequired(
+                    assetStates,
+                    (state) => state.assetCodename === assetCodename,
+                    `Invalid state for asset '${chalk.red(
+                        assetCodename
+                    )}'. It is expected that all asset states will be initialized`
+                );
             },
             getElement: getElementByCodenames
         };

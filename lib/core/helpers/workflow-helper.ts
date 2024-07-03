@@ -1,5 +1,6 @@
 import { WorkflowModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
+import { findRequired } from '../utils/array.utils.js';
 
 type WorkflowStep = {
     readonly codename: string;
@@ -7,35 +8,25 @@ type WorkflowStep = {
 };
 
 type WorkflowMatcher = {
-    readonly match: (workflow: Readonly<WorkflowModels.Workflow>) => boolean;
+    readonly match: (workflow: Readonly<WorkflowModels.Workflow>, index: number) => boolean;
     readonly errorMessage: string;
 };
 type StepMatcher = {
-    readonly match: (step: WorkflowStep) => boolean;
+    readonly match: (step: WorkflowStep, index: number) => boolean;
     readonly errorMessage: string;
 };
 
 export function workflowHelper(workflows: readonly WorkflowModels.Workflow[]) {
     const getWorkflowStep = (workflow: Readonly<WorkflowModels.Workflow>, stepMatcher: StepMatcher): WorkflowStep => {
-        const step = [...workflow.steps, workflow.archivedStep, workflow.publishedStep, workflow.scheduledStep].find(
-            stepMatcher.match
+        return findRequired(
+            [...workflow.steps, workflow.archivedStep, workflow.publishedStep, workflow.scheduledStep],
+            stepMatcher.match,
+            stepMatcher.errorMessage
         );
-
-        if (!step) {
-            throw Error(stepMatcher.errorMessage);
-        }
-
-        return step;
     };
 
     const getWorkflow = (workflowMatcher: WorkflowMatcher): Readonly<WorkflowModels.Workflow> => {
-        const workflow = workflows.find(workflowMatcher.match);
-
-        if (!workflow) {
-            throw Error(workflowMatcher.errorMessage);
-        }
-
-        return workflow;
+        return findRequired(workflows, workflowMatcher.match, workflowMatcher.errorMessage);
     };
 
     const getWorkflowByCodename = (workflowCodename: string): Readonly<WorkflowModels.Workflow> => {

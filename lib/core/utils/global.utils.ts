@@ -2,7 +2,6 @@ import { format } from 'bytes';
 import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/tools-analytics';
 import { isBrowser, isNode, isWebWorker } from 'browser-or-node';
 import { EnvContext } from '../models/core.models.js';
-import { MigrationElementValue, MigrationReference } from '../models/migration.models.js';
 
 export const isNotUndefined = <T>(item: T | undefined): item is T => item !== undefined;
 
@@ -16,16 +15,6 @@ export function sleepAsync(ms: number): Promise<void> {
 
 export function exitProgram(data: { readonly message: string }): never {
     throw Error(data.message);
-}
-
-export function parseAsMigrationReferencesArray(value: MigrationElementValue): readonly MigrationReference[] {
-    if (!value) {
-        return [];
-    }
-    if (Array.isArray(value)) {
-        return value;
-    }
-    throw Error(`Value is not an array`);
 }
 
 export function getCurrentEnvironment(): EnvContext {
@@ -67,15 +56,4 @@ export async function executeWithTrackingAsync<TResult>(data: {
 
         throw error;
     }
-}
-
-export async function mapAsync<Input, Result>(
-    array: readonly Input[],
-    callbackAsync: (item: Readonly<Input>, index: number, array: readonly Input[]) => Promise<Readonly<Result>>
-): Promise<Readonly<Result[]>> {
-    const results: Result[] = [];
-    for (let i = 0; i < array.length; i++) {
-        results.push(await callbackAsync(array[i], i, array));
-    }
-    return results;
 }

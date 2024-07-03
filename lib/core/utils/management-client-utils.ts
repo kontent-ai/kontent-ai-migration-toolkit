@@ -13,9 +13,10 @@ import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { runMapiRequestAsync } from './run.utils.js';
 import { Logger } from '../models/log.models.js';
 import { FlattenedContentType, FlattenedContentTypeElement } from '../models/core.models.js';
-import { exitProgram, isNotUndefined } from './global.utils.js';
+import { isNotUndefined } from './global.utils.js';
 import chalk from 'chalk';
 import { defaultHttpService, defaultRetryStrategy } from './http.utils.js';
+import { findRequired } from './array.utils.js';
 
 export interface ManagementClientConfig {
     readonly environmentId: string;
@@ -92,17 +93,13 @@ export function managementClientUtils(client: Readonly<ManagementClient>, logger
                     const snippetElement = element;
 
                     // replace snippet element with actual elements
-                    const contentTypeSnippet = contentTypeSnippets.find(
-                        (m) => m.id.toLowerCase() === snippetElement.snippet.id?.toLowerCase()
+                    const contentTypeSnippet = findRequired(
+                        contentTypeSnippets,
+                        (snippet) => snippet.id === snippetElement.snippet.id,
+                        `Could not find content type snippet for element. This snippet is referenced in type '${chalk.red(
+                            contentType.codename
+                        )}'`
                     );
-
-                    if (!contentTypeSnippet) {
-                        exitProgram({
-                            message: `Could not find content type snippet for element. This snippet is referenced in type '${chalk.red(
-                                contentType.codename
-                            )}'`
-                        });
-                    }
 
                     return contentTypeSnippet.elements.map((snippetElement) => {
                         if (snippetElement.type === 'guidelines' || snippetElement.type === 'snippet') {

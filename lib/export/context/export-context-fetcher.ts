@@ -16,7 +16,9 @@ import {
     FlattenedContentType,
     isNotUndefined,
     managementClientUtils,
-    LogSpinnerData
+    LogSpinnerData,
+    findRequired,
+    workflowHelper
 } from '../../core/index.js';
 import { itemsExtractionProcessor } from '../../translation/index.js';
 import {
@@ -172,62 +174,72 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         contentType: Readonly<FlattenedContentType>;
         workflowStepCodename: string;
     } => {
-        const collection = environmentData.collections.find((m) => m.id === data.contentItem.collection.id);
-
-        if (!collection) {
-            throwErrorForItemRequest(
-                data.sourceItem,
-                `Invalid collection '${chalk.yellow(data.contentItem.collection.id ?? '')}'`
-            );
-        }
-
-        const contentType = environmentData.contentTypes.find((m) => m.contentTypeId === data.contentItem.type.id);
-
-        if (!contentType) {
-            throwErrorForItemRequest(data.sourceItem, `Invalid content type '${chalk.red(data.contentItem.type.id)}'`);
-        }
-
-        const language = environmentData.languages.find((m) => m.id === data.languageVariant.language.id);
-
-        if (!language) {
-            throwErrorForItemRequest(
-                data.sourceItem,
-                `Invalid language '${chalk.red(data.languageVariant.language.id ?? '')}'`
-            );
-        }
-
-        const workflow = environmentData.workflows.find(
-            (m) => m.id === data.languageVariant.workflow.workflowIdentifier.id
+        const collection = findRequired(
+            environmentData.collections,
+            (collection) => collection.id === data.contentItem.collection.id,
+            () => {
+                throwErrorForItemRequest(
+                    data.sourceItem,
+                    `Invalid collection '${chalk.yellow(data.contentItem.collection.id ?? '')}'`
+                );
+            }
         );
 
-        if (!workflow) {
-            throwErrorForItemRequest(
-                data.sourceItem,
-                `Invalid workflow '${chalk.red(data.languageVariant.workflow.workflowIdentifier.id ?? '')}'`
-            );
-        }
+        const contentType = findRequired(
+            environmentData.contentTypes,
+            (contentType) => contentType.contentTypeId === data.contentItem.type.id,
+            () => {
+                throwErrorForItemRequest(
+                    data.sourceItem,
+                    `Invalid content type '${chalk.red(data.contentItem.type.id)}'`
+                );
+            }
+        );
 
-        const workflowStepCodename = getWorkflowStepCodename(workflow, data.languageVariant);
+        const language = findRequired(
+            environmentData.languages,
+            (language) => language.id === data.languageVariant.language.id,
+            () => {
+                throwErrorForItemRequest(
+                    data.sourceItem,
+                    `Invalid language '${chalk.red(data.languageVariant.language.id ?? '')}'`
+                );
+            }
+        );
 
-        if (!workflowStepCodename) {
-            throwErrorForItemRequest(
-                data.sourceItem,
-                `Invalid workflow step '${chalk.red(data.languageVariant.workflow.stepIdentifier.id ?? '')}'`
-            );
-        }
+        const workflow = findRequired(
+            environmentData.workflows,
+            (workflow) => workflow.id === data.languageVariant.workflow.workflowIdentifier.id,
+            () => {
+                throwErrorForItemRequest(
+                    data.sourceItem,
+                    `Invalid workflow '${chalk.red(data.languageVariant.workflow.workflowIdentifier.id ?? '')}'`
+                );
+            }
+        );
+
+        const workflowStep = workflowHelper(environmentData.workflows).getWorkflowStep(workflow, {
+            match: (step) => step.id === data.languageVariant.workflow.stepIdentifier.id,
+            errorMessage: `Invalid workflow step '${chalk.red(data.languageVariant.workflow.stepIdentifier.id ?? '')}'`
+        });
 
         return {
             collection: collection,
             language: language,
             workflow: workflow,
             contentType: contentType,
-            workflowStepCodename: workflowStepCodename
+            workflowStepCodename: workflowStep.codename
         };
     };
 
     const prepareExportItemsAsync = async (
         exportItems: readonly SourceExportItem[]
     ): Promise<readonly ExportItem[]> => {
+        config.logger.log({
+            type: 'info',
+            message: `Preparing '${chalk.yellow(config.exportItems.length.toString())}' items for export`
+        });
+
         return await processSetAsync<SourceExportItem, ExportItem>({
             logger: config.logger,
             action: 'Preparing content items & language variants',
@@ -266,19 +278,6 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                 };
             }
         });
-    };
-
-    const getWorkflowStepCodename = (
-        workflow: Readonly<WorkflowModels.Workflow>,
-        languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>
-    ): Readonly<string> | undefined => {
-        return [
-            ...workflow.steps,
-            workflow.archivedStep,
-            workflow.publishedStep,
-            workflow.scheduledStep,
-            workflow
-        ].find((step) => step.id === languageVariant.workflow.stepIdentifier.id)?.codename;
     };
 
     const getContentItemsByIdsAsync = async (
@@ -391,21 +390,19 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
 
     const getElementByIds = (): GetFlattenedElementByIds => {
         const getFunc: GetFlattenedElementByIds = (contentTypeId: string, elementId: string) => {
-            const contentType = environmentData.contentTypes.find((m) => m.contentTypeId === contentTypeId);
+            const contentType = findRequired(
+                environmentData.contentTypes,
+                (contentType) => contentType.contentTypeId === contentTypeId,
+                `Could not find content type with id '${chalk.red(contentTypeId)}'`
+            );
 
-            if (!contentType) {
-                throw Error(`Could not find content type with id '${chalk.red(contentTypeId)}'`);
-            }
-
-            const element = contentType.elements.find((m) => m.id === elementId);
-
-            if (!element) {
-                throw Error(
-                    `Could not find element with id '${chalk.red(elementId)}' in content type '${chalk.red(
-                        contentType.contentTypeCodename
-                    )}'`
-                );
-            }
+            const element = findRequired(
+                contentType.elements,
+                (element) => element.id === elementId,
+                `Could not find element with id '${chalk.red(elementId)}' in content type '${chalk.red(
+                    contentType.contentTypeCodename
+                )}'`
+            );
 
             return element;
         };
@@ -414,10 +411,6 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
     };
 
     const getExportContextAsync = async (): Promise<ExportContext> => {
-        config.logger.log({
-            type: 'info',
-            message: `Preparing '${chalk.yellow(config.exportItems.length.toString())}' items for export`
-        });
         const preparedItems = await prepareExportItemsAsync(config.exportItems);
 
         config.logger.log({
@@ -464,28 +457,18 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             exportItems: preparedItems,
             environmentData: environmentData,
             referencedData: referencedData,
-            getAssetStateInSourceEnvironment: (id) => {
-                const assetSate = assetStates.find((m) => m.id === id);
-
-                if (!assetSate) {
-                    throw Error(
-                        `Invalid state for asset '${chalk.red(id)}'. It is expected that all asset states will exist`
-                    );
-                }
-
-                return assetSate;
-            },
-            getItemStateInSourceEnvironment: (id) => {
-                const itemState = itemStates.find((m) => m.id === id);
-
-                if (!itemState) {
-                    throw Error(
-                        `Invalid state for item '${chalk.red(id)}'. It is expected that all item states will exist`
-                    );
-                }
-
-                return itemState;
-            }
+            getAssetStateInSourceEnvironment: (id) =>
+                findRequired(
+                    assetStates,
+                    (m) => m.id === id,
+                    `Invalid state for asset '${chalk.red(id)}'. It is expected that all asset states will exist`
+                ),
+            getItemStateInSourceEnvironment: (id) =>
+                findRequired(
+                    itemStates,
+                    (m) => m.id === id,
+                    `Invalid state for item '${chalk.red(id)}'. It is expected that all item states will exist`
+                )
         };
 
         return exportContext;

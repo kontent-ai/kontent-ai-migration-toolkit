@@ -15,7 +15,8 @@ import {
     MigrationData,
     isNotUndefined,
     MigrationElementValue,
-    getMigrationManagementClient
+    getMigrationManagementClient,
+    findRequired
 } from '../core/index.js';
 import { exportTransforms } from '../translation/index.js';
 import { exportContextFetcherAsync } from './context/export-context-fetcher.js';
@@ -96,11 +97,11 @@ export function exportManager(config: ExportConfig) {
                 return 0;
             })
             .reduce<MigrationElements>((model, typeElement) => {
-                const itemElement = elements.find((m) => m.element.id === typeElement.id);
-
-                if (!itemElement) {
-                    throw new Error(`Could not find element '${chalk.red(typeElement.codename)}'`);
-                }
+                const itemElement = findRequired(
+                    elements,
+                    (m) => m.element.id === typeElement.id,
+                    `Could not find element '${chalk.red(typeElement.codename)}'`
+                );
 
                 model[typeElement.codename] = {
                     type: typeElement.type,
@@ -198,17 +199,13 @@ export function exportManager(config: ExportConfig) {
                     binaryData: binaryData.data,
                     collection: assetCollection ? { codename: assetCollection.codename } : undefined,
                     descriptions: asset.descriptions.map((description) => {
-                        const language = context.environmentData.languages.find(
-                            (m) => m.id === description.language.id
+                        const language = findRequired(
+                            context.environmentData.languages,
+                            (language) => language.id === description.language.id,
+                            `Could not find language with id '${chalk.red(
+                                description.language.id
+                            )}' requested by asset '${chalk.red(asset.codename)}'`
                         );
-
-                        if (!language) {
-                            throw Error(
-                                `Could not find language with id '${chalk.red(
-                                    description.language.id
-                                )}' requested by asset '${chalk.red(asset.codename)}'`
-                            );
-                        }
 
                         return {
                             description: description.description ?? undefined,

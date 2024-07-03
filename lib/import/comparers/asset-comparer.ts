@@ -1,5 +1,5 @@
 import { AssetModels, CollectionModels, LanguageModels } from '@kontent-ai/management-sdk';
-import { MigrationAsset, MigrationAssetDescription } from '../../core/index.js';
+import { MigrationAsset, MigrationAssetDescription, findRequired } from '../../core/index.js';
 import deepEqual from 'deep-equal';
 
 export function shouldUpdateAsset(data: {
@@ -35,8 +35,10 @@ function isInSameCollection(data: {
     targetAsset: Readonly<AssetModels.Asset>;
     collections: readonly CollectionModels.Collection[];
 }): boolean {
-    const collectionOfTargetAsset = data.collections.find((m) => m.id === data.targetAsset.collection?.reference?.id);
-    return collectionOfTargetAsset?.codename === data.migrationAsset.collection?.codename;
+    return (
+        data.collections.find((m) => m.id === data.targetAsset.collection?.reference?.id)?.codename ===
+        data.migrationAsset.collection?.codename
+    );
 }
 
 function areDescriptionsIdentical(data: {
@@ -65,16 +67,15 @@ function mapToMigrationDescriptions(data: {
 }): MigrationAssetDescription[] {
     return data.targetAsset.descriptions.map((description) => {
         const languageId = description.language.id;
-        const language = data.languages.find((m) => m.id === languageId);
-
-        if (!language) {
-            throw Error(`Could not find language with id '${languageId}'`);
-        }
 
         return {
             description: description.description?.length ? description.description : undefined,
             language: {
-                codename: language.codename
+                codename: findRequired(
+                    data.languages,
+                    (language) => language.id === languageId,
+                    `Could not find language with id '${languageId}'`
+                ).codename
             }
         };
     });

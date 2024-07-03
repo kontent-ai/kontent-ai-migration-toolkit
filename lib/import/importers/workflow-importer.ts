@@ -1,6 +1,5 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
-import { Logger, runMapiRequestAsync, LogSpinnerData, MigrationItem } from '../../core/index.js';
-import { workflowHelper } from '../utils/workflow-helper.js';
+import { Logger, runMapiRequestAsync, LogSpinnerData, MigrationItem, workflowHelper } from '../../core/index.js';
 
 export function workflowImporter(config: {
     logger: Logger;

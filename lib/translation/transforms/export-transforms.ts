@@ -3,6 +3,7 @@ import {
     MigrationReference,
     MigrationRichTextElementValue,
     MigrationUrlSlugElementValue,
+    findRequired,
     isNotUndefined
 } from '../../core/index.js';
 import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
@@ -66,11 +67,11 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         const taxonomyGroupId = taxonomyElement.taxonomy_group.id ?? 'n/a';
 
         // get taxonomy group
-        const taxonomy = data.context.environmentData.taxonomies.find((m) => m.id === taxonomyGroupId);
-
-        if (!taxonomy) {
-            throw Error(`Could not find taxonomy group with id '${chalk.red(taxonomyGroupId)}'`);
-        }
+        const taxonomy = findRequired(
+            data.context.environmentData.taxonomies,
+            (taxonomy) => taxonomy.id === taxonomyGroupId,
+            `Could not find taxonomy group with id '${chalk.red(taxonomyGroupId)}'`
+        );
 
         // translate taxonomy term to codename
         return data.exportElement.value
@@ -136,13 +137,17 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
             .map((m) => m.id)
             .filter(isNotUndefined)
             .map<MigrationReference>((id) => {
-                const option = multipleChoiceElement.options.find((m) => m.id === id);
+                const option = findRequired(
+                    multipleChoiceElement.options,
+                    (option) => option.id === id,
+                    `Could not find multiple choice element with option id '${chalk.red(id)}'`
+                );
 
-                if (option?.codename) {
-                    return { codename: option.codename };
-                } else {
-                    throw Error(`Could not find multiple choice element with option id '${chalk.red(id)}'`);
+                if (!option.codename) {
+                    throw Error(`Invalid codename for multiple choice option '${chalk.red(option.name)}'`);
                 }
+
+                return { codename: option.codename };
             });
     },
     subpages: (data) => {

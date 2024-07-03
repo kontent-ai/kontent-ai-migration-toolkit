@@ -10,17 +10,17 @@ import {
     processSetAsync,
     runMapiRequestAsync,
     MigrationItem,
-    exitProgram,
     LogSpinnerData,
     MigrationElement,
-    MigrationItemVersion
+    MigrationItemVersion,
+    workflowHelper,
+    findRequired
 } from '../../core/index.js';
 import chalk from 'chalk';
 import { ImportContext } from '../import.models.js';
 import { importTransforms } from '../../translation/index.js';
 import { workflowImporter } from './workflow-importer.js';
 import { throwErrorForMigrationItem } from '../utils/import.utils.js';
-import { workflowHelper } from '../utils/workflow-helper.js';
 
 export function languageVariantImporter(config: {
     readonly logger: Logger;
@@ -323,19 +323,15 @@ export function languageVariantImporter(config: {
                     };
                 },
                 processAsync: async (migrationItem, logSpinner) => {
-                    const preparedContentItem = config.preparedContentItems.find(
-                        (m) => m.codename === migrationItem.system.codename
+                    const contentItem = findRequired(
+                        config.preparedContentItems,
+                        (item) => item.codename === migrationItem.system.codename,
+                        `Missing content item with codename '${chalk.red(
+                            migrationItem.system.codename
+                        )}'. Content item should have been prepepared.`
                     );
 
-                    if (!preparedContentItem) {
-                        exitProgram({
-                            message: `Missing content item with codename '${chalk.red(
-                                migrationItem.system.codename
-                            )}'. Content item should have been prepepared.`
-                        });
-                    }
-
-                    return await importLanguageVariantAsync(logSpinner, migrationItem, preparedContentItem);
+                    return await importLanguageVariantAsync(logSpinner, migrationItem, contentItem);
                 }
             })
         ).flatMap((m) => m.map((s) => s));

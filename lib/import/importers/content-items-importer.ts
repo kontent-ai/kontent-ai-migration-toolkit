@@ -4,9 +4,9 @@ import {
     processSetAsync,
     runMapiRequestAsync,
     MigrationItem,
-    exitProgram,
     LogSpinnerData,
-    isNotUndefined
+    isNotUndefined,
+    findRequired
 } from '../../core/index.js';
 import chalk from 'chalk';
 import { ImportContext } from '../import.models.js';
@@ -21,13 +21,12 @@ export function contentItemsImporter(data: {
         migrationContentItem: MigrationItem,
         contentItem: Readonly<ContentItemModels.ContentItem>
     ): boolean => {
-        const collection = data.collections.find((m) => m.codename === migrationContentItem.system.collection.codename);
+        const collection = findRequired(
+            data.collections,
+            (collection) => collection.codename === migrationContentItem.system.collection.codename,
+            `Invalid collection '${migrationContentItem.system.collection.codename}'`
+        );
 
-        if (!collection) {
-            exitProgram({
-                message: `Invalid collection '${migrationContentItem.system.collection.codename}'`
-            });
-        }
         return (
             migrationContentItem.system.name !== contentItem.name ||
             migrationContentItem.system.collection.codename !== collection.codename
