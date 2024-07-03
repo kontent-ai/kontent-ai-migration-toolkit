@@ -5,7 +5,7 @@ import { ImportConfig, ImportContext, ImportResult } from './import.models.js';
 import { assetsImporter } from './importers/assets-importer.js';
 import { contentItemsImporter } from './importers/content-items-importer.js';
 import { languageVariantImporter } from './importers/language-variant-importer.js';
-import { importContextFetcher } from './context/import-context-fetcher.js';
+import { importContextFetcherAsync } from './context/import-context-fetcher.js';
 
 export function importManager(config: ImportConfig) {
     const logger: Logger = config.logger ?? getDefaultLogger();
@@ -64,12 +64,14 @@ export function importManager(config: ImportConfig) {
 
     return {
         async importAsync(): Promise<ImportResult> {
-            const importContext = await importContextFetcher({
-                migrationData: config.data,
-                externalIdGenerator: config.externalIdGenerator ?? defaultExternalIdGenerator,
-                logger: logger,
-                managementClient: targetEnvironmentClient
-            }).getImportContextAsync();
+            const importContext = await (
+                await importContextFetcherAsync({
+                    migrationData: config.data,
+                    externalIdGenerator: config.externalIdGenerator ?? defaultExternalIdGenerator,
+                    logger: logger,
+                    managementClient: targetEnvironmentClient
+                })
+            ).getImportContextAsync();
 
             // Import order matters
             // #1 Assets

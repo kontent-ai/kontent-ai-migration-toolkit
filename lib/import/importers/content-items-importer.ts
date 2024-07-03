@@ -5,7 +5,6 @@ import {
     runMapiRequestAsync,
     MigrationItem,
     LogSpinnerData,
-    isNotUndefined,
     findRequired
 } from '../../core/index.js';
 import chalk from 'chalk';
@@ -89,19 +88,18 @@ export function contentItemsImporter(data: {
             if (shouldUpdateContentItem(migrationItem, preparedContentItemResult.contentItem)) {
                 await runMapiRequestAsync({
                     logger: data.logger,
-                    func: async () =>
-                        (
-                            await data.client
-                                .upsertContentItem()
-                                .byItemCodename(migrationItem.system.codename)
-                                .withData({
-                                    name: migrationItem.system.name,
-                                    collection: {
-                                        codename: migrationItem.system.collection.codename
-                                    }
-                                })
-                                .toPromise()
-                        ).data,
+                    func: async () => {
+                        await data.client
+                            .upsertContentItem()
+                            .byItemCodename(migrationItem.system.codename)
+                            .withData({
+                                name: migrationItem.system.name,
+                                collection: {
+                                    codename: migrationItem.system.collection.codename
+                                }
+                            })
+                            .toPromise();
+                    },
                     action: 'upsert',
                     type: 'contentItem',
                     logSpinner: logSpinner,
@@ -121,23 +119,21 @@ export function contentItemsImporter(data: {
             message: `Importing '${chalk.yellow(contentItemsToImport.length.toString())}' content items`
         });
 
-        return (
-            await processSetAsync<MigrationItem, ContentItemModels.ContentItem | undefined>({
-                action: 'Importing content items',
-                logger: data.logger,
-                parallelLimit: 1,
-                items: contentItemsToImport,
-                itemInfo: (item) => {
-                    return {
-                        itemType: 'contentItem',
-                        title: `${item.system.codename} -> ${item.system.language.codename}`
-                    };
-                },
-                processAsync: async (item, logSpinner) => {
-                    return await importContentItemAsync(logSpinner, item);
-                }
-            })
-        ).filter(isNotUndefined);
+        return await processSetAsync<MigrationItem, ContentItemModels.ContentItem>({
+            action: 'Importing content items',
+            logger: data.logger,
+            parallelLimit: 1,
+            items: contentItemsToImport,
+            itemInfo: (item) => {
+                return {
+                    itemType: 'contentItem',
+                    title: `${item.system.codename} -> ${item.system.language.codename}`
+                };
+            },
+            processAsync: async (item, logSpinner) => {
+                return await importContentItemAsync(logSpinner, item);
+            }
+        });
     };
 
     return {

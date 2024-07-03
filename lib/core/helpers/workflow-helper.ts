@@ -2,7 +2,7 @@ import { WorkflowModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import { findRequired } from '../utils/array.utils.js';
 
-type WorkflowStep = {
+export type WorkflowStep = {
     readonly codename: string;
     readonly id: string;
 };

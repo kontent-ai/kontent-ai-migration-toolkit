@@ -37,8 +37,8 @@ export function languageVariantImporter(config: {
     }): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant>> => {
         return await runMapiRequestAsync({
             logger: config.logger,
-            func: async () =>
-                (
+            func: async () => {
+                return (
                     await config.client
                         .upsertLanguageVariant()
                         .byItemCodename(data.preparedContentItem.codename)
@@ -61,7 +61,8 @@ export function languageVariantImporter(config: {
                             };
                         })
                         .toPromise()
-                ).data,
+                ).data;
+            },
             action: 'upsert',
             type: 'languageVariant',
             logSpinner: data.logSpinner,
@@ -158,6 +159,7 @@ export function languageVariantImporter(config: {
         preparedContentItem: Readonly<ContentItemModels.ContentItem>
     ): Promise<readonly LanguageVariantModels.ContentItemLanguageVariant[]> => {
         const { draftVersion, publishedVersion } = categorizeVersions(migrationItem);
+
         let publishedLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
         let draftLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
         let lastWorkflowStepCodenameInTargetEnvironment: string | undefined;
@@ -172,18 +174,9 @@ export function languageVariantImporter(config: {
             migrationItem.system.language.codename
         );
 
-        if (languageVariantState.languageVariant) {
-            const stepId = languageVariantState.languageVariant?.workflow.stepIdentifier.id;
-
-            const step = workflowHelper(config.importContext.environmentData.workflows).getWorkflowStep(workflow, {
-                errorMessage: `Could not workflow step with id '${chalk.red(stepId)}' in workflow '${chalk.yellow(
-                    workflow.codename
-                )}'`,
-                match: (step) => step.id == stepId
-            });
-
+        if (languageVariantState.step) {
             // keep track of last worfklow step
-            lastWorkflowStepCodenameInTargetEnvironment = step.codename;
+            lastWorkflowStepCodenameInTargetEnvironment = languageVariantState.step.codename;
         }
 
         // first import published version if it exists
@@ -222,14 +215,13 @@ export function languageVariantImporter(config: {
     ): Promise<void> => {
         await runMapiRequestAsync({
             logger: config.logger,
-            func: async () =>
-                (
-                    await config.client
-                        .createNewVersionOfLanguageVariant()
-                        .byItemCodename(migrationItem.system.codename)
-                        .byLanguageCodename(migrationItem.system.language.codename)
-                        .toPromise()
-                ).data,
+            func: async () => {
+                await config.client
+                    .createNewVersionOfLanguageVariant()
+                    .byItemCodename(migrationItem.system.codename)
+                    .byLanguageCodename(migrationItem.system.language.codename)
+                    .toPromise();
+            },
             action: 'createNewVersion',
             type: 'languageVariant',
             logSpinner: logSpinner,
@@ -247,15 +239,14 @@ export function languageVariantImporter(config: {
         if (firstWorkflowStep) {
             await runMapiRequestAsync({
                 logger: config.logger,
-                func: async () =>
-                    (
-                        await config.client
-                            .changeWorkflowStepOfLanguageVariant()
-                            .byItemCodename(migrationItem.system.codename)
-                            .byLanguageCodename(migrationItem.system.language.codename)
-                            .byWorkflowStepCodename(firstWorkflowStep.codename)
-                            .toPromise()
-                    ).data,
+                func: async () => {
+                    await config.client
+                        .changeWorkflowStepOfLanguageVariant()
+                        .byItemCodename(migrationItem.system.codename)
+                        .byLanguageCodename(migrationItem.system.language.codename)
+                        .byWorkflowStepCodename(firstWorkflowStep.codename)
+                        .toPromise();
+                },
                 action: 'changeWorkflowStep',
                 type: 'languageVariant',
                 logSpinner: logSpinner,

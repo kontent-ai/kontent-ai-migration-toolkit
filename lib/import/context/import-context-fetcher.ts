@@ -10,7 +10,8 @@ import {
     isNotUndefined,
     managementClientUtils,
     processSetAsync,
-    runMapiRequestAsync
+    runMapiRequestAsync,
+    workflowHelper
 } from '../../core/index.js';
 import {
     GetFlattenedElementByCodenames,
@@ -26,8 +27,20 @@ interface LanguageVariantWrapper {
     readonly migrationItem: MigrationItem;
 }
 
-export function importContextFetcher(config: ImportContextConfig) {
+export async function importContextFetcherAsync(config: ImportContextConfig) {
     const mapiUtils = managementClientUtils(config.managementClient, config.logger);
+
+    const getEnvironmentDataAsync = async (): Promise<ImportContextEnvironmentData> => {
+        const environmentData: ImportContextEnvironmentData = {
+            collections: await mapiUtils.getAllCollectionsAsync(),
+            languages: await mapiUtils.getAllLanguagesAsync(),
+            workflows: await mapiUtils.getAllWorkflowsAsync()
+        };
+
+        return environmentData;
+    };
+
+    const environmentData = await getEnvironmentDataAsync();
 
     const getElement = (types: readonly FlattenedContentType[]) => {
         const getFlattenedElement: GetFlattenedElementByCodenames = (
@@ -206,10 +219,24 @@ export function importContextFetcher(config: ImportContextConfig) {
                     m.migrationItem.system.language === migrationItem.system.language
             );
 
+            const variantWorkflowId = variant?.languageVariant?.workflow?.workflowIdentifier?.id;
+            const variantStepId = variant?.languageVariant?.workflow?.stepIdentifier?.id;
+
+            const workflow = environmentData.workflows.find((workflow) => workflow.id === variantWorkflowId);
+
             return {
                 itemCodename: migrationItem.system.codename,
                 languageCodename: migrationItem.system.language.codename,
                 languageVariant: variant?.languageVariant,
+                workflow: workflow,
+                step: workflow
+                    ? workflowHelper(environmentData.workflows).getWorkflowStep(workflow, {
+                          errorMessage: `Could not workflow step with id '${chalk.red(
+                              variantStepId
+                          )}' in workflow '${chalk.yellow(workflow.codename)}'`,
+                          match: (step) => step.id == variantStepId
+                      })
+                    : undefined,
                 state: variant ? 'exists' : 'doesNotExists'
             };
         });
@@ -266,16 +293,13 @@ export function importContextFetcher(config: ImportContextConfig) {
             }, []),
             getElementByCodenames
         );
-
-        // if content item does not have a workflow / step it means it is used as a component within Rich text element
-
-        // check all items, including referenced items in content
+        // fetch all items, including referenced items in content
         const itemCodenamesToCheckInTargetEnv: ReadonlySet<string> = new Set<string>([
             ...referencedData.itemCodenames,
             ...config.migrationData.items.map((m) => m.system.codename)
         ]);
 
-        // check all assets, including referenced assets in content
+        // fetch all assets, including referenced assets in content
         const assetCodenamesToCheckInTargetEnv: ReadonlySet<string> = new Set<string>([
             ...referencedData.assetCodenames,
             ...config.migrationData.assets.map((m) => m.codename)
@@ -294,22 +318,13 @@ export function importContextFetcher(config: ImportContextConfig) {
             assetCodenamesToCheckInTargetEnv
         );
 
-        const getEnvironmentDataAsync = async (): Promise<ImportContextEnvironmentData> => {
-            const environmentData: ImportContextEnvironmentData = {
-                collections: await mapiUtils.getAllCollectionsAsync(),
-                languages: await mapiUtils.getAllLanguagesAsync(),
-                workflows: await mapiUtils.getAllWorkflowsAsync()
-            };
-
-            return environmentData;
-        };
-        const importContext: ImportContext = {
-            environmentData: await getEnvironmentDataAsync(),
+        return {
+            environmentData,
+            referencedData,
             categorizedImportData: {
                 assets: config.migrationData.assets,
                 contentItems: config.migrationData.items
             },
-            referencedData: referencedData,
             getItemStateInTargetEnvironment: (itemCodename) => {
                 return findRequired(
                     itemStates,
@@ -339,8 +354,6 @@ export function importContextFetcher(config: ImportContextConfig) {
             },
             getElement: getElementByCodenames
         };
-
-        return importContext;
     };
 
     return {

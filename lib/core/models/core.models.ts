@@ -1,5 +1,12 @@
-import { AssetModels, ContentItemModels, ContentTypeElements, LanguageVariantModels } from '@kontent-ai/management-sdk';
+import {
+    AssetModels,
+    ContentItemModels,
+    ContentTypeElements,
+    LanguageVariantModels,
+    WorkflowModels
+} from '@kontent-ai/management-sdk';
 import { MigrationElementType } from './migration.models.js';
+import { WorkflowStep } from '../helpers/workflow-helper.js';
 
 export type TargetItemState = 'exists' | 'doesNotExists';
 export type CliAction = 'export' | 'import' | 'migrate';
@@ -78,6 +85,8 @@ export interface LanguageVariantStateInTargetEnvironmentByCodename {
     readonly itemCodename: string;
     readonly languageCodename: string;
     readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
+    readonly workflow: Readonly<WorkflowModels.Workflow> | undefined;
+    readonly step: Readonly<WorkflowStep> | undefined;
 }
 
 export interface AssetStateInTargetEnvironmentByCodename {
