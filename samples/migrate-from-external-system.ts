@@ -41,27 +41,31 @@ const migrationItem: MigrationItem<ArticleElements> = {
         },
         workflow: {
             codename: 'default'
-        },
-        workflow_step: {
-            codename: 'draft'
         }
     },
-    elements: {
-        title: elementsBuilder.textElement({ value: 'Title of the article' }),
-        rating: elementsBuilder.numberElement({ value: 5 }),
-        related_pages: elementsBuilder.linkedItemsElement({
-            value: [
-                {
-                    codename: 'pageA'
-                },
-                {
-                    codename: 'pageB'
-                }
-            ]
-        }),
-        // assets are referenced by their codename
-        teaser_image: elementsBuilder.assetElement({ value: [{ codename: 'article_teaser' }] })
-    }
+    versions: [
+        {
+            workflow_step: {
+                codename: 'published'
+            },
+            elements: {
+                title: elementsBuilder.textElement({ value: 'Title of the article' }),
+                rating: elementsBuilder.numberElement({ value: 5 }),
+                related_pages: elementsBuilder.linkedItemsElement({
+                    value: [
+                        {
+                            codename: 'pageA'
+                        },
+                        {
+                            codename: 'pageB'
+                        }
+                    ]
+                }),
+                // assets are referenced by their codename
+                teaser_image: elementsBuilder.assetElement({ value: [{ codename: 'article_teaser' }] })
+            }
+        }
+    ]
 };
 
 const migrationAsset: MigrationAsset = {
