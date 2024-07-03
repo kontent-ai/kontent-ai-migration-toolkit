@@ -70,13 +70,18 @@ export interface DefaultExportContextConfig {
 
 export type GetFlattenedElementByIds = (contentTypeId: string, elementId: string) => FlattenedContentTypeElement;
 
-export interface ExportItem {
+export interface ExportItemVersion {
+    readonly workflowStepCodename: string;
     readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
+}
+
+export interface ExportItem {
+    readonly requestItem: SourceExportItem;
+    readonly versions: readonly ExportItemVersion[];
     readonly contentItem: Readonly<ContentItemModels.ContentItem>;
+
     readonly collection: Readonly<CollectionModels.Collection>;
     readonly language: Readonly<LanguageModels.LanguageModel>;
     readonly workflow: Readonly<WorkflowModels.Workflow>;
-    readonly workflowStepCodename: string;
-    readonly requestItem: SourceExportItem;
     readonly contentType: Readonly<FlattenedContentType>;
 }

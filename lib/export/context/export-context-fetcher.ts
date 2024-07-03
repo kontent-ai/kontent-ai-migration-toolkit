@@ -1,4 +1,11 @@
-import { WorkflowModels, LanguageVariantModels, ContentItemModels, AssetModels } from '@kontent-ai/management-sdk';
+import {
+    WorkflowModels,
+    LanguageVariantModels,
+    ContentItemModels,
+    AssetModels,
+    CollectionModels,
+    LanguageModels
+} from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import {
     processSetAsync,
@@ -8,7 +15,8 @@ import {
     AssetStateInSourceEnvironmentById,
     FlattenedContentType,
     isNotUndefined,
-    managementClientUtils
+    managementClientUtils,
+    LogSpinnerData
 } from '../../core/index.js';
 import { itemsExtractionProcessor } from '../../translation/index.js';
 import {
@@ -17,13 +25,207 @@ import {
     ExportContextEnvironmentData,
     SourceExportItem,
     ExportItem,
-    GetFlattenedElementByIds
+    GetFlattenedElementByIds,
+    ExportItemVersion
 } from '../export.models.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
 
-export function exportContextFetcher(config: DefaultExportContextConfig) {
+export async function exportContextFetcherAsync(config: DefaultExportContextConfig) {
+    const getEnvironmentDataAsync = async (): Promise<ExportContextEnvironmentData> => {
+        const mapiUtils = managementClientUtils(config.managementClient, config.logger);
+        const environmentData: ExportContextEnvironmentData = {
+            collections: await mapiUtils.getAllCollectionsAsync(),
+            contentTypes: await mapiUtils.getFlattenedContentTypesAsync(),
+            languages: await mapiUtils.getAllLanguagesAsync(),
+            workflows: await mapiUtils.getAllWorkflowsAsync(),
+            taxonomies: await mapiUtils.getAllTaxonomiesAsync()
+        };
+
+        return environmentData;
+    };
+
+    const environmentData = await getEnvironmentDataAsync();
+
+    const getContentItemAsync = async (
+        sourceItem: SourceExportItem,
+        logSpinner: LogSpinnerData
+    ): Promise<Readonly<ContentItemModels.ContentItem>> => {
+        return await runMapiRequestAsync({
+            logger: config.logger,
+            logSpinner: logSpinner,
+            func: async () =>
+                (
+                    await config.managementClient.viewContentItem().byItemCodename(sourceItem.itemCodename).toPromise()
+                ).data,
+            action: 'view',
+            type: 'contentItem',
+            itemName: `codename -> ${sourceItem.itemCodename}`
+        });
+    };
+
+    const getLatestLanguageVariantAsync = async (
+        sourceItem: SourceExportItem,
+        logSpinner: LogSpinnerData
+    ): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant>> => {
+        return await runMapiRequestAsync({
+            logger: config.logger,
+            logSpinner: logSpinner,
+            func: async () =>
+                (
+                    await config.managementClient
+                        .viewLanguageVariant()
+                        .byItemCodename(sourceItem.itemCodename)
+                        .byLanguageCodename(sourceItem.languageCodename)
+                        .toPromise()
+                ).data,
+            action: 'view',
+            type: 'languageVariant',
+            itemName: `codename -> ${sourceItem.itemCodename} -> latest (${sourceItem.languageCodename})`
+        });
+    };
+
+    const isLanguageVariantPublished = (
+        languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>
+    ): boolean => {
+        return environmentData.workflows.find(
+            (workflow) => workflow.publishedStep.id === languageVariant.workflow.stepIdentifier.id
+        )
+            ? true
+            : false;
+    };
+
+    const mapToExportVersionItem = (
+        sourceItem: SourceExportItem,
+        contentItem: Readonly<ContentItemModels.ContentItem>,
+        languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>
+    ): ExportItemVersion => {
+        return {
+            languageVariant: languageVariant,
+            workflowStepCodename: validateExportItem({
+                sourceItem: sourceItem,
+                contentItem: contentItem,
+                languageVariant: languageVariant
+            }).workflowStepCodename
+        };
+    };
+
+    const getExportItemVersionsAsync = async (
+        sourceItem: SourceExportItem,
+        contentItem: Readonly<ContentItemModels.ContentItem>,
+        logSpinner: LogSpinnerData
+    ): Promise<readonly ExportItemVersion[]> => {
+        const latestLanguageVariant = await getLatestLanguageVariantAsync(sourceItem, logSpinner);
+        const latestExportVersion = mapToExportVersionItem(sourceItem, contentItem, latestLanguageVariant);
+
+        if (isLanguageVariantPublished(latestLanguageVariant)) {
+            // latest language variant is also published = no need to fetch published version
+            return [latestExportVersion];
+        }
+
+        const publishedLanguageVariant = await getPublishedLanguageVariantAsync(sourceItem, logSpinner);
+
+        if (!publishedLanguageVariant) {
+            return [latestExportVersion];
+        }
+
+        return [latestExportVersion, mapToExportVersionItem(sourceItem, contentItem, publishedLanguageVariant)];
+    };
+
+    const getPublishedLanguageVariantAsync = async (
+        sourceItem: SourceExportItem,
+        logSpinner: LogSpinnerData
+    ): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined> => {
+        return await runMapiRequestAsync({
+            logger: config.logger,
+            logSpinner: logSpinner,
+            func: async () => {
+                try {
+                    return (
+                        await config.managementClient
+                            .viewLanguageVariant()
+                            .byItemCodename(sourceItem.itemCodename)
+                            .byLanguageCodename(sourceItem.languageCodename)
+                            .published()
+                            .toPromise()
+                    ).data;
+                } catch (error) {
+                    if (is404Error(error)) {
+                        return undefined;
+                    }
+                    throw error;
+                }
+            },
+            action: 'view',
+            type: 'languageVariant',
+            itemName: `codename -> ${sourceItem.itemCodename} -> published (${sourceItem.languageCodename})`
+        });
+    };
+
+    const validateExportItem = (data: {
+        sourceItem: SourceExportItem;
+        contentItem: Readonly<ContentItemModels.ContentItem>;
+        languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
+    }): {
+        collection: Readonly<CollectionModels.Collection>;
+        language: Readonly<LanguageModels.LanguageModel>;
+        workflow: Readonly<WorkflowModels.Workflow>;
+        contentType: Readonly<FlattenedContentType>;
+        workflowStepCodename: string;
+    } => {
+        const collection = environmentData.collections.find((m) => m.id === data.contentItem.collection.id);
+
+        if (!collection) {
+            throwErrorForItemRequest(
+                data.sourceItem,
+                `Invalid collection '${chalk.yellow(data.contentItem.collection.id ?? '')}'`
+            );
+        }
+
+        const contentType = environmentData.contentTypes.find((m) => m.contentTypeId === data.contentItem.type.id);
+
+        if (!contentType) {
+            throwErrorForItemRequest(data.sourceItem, `Invalid content type '${chalk.red(data.contentItem.type.id)}'`);
+        }
+
+        const language = environmentData.languages.find((m) => m.id === data.languageVariant.language.id);
+
+        if (!language) {
+            throwErrorForItemRequest(
+                data.sourceItem,
+                `Invalid language '${chalk.red(data.languageVariant.language.id ?? '')}'`
+            );
+        }
+
+        const workflow = environmentData.workflows.find(
+            (m) => m.id === data.languageVariant.workflow.workflowIdentifier.id
+        );
+
+        if (!workflow) {
+            throwErrorForItemRequest(
+                data.sourceItem,
+                `Invalid workflow '${chalk.red(data.languageVariant.workflow.workflowIdentifier.id ?? '')}'`
+            );
+        }
+
+        const workflowStepCodename = getWorkflowStepCodename(workflow, data.languageVariant);
+
+        if (!workflowStepCodename) {
+            throwErrorForItemRequest(
+                data.sourceItem,
+                `Invalid workflow step '${chalk.red(data.languageVariant.workflow.stepIdentifier.id ?? '')}'`
+            );
+        }
+
+        return {
+            collection: collection,
+            language: language,
+            workflow: workflow,
+            contentType: contentType,
+            workflowStepCodename: workflowStepCodename
+        };
+    };
+
     const prepareExportItemsAsync = async (
-        environmentData: ExportContextEnvironmentData,
         exportItems: readonly SourceExportItem[]
     ): Promise<readonly ExportItem[]> => {
         return await processSetAsync<SourceExportItem, ExportItem>({
@@ -37,94 +239,31 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
                 };
             },
             items: exportItems,
-            processAsync: async (exportItem, logSpinner) => {
-                const contentItem = await runMapiRequestAsync({
-                    logger: config.logger,
-                    logSpinner: logSpinner,
-                    func: async () =>
-                        (
-                            await config.managementClient
-                                .viewContentItem()
-                                .byItemCodename(exportItem.itemCodename)
-                                .toPromise()
-                        ).data,
-                    action: 'view',
-                    type: 'contentItem',
-                    itemName: `codename -> ${exportItem.itemCodename} (${exportItem.languageCodename})`
-                });
+            processAsync: async (sourceItem, logSpinner) => {
+                const contentItem = await getContentItemAsync(sourceItem, logSpinner);
+                const versions = await getExportItemVersionsAsync(sourceItem, contentItem, logSpinner);
 
-                const languageVariant = await runMapiRequestAsync({
-                    logger: config.logger,
-                    logSpinner: logSpinner,
-                    func: async () =>
-                        (
-                            await config.managementClient
-                                .viewLanguageVariant()
-                                .byItemCodename(exportItem.itemCodename)
-                                .byLanguageCodename(exportItem.languageCodename)
-                                .toPromise()
-                        ).data,
-                    action: 'view',
-                    type: 'languageVariant',
-                    itemName: `codename -> ${exportItem.itemCodename} (${exportItem.languageCodename})`
-                });
-
-                const collection = environmentData.collections.find((m) => m.id === contentItem.collection.id);
-
-                if (!collection) {
-                    throwErrorForItemRequest(
-                        exportItem,
-                        `Invalid collection '${chalk.yellow(contentItem.collection.id ?? '')}'`
-                    );
+                // get shared attributes from any version
+                const anyVersion = versions[0];
+                if (!anyVersion) {
+                    throwErrorForItemRequest(sourceItem, `Expected at least 1 version of the content item`);
                 }
 
-                const contentType = environmentData.contentTypes.find((m) => m.contentTypeId === contentItem.type.id);
-
-                if (!contentType) {
-                    throwErrorForItemRequest(exportItem, `Invalid content type '${chalk.red(contentItem.type.id)}'`);
-                }
-
-                const language = environmentData.languages.find((m) => m.id === languageVariant.language.id);
-
-                if (!language) {
-                    throwErrorForItemRequest(
-                        exportItem,
-                        `Invalid language '${chalk.red(languageVariant.language.id ?? '')}'`
-                    );
-                }
-
-                const workflow = environmentData.workflows.find(
-                    (m) => m.id === languageVariant.workflow.workflowIdentifier.id
-                );
-
-                if (!workflow) {
-                    throwErrorForItemRequest(
-                        exportItem,
-                        `Invalid workflow '${chalk.red(languageVariant.workflow.workflowIdentifier.id ?? '')}'`
-                    );
-                }
-
-                const workflowStepCodename = getWorkflowStepCodename(workflow, languageVariant);
-
-                if (!workflowStepCodename) {
-                    throwErrorForItemRequest(
-                        exportItem,
-                        `Invalid workflow step '${chalk.red(languageVariant.workflow.stepIdentifier.id ?? '')}'`
-                    );
-                }
-
-                const preparedItem: ExportItem = {
+                const { collection, contentType, language, workflow } = validateExportItem({
+                    sourceItem: sourceItem,
                     contentItem: contentItem,
-                    languageVariant: languageVariant,
+                    languageVariant: anyVersion.languageVariant
+                });
+
+                return {
+                    contentItem: contentItem,
+                    versions: versions,
                     contentType: contentType,
-                    requestItem: exportItem,
+                    requestItem: sourceItem,
                     workflow: workflow,
-                    workflowStepCodename: workflowStepCodename,
                     collection: collection,
                     language: language
                 };
-
-                return preparedItem;
             }
         });
     };
@@ -132,41 +271,14 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     const getWorkflowStepCodename = (
         workflow: Readonly<WorkflowModels.Workflow>,
         languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>
-    ): string | undefined => {
-        const variantStepId = languageVariant.workflow.stepIdentifier.id;
-
-        const workflowStep = workflow.steps.find((step) => step.id === variantStepId);
-
-        if (workflowStep) {
-            return workflowStep.id;
-        }
-
-        if (workflow.archivedStep.id === variantStepId) {
-            return workflow.archivedStep.codename;
-        }
-
-        if (workflow.scheduledStep.id === variantStepId) {
-            return workflow.scheduledStep.codename;
-        }
-
-        if (workflow.publishedStep.id === variantStepId) {
-            return workflow.publishedStep.codename;
-        }
-
-        return undefined;
-    };
-
-    const getEnvironmentDataAsync = async (): Promise<ExportContextEnvironmentData> => {
-        const mapiUtils = managementClientUtils(config.managementClient, config.logger);
-        const environmentData: ExportContextEnvironmentData = {
-            collections: await mapiUtils.getAllCollectionsAsync(),
-            contentTypes: await mapiUtils.getFlattenedContentTypesAsync(),
-            languages: await mapiUtils.getAllLanguagesAsync(),
-            workflows: await mapiUtils.getAllWorkflowsAsync(),
-            taxonomies: await mapiUtils.getAllTaxonomiesAsync()
-        };
-
-        return environmentData;
+    ): Readonly<string> | undefined => {
+        return [
+            ...workflow.steps,
+            workflow.archivedStep,
+            workflow.publishedStep,
+            workflow.scheduledStep,
+            workflow
+        ].find((step) => step.id === languageVariant.workflow.stepIdentifier.id)?.codename;
     };
 
     const getContentItemsByIdsAsync = async (
@@ -277,9 +389,9 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
     };
 
-    const getElementByIds = (types: readonly FlattenedContentType[]): GetFlattenedElementByIds => {
+    const getElementByIds = (): GetFlattenedElementByIds => {
         const getFunc: GetFlattenedElementByIds = (contentTypeId: string, elementId: string) => {
-            const contentType = types.find((m) => m.contentTypeId === contentTypeId);
+            const contentType = environmentData.contentTypes.find((m) => m.contentTypeId === contentTypeId);
 
             if (!contentType) {
                 throw Error(`Could not find content type with id '${chalk.red(contentTypeId)}'`);
@@ -302,13 +414,11 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
     };
 
     const getExportContextAsync = async (): Promise<ExportContext> => {
-        const environmentData = await getEnvironmentDataAsync();
-
         config.logger.log({
             type: 'info',
             message: `Preparing '${chalk.yellow(config.exportItems.length.toString())}' items for export`
         });
-        const preparedItems = await prepareExportItemsAsync(environmentData, config.exportItems);
+        const preparedItems = await prepareExportItemsAsync(config.exportItems);
 
         config.logger.log({
             type: 'info',
@@ -316,13 +426,13 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         });
 
         const referencedData = itemsExtractionProcessor().extractReferencedDataFromExtractItems(
-            preparedItems.map((m) => {
+            preparedItems.map((exportItem) => {
                 return {
-                    contentTypeId: m.contentType.contentTypeId,
-                    elements: m.languageVariant.elements
+                    contentTypeId: exportItem.contentType.contentTypeId,
+                    elements: exportItem.versions.flatMap((m) => m.languageVariant).flatMap((s) => s.elements)
                 };
             }),
-            getElementByIds(environmentData.contentTypes)
+            getElementByIds()
         );
 
         // fetch both referenced items and items that are set to be exported
@@ -350,7 +460,7 @@ export function exportContextFetcher(config: DefaultExportContextConfig) {
         );
 
         const exportContext: ExportContext = {
-            getElement: getElementByIds(environmentData.contentTypes),
+            getElement: getElementByIds(),
             exportItems: preparedItems,
             environmentData: environmentData,
             referencedData: referencedData,

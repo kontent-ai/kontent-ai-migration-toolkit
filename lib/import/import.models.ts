@@ -42,7 +42,6 @@ export type GetFlattenedElementByCodenames = (
 
 export interface CategorizedImportData {
     readonly assets: readonly MigrationAsset[];
-    readonly componentItems: readonly MigrationItem[];
     readonly contentItems: readonly MigrationItem[];
 }
 

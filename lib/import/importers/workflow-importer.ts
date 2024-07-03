@@ -1,77 +1,14 @@
 import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
 import { Logger, runMapiRequestAsync, LogSpinnerData, MigrationItem } from '../../core/index.js';
-import chalk from 'chalk';
-
-type WorkflowStep = {
-    codename: string;
-    id: string;
-};
+import { workflowHelper } from '../utils/workflow-helper.js';
 
 export function workflowImporter(config: {
     logger: Logger;
     managementClient: Readonly<ManagementClient>;
     workflows: readonly WorkflowModels.Workflow[];
 }) {
-    const getWorkflowStep = (
-        workflow: Readonly<WorkflowModels.Workflow>,
-        stepCodename: string
-    ): WorkflowStep | undefined => {
-        return [...workflow.steps, workflow.archivedStep, workflow.publishedStep, workflow.scheduledStep].find(
-            (m) => m.codename === stepCodename
-        );
-    };
-
-    const getWorkflowAndStep = (data: {
-        readonly workflowStepCodename: string;
-        readonly workflowCodename: string;
-    }): { step: WorkflowStep; workflow: WorkflowModels.Workflow } => {
-        const workflow = config.workflows.find(
-            (m) => m.codename?.toLowerCase() === data.workflowCodename.toLowerCase()
-        );
-
-        if (!workflow) {
-            const errorMessages: string[] = [
-                `Workflow with codename '${chalk.red(data.workflowCodename)}' does not exist in target project`,
-                `Available workflows are (${config.workflows.length}): ${config.workflows
-                    .map((m) => chalk.cyan(m.codename))
-                    .join(', ')}`
-            ];
-
-            throw Error(errorMessages.join('. '));
-        }
-
-        const workflowStep = getWorkflowStep(workflow, data.workflowStepCodename);
-
-        if (!workflowStep) {
-            throw Error(
-                `Workflow step with codename '${chalk.red(
-                    data.workflowStepCodename
-                )}' does not exist within worklflow '${chalk.cyan(workflow.codename)}'`
-            );
-        }
-
-        return {
-            step: workflowStep,
-            workflow: workflow
-        };
-    };
-
-    const isPublishedStep = (stepCodename: string): boolean => {
-        return config.workflows.find((workflow) => workflow.publishedStep.codename === stepCodename) ? true : false;
-    };
-
-    const isArchivedStep = (stepCodename: string): boolean => {
-        return config.workflows.find((workflow) => workflow.archivedStep.codename === stepCodename) ? true : false;
-    };
-
-    const isScheduledStep = (stepCodename: string): boolean => {
-        return config.workflows.find((workflow) => workflow.scheduledStep.codename === stepCodename) ? true : false;
-    };
-
     const publishLanguageVariantAsync = async (data: {
         logSpinner: LogSpinnerData;
-        workflowCodename: string;
-        workflowStepCodename: string;
         migrationItem: MigrationItem;
     }): Promise<void> => {
         await runMapiRequestAsync({
@@ -94,8 +31,6 @@ export function workflowImporter(config: {
 
     const unpublishLanguageVariantAsync = async (data: {
         logSpinner: LogSpinnerData;
-        workflowCodename: string;
-        workflowStepCodename: string;
         migrationItem: MigrationItem;
     }): Promise<void> => {
         // unpublish the language variant first if published
@@ -133,10 +68,9 @@ export function workflowImporter(config: {
     const archiveLanguageVariantAsync = async (data: {
         logSpinner: LogSpinnerData;
         workflowCodename: string;
-        workflowStepCodename: string;
         migrationItem: MigrationItem;
     }): Promise<void> => {
-        const { workflow } = getWorkflowAndStep(data);
+        const workflow = workflowHelper(config.workflows).getWorkflowByCodename(data.workflowCodename);
         await runMapiRequestAsync({
             logger: config.logger,
             func: async () =>
@@ -165,10 +99,13 @@ export function workflowImporter(config: {
     const changeWorkflowOfLanguageVariantAsync = async (data: {
         logSpinner: LogSpinnerData;
         workflowCodename: string;
-        workflowStepCodename: string;
+        stepCodename: string;
         migrationItem: MigrationItem;
     }): Promise<void> => {
-        const { workflow, step } = getWorkflowAndStep(data);
+        const { workflow, step } = workflowHelper(config.workflows).getWorkflowAndStepByCodenames({
+            workflowCodename: data.workflowCodename,
+            stepCodename: data.stepCodename
+        });
 
         await runMapiRequestAsync({
             logger: config.logger,
@@ -198,17 +135,17 @@ export function workflowImporter(config: {
     const setWorkflowOfLanguageVariantAsync = async (data: {
         logSpinner: LogSpinnerData;
         workflowCodename: string;
-        workflowStepCodename: string;
+        stepCodename: string;
         migrationItem: MigrationItem;
     }): Promise<void> => {
-        if (isPublishedStep(data.workflowStepCodename)) {
+        if (workflowHelper(config.workflows).isPublishedStepByCodename(data.stepCodename)) {
             await publishLanguageVariantAsync(data);
-        } else if (isScheduledStep(data.workflowStepCodename)) {
+        } else if (workflowHelper(config.workflows).isScheduledStepByCodename(data.stepCodename)) {
             data.logSpinner({
                 type: 'skip',
-                message: `Skipping scheduled workflow step for item '${chalk.yellow(data.migrationItem.system.name)}'`
+                message: `${data.migrationItem.system.codename} (${data.migrationItem.system.language.codename}) -> Skipping scheduled workflow step assignment`
             });
-        } else if (isArchivedStep(data.workflowStepCodename)) {
+        } else if (workflowHelper(config.workflows).isArchivedStepByCodename(data.stepCodename)) {
             await unpublishLanguageVariantAsync(data);
             await archiveLanguageVariantAsync(data);
         } else {
@@ -217,7 +154,7 @@ export function workflowImporter(config: {
     };
 
     return {
-        getWorkflowAndStep,
-        setWorkflowOfLanguageVariantAsync
+        setWorkflowOfLanguageVariantAsync,
+        publishLanguageVariantAsync
     };
 }

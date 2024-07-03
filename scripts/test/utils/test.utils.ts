@@ -1,8 +1,10 @@
+import chalk from 'chalk';
+
 export function getEnvironmentRequiredValue(variableName: string): string {
     const value = getEnvironmentOptionalValue(variableName);
 
     if (!value) {
-        throw new Error(`Missing environment variable '${variableName}'`);
+        throw new Error(`Missing environment variable '${chalk.red(variableName)}'`);
     }
 
     return value;

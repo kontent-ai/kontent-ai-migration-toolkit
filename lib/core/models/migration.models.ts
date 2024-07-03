@@ -73,6 +73,11 @@ export interface MigrationElements {
     [elementCodename: string]: MigrationElement;
 }
 
+export interface MigrationItemVersion<TElements extends MigrationElements = MigrationElements> {
+    readonly elements: TElements;
+    readonly workflow_step: MigrationReference;
+}
+
 export interface MigrationItem<TElements extends MigrationElements = MigrationElements> {
     readonly system: {
         /**
@@ -100,12 +105,8 @@ export interface MigrationItem<TElements extends MigrationElements = MigrationEl
          * Workflow of the item
          */
         readonly workflow: MigrationReference;
-        /**
-         * Workflow step of the item
-         */
-        readonly workflow_step: MigrationReference;
     };
-    readonly elements: TElements;
+    readonly versions: MigrationItemVersion<TElements>[];
 }
 
 export interface MigrationReference {
@@ -117,7 +118,7 @@ export interface MigrationReference {
 
 export interface MigrationAssetDescription {
     readonly language: MigrationReference;
-    readonly description: string | undefined;
+    readonly description?: string;
 }
 
 export interface MigrationAsset {
@@ -152,6 +153,13 @@ export interface MigrationAsset {
 }
 
 export interface MigrationData {
+    /**
+     * Array of migration items to process (export / import)
+     */
     readonly items: readonly MigrationItem[];
+
+    /**
+     * Array of migration assets to process
+     */
     readonly assets: readonly MigrationAsset[];
 }

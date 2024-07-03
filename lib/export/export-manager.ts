@@ -18,7 +18,7 @@ import {
     getMigrationManagementClient
 } from '../core/index.js';
 import { exportTransforms } from '../translation/index.js';
-import { exportContextFetcher } from './context/export-context-fetcher.js';
+import { exportContextFetcherAsync } from './context/export-context-fetcher.js';
 
 export function exportManager(config: ExportConfig) {
     const logger = config.logger ?? getDefaultLogger();
@@ -38,10 +38,16 @@ export function exportManager(config: ExportConfig) {
                 collection: { codename: exportItem.collection.codename },
                 workflow: {
                     codename: exportItem.workflow.codename
-                },
-                workflow_step: { codename: exportItem.workflowStepCodename }
+                }
             },
-            elements: getMigrationElements(context, exportItem.contentType, exportItem.languageVariant.elements)
+            versions: exportItem.versions.map((version) => {
+                return {
+                    elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements),
+                    workflow_step: {
+                        codename: version.workflowStepCodename
+                    }
+                };
+            })
         };
 
         return migrationItem;
@@ -225,11 +231,13 @@ export function exportManager(config: ExportConfig) {
                 message: `Preparing to export data`
             });
 
-            const exportContext = await exportContextFetcher({
-                exportItems: config.exportItems,
-                logger: logger,
-                managementClient: managementClient
-            }).getExportContextAsync();
+            const exportContext = await (
+                await exportContextFetcherAsync({
+                    exportItems: config.exportItems,
+                    logger: logger,
+                    managementClient: managementClient
+                })
+            ).getExportContextAsync();
 
             const migrationData: MigrationData = {
                 items: getMigrationItems(exportContext),

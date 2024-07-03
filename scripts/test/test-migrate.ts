@@ -38,12 +38,12 @@ const run = async () => {
     await migrateAsync({
         logger: logger,
         sourceEnvironment: {
-            id: sourceEnvironmentId,
+            environmentId: sourceEnvironmentId,
             apiKey: sourceApiKey,
             items: itemsToMigrate
         },
         targetEnvironment: {
-            id: targetEnvironmentId,
+            environmentId: targetEnvironmentId,
             apiKey: targetApiKey,
             skipFailedItems: false
         }

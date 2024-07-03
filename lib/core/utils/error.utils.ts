@@ -20,7 +20,6 @@ export function extractErrorData(error: unknown): ErrorData {
         requestData = originalError?.response?.config?.data;
         message += error.validationErrors.map((m) => m.message).join(', ');
     } else if (error instanceof Error) {
-        isUnknownError = false;
         message = error.message;
     }
 

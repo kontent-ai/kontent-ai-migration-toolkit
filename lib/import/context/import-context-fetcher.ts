@@ -17,7 +17,7 @@ import {
     ImportContextConfig,
     ImportContextEnvironmentData
 } from '../import.models.js';
-import { itemsExtractionProcessor } from '../../translation/index.js';
+import { ExtractItemByCodename, itemsExtractionProcessor } from '../../translation/index.js';
 import chalk from 'chalk';
 
 interface LanguageVariantWrapper {
@@ -263,29 +263,27 @@ export function importContextFetcher(config: ImportContextConfig) {
         const getElementByCodenames: GetFlattenedElementByCodenames = getElement(flattenedContentTypes);
 
         const referencedData = itemsExtractionProcessor().extractReferencedItemsFromMigrationItems(
-            config.migrationData.items.map((item) => {
-                return {
-                    contentTypeCodename: item.system.type.codename,
-                    elements: item.elements
-                };
-            }),
+            config.migrationData.items.reduce<ExtractItemByCodename[]>((items, item) => {
+                return [
+                    ...items,
+                    ...item.versions.map((version) => {
+                        const extractionItem: ExtractItemByCodename = {
+                            contentTypeCodename: item.system.type.codename,
+                            elements: version.elements
+                        };
+                        return extractionItem;
+                    })
+                ];
+            }, []),
             getElementByCodenames
         );
 
-        // only items with workflow / step are standalone content items
-        const contentItemsExcludingComponents = config.migrationData.items.filter(
-            (m) => m.system.workflow && m.system.workflow_step
-        );
-
         // if content item does not have a workflow / step it means it is used as a component within Rich text element
-        const contentItemComponents = config.migrationData.items.filter(
-            (m) => !m.system.workflow || m.system.workflow_step
-        );
 
         // check all items, including referenced items in content
         const itemCodenamesToCheckInTargetEnv: ReadonlySet<string> = new Set<string>([
             ...referencedData.itemCodenames,
-            ...contentItemsExcludingComponents.map((m) => m.system.codename)
+            ...config.migrationData.items.map((m) => m.system.codename)
         ]);
 
         // check all assets, including referenced assets in content
@@ -300,7 +298,7 @@ export function importContextFetcher(config: ImportContextConfig) {
         );
 
         const variantStates: readonly LanguageVariantStateInTargetEnvironmentByCodename[] = await getVariantStatesAsync(
-            contentItemsExcludingComponents
+            config.migrationData.items
         );
 
         const assetStates: readonly AssetStateInTargetEnvironmentByCodename[] = await getAssetStatesAsync(
@@ -319,8 +317,7 @@ export function importContextFetcher(config: ImportContextConfig) {
             environmentData: await getEnvironmentDataAsync(),
             categorizedImportData: {
                 assets: config.migrationData.assets,
-                componentItems: contentItemComponents,
-                contentItems: contentItemsExcludingComponents
+                contentItems: config.migrationData.items
             },
             referencedData: referencedData,
             getItemStateInTargetEnvironment: (itemCodename) => {

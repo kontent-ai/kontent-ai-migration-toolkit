@@ -10,22 +10,22 @@ import { GetFlattenedElementByCodenames } from '../../import/index.js';
 import { ElementModels } from '@kontent-ai/management-sdk';
 import { GetFlattenedElementByIds } from 'lib/export/export.models.js';
 
-interface ExtractItemById {
+export interface ExtractItemById {
     readonly elements: ElementModels.ContentItemElement[];
     readonly contentTypeId: string;
 }
 
-interface ExtractItemByCodename {
+export interface ExtractItemByCodename {
     readonly elements: MigrationElements;
     readonly contentTypeCodename: string;
 }
 
-interface ReferencedDataInMigrationItemsLocal {
+export interface ReferencedDataInMigrationItemsLocal {
     readonly itemCodenames: Set<string>;
     readonly assetCodenames: Set<string>;
 }
 
-interface ReferencedDataInLanguageVariantsLocal {
+export interface ReferencedDataInLanguageVariantsLocal {
     readonly itemIds: Set<string>;
     readonly assetIds: Set<string>;
 }
