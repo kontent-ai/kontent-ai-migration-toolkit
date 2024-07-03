@@ -164,9 +164,9 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
     };
 
     const validateExportItem = (data: {
-        sourceItem: SourceExportItem;
-        contentItem: Readonly<ContentItemModels.ContentItem>;
-        languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
+        readonly sourceItem: SourceExportItem;
+        readonly contentItem: Readonly<ContentItemModels.ContentItem>;
+        readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
     }): {
         collection: Readonly<CollectionModels.Collection>;
         language: Readonly<LanguageModels.LanguageModel>;

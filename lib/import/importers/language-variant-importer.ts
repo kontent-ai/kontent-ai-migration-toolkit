@@ -30,11 +30,11 @@ export function languageVariantImporter(config: {
     readonly client: Readonly<ManagementClient>;
 }) {
     const upsertLanguageVariantAsync = async (data: {
-        workflow: Readonly<WorkflowModels.Workflow>;
-        logSpinner: LogSpinnerData;
-        migrationItem: MigrationItem;
-        migrationItemVersion: MigrationItemVersion;
-        preparedContentItem: Readonly<ContentItemModels.ContentItem>;
+        readonly workflow: Readonly<WorkflowModels.Workflow>;
+        readonly logSpinner: LogSpinnerData;
+        readonly migrationItem: MigrationItem;
+        readonly migrationItemVersion: MigrationItemVersion;
+        readonly preparedContentItem: Readonly<ContentItemModels.ContentItem>;
     }): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant>> => {
         return await runMapiRequestAsync({
             logger: config.logger,
@@ -103,11 +103,11 @@ export function languageVariantImporter(config: {
     };
 
     const importVersionAsync = async (data: {
-        logSpinner: LogSpinnerData;
-        migrationItem: MigrationItem;
-        migrationItemVersion: MigrationItemVersion;
-        preparedContentItem: Readonly<ContentItemModels.ContentItem>;
-        workflowStepCodenameInTargetEnvironment: string | undefined;
+        readonly logSpinner: LogSpinnerData;
+        readonly migrationItem: MigrationItem;
+        readonly migrationItemVersion: MigrationItemVersion;
+        readonly preparedContentItem: Readonly<ContentItemModels.ContentItem>;
+        readonly workflowStepCodenameInTargetEnvironment: string | undefined;
     }): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant>> => {
         // validate workflow
         const { step, workflow } = workflowHelper(config.workflows).getWorkflowAndStepByCodenames({
@@ -260,10 +260,10 @@ export function languageVariantImporter(config: {
     };
 
     const prepareLanguageVariantForImportAsync = async (data: {
-        logSpinner: LogSpinnerData;
-        migrationItem: MigrationItem;
-        workflowStepCodenameInTargetEnvironment: string;
-        workflow: Readonly<WorkflowModels.Workflow>;
+        readonly logSpinner: LogSpinnerData;
+        readonly migrationItem: MigrationItem;
+        readonly workflowStepCodenameInTargetEnvironment: string;
+        readonly workflow: Readonly<WorkflowModels.Workflow>;
     }): Promise<void> => {
         // create new version if language variant is published
         if (isPublishedWorkflowStep(data.workflowStepCodenameInTargetEnvironment, data.workflow)) {

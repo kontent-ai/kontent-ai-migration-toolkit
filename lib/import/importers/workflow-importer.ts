@@ -7,8 +7,8 @@ export function workflowImporter(config: {
     workflows: readonly WorkflowModels.Workflow[];
 }) {
     const publishLanguageVariantAsync = async (data: {
-        logSpinner: LogSpinnerData;
-        migrationItem: MigrationItem;
+        readonly logSpinner: LogSpinnerData;
+        readonly migrationItem: MigrationItem;
     }): Promise<void> => {
         await runMapiRequestAsync({
             logger: config.logger,
@@ -29,8 +29,8 @@ export function workflowImporter(config: {
     };
 
     const unpublishLanguageVariantAsync = async (data: {
-        logSpinner: LogSpinnerData;
-        migrationItem: MigrationItem;
+        readonly logSpinner: LogSpinnerData;
+        readonly migrationItem: MigrationItem;
     }): Promise<void> => {
         // unpublish the language variant first if published
         // there is no way to determine if language variant is published via MAPI
@@ -65,9 +65,9 @@ export function workflowImporter(config: {
     };
 
     const archiveLanguageVariantAsync = async (data: {
-        logSpinner: LogSpinnerData;
-        workflowCodename: string;
-        migrationItem: MigrationItem;
+        readonly logSpinner: LogSpinnerData;
+        readonly workflowCodename: string;
+        readonly migrationItem: MigrationItem;
     }): Promise<void> => {
         const workflow = workflowHelper(config.workflows).getWorkflowByCodename(data.workflowCodename);
         await runMapiRequestAsync({
@@ -96,10 +96,10 @@ export function workflowImporter(config: {
     };
 
     const changeWorkflowOfLanguageVariantAsync = async (data: {
-        logSpinner: LogSpinnerData;
-        workflowCodename: string;
-        stepCodename: string;
-        migrationItem: MigrationItem;
+        readonly logSpinner: LogSpinnerData;
+        readonly workflowCodename: string;
+        readonly stepCodename: string;
+        readonly migrationItem: MigrationItem;
     }): Promise<void> => {
         const { workflow, step } = workflowHelper(config.workflows).getWorkflowAndStepByCodenames({
             workflowCodename: data.workflowCodename,
@@ -132,10 +132,10 @@ export function workflowImporter(config: {
     };
 
     const setWorkflowOfLanguageVariantAsync = async (data: {
-        logSpinner: LogSpinnerData;
-        workflowCodename: string;
-        stepCodename: string;
-        migrationItem: MigrationItem;
+        readonly logSpinner: LogSpinnerData;
+        readonly workflowCodename: string;
+        readonly stepCodename: string;
+        readonly migrationItem: MigrationItem;
     }): Promise<void> => {
         if (workflowHelper(config.workflows).isPublishedStepByCodename(data.stepCodename)) {
             await publishLanguageVariantAsync(data);
