@@ -54,7 +54,9 @@ export function zipPackager(jsZip: JSZip): ZipPackager {
 
             logger.log({
                 type: 'info',
-                message: `Creating zip file using '${zipOutputType}' with compression level '${compressionLevel.toString()}'`
+                message: `Creating zip file using '${chalk.yellow(
+                    zipOutputType
+                )}' with compression level '${chalk.yellow(compressionLevel.toString())}'`
             });
 
             const result = await jsZip.generateAsync({

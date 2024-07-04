@@ -45,7 +45,6 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                     });
 
                     processedItemsCount++;
-
                     return output;
                 });
             })
@@ -61,7 +60,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         // Only '<parallelLimit>' promises at a time
         const outputItems = await Promise.all(requests);
 
-        logSpinner({ type: 'info', message: `Completed '${chalk.yellow(data.action)}'` });
+        logSpinner({ type: 'info', message: `Completed '${chalk.yellow(data.action)}' (${outputItems.length})` });
 
         return outputItems;
     });
