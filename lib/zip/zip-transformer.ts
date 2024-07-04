@@ -1,5 +1,6 @@
 import { FileBinaryData, ZipPackager } from './zip.models.js';
 import { Logger, MigrationAsset, MigrationData, MigrationItem, getDefaultLogger, mapAsync } from '../core/index.js';
+import chalk from 'chalk';
 
 type ZipAssetRecord = Omit<MigrationAsset, 'binaryData'> & {
     _zipFilename: string;
@@ -64,13 +65,19 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
         const assetRecords = JSON.parse(text) as ZipAssetRecord[];
 
         return await mapAsync(assetRecords, async (assetRecord) => {
+            const binaryFile = await zip.getBinaryDataAsync(`${assetRecord._zipFilename}`);
+
+            if (!binaryFile) {
+                throw Error(`Could not load binary data for file '${chalk.red(assetRecord._zipFilename)}'`);
+            }
+
             const migrationAsset: MigrationAsset = {
                 codename: assetRecord.codename,
                 filename: assetRecord.filename,
                 collection: assetRecord.collection,
                 title: assetRecord.title,
                 descriptions: assetRecord.descriptions,
-                binaryData: await zip.getBinaryDataAsync(`${assetRecord._zipFilename}`)
+                binaryData: binaryFile
             };
 
             return migrationAsset;

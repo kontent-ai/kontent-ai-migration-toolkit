@@ -19,3 +19,11 @@ export async function getBinaryDataFromUrlAsync(url: string): Promise<{ data: Bu
 
     return { data: response.data, contentLength: contentLength };
 }
+
+export function geSizeInBytes(data: Blob | Buffer): number {
+    if (data instanceof Blob) {
+        return data.size;
+    }
+
+    return data.byteLength;
+}

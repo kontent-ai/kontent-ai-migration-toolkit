@@ -1,5 +1,5 @@
 import { AssetModels, CollectionModels, LanguageModels } from '@kontent-ai/management-sdk';
-import { MigrationAsset, MigrationAssetDescription, findRequired } from '../../core/index.js';
+import { MigrationAsset, MigrationAssetDescription, findRequired, geSizeInBytes } from '../../core/index.js';
 import deepEqual from 'deep-equal';
 
 export function shouldUpdateAsset(data: {
@@ -20,7 +20,35 @@ export function shouldUpdateAsset(data: {
         return true;
     }
 
+    if (!isBinaryFileIdentical(data)) {
+        return true;
+    }
+
     return false;
+}
+
+export function shouldReplaceBinaryFile(data: {
+    migrationAsset: MigrationAsset;
+    targetAsset: Readonly<AssetModels.Asset>;
+}): boolean {
+    if (!isBinaryFileIdentical(data)) {
+        return true;
+    }
+
+    return false;
+}
+
+function isBinaryFileIdentical(data: {
+    migrationAsset: MigrationAsset;
+    targetAsset: Readonly<AssetModels.Asset>;
+}): boolean {
+    const sourceFileSize = geSizeInBytes(data.migrationAsset.binaryData);
+    const targetFileSize = data.targetAsset.size;
+
+    const sourceFilename = data.migrationAsset.filename;
+    const targetFilename = data.targetAsset.fileName;
+
+    return sourceFileSize === targetFileSize && sourceFilename === targetFilename;
 }
 
 function isTitleIdentical(data: { migrationAsset: MigrationAsset; targetAsset: Readonly<AssetModels.Asset> }): boolean {

@@ -129,7 +129,7 @@ export interface MigrationAsset {
     /**
      * Binary data of the asset
      */
-    readonly binaryData: Buffer | Blob | undefined;
+    readonly binaryData: Buffer | Blob;
     /**
      * Filename of the asset, will be used as a filename in Kontent.ai after importing the asset
      */

@@ -5,12 +5,21 @@ import {
     processItemsAsync,
     runMapiRequestAsync,
     MigrationAssetDescription,
-    MigrationReference
+    MigrationReference,
+    geSizeInBytes,
+    isNotUndefined,
+    LogSpinnerData
 } from '../../core/index.js';
 import mime from 'mime';
 import chalk from 'chalk';
 import { ImportContext, ImportResult } from '../import.models.js';
-import { shouldUpdateAsset } from '../comparers/asset-comparer.js';
+import { shouldReplaceBinaryFile, shouldUpdateAsset } from '../comparers/asset-comparer.js';
+
+interface AssetToEdit {
+    migrationAsset: MigrationAsset;
+    targetAsset: Readonly<AssetModels.Asset>;
+    replaceBinaryFile: boolean;
+}
 
 export function assetsImporter(data: {
     readonly logger: Logger;
@@ -23,30 +32,45 @@ export function assetsImporter(data: {
         });
     };
 
-    const getAssetsToEdit = (): readonly MigrationAsset[] => {
-        return data.importContext.categorizedImportData.assets.filter((migrationAsset) => {
-            const assetState = data.importContext.getAssetStateInTargetEnvironment(migrationAsset.codename);
+    const getAssetsToEdit = (): readonly AssetToEdit[] => {
+        return data.importContext.categorizedImportData.assets
+            .map<AssetToEdit | undefined>((migrationAsset) => {
+                const assetState = data.importContext.getAssetStateInTargetEnvironment(migrationAsset.codename);
 
-            if (!assetState.asset || assetState.state === 'doesNotExists') {
-                return false;
-            }
+                if (!assetState.asset || assetState.state === 'doesNotExists') {
+                    return undefined;
+                }
 
-            return shouldUpdateAsset({
-                collections: data.importContext.environmentData.collections,
-                languages: data.importContext.environmentData.languages,
-                migrationAsset: migrationAsset,
-                targetAsset: assetState.asset
-            });
-        });
+                if (
+                    !shouldUpdateAsset({
+                        collections: data.importContext.environmentData.collections,
+                        languages: data.importContext.environmentData.languages,
+                        migrationAsset: migrationAsset,
+                        targetAsset: assetState.asset
+                    })
+                ) {
+                    return undefined;
+                }
+
+                return {
+                    migrationAsset: migrationAsset,
+                    replaceBinaryFile: shouldReplaceBinaryFile({
+                        migrationAsset: migrationAsset,
+                        targetAsset: assetState.asset
+                    }),
+                    targetAsset: assetState.asset
+                };
+            })
+            .filter(isNotUndefined);
     };
 
-    const editAssets = async (assetsToEdit: readonly MigrationAsset[]): Promise<readonly AssetModels.Asset[]> => {
+    const editAssets = async (assetsToEdit: readonly AssetToEdit[]): Promise<readonly AssetModels.Asset[]> => {
         data.logger.log({
             type: 'upsert',
             message: `Upserting '${chalk.yellow(assetsToEdit.length.toString())}' assets`
         });
 
-        return await processItemsAsync<MigrationAsset, Readonly<AssetModels.Asset>>({
+        return await processItemsAsync<AssetToEdit, Readonly<AssetModels.Asset>>({
             action: 'Upserting assets',
             logger: data.logger,
             parallelLimit: 1,
@@ -54,22 +78,31 @@ export function assetsImporter(data: {
             itemInfo: (input) => {
                 return {
                     itemType: 'asset',
-                    title: input.title
+                    title: input.migrationAsset.title
                 };
             },
-            processAsync: async (asset, logSpinner) => {
+            processAsync: async (assetEditRequest, logSpinner) => {
+                let uploadedBinaryFile: Readonly<AssetModels.AssetFileReference> | undefined;
+
+                if (assetEditRequest.replaceBinaryFile) {
+                    uploadedBinaryFile = await uploadBinaryFileAsync(assetEditRequest.migrationAsset, logSpinner);
+                }
+
                 return await runMapiRequestAsync({
                     logger: data.logger,
                     func: async () => {
                         return (
                             await data.client
                                 .upsertAsset()
-                                .byAssetCodename(asset.codename)
+                                .byAssetCodename(assetEditRequest.migrationAsset.codename)
                                 .withData(() => {
                                     return {
-                                        title: asset.title,
-                                        descriptions: mapAssetDescriptions(asset.descriptions),
-                                        collection: mapAssetCollection(asset.collection)
+                                        title: assetEditRequest.migrationAsset.title,
+                                        descriptions: mapAssetDescriptions(
+                                            assetEditRequest.migrationAsset.descriptions
+                                        ),
+                                        collection: mapAssetCollection(assetEditRequest.migrationAsset.collection),
+                                        file_reference: uploadedBinaryFile ?? undefined
                                     };
                                 })
                                 .toPromise()
@@ -78,7 +111,7 @@ export function assetsImporter(data: {
                     action: 'upsert',
                     type: 'asset',
                     logSpinner: logSpinner,
-                    itemName: `${asset.title ?? asset.filename}`
+                    itemName: `${assetEditRequest.migrationAsset.title ?? assetEditRequest.migrationAsset.filename}`
                 });
             }
         });
@@ -111,7 +144,35 @@ export function assetsImporter(data: {
         });
     };
 
-    const uploadAssets = async (assetsToUpload: readonly MigrationAsset[]): Promise<readonly AssetModels.Asset[]> => {
+    const uploadBinaryFileAsync = async (
+        migrationAsset: MigrationAsset,
+        logSpinner: LogSpinnerData
+    ): Promise<Readonly<AssetModels.AssetFileReference>> => {
+        return await runMapiRequestAsync({
+            logger: data.logger,
+            func: async () => {
+                return (
+                    await data.client
+                        .uploadBinaryFile()
+                        .withData({
+                            binaryData: migrationAsset.binaryData,
+                            contentLength: geSizeInBytes(migrationAsset.binaryData),
+                            contentType: mime.getType(migrationAsset.filename) ?? '',
+                            filename: migrationAsset.filename
+                        })
+                        .toPromise()
+                ).data;
+            },
+            action: 'upload',
+            type: 'binaryFile',
+            logSpinner: logSpinner,
+            itemName: `${migrationAsset.title ?? migrationAsset.filename}`
+        });
+    };
+
+    const uploadAssetsAsync = async (
+        assetsToUpload: readonly MigrationAsset[]
+    ): Promise<readonly AssetModels.Asset[]> => {
         data.logger.log({
             type: 'upload',
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
@@ -128,26 +189,8 @@ export function assetsImporter(data: {
                     title: input.title
                 };
             },
-            processAsync: async (asset, logSpinner) => {
-                const uploadedBinaryFile = await runMapiRequestAsync({
-                    logger: data.logger,
-                    func: async () => {
-                        return (
-                            await data.client
-                                .uploadBinaryFile()
-                                .withData({
-                                    binaryData: asset.binaryData,
-                                    contentType: mime.getType(asset.filename) ?? '',
-                                    filename: asset.filename
-                                })
-                                .toPromise()
-                        ).data;
-                    },
-                    action: 'upload',
-                    type: 'binaryFile',
-                    logSpinner: logSpinner,
-                    itemName: `${asset.title ?? asset.filename}`
-                });
+            processAsync: async (migrationAsset, logSpinner) => {
+                const uploadedBinaryFile = await uploadBinaryFileAsync(migrationAsset, logSpinner);
 
                 return await runMapiRequestAsync({
                     logger: data.logger,
@@ -157,19 +200,16 @@ export function assetsImporter(data: {
                                 .addAsset()
                                 .withData(() => {
                                     const assetStateInTargetEnv = data.importContext.getAssetStateInTargetEnvironment(
-                                        asset.codename
+                                        migrationAsset.codename
                                     );
 
                                     const assetRequestData: AssetModels.IAddAssetRequestData = {
-                                        file_reference: {
-                                            id: uploadedBinaryFile.id,
-                                            type: 'internal'
-                                        },
-                                        codename: asset.codename,
-                                        title: asset.title,
+                                        file_reference: uploadedBinaryFile,
+                                        codename: migrationAsset.codename,
+                                        title: migrationAsset.title,
                                         external_id: assetStateInTargetEnv.externalIdToUse,
-                                        collection: mapAssetCollection(asset.collection),
-                                        descriptions: mapAssetDescriptions(asset.descriptions)
+                                        collection: mapAssetCollection(migrationAsset.collection),
+                                        descriptions: mapAssetDescriptions(migrationAsset.descriptions)
                                     };
                                     return assetRequestData;
                                 })
@@ -178,7 +218,7 @@ export function assetsImporter(data: {
                     action: 'create',
                     type: 'asset',
                     logSpinner: logSpinner,
-                    itemName: `${asset.title ?? asset.filename}`
+                    itemName: `${migrationAsset.title ?? migrationAsset.filename}`
                 });
             }
         });
@@ -187,7 +227,7 @@ export function assetsImporter(data: {
     const importAsync = async (): Promise<Pick<ImportResult, 'editedAssets' | 'uploadedAssets'>> => {
         return {
             editedAssets: await editAssets(getAssetsToEdit()),
-            uploadedAssets: await uploadAssets(getAssetsToUpload())
+            uploadedAssets: await uploadAssetsAsync(getAssetsToUpload())
         };
     };
 
