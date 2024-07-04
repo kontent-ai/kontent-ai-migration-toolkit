@@ -1,7 +1,6 @@
 import { AssetModels, ContentItemModels, LanguageVariantModels } from '@kontent-ai/management-sdk';
 import {
     AssetStateInTargetEnvironmentByCodename,
-    FlattenedContentType,
     ItemStateInTargetEnvironmentByCodename,
     LanguageVariantStateInTargetEnvironmentByCodename,
     MigrationItem,
@@ -9,7 +8,7 @@ import {
     is404Error,
     isNotUndefined,
     managementClientUtils,
-    processSetAsync,
+    processItemsAsync,
     runMapiRequestAsync,
     workflowHelper
 } from '../../core/index.js';
@@ -28,28 +27,35 @@ interface LanguageVariantWrapper {
 }
 
 export async function importContextFetcherAsync(config: ImportContextConfig) {
-    const mapiUtils = managementClientUtils(config.managementClient, config.logger);
-
     const getEnvironmentDataAsync = async (): Promise<ImportContextEnvironmentData> => {
-        const environmentData: ImportContextEnvironmentData = {
-            collections: await mapiUtils.getAllCollectionsAsync(),
-            languages: await mapiUtils.getAllLanguagesAsync(),
-            workflows: await mapiUtils.getAllWorkflowsAsync()
-        };
+        const mapiUtils = managementClientUtils(config.managementClient, config.logger);
 
-        return environmentData;
+        return await config.logger.logWithSpinnerAsync(async (spinnerData) => {
+            spinnerData({ type: 'info', message: `Loading environment data` });
+
+            const environmentData: ImportContextEnvironmentData = {
+                collections: await mapiUtils.getAllCollectionsAsync(spinnerData),
+                languages: await mapiUtils.getAllLanguagesAsync(spinnerData),
+                workflows: await mapiUtils.getAllWorkflowsAsync(spinnerData),
+                types: await mapiUtils.getFlattenedContentTypesAsync(spinnerData)
+            };
+
+            spinnerData({ type: 'info', message: `Environmental data loaded` });
+
+            return environmentData;
+        });
     };
 
     const environmentData = await getEnvironmentDataAsync();
 
-    const getElement = (types: readonly FlattenedContentType[]) => {
+    const getElement = () => {
         const getFlattenedElement: GetFlattenedElementByCodenames = (
             contentTypeCodename,
             elementCodename,
             sourceType
         ) => {
             const contentType = findRequired(
-                types,
+                environmentData.types,
                 (type) => type.contentTypeCodename === contentTypeCodename,
                 `Content type with codename '${chalk.red(contentTypeCodename)}' was not found.`
             );
@@ -82,7 +88,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         migrationItems: readonly MigrationItem[]
     ): Promise<readonly LanguageVariantWrapper[]> => {
         return (
-            await processSetAsync<MigrationItem, LanguageVariantWrapper | undefined>({
+            await processItemsAsync<MigrationItem, LanguageVariantWrapper | undefined>({
                 action: 'Fetching language variants',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -131,7 +137,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         itemCodenames: ReadonlySet<string>
     ): Promise<readonly ContentItemModels.ContentItem[]> => {
         return (
-            await processSetAsync<string, ContentItemModels.ContentItem | undefined>({
+            await processItemsAsync<string, ContentItemModels.ContentItem | undefined>({
                 action: 'Fetching content items',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -171,7 +177,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         assetCodenames: ReadonlySet<string>
     ): Promise<readonly AssetModels.Asset[]> => {
         return (
-            await processSetAsync<string, AssetModels.Asset | undefined>({
+            await processItemsAsync<string, AssetModels.Asset | undefined>({
                 action: 'Fetching assets',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -275,8 +281,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
     };
 
     const getImportContextAsync = async (): Promise<ImportContext> => {
-        const flattenedContentTypes: readonly FlattenedContentType[] = await mapiUtils.getFlattenedContentTypesAsync();
-        const getElementByCodenames: GetFlattenedElementByCodenames = getElement(flattenedContentTypes);
+        const getElementByCodenames: GetFlattenedElementByCodenames = getElement();
 
         const referencedData = itemsExtractionProcessor().extractReferencedItemsFromMigrationItems(
             config.migrationData.items.reduce<ExtractItemByCodename[]>((items, item) => {

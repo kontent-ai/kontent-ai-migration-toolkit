@@ -8,7 +8,7 @@ import {
 } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import {
-    processSetAsync,
+    processItemsAsync,
     runMapiRequestAsync,
     is404Error,
     ItemStateInSourceEnvironmentById,
@@ -35,15 +35,22 @@ import { throwErrorForItemRequest } from '../utils/export.utils.js';
 export async function exportContextFetcherAsync(config: DefaultExportContextConfig) {
     const getEnvironmentDataAsync = async (): Promise<ExportContextEnvironmentData> => {
         const mapiUtils = managementClientUtils(config.managementClient, config.logger);
-        const environmentData: ExportContextEnvironmentData = {
-            collections: await mapiUtils.getAllCollectionsAsync(),
-            contentTypes: await mapiUtils.getFlattenedContentTypesAsync(),
-            languages: await mapiUtils.getAllLanguagesAsync(),
-            workflows: await mapiUtils.getAllWorkflowsAsync(),
-            taxonomies: await mapiUtils.getAllTaxonomiesAsync()
-        };
 
-        return environmentData;
+        return await config.logger.logWithSpinnerAsync(async (spinnerData) => {
+            spinnerData({ type: 'info', message: `Loading environment data` });
+
+            const environmentData: ExportContextEnvironmentData = {
+                collections: await mapiUtils.getAllCollectionsAsync(spinnerData),
+                contentTypes: await mapiUtils.getFlattenedContentTypesAsync(spinnerData),
+                languages: await mapiUtils.getAllLanguagesAsync(spinnerData),
+                workflows: await mapiUtils.getAllWorkflowsAsync(spinnerData),
+                taxonomies: await mapiUtils.getAllTaxonomiesAsync(spinnerData)
+            };
+
+            spinnerData({ type: 'info', message: `Environmental data loaded` });
+
+            return environmentData;
+        });
     };
 
     const environmentData = await getEnvironmentDataAsync();
@@ -240,7 +247,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             message: `Preparing '${chalk.yellow(config.exportItems.length.toString())}' items for export`
         });
 
-        return await processSetAsync<SourceExportItem, ExportItem>({
+        return await processItemsAsync<SourceExportItem, ExportItem>({
             logger: config.logger,
             action: 'Preparing content items & language variants',
             parallelLimit: 1,
@@ -284,7 +291,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         itemIds: ReadonlySet<string>
     ): Promise<readonly ContentItemModels.ContentItem[]> => {
         return (
-            await processSetAsync<string, ContentItemModels.ContentItem | undefined>({
+            await processItemsAsync<string, ContentItemModels.ContentItem | undefined>({
                 logger: config.logger,
                 action: 'Fetching content items',
                 parallelLimit: 1,
@@ -322,7 +329,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
 
     const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly AssetModels.Asset[]> => {
         return (
-            await processSetAsync<string, AssetModels.Asset | undefined>({
+            await processItemsAsync<string, AssetModels.Asset | undefined>({
                 logger: config.logger,
                 action: 'Fetching assets',
                 parallelLimit: 1,
@@ -415,7 +422,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
 
         config.logger.log({
             type: 'info',
-            message: `Extracting referenced items from content`
+            message: `Extracting referenced items & assets from content`
         });
 
         const referencedData = itemsExtractionProcessor().extractReferencedDataFromExtractItems(
@@ -428,28 +435,12 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             getElementByIds()
         );
 
-        // fetch both referenced items and items that are set to be exported
-        const itemIdsToCheckInTargetEnv = new Set<string>([
-            ...referencedData.itemIds,
-            ...preparedItems.map((m) => m.contentItem.id)
-        ]);
-
-        const assetIdsToCheckInTargetEnv = new Set<string>([...referencedData.assetIds]);
-
-        config.logger.log({
-            type: 'info',
-            message: `Fetching referenced items`
-        });
         const itemStates: readonly ItemStateInSourceEnvironmentById[] = await getItemStatesAsync(
-            itemIdsToCheckInTargetEnv
+            // fetch both referenced items and items that are set to be exported
+            new Set<string>([...referencedData.itemIds, ...preparedItems.map((m) => m.contentItem.id)])
         );
-
-        config.logger.log({
-            type: 'info',
-            message: `Fetching referenced assets`
-        });
         const assetStates: readonly AssetStateInSourceEnvironmentById[] = await getAssetStatesAsync(
-            assetIdsToCheckInTargetEnv
+            new Set<string>([...referencedData.assetIds])
         );
 
         const exportContext: ExportContext = {
@@ -461,13 +452,15 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                 findRequired(
                     assetStates,
                     (m) => m.id === id,
-                    `Invalid state for asset '${chalk.red(id)}'. It is expected that all asset states will exist`
+                    `Invalid state for asset '${chalk.red(
+                        id
+                    )}'. It is expected that all asset states will be initialized`
                 ),
             getItemStateInSourceEnvironment: (id) =>
                 findRequired(
                     itemStates,
                     (m) => m.id === id,
-                    `Invalid state for item '${chalk.red(id)}'. It is expected that all item states will exist`
+                    `Invalid state for item '${chalk.red(id)}'. It is expected that all item states will be initialized`
                 )
         };
 

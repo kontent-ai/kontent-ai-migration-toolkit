@@ -3,7 +3,7 @@ import pLimit from 'p-limit';
 import { ItemInfo } from '../models/core.models.js';
 import { LogSpinnerData, Logger } from '../models/log.models.js';
 
-type SetAction =
+type ProcessSetAction =
     | 'Fetching assets'
     | 'Downloading assets'
     | 'Fetching content items'
@@ -14,8 +14,8 @@ type SetAction =
     | 'Upserting assets'
     | 'Uploading assets';
 
-export async function processSetAsync<InputItem, OutputItem>(data: {
-    readonly action: SetAction;
+export async function processItemsAsync<InputItem, OutputItem>(data: {
+    readonly action: ProcessSetAction;
     readonly logger: Logger;
     readonly items: Readonly<InputItem[]>;
     readonly parallelLimit: number;
@@ -61,7 +61,7 @@ export async function processSetAsync<InputItem, OutputItem>(data: {
         // Only '<parallelLimit>' promises at a time
         const outputItems = await Promise.all(requests);
 
-        logSpinner({ type: 'info', message: `Action '${chalk.yellow(data.action)}' finished successfully` });
+        logSpinner({ type: 'info', message: `Completed '${chalk.yellow(data.action)}'` });
 
         return outputItems;
     });

@@ -6,7 +6,7 @@ import {
     MigrationItem,
     FlattenedContentTypeElement,
     extractErrorData,
-    processSetAsync,
+    processItemsAsync,
     getBinaryDataFromUrlAsync,
     MigrationElements,
     FlattenedContentType,
@@ -170,7 +170,7 @@ export function exportManager(config: ExportConfig) {
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });
 
-        return await processSetAsync<AssetModels.Asset, MigrationAsset>({
+        return await processItemsAsync<AssetModels.Asset, MigrationAsset>({
             action: 'Downloading assets',
             logger: logger,
             parallelLimit: 5,
@@ -223,11 +223,6 @@ export function exportManager(config: ExportConfig) {
 
     return {
         async exportAsync(): Promise<MigrationData> {
-            logger.log({
-                type: 'info',
-                message: `Preparing to export data`
-            });
-
             const exportContext = await (
                 await exportContextFetcherAsync({
                     exportItems: config.exportItems,

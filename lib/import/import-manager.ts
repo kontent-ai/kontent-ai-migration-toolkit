@@ -11,16 +11,21 @@ export function importManager(config: ImportConfig) {
     const logger: Logger = config.logger ?? getDefaultLogger();
     const targetEnvironmentClient: ManagementClient = getMigrationManagementClient(config);
 
-    const importAssetsAsync = async (importContext: ImportContext): Promise<void> => {
+    const importAssetsAsync = async (
+        importContext: ImportContext
+    ): Promise<Pick<ImportResult, 'editedAssets' | 'uploadedAssets'>> => {
         if (!importContext.categorizedImportData.assets.length) {
             logger.log({
                 type: 'info',
                 message: `There are no assets to import`
             });
-            return;
+            return {
+                editedAssets: [],
+                uploadedAssets: []
+            };
         }
 
-        await assetsImporter({
+        return await assetsImporter({
             client: targetEnvironmentClient,
             importContext: importContext,
             logger: logger
@@ -73,9 +78,8 @@ export function importManager(config: ImportConfig) {
                 })
             ).getImportContextAsync();
 
-            // Import order matters
             // #1 Assets
-            await importAssetsAsync(importContext);
+            const { editedAssets, uploadedAssets } = await importAssetsAsync(importContext);
 
             // #2 Content items
             const contentItems = await importContentItemsAsync(importContext);
@@ -89,6 +93,8 @@ export function importManager(config: ImportConfig) {
             });
 
             return {
+                editedAssets,
+                uploadedAssets,
                 contentItems,
                 languageVariants
             };

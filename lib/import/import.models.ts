@@ -11,9 +11,11 @@ import {
     MigrationElementValue,
     MigrationElementType,
     MigrationData,
-    ManagementClientConfig
+    ManagementClientConfig,
+    FlattenedContentType
 } from '../core/index.js';
 import {
+    AssetModels,
     CollectionModels,
     ContentItemModels,
     ElementContracts,
@@ -34,6 +36,7 @@ export interface ImportContextEnvironmentData {
     readonly languages: readonly LanguageModels.LanguageModel[];
     readonly collections: readonly CollectionModels.Collection[];
     readonly workflows: readonly WorkflowModels.Workflow[];
+    readonly types: readonly FlattenedContentType[];
 }
 
 export type GetFlattenedElementByCodenames = (
@@ -74,6 +77,8 @@ export interface ImportConfig extends ManagementClientConfig {
 }
 
 export interface ImportResult {
+    readonly uploadedAssets: readonly AssetModels.Asset[];
+    readonly editedAssets: readonly AssetModels.Asset[];
     readonly contentItems: readonly ContentItemModels.ContentItem[];
     readonly languageVariants: readonly LanguageVariantModels.ContentItemLanguageVariant[];
 }

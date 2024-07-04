@@ -1,7 +1,7 @@
 import { ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
 import {
     Logger,
-    processSetAsync,
+    processItemsAsync,
     runMapiRequestAsync,
     MigrationItem,
     LogSpinnerData,
@@ -119,7 +119,7 @@ export function contentItemsImporter(data: {
             message: `Importing '${chalk.yellow(contentItemsToImport.length.toString())}' content items`
         });
 
-        return await processSetAsync<MigrationItem, ContentItemModels.ContentItem>({
+        return await processItemsAsync<MigrationItem, ContentItemModels.ContentItem>({
             action: 'Importing content items',
             logger: data.logger,
             parallelLimit: 1,

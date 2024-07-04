@@ -2,14 +2,14 @@ import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
 import {
     MigrationAsset,
     Logger,
-    processSetAsync,
+    processItemsAsync,
     runMapiRequestAsync,
     MigrationAssetDescription,
     MigrationReference
 } from '../../core/index.js';
 import mime from 'mime';
 import chalk from 'chalk';
-import { ImportContext } from '../import.models.js';
+import { ImportContext, ImportResult } from '../import.models.js';
 import { shouldUpdateAsset } from '../comparers/asset-comparer.js';
 
 export function assetsImporter(data: {
@@ -40,13 +40,13 @@ export function assetsImporter(data: {
         });
     };
 
-    const editAssets = async (assetsToEdit: readonly MigrationAsset[]): Promise<void> => {
+    const editAssets = async (assetsToEdit: readonly MigrationAsset[]): Promise<readonly AssetModels.Asset[]> => {
         data.logger.log({
             type: 'upsert',
             message: `Upserting '${chalk.yellow(assetsToEdit.length.toString())}' assets`
         });
 
-        await processSetAsync<MigrationAsset, void>({
+        return await processItemsAsync<MigrationAsset, Readonly<AssetModels.Asset>>({
             action: 'Upserting assets',
             logger: data.logger,
             parallelLimit: 1,
@@ -58,10 +58,10 @@ export function assetsImporter(data: {
                 };
             },
             processAsync: async (asset, logSpinner) => {
-                await runMapiRequestAsync({
+                return await runMapiRequestAsync({
                     logger: data.logger,
-                    func: async () =>
-                        (
+                    func: async () => {
+                        return (
                             await data.client
                                 .upsertAsset()
                                 .byAssetCodename(asset.codename)
@@ -73,7 +73,8 @@ export function assetsImporter(data: {
                                     };
                                 })
                                 .toPromise()
-                        ).data,
+                        ).data;
+                    },
                     action: 'upload',
                     type: 'binaryFile',
                     logSpinner: logSpinner,
@@ -110,13 +111,13 @@ export function assetsImporter(data: {
         });
     };
 
-    const uploadAssets = async (assetsToUpload: readonly MigrationAsset[]): Promise<void> => {
+    const uploadAssets = async (assetsToUpload: readonly MigrationAsset[]): Promise<readonly AssetModels.Asset[]> => {
         data.logger.log({
             type: 'upload',
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
         });
 
-        await processSetAsync<MigrationAsset, void>({
+        return await processItemsAsync<MigrationAsset, Readonly<AssetModels.Asset>>({
             action: 'Uploading assets',
             logger: data.logger,
             parallelLimit: 3,
@@ -130,8 +131,8 @@ export function assetsImporter(data: {
             processAsync: async (asset, logSpinner) => {
                 const uploadedBinaryFile = await runMapiRequestAsync({
                     logger: data.logger,
-                    func: async () =>
-                        (
+                    func: async () => {
+                        return (
                             await data.client
                                 .uploadBinaryFile()
                                 .withData({
@@ -140,14 +141,15 @@ export function assetsImporter(data: {
                                     filename: asset.filename
                                 })
                                 .toPromise()
-                        ).data,
+                        ).data;
+                    },
                     action: 'upload',
                     type: 'binaryFile',
                     logSpinner: logSpinner,
                     itemName: `${asset.title ?? asset.filename}`
                 });
 
-                await runMapiRequestAsync({
+                return await runMapiRequestAsync({
                     logger: data.logger,
                     func: async () =>
                         (
@@ -182,16 +184,11 @@ export function assetsImporter(data: {
         });
     };
 
-    const importAsync = async (): Promise<void> => {
-        data.logger.log({
-            type: 'info',
-            message: `Categorizing '${chalk.yellow(
-                data.importContext.categorizedImportData.assets.length.toString()
-            )}' assets`
-        });
-
-        await uploadAssets(getAssetsToUpload());
-        await editAssets(getAssetsToEdit());
+    const importAsync = async (): Promise<Pick<ImportResult, 'editedAssets' | 'uploadedAssets'>> => {
+        return {
+            editedAssets: await editAssets(getAssetsToEdit()),
+            uploadedAssets: await uploadAssets(getAssetsToUpload())
+        };
     };
 
     return {

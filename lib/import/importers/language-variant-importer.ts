@@ -7,7 +7,7 @@ import {
 } from '@kontent-ai/management-sdk';
 import {
     Logger,
-    processSetAsync,
+    processItemsAsync,
     runMapiRequestAsync,
     MigrationItem,
     LogSpinnerData,
@@ -306,7 +306,7 @@ export function languageVariantImporter(config: {
         });
 
         return (
-            await processSetAsync<MigrationItem, readonly LanguageVariantModels.ContentItemLanguageVariant[]>({
+            await processItemsAsync<MigrationItem, readonly LanguageVariantModels.ContentItemLanguageVariant[]>({
                 action: 'Importing language variants',
                 logger: config.logger,
                 parallelLimit: 1,

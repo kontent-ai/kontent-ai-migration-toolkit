@@ -14,7 +14,7 @@ export async function runMapiRequestAsync<TResult>(data: {
 
     if (data.action === 'list') {
         logData = {
-            message: `Loading '${chalk.yellow(data.type)}' objects`,
+            message: `Fetching objects of type '${chalk.yellow(data.type)}'`,
             type: data.action
         };
     } else if (data.itemName) {
@@ -35,22 +35,7 @@ export async function runMapiRequestAsync<TResult>(data: {
         logData: logData
     });
 
-    const result = await data.func();
-
-    if (Array.isArray(result) && data.action === 'list') {
-        const logData: LogMessage = {
-            message: `Fetched '${chalk.yellow(result.length)}' objects of type '${chalk.yellow(data.type)}'`,
-            type: data.action
-        };
-
-        logSpinnerOrDefault({
-            logSpinner: data.logSpinner,
-            logger: data.logger,
-            logData: logData
-        });
-    }
-
-    return result;
+    return await data.func();
 }
 
 function logSpinnerOrDefault(data: {

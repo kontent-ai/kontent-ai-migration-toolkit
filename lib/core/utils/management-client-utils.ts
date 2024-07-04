@@ -11,7 +11,7 @@ import {
 } from '@kontent-ai/management-sdk';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { runMapiRequestAsync } from './run.utils.js';
-import { Logger } from '../models/log.models.js';
+import { LogSpinnerData, Logger } from '../models/log.models.js';
 import { FlattenedContentType, FlattenedContentTypeElement } from '../models/core.models.js';
 import { isNotUndefined } from './global.utils.js';
 import chalk from 'chalk';
@@ -39,8 +39,11 @@ export function managementClientUtils(client: Readonly<ManagementClient>, logger
         return (await client.environmentInformation().toPromise()).data.project;
     };
 
-    const getAllLanguagesAsync = async (): Promise<readonly LanguageModels.LanguageModel[]> => {
+    const getAllLanguagesAsync = async (
+        logSpinner: LogSpinnerData
+    ): Promise<readonly LanguageModels.LanguageModel[]> => {
         return await runMapiRequestAsync({
+            logSpinner: logSpinner,
             logger: logger,
             func: async () => (await client.listLanguages().toAllPromise()).data.items,
             action: 'list',
@@ -48,27 +51,32 @@ export function managementClientUtils(client: Readonly<ManagementClient>, logger
         });
     };
 
-    const getAllCollectionsAsync = async (): Promise<readonly CollectionModels.Collection[]> => {
+    const getAllCollectionsAsync = async (
+        logSpinner: LogSpinnerData
+    ): Promise<readonly CollectionModels.Collection[]> => {
         return await runMapiRequestAsync({
             logger: logger,
+            logSpinner: logSpinner,
             func: async () => (await client.listCollections().toPromise()).data.collections,
             action: 'list',
             type: 'collection'
         });
     };
 
-    const getAllWorkflowsAsync = async (): Promise<readonly WorkflowModels.Workflow[]> => {
+    const getAllWorkflowsAsync = async (logSpinner: LogSpinnerData): Promise<readonly WorkflowModels.Workflow[]> => {
         return await runMapiRequestAsync({
             logger: logger,
+            logSpinner: logSpinner,
             func: async () => (await client.listWorkflows().toPromise()).data,
             action: 'list',
             type: 'workflow'
         });
     };
 
-    const getAllTaxonomiesAsync = async (): Promise<readonly TaxonomyModels.Taxonomy[]> => {
+    const getAllTaxonomiesAsync = async (logSpinner: LogSpinnerData): Promise<readonly TaxonomyModels.Taxonomy[]> => {
         return await runMapiRequestAsync({
             logger: logger,
+            logSpinner: logSpinner,
             func: async () => (await client.listTaxonomies().toAllPromise()).data.items,
             action: 'list',
             type: 'taxonomy'
@@ -131,9 +139,12 @@ export function managementClientUtils(client: Readonly<ManagementClient>, logger
             .filter(isNotUndefined);
     };
 
-    const getFlattenedContentTypesAsync = async (): Promise<readonly FlattenedContentType[]> => {
+    const getFlattenedContentTypesAsync = async (
+        logSpinner: LogSpinnerData
+    ): Promise<readonly FlattenedContentType[]> => {
         const contentTypes = await runMapiRequestAsync({
             logger: logger,
+            logSpinner: logSpinner,
             func: async () => (await client.listContentTypes().toAllPromise()).data.items,
             action: 'list',
             type: 'contentType'
@@ -141,6 +152,7 @@ export function managementClientUtils(client: Readonly<ManagementClient>, logger
 
         const contentTypeSnippets = await runMapiRequestAsync({
             logger: logger,
+            logSpinner: logSpinner,
             func: async () => (await client.listContentTypeSnippets().toAllPromise()).data.items,
             action: 'list',
             type: 'contentTypeSnippet'
