@@ -231,10 +231,10 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         });
 
         return {
-            collection: collection,
-            language: language,
-            workflow: workflow,
-            contentType: contentType,
+            collection,
+            language,
+            workflow,
+            contentType,
             workflowStepCodename: workflowStep.codename
         };
     };
@@ -258,30 +258,30 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                 };
             },
             items: exportItems,
-            processAsync: async (sourceItem, logSpinner) => {
-                const contentItem = await getContentItemAsync(sourceItem, logSpinner);
-                const versions = await getExportItemVersionsAsync(sourceItem, contentItem, logSpinner);
+            processAsync: async (requestItem, logSpinner) => {
+                const contentItem = await getContentItemAsync(requestItem, logSpinner);
+                const versions = await getExportItemVersionsAsync(requestItem, contentItem, logSpinner);
 
                 // get shared attributes from any version
                 const anyVersion = versions[0];
                 if (!anyVersion) {
-                    throwErrorForItemRequest(sourceItem, `Expected at least 1 version of the content item`);
+                    throwErrorForItemRequest(requestItem, `Expected at least 1 version of the content item`);
                 }
 
                 const { collection, contentType, language, workflow } = validateExportItem({
-                    sourceItem: sourceItem,
+                    sourceItem: requestItem,
                     contentItem: contentItem,
                     languageVariant: anyVersion.languageVariant
                 });
 
                 return {
-                    contentItem: contentItem,
-                    versions: versions,
-                    contentType: contentType,
-                    requestItem: sourceItem,
-                    workflow: workflow,
-                    collection: collection,
-                    language: language
+                    contentItem,
+                    versions,
+                    contentType,
+                    requestItem,
+                    workflow,
+                    collection,
+                    language
                 };
             }
         });
