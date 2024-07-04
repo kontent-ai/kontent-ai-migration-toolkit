@@ -75,8 +75,8 @@ export function assetsImporter(data: {
                                 .toPromise()
                         ).data;
                     },
-                    action: 'upload',
-                    type: 'binaryFile',
+                    action: 'upsert',
+                    type: 'asset',
                     logSpinner: logSpinner,
                     itemName: `${asset.title ?? asset.filename}`
                 });
