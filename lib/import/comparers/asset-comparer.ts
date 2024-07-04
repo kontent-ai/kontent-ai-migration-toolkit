@@ -3,10 +3,10 @@ import { MigrationAsset, MigrationAssetDescription, findRequired, geSizeInBytes 
 import deepEqual from 'deep-equal';
 
 export function shouldUpdateAsset(data: {
-    migrationAsset: MigrationAsset;
-    targetAsset: Readonly<AssetModels.Asset>;
-    collections: readonly CollectionModels.Collection[];
-    languages: readonly LanguageModels.LanguageModel[];
+    readonly migrationAsset: MigrationAsset;
+    readonly targetAsset: Readonly<AssetModels.Asset>;
+    readonly collections: readonly CollectionModels.Collection[];
+    readonly languages: readonly LanguageModels.LanguageModel[];
 }): boolean {
     if (!isInSameCollection(data)) {
         return true;
@@ -28,8 +28,8 @@ export function shouldUpdateAsset(data: {
 }
 
 export function shouldReplaceBinaryFile(data: {
-    migrationAsset: MigrationAsset;
-    targetAsset: Readonly<AssetModels.Asset>;
+    readonly migrationAsset: MigrationAsset;
+    readonly targetAsset: Readonly<AssetModels.Asset>;
 }): boolean {
     if (!isBinaryFileIdentical(data)) {
         return true;
@@ -39,8 +39,8 @@ export function shouldReplaceBinaryFile(data: {
 }
 
 function isBinaryFileIdentical(data: {
-    migrationAsset: MigrationAsset;
-    targetAsset: Readonly<AssetModels.Asset>;
+    readonly migrationAsset: MigrationAsset;
+    readonly targetAsset: Readonly<AssetModels.Asset>;
 }): boolean {
     const sourceFileSize = geSizeInBytes(data.migrationAsset.binaryData);
     const targetFileSize = data.targetAsset.size;
@@ -51,7 +51,10 @@ function isBinaryFileIdentical(data: {
     return sourceFileSize === targetFileSize && sourceFilename === targetFilename;
 }
 
-function isTitleIdentical(data: { migrationAsset: MigrationAsset; targetAsset: Readonly<AssetModels.Asset> }): boolean {
+function isTitleIdentical(data: {
+    readonly migrationAsset: MigrationAsset;
+    readonly targetAsset: Readonly<AssetModels.Asset>;
+}): boolean {
     const sourceTitle = data.migrationAsset.title?.length ? data.migrationAsset.title : undefined;
     const targetTitle = data.targetAsset.title?.length ? data.targetAsset.title : undefined;
 
@@ -59,9 +62,9 @@ function isTitleIdentical(data: { migrationAsset: MigrationAsset; targetAsset: R
 }
 
 function isInSameCollection(data: {
-    migrationAsset: MigrationAsset;
-    targetAsset: Readonly<AssetModels.Asset>;
-    collections: readonly CollectionModels.Collection[];
+    readonly migrationAsset: MigrationAsset;
+    readonly targetAsset: Readonly<AssetModels.Asset>;
+    readonly collections: readonly CollectionModels.Collection[];
 }): boolean {
     return (
         data.collections.find((m) => m.id === data.targetAsset.collection?.reference?.id)?.codename ===
@@ -70,9 +73,9 @@ function isInSameCollection(data: {
 }
 
 function areDescriptionsIdentical(data: {
-    migrationAsset: MigrationAsset;
-    targetAsset: Readonly<AssetModels.Asset>;
-    languages: readonly LanguageModels.LanguageModel[];
+    readonly migrationAsset: MigrationAsset;
+    readonly targetAsset: Readonly<AssetModels.Asset>;
+    readonly languages: readonly LanguageModels.LanguageModel[];
 }): boolean {
     const sourceMigrationDescriptions = (data.migrationAsset.descriptions ?? [])
         .map<MigrationAssetDescription>((description) => {
@@ -90,8 +93,8 @@ function areDescriptionsIdentical(data: {
 }
 
 function mapToMigrationDescriptions(data: {
-    targetAsset: Readonly<AssetModels.Asset>;
-    languages: readonly LanguageModels.LanguageModel[];
+    readonly targetAsset: Readonly<AssetModels.Asset>;
+    readonly languages: readonly LanguageModels.LanguageModel[];
 }): MigrationAssetDescription[] {
     return data.targetAsset.descriptions.map((description) => {
         const languageId = description.language.id;
