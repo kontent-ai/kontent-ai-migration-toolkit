@@ -297,7 +297,7 @@ export function languageVariantImporter(config: {
         return importTransformResult;
     };
 
-    const importAsync = async (): Promise<readonly LanguageVariantModels.ContentItemLanguageVariant[]> => {
+    const importAsync = async (): Promise<readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]> => {
         config.logger.log({
             type: 'info',
             message: `Importing '${chalk.yellow(
@@ -306,7 +306,10 @@ export function languageVariantImporter(config: {
         });
 
         return (
-            await processItemsAsync<MigrationItem, readonly LanguageVariantModels.ContentItemLanguageVariant[]>({
+            await processItemsAsync<
+                MigrationItem,
+                readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]
+            >({
                 action: 'Importing language variants',
                 logger: config.logger,
                 parallelLimit: 1,

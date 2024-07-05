@@ -56,7 +56,7 @@ export function exportManager(config: ExportConfig) {
 
     const mapToMigrationComponent = (
         context: ExportContext,
-        component: ElementModels.ContentItemElementComponent
+        component: Readonly<ElementModels.ContentItemElementComponent>
     ): MigrationComponent => {
         const componentType = context.environmentData.contentTypes.find((m) => m.contentTypeId === component.type.id);
 
@@ -84,7 +84,7 @@ export function exportManager(config: ExportConfig) {
     const getMigrationElements = (
         context: ExportContext,
         contentType: FlattenedContentType,
-        elements: readonly ElementModels.ContentItemElement[]
+        elements: readonly Readonly<ElementModels.ContentItemElement>[]
     ): MigrationElements => {
         return contentType.elements
             .toSorted((a, b) => {
@@ -153,16 +153,18 @@ export function exportManager(config: ExportConfig) {
         }
     };
 
-    const exportAssetsAsync = async (context: ExportContext): Promise<readonly MigrationAsset[]> => {
+    const exportAssetsAsync = async (context: ExportContext): Promise<readonly Readonly<MigrationAsset>[]> => {
         const assets = Array.from(context.referencedData.assetIds)
-            .map<AssetModels.Asset | undefined>((assetId) => context.getAssetStateInSourceEnvironment(assetId).asset)
+            .map<Readonly<AssetModels.Asset> | undefined>(
+                (assetId) => context.getAssetStateInSourceEnvironment(assetId).asset
+            )
             .filter(isNotUndefined);
 
         return await getMigrationAssetsWithBinaryDataAsync(assets, context);
     };
 
     const getMigrationAssetsWithBinaryDataAsync = async (
-        assets: AssetModels.Asset[],
+        assets: readonly Readonly<AssetModels.Asset>[],
         context: ExportContext
     ): Promise<readonly MigrationAsset[]> => {
         logger.log({
@@ -170,7 +172,7 @@ export function exportManager(config: ExportConfig) {
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });
 
-        return await processItemsAsync<AssetModels.Asset, MigrationAsset>({
+        return await processItemsAsync<Readonly<AssetModels.Asset>, MigrationAsset>({
             action: 'Downloading assets',
             logger: logger,
             parallelLimit: 5,
@@ -182,7 +184,7 @@ export function exportManager(config: ExportConfig) {
             },
             items: assets,
             processAsync: async (asset, logSpinner) => {
-                const assetCollection: CollectionModels.Collection | undefined =
+                const assetCollection: Readonly<CollectionModels.Collection> | undefined =
                     context.environmentData.collections.find((m) => m.id === asset.collection?.reference?.id);
 
                 logSpinner({

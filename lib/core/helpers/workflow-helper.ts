@@ -16,7 +16,7 @@ type StepMatcher = {
     readonly errorMessage: string;
 };
 
-export function workflowHelper(workflows: readonly WorkflowModels.Workflow[]) {
+export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workflow>[]) {
     const getWorkflowStep = (workflow: Readonly<WorkflowModels.Workflow>, stepMatcher: StepMatcher): WorkflowStep => {
         return findRequired(
             [...workflow.steps, workflow.archivedStep, workflow.publishedStep, workflow.scheduledStep],

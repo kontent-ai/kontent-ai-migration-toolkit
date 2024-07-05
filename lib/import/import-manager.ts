@@ -33,7 +33,7 @@ export function importManager(config: ImportConfig) {
     };
     const importContentItemsAsync = async (
         importContext: ImportContext
-    ): Promise<readonly ContentItemModels.ContentItem[]> => {
+    ): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
         if (!importContext.categorizedImportData.contentItems.length) {
             logger.log({
                 type: 'info',
@@ -50,8 +50,8 @@ export function importManager(config: ImportConfig) {
 
     const importLanguageVariantsAsync = async (
         importContext: ImportContext,
-        contentItems: readonly ContentItemModels.ContentItem[]
-    ): Promise<readonly LanguageVariantModels.ContentItemLanguageVariant[]> => {
+        contentItems: readonly Readonly<ContentItemModels.ContentItem>[]
+    ): Promise<readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]> => {
         if (!importContext.categorizedImportData.contentItems.length) {
             logger.log({
                 type: 'info',

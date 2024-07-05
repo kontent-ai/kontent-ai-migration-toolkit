@@ -111,7 +111,7 @@ export function contentItemsImporter(data: {
         return preparedContentItemResult.contentItem;
     };
 
-    const importAsync = async (): Promise<readonly ContentItemModels.ContentItem[]> => {
+    const importAsync = async (): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
         const contentItemsToImport = data.importContext.categorizedImportData.contentItems;
 
         data.logger.log({
@@ -119,7 +119,7 @@ export function contentItemsImporter(data: {
             message: `Importing '${chalk.yellow(contentItemsToImport.length.toString())}' content items`
         });
 
-        return await processItemsAsync<MigrationItem, ContentItemModels.ContentItem>({
+        return await processItemsAsync<MigrationItem, Readonly<ContentItemModels.ContentItem>>({
             action: 'Importing content items',
             logger: data.logger,
             parallelLimit: 1,

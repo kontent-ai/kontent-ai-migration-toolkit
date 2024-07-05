@@ -137,7 +137,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         itemCodenames: ReadonlySet<string>
     ): Promise<readonly ContentItemModels.ContentItem[]> => {
         return (
-            await processItemsAsync<string, ContentItemModels.ContentItem | undefined>({
+            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | undefined>({
                 action: 'Fetching content items',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -177,7 +177,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         assetCodenames: ReadonlySet<string>
     ): Promise<readonly AssetModels.Asset[]> => {
         return (
-            await processItemsAsync<string, AssetModels.Asset | undefined>({
+            await processItemsAsync<string, Readonly<AssetModels.Asset> | undefined>({
                 action: 'Fetching assets',
                 logger: config.logger,
                 parallelLimit: 1,

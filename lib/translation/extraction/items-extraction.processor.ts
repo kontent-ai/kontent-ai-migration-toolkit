@@ -11,7 +11,7 @@ import { ElementModels } from '@kontent-ai/management-sdk';
 import { GetFlattenedElementByIds } from 'lib/export/export.models.js';
 
 export interface ExtractItemById {
-    readonly elements: ElementModels.ContentItemElement[];
+    readonly elements: Readonly<ElementModels.ContentItemElement>[];
     readonly contentTypeId: string;
 }
 

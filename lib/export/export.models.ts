@@ -22,11 +22,11 @@ import {
 } from '@kontent-ai/management-sdk';
 
 export interface ExportContextEnvironmentData {
-    readonly languages: readonly LanguageModels.LanguageModel[];
-    readonly contentTypes: readonly FlattenedContentType[];
-    readonly collections: readonly CollectionModels.Collection[];
-    readonly workflows: readonly WorkflowModels.Workflow[];
-    readonly taxonomies: readonly TaxonomyModels.Taxonomy[];
+    readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
+    readonly contentTypes: readonly Readonly<FlattenedContentType>[];
+    readonly collections: readonly Readonly<CollectionModels.Collection>[];
+    readonly workflows: readonly Readonly<WorkflowModels.Workflow>[];
+    readonly taxonomies: readonly Readonly<TaxonomyModels.Taxonomy>[];
 }
 
 export type ExportElementValue = string | number | SharedModels.ReferenceObject[] | undefined;

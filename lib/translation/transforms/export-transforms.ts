@@ -63,7 +63,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
             throw Error(`Expected value to be an array`);
         }
 
-        const taxonomyElement = data.typeElement.element as ContentTypeElements.ITaxonomyElement;
+        const taxonomyElement = data.typeElement.element as Readonly<ContentTypeElements.ITaxonomyElement>;
         const taxonomyGroupId = taxonomyElement.taxonomy_group.id ?? 'n/a';
 
         // get taxonomy group
@@ -131,7 +131,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         }
 
         // translate multiple choice option id to codename
-        const multipleChoiceElement = data.typeElement.element as ContentTypeElements.IMultipleChoiceElement;
+        const multipleChoiceElement = data.typeElement.element as Readonly<ContentTypeElements.IMultipleChoiceElement>;
 
         return data.exportElement.value
             .map((m) => m.id)
@@ -175,7 +175,10 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
     }
 };
 
-function findTaxonomy(termId: string, taxonomy: TaxonomyModels.Taxonomy): TaxonomyModels.Taxonomy | undefined {
+function findTaxonomy(
+    termId: string,
+    taxonomy: Readonly<TaxonomyModels.Taxonomy>
+): Readonly<TaxonomyModels.Taxonomy> | undefined {
     if (taxonomy.id === termId) {
         return taxonomy;
     }

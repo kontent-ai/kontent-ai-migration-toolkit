@@ -64,7 +64,9 @@ export function assetsImporter(data: {
             .filter(isNotUndefined);
     };
 
-    const editAssets = async (assetsToEdit: readonly AssetToEdit[]): Promise<readonly AssetModels.Asset[]> => {
+    const editAssets = async (
+        assetsToEdit: readonly AssetToEdit[]
+    ): Promise<readonly Readonly<AssetModels.Asset>[]> => {
         data.logger.log({
             type: 'upsert',
             message: `Upserting '${chalk.yellow(assetsToEdit.length.toString())}' assets`
@@ -119,7 +121,7 @@ export function assetsImporter(data: {
 
     const mapAssetCollection = (
         migrationCollection: MigrationReference | undefined
-    ): AssetModels.IAssetCollectionReferenceObject | undefined => {
+    ): Readonly<AssetModels.IAssetCollectionReferenceObject> | undefined => {
         return migrationCollection
             ? {
                   reference: {
@@ -131,9 +133,9 @@ export function assetsImporter(data: {
 
     const mapAssetDescriptions = (
         migrationDescription: readonly MigrationAssetDescription[] | undefined
-    ): AssetModels.IAssetFileDescription[] => {
+    ): Readonly<AssetModels.IAssetFileDescription>[] => {
         return (migrationDescription ?? []).map((m) => {
-            const assetDescription: AssetModels.IAssetFileDescription = {
+            const assetDescription: Readonly<AssetModels.IAssetFileDescription> = {
                 description: m.description ?? '',
                 language: {
                     codename: m.language.codename
@@ -172,7 +174,7 @@ export function assetsImporter(data: {
 
     const uploadAssetsAsync = async (
         assetsToUpload: readonly MigrationAsset[]
-    ): Promise<readonly AssetModels.Asset[]> => {
+    ): Promise<readonly Readonly<AssetModels.Asset>[]> => {
         data.logger.log({
             type: 'upload',
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
@@ -203,7 +205,7 @@ export function assetsImporter(data: {
                                         migrationAsset.codename
                                     );
 
-                                    const assetRequestData: AssetModels.IAddAssetRequestData = {
+                                    const assetRequestData: Readonly<AssetModels.IAddAssetRequestData> = {
                                         file_reference: uploadedBinaryFile,
                                         codename: migrationAsset.codename,
                                         title: migrationAsset.title,

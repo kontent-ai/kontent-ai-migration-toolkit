@@ -5,8 +5,8 @@ import deepEqual from 'deep-equal';
 export function shouldUpdateAsset(data: {
     readonly migrationAsset: MigrationAsset;
     readonly targetAsset: Readonly<AssetModels.Asset>;
-    readonly collections: readonly CollectionModels.Collection[];
-    readonly languages: readonly LanguageModels.LanguageModel[];
+    readonly collections: readonly Readonly<CollectionModels.Collection>[];
+    readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
 }): boolean {
     if (!isInSameCollection(data)) {
         return true;
@@ -64,7 +64,7 @@ function isTitleIdentical(data: {
 function isInSameCollection(data: {
     readonly migrationAsset: MigrationAsset;
     readonly targetAsset: Readonly<AssetModels.Asset>;
-    readonly collections: readonly CollectionModels.Collection[];
+    readonly collections: readonly Readonly<CollectionModels.Collection>[];
 }): boolean {
     return (
         data.collections.find((m) => m.id === data.targetAsset.collection?.reference?.id)?.codename ===
@@ -75,7 +75,7 @@ function isInSameCollection(data: {
 function areDescriptionsIdentical(data: {
     readonly migrationAsset: MigrationAsset;
     readonly targetAsset: Readonly<AssetModels.Asset>;
-    readonly languages: readonly LanguageModels.LanguageModel[];
+    readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
 }): boolean {
     const sourceMigrationDescriptions = (data.migrationAsset.descriptions ?? [])
         .map<MigrationAssetDescription>((description) => {
@@ -94,7 +94,7 @@ function areDescriptionsIdentical(data: {
 
 function mapToMigrationDescriptions(data: {
     readonly targetAsset: Readonly<AssetModels.Asset>;
-    readonly languages: readonly LanguageModels.LanguageModel[];
+    readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
 }): MigrationAssetDescription[] {
     return data.targetAsset.descriptions.map((description) => {
         const languageId = description.language.id;

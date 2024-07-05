@@ -4,7 +4,7 @@ import { Logger, runMapiRequestAsync, LogSpinnerData, MigrationItem, workflowHel
 export function workflowImporter(config: {
     logger: Logger;
     managementClient: Readonly<ManagementClient>;
-    workflows: readonly WorkflowModels.Workflow[];
+    workflows: readonly Readonly<WorkflowModels.Workflow>[];
 }) {
     const publishLanguageVariantAsync = async (data: {
         readonly logSpinner: LogSpinnerData;

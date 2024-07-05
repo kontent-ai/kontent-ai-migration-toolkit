@@ -31,7 +31,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
     asset: (data) => {
         const assetReferences = parseAsMigrationReferencesArray(data.value)
             .map((reference) => reference.codename)
-            .map<SharedContracts.IReferenceObjectContract>((codename) => {
+            .map<Readonly<SharedContracts.IReferenceObjectContract>>((codename) => {
                 const assetState = data.importContext.getAssetStateInTargetEnvironment(codename);
 
                 // only reference with external_id if item does not exist in target env
@@ -68,7 +68,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
     modular_content: (data) => {
         const linkedItemReferences = parseAsMigrationReferencesArray(data.value)
             .map((reference) => reference.codename)
-            .map<SharedContracts.IReferenceObjectContract>((codename) => {
+            .map<Readonly<SharedContracts.IReferenceObjectContract>>((codename) => {
                 const itemState = data.importContext.getItemStateInTargetEnvironment(codename);
 
                 // only reference with external_id if item does not exist in target env
@@ -146,7 +146,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         });
     },
     url_slug: (data) => {
-        const urlSlugElementValue = data.value as MigrationUrlSlugElementValue;
+        const urlSlugElementValue = data.value as Readonly<MigrationUrlSlugElementValue>;
 
         return elementsBuilder.urlSlugElement({
             element: {
@@ -164,7 +164,7 @@ function mapComponents(data: {
     readonly migrationItems: readonly MigrationItem[];
 }): LanguageVariantElements.IRichTextComponent[] {
     return data.rteValue.components.map((component) => {
-        const mappedComponent: LanguageVariantElements.IRichTextComponent = {
+        const mappedComponent: Readonly<LanguageVariantElements.IRichTextComponent> = {
             id: component.system.id,
             type: {
                 codename: component.system.type.codename

@@ -289,9 +289,9 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
 
     const getContentItemsByIdsAsync = async (
         itemIds: ReadonlySet<string>
-    ): Promise<readonly ContentItemModels.ContentItem[]> => {
+    ): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
         return (
-            await processItemsAsync<string, ContentItemModels.ContentItem | undefined>({
+            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | undefined>({
                 logger: config.logger,
                 action: 'Fetching content items',
                 parallelLimit: 1,
@@ -327,9 +327,11 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         ).filter(isNotUndefined);
     };
 
-    const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly AssetModels.Asset[]> => {
+    const getAssetsByIdsAsync = async (
+        itemIds: ReadonlySet<string>
+    ): Promise<readonly Readonly<AssetModels.Asset>[]> => {
         return (
-            await processItemsAsync<string, AssetModels.Asset | undefined>({
+            await processItemsAsync<string, Readonly<AssetModels.Asset> | undefined>({
                 logger: config.logger,
                 action: 'Fetching assets',
                 parallelLimit: 1,

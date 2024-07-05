@@ -33,10 +33,10 @@ export interface ImportContextConfig {
 }
 
 export interface ImportContextEnvironmentData {
-    readonly languages: readonly LanguageModels.LanguageModel[];
-    readonly collections: readonly CollectionModels.Collection[];
-    readonly workflows: readonly WorkflowModels.Workflow[];
-    readonly types: readonly FlattenedContentType[];
+    readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
+    readonly collections: readonly Readonly<CollectionModels.Collection>[];
+    readonly workflows: readonly Readonly<WorkflowModels.Workflow>[];
+    readonly types: readonly Readonly<FlattenedContentType>[];
 }
 
 export type GetFlattenedElementByCodenames = (
@@ -77,8 +77,8 @@ export interface ImportConfig extends ManagementClientConfig {
 }
 
 export interface ImportResult {
-    readonly uploadedAssets: readonly AssetModels.Asset[];
-    readonly editedAssets: readonly AssetModels.Asset[];
-    readonly contentItems: readonly ContentItemModels.ContentItem[];
-    readonly languageVariants: readonly LanguageVariantModels.ContentItemLanguageVariant[];
+    readonly uploadedAssets: readonly Readonly<AssetModels.Asset>[];
+    readonly editedAssets: readonly Readonly<AssetModels.Asset>[];
+    readonly contentItems: readonly Readonly<ContentItemModels.ContentItem>[];
+    readonly languageVariants: readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[];
 }
