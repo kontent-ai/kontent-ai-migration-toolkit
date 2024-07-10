@@ -16,7 +16,7 @@ This library can only be used as a library both in `node.js` & `browser` or as a
 Use `--help` anytime to get information about available commands and their options.
 
 ```bash
-npx @kontent-ai/migration-toolkit --help
+npx @kontent-ai/migration-toolkit@latest --help
 
 # you can also install the package globally, or locally
 npm i @kontent-ai/migration-toolkit -g
