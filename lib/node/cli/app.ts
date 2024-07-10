@@ -6,6 +6,10 @@ import { exportActionAsync } from './actions/export-action.js';
 import { importActionAsync } from './actions/import-action.js';
 import { migrateActionAsync } from './actions/migrate-action.js';
 import { argumentsFetcherAsync } from './args/args-fetcher.js';
+import { cliArgs } from './commands.js';
+
+// This enabled --help with all commands, options & samples
+cliArgs.registerCommands();
 
 const run = async () => {
     const argsFetcher = await argumentsFetcherAsync();

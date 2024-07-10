@@ -30,6 +30,9 @@ export function argumentsSetter(): CliArgumentsSetter {
             });
 
             return this;
+        },
+        registerCommands(): void {
+            argv.parseSync();
         }
     };
 }

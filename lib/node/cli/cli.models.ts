@@ -18,6 +18,7 @@ export interface CommandOption {
 export type CliArgumentsSetter = {
     withCommand(command: Command): CliArgumentsSetter;
     withOption(option: CommandOption): CliArgumentsSetter;
+    registerCommands(): void;
 };
 
 export type CliArgumentsFetcher = {
