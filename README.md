@@ -34,10 +34,10 @@ kontent-ai-migration-toolkit migrate --help
 
 ## Code examples
 
-1. [Import](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/import-sample.ts)
-2. [Export](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/export-sample.ts)
-3. [Migrate from external system](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-from-external-system.ts)
-4. [Migrate content between Kontent.ai environments](https://github.com/Kontent-ai-consulting/kontent-ai-migration-toolkit/blob/main/samples/migrate-between-kontent-ai-environments.ts)
+1. [Import](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/blob/main/samples/import-sample.ts)
+2. [Export](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/blob/main/samples/export-sample.ts)
+3. [Migrate from external system](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/blob/main/samples/migrate-from-external-system.ts)
+4. [Migrate content between Kontent.ai environments](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/blob/main/samples/migrate-between-kontent-ai-environments.ts)
 
 > [!NOTE]  
 > You can run `kontent-ai-migration-toolkit` many times over without being worried that duplicate content items / assets
