@@ -45,7 +45,7 @@ You may migrate content (items & asset) between Kontent.ai environments. For mig
 [Data Ops](https://github.com/kontent-ai/data-ops) instead.
 
 > [!CAUTION]  
-> **We recommend migrating to test / dev environments first ** to ensure nothing unexpected happens..
+> **We recommend migrating to test / dev environments first** to ensure nothing unexpected happens..
 
 ## Configuration
 
