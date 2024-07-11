@@ -23,7 +23,7 @@ export async function confirmExportAsync(data: {
         data.dataToExport.itemsCount
     )}' content ${getItemsPluralText(data.dataToExport.itemsCount)} from ${chalk.yellow(
         environment.name
-    )} (${chalk.yellow(environment.environment)}?`;
+    )} (${chalk.magenta(environment.environment)})?`;
 
     await confirmAsync({
         force: data.force,
@@ -65,9 +65,9 @@ export async function confirmMigrateAsync(data: {
 
     const text: string = `Are you sure to migrate '${chalk.cyan(data.dataToMigrate.itemsCount)}' ${getItemsPluralText(
         data.dataToMigrate.itemsCount
-    )} from ${chalk.yellow(sourceEnvironment.name)} (${chalk.yellow(
+    )} from ${chalk.yellow(sourceEnvironment.name)} (${chalk.magenta(
         sourceEnvironment.environment
-    )}) to environment ${chalk.yellow(targetEnvironment.name)} (${chalk.yellow(targetEnvironment.environment)}) ?`;
+    )}) to environment ${chalk.yellow(targetEnvironment.name)} (${chalk.magenta(targetEnvironment.environment)}) ?`;
 
     await confirmAsync({
         force: data.force,
@@ -91,7 +91,7 @@ export async function confirmImportAsync(data: {
         data.logger
     ).getEnvironmentAsync();
 
-    const text: string = `Are you sure to import data into ${chalk.yellow(environment.name)} (${chalk.yellow(
+    const text: string = `Are you sure to import data into ${chalk.yellow(environment.name)} (${chalk.magenta(
         environment.environment
     )})?`;
 

@@ -62,10 +62,11 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         return await runMapiRequestAsync({
             logger: config.logger,
             logSpinner: logSpinner,
-            func: async () =>
-                (
+            func: async () => {
+                return (
                     await config.managementClient.viewContentItem().byItemCodename(sourceItem.itemCodename).toPromise()
-                ).data,
+                ).data;
+            },
             action: 'view',
             type: 'contentItem',
             itemName: `codename -> ${sourceItem.itemCodename}`
@@ -79,14 +80,16 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         return await runMapiRequestAsync({
             logger: config.logger,
             logSpinner: logSpinner,
-            func: async () =>
-                (
+            func: async () => {
+                return (
                     await config.managementClient
                         .viewLanguageVariant()
                         .byItemCodename(sourceItem.itemCodename)
                         .byLanguageCodename(sourceItem.languageCodename)
                         .toPromise()
-                ).data,
+                ).data;
+            },
+
             action: 'view',
             type: 'languageVariant',
             itemName: `codename -> ${sourceItem.itemCodename} -> latest (${sourceItem.languageCodename})`
