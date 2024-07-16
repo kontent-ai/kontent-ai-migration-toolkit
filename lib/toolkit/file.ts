@@ -1,11 +1,5 @@
 import { fileManager } from '../file/index.js';
-import {
-    Logger,
-    executeWithTrackingAsync,
-    getDefaultZipFilename,
-    getDefaultLogger,
-    MigrationData
-} from '../core/index.js';
+import { Logger, executeWithTrackingAsync, defaultZipFilename, getDefaultLogger, MigrationData } from '../core/index.js';
 import { zipManager } from '../zip/index.js';
 import { libMetadata } from '../metadata.js';
 
@@ -22,7 +16,7 @@ export interface ExtractConfig {
 
 export async function storeAsync(config: StoreConfig): Promise<void> {
     const logger = config.logger ?? getDefaultLogger();
-    const filename: string = getDefaultZipFilename();
+    const filename = config.filename ?? defaultZipFilename;
 
     await executeWithTrackingAsync<void>({
         event: {
@@ -49,7 +43,7 @@ export async function storeAsync(config: StoreConfig): Promise<void> {
 
 export async function extractAsync(config: ExtractConfig): Promise<MigrationData> {
     const logger = config.logger ?? getDefaultLogger();
-    const filename: string = getDefaultZipFilename();
+    const filename = config.filename ?? defaultZipFilename;
 
     return await executeWithTrackingAsync({
         event: {

@@ -30,9 +30,7 @@ export function getCurrentEnvironment(): EnvContext {
     throw Error(`Invalid current environment. This library can be used in node.js or in browsers.`);
 }
 
-export function getDefaultZipFilename(): string {
-    return `data.zip`;
-}
+export const defaultZipFilename: string = 'data.zip';
 
 export async function executeWithTrackingAsync<TResult>(data: {
     func: () => Promise<TResult extends void ? void : Readonly<TResult>>;
