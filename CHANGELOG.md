@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.0.1...v1.1.0) (2024-07-16)
+
+
+### Features
+
+* Implements data validation with Zod & refactors migration models ([2bf1a72](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/2bf1a7278669cc37839f971438f46bff06949a53))
+* updates deps ([7edc5f0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/7edc5f0a51757ea71b27bd1fa17fa6e378f2aa75))
+
+
+### Bug Fixes
+
+* Correctly use `filename` from config props ([a5274cd](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/a5274cd10abd13623979921fc60a1cc38b9d96de))
+
 ### [1.0.1](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.0.0...v1.0.1) (2024-07-10)
 
 
