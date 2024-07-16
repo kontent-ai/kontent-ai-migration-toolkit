@@ -175,10 +175,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
     }
 };
 
-function findTaxonomy(
-    termId: string,
-    taxonomy: Readonly<TaxonomyModels.Taxonomy>
-): Readonly<TaxonomyModels.Taxonomy> | undefined {
+function findTaxonomy(termId: string, taxonomy: Readonly<TaxonomyModels.Taxonomy>): Readonly<TaxonomyModels.Taxonomy> | undefined {
     if (taxonomy.id === termId) {
         return taxonomy;
     }

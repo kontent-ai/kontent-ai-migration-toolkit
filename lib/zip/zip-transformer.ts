@@ -1,10 +1,19 @@
-import { FileBinaryData, ZipPackager } from './zip.models.js';
-import { Logger, MigrationAsset, MigrationData, MigrationItem, getDefaultLogger, mapAsync } from '../core/index.js';
 import chalk from 'chalk';
+import { z } from 'zod';
+import { FileBinaryData, ZipPackager } from './zip.models.js';
+import {
+    Logger,
+    MigrationAsset,
+    MigrationData,
+    MigrationItem,
+    MigrationItemsSchema,
+    ZipMigrationAssetSchema,
+    ZipMigrationAssetsSchema,
+    getDefaultLogger,
+    mapAsync
+} from '../core/index.js';
 
-type ZipAssetRecord = Omit<MigrationAsset, 'binaryData'> & {
-    _zipFilename: string;
-};
+type ZipAssetRecord = z.infer<typeof ZipMigrationAssetSchema>;
 
 export function zipTransformer(zip: ZipPackager, logger?: Logger) {
     const loggerToUse: Logger = logger ?? getDefaultLogger();
@@ -51,18 +60,23 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
     };
 
     const parseItems = async () => {
-        const fileContent = await zip.getFileContentAsync(filename);
-        return fileContent ? (JSON.parse(fileContent) as MigrationItem[]) : [];
-    };
+        const content = await zip.getFileContentAsync(filename);
 
-    const parseAssets = async () => {
-        const text = await zip.getFileContentAsync(assetsFilename);
-
-        if (!text) {
+        if (!content) {
             return [];
         }
 
-        const assetRecords = JSON.parse(text) as ZipAssetRecord[];
+        return MigrationItemsSchema.parse(JSON.parse(content));
+    };
+
+    const parseAssets = async () => {
+        const content = await zip.getFileContentAsync(assetsFilename);
+
+        if (!content) {
+            return [];
+        }
+
+        const assetRecords = ZipMigrationAssetsSchema.parse(JSON.parse(content));
 
         return await mapAsync(assetRecords, async (assetRecord) => {
             const binaryFile = await zip.getBinaryDataAsync(`${assetRecord._zipFilename}`);

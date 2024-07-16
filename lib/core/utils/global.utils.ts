@@ -3,6 +3,8 @@ import { ITrackingEventData, getTrackingService } from '@kontent-ai-consulting/t
 import { isBrowser, isNode, isWebWorker } from 'browser-or-node';
 import { EnvContext } from '../models/core.models.js';
 
+export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
+
 export const isNotUndefined = <T>(item: T | undefined): item is T => item !== undefined;
 
 export function formatBytes(bytes: number): string {

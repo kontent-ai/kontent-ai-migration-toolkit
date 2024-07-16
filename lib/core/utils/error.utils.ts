@@ -1,6 +1,7 @@
 import { SharedModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import { ErrorData, OriginalManagementError } from '../models/core.models.js';
+import { ZodError } from 'zod';
 
 export function extractErrorData(error: unknown): ErrorData {
     let isUnknownError: boolean = true;
@@ -10,15 +11,17 @@ export function extractErrorData(error: unknown): ErrorData {
 
     if (error instanceof SharedModels.ContentManagementBaseKontentError) {
         isUnknownError = false;
-        message = `${error.message}`;
-
-        const originalError: OriginalManagementError | undefined = error.originalError as
-            | OriginalManagementError
-            | undefined;
+        const originalError = error.originalError as OriginalManagementError | undefined;
 
         requestUrl = originalError?.response?.config?.url;
         requestData = originalError?.response?.config?.data;
-        message += error.validationErrors.map((m) => m.message).join(', ');
+
+        message = `${error.message}: ${error.validationErrors.map((m) => m.message).join(', ')}`;
+    } else if (error instanceof ZodError) {
+        isUnknownError = false;
+        message = `Found '${chalk.red(error.issues.length)}' parsing errors: \n${error.issues.reduce<string>((current, issue, index) => {
+            return (current += `\n${index + 1}. ${chalk.red(issue.message)} (${chalk.yellow('path')}: ${issue.path.join(',')})`);
+        }, '')}`;
     } else if (error instanceof Error) {
         message = error.message;
     }

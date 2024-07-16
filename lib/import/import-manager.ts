@@ -11,9 +11,7 @@ export function importManager(config: ImportConfig) {
     const logger: Logger = config.logger ?? getDefaultLogger();
     const targetEnvironmentClient: ManagementClient = getMigrationManagementClient(config);
 
-    const importAssetsAsync = async (
-        importContext: ImportContext
-    ): Promise<Pick<ImportResult, 'editedAssets' | 'uploadedAssets'>> => {
+    const importAssetsAsync = async (importContext: ImportContext): Promise<Pick<ImportResult, 'editedAssets' | 'uploadedAssets'>> => {
         if (!importContext.categorizedImportData.assets.length) {
             logger.log({
                 type: 'info',
@@ -31,9 +29,7 @@ export function importManager(config: ImportConfig) {
             logger: logger
         }).importAsync();
     };
-    const importContentItemsAsync = async (
-        importContext: ImportContext
-    ): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
+    const importContentItemsAsync = async (importContext: ImportContext): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
         if (!importContext.categorizedImportData.contentItems.length) {
             logger.log({
                 type: 'info',

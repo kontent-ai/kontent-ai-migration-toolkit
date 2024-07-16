@@ -5,7 +5,8 @@ import {
     elementsBuilder,
     MigrationElements,
     MigrationElementModels,
-    importAsync
+    importAsync,
+    FileBinaryData
 } from '../lib/index.js';
 
 /**
@@ -76,7 +77,7 @@ const migrationAsset: MigrationAsset = {
     // title will be used in K.ai asset as a title
     title: 'Article teaser',
     // binary data of the asset you want to upload
-    binaryData: undefined,
+    binaryData: stringToBinaryData('data'),
     // collection assignment
     collection: {
         codename: 'teasers'
@@ -110,3 +111,7 @@ await importAsync({
     apiKey: '<apiKey>',
     environmentId: '<envId>'
 });
+
+function stringToBinaryData(input: string): FileBinaryData {
+    return Buffer.from(input);
+}

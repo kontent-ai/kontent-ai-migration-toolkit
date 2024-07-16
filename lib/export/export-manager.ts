@@ -16,7 +16,10 @@ import {
     isNotUndefined,
     MigrationElementValue,
     getMigrationManagementClient,
-    findRequired
+    findRequired,
+    Writeable,
+    MigrationItemsSchema,
+    MigrationAssetsSchema
 } from '../core/index.js';
 import { exportTransforms } from '../translation/index.js';
 import { exportContextFetcherAsync } from './context/export-context-fetcher.js';
@@ -61,11 +64,7 @@ export function exportManager(config: ExportConfig) {
         const componentType = context.environmentData.contentTypes.find((m) => m.contentTypeId === component.type.id);
 
         if (!componentType) {
-            throw Error(
-                `Could not find content type with id '${chalk.red(component.type.id)}' for component '${chalk.red(
-                    component.id
-                )}'`
-            );
+            throw Error(`Could not find content type with id '${chalk.red(component.type.id)}' for component '${chalk.red(component.id)}'`);
         }
 
         const migrationItem: MigrationComponent = {
@@ -96,7 +95,7 @@ export function exportManager(config: ExportConfig) {
                 }
                 return 0;
             })
-            .reduce<MigrationElements>((model, typeElement) => {
+            .reduce<Writeable<MigrationElements>>((model, typeElement) => {
                 const itemElement = findRequired(
                     elements,
                     (m) => m.element.id === typeElement.id,
@@ -128,9 +127,7 @@ export function exportManager(config: ExportConfig) {
                 context: data.context,
                 typeElement: data.typeElement,
                 exportElement: {
-                    components: data.exportElement.components.map((component) =>
-                        mapToMigrationComponent(data.context, component)
-                    ),
+                    components: data.exportElement.components.map((component) => mapToMigrationComponent(data.context, component)),
                     value: data.exportElement.value,
                     urlSlugMode: data.exportElement.mode
                 }
@@ -155,9 +152,7 @@ export function exportManager(config: ExportConfig) {
 
     const exportAssetsAsync = async (context: ExportContext): Promise<readonly Readonly<MigrationAsset>[]> => {
         const assets = Array.from(context.referencedData.assetIds)
-            .map<Readonly<AssetModels.Asset> | undefined>(
-                (assetId) => context.getAssetStateInSourceEnvironment(assetId).asset
-            )
+            .map<Readonly<AssetModels.Asset> | undefined>((assetId) => context.getAssetStateInSourceEnvironment(assetId).asset)
             .filter(isNotUndefined);
 
         return await getMigrationAssetsWithBinaryDataAsync(assets, context);
@@ -184,8 +179,9 @@ export function exportManager(config: ExportConfig) {
             },
             items: assets,
             processAsync: async (asset, logSpinner) => {
-                const assetCollection: Readonly<CollectionModels.Collection> | undefined =
-                    context.environmentData.collections.find((m) => m.id === asset.collection?.reference?.id);
+                const assetCollection: Readonly<CollectionModels.Collection> | undefined = context.environmentData.collections.find(
+                    (m) => m.id === asset.collection?.reference?.id
+                );
 
                 logSpinner({
                     type: 'download',
@@ -204,9 +200,9 @@ export function exportManager(config: ExportConfig) {
                         const language = findRequired(
                             context.environmentData.languages,
                             (language) => language.id === description.language.id,
-                            `Could not find language with id '${chalk.red(
-                                description.language.id
-                            )}' requested by asset '${chalk.red(asset.codename)}'`
+                            `Could not find language with id '${chalk.red(description.language.id)}' requested by asset '${chalk.red(
+                                asset.codename
+                            )}'`
                         );
 
                         return {
@@ -234,8 +230,8 @@ export function exportManager(config: ExportConfig) {
             ).getExportContextAsync();
 
             const migrationData: MigrationData = {
-                items: getMigrationItems(exportContext),
-                assets: await exportAssetsAsync(exportContext)
+                items: MigrationItemsSchema.parse(getMigrationItems(exportContext)),
+                assets: MigrationAssetsSchema.parse(await exportAssetsAsync(exportContext))
             };
 
             logger.log({
