@@ -1,4 +1,4 @@
-import { confirmImportAsync, getDefaultZipFilename, getDefaultLogger } from '../../../core/index.js';
+import { confirmImportAsync, defaultZipFilename, getDefaultLogger } from '../../../core/index.js';
 import { extractAsync, importAsync } from '../../../toolkit/index.js';
 import { CliArgumentsFetcher } from '../cli.models.js';
 
@@ -8,7 +8,7 @@ export async function importActionAsync(argsFetcher: CliArgumentsFetcher): Promi
     const apiKey = argsFetcher.getRequiredArgumentValue('targetApiKey');
     const baseUrl = argsFetcher.getOptionalArgumentValue('baseUrl');
     const force = argsFetcher.getBooleanArgumentValue('force', false);
-    const filename = argsFetcher.getOptionalArgumentValue('filename') ?? getDefaultZipFilename();
+    const filename = argsFetcher.getOptionalArgumentValue('filename') ?? defaultZipFilename;
 
     await confirmImportAsync({
         force: force,

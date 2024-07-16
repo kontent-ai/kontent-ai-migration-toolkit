@@ -1,4 +1,4 @@
-import { confirmExportAsync, getDefaultZipFilename, getDefaultLogger } from '../../../core/index.js';
+import { confirmExportAsync, defaultZipFilename, getDefaultLogger } from '../../../core/index.js';
 import { exportAsync, storeAsync } from '../../../toolkit/index.js';
 import { CliArgumentsFetcher } from '../cli.models.js';
 
@@ -10,7 +10,7 @@ export async function exportActionAsync(cliFetcher: CliArgumentsFetcher): Promis
     const items = cliFetcher.getRequiredArgumentValue('items').split(',');
     const baseUrl = cliFetcher.getOptionalArgumentValue('baseUrl');
     const force = cliFetcher.getBooleanArgumentValue('force', false);
-    const filename = cliFetcher.getOptionalArgumentValue('filename') ?? getDefaultZipFilename();
+    const filename = cliFetcher.getOptionalArgumentValue('filename') ?? defaultZipFilename;
 
     await confirmExportAsync({
         force: force,
