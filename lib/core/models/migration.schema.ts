@@ -120,30 +120,28 @@ export const MigrationElementSchema = z
     })
     .readonly();
 
-export const BaseMigrationItemVersionSchema = z.strictObject({
-    workflow_step: MigrationReferenceSchema
-});
+export const MigrationItemVersionSchema = z
+    .strictObject({
+        workflow_step: MigrationReferenceSchema,
+        elements: MigrationElementsSchema
+    })
+    .readonly();
 
-export const MigrationItemVersionSchema = BaseMigrationItemVersionSchema.extend({
-    elements: MigrationElementsSchema
-}).readonly();
-
-export const BaseMigrationItemSchema = z.strictObject({
-    system: z
-        .strictObject({
-            codename: z.string(),
-            name: z.string(),
-            language: MigrationReferenceSchema,
-            type: MigrationReferenceSchema,
-            collection: MigrationReferenceSchema,
-            workflow: MigrationReferenceSchema
-        })
-        .readonly()
-});
-
-export const MigrationItemSchema = BaseMigrationItemSchema.extend({
-    versions: z.array(MigrationItemVersionSchema)
-}).readonly();
+export const MigrationItemSchema = z
+    .strictObject({
+        system: z
+            .strictObject({
+                codename: z.string(),
+                name: z.string(),
+                language: MigrationReferenceSchema,
+                type: MigrationReferenceSchema,
+                collection: MigrationReferenceSchema,
+                workflow: MigrationReferenceSchema
+            })
+            .readonly(),
+        versions: z.array(MigrationItemVersionSchema)
+    })
+    .readonly();
 
 export const MigrationAssetDescriptionSchema = z
     .strictObject({

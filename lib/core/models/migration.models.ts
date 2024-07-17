@@ -12,8 +12,8 @@ import {
     MigrationAssetDescriptionSchema,
     MigrationDataSchema,
     MigrationAssetSchema,
-    BaseMigrationItemSchema,
-    BaseMigrationItemVersionSchema
+    MigrationItemVersionSchema,
+    MigrationItemSchema
 } from './migration.schema.js';
 
 export namespace MigrationElementModels {
@@ -51,12 +51,10 @@ export type MigrationAssetDescription = z.infer<typeof MigrationAssetDescription
 export type MigrationAsset = z.infer<typeof MigrationAssetSchema>;
 export type MigrationData = z.infer<typeof MigrationDataSchema>;
 
-export type MigrationItemVersion<TElements extends MigrationElements = MigrationElements> = z.infer<
-    typeof BaseMigrationItemVersionSchema
-> & {
+export type MigrationItemVersion<TElements extends MigrationElements = MigrationElements> = z.infer<typeof MigrationItemVersionSchema> & {
     readonly elements: TElements;
 };
 
-export type MigrationItem<TElements extends MigrationElements = MigrationElements> = z.infer<typeof BaseMigrationItemSchema> & {
+export type MigrationItem<TElements extends MigrationElements = MigrationElements> = z.infer<typeof MigrationItemSchema> & {
     readonly versions: MigrationItemVersion<TElements>[];
 };
