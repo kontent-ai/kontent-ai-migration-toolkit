@@ -21,21 +21,21 @@ export namespace MigrationElementModels {
         TElementType extends MigrationElementType = MigrationElementType,
         TValue extends MigrationElementValue = MigrationElementValue
     > = {
-        readonly value: TValue;
+        readonly value: TValue | undefined;
         readonly type: TElementType;
     };
 
-    export type TextElement = MigrationElementDef<'text', string | undefined>;
-    export type NumberElement = MigrationElementDef<'number', number | undefined>;
-    export type RichTextElement = MigrationElementDef<'rich_text', MigrationRichTextElementValue | undefined>;
-    export type MultipleChoiceElement = MigrationElementDef<'multiple_choice', MigrationReference[] | undefined>;
-    export type DateTimeElement = MigrationElementDef<'date_time', string | undefined>;
-    export type AssetElement = MigrationElementDef<'asset', MigrationReference[] | undefined>;
-    export type LinkedItemsElement = MigrationElementDef<'modular_content', MigrationReference[] | undefined>;
-    export type TaxonomyElement = MigrationElementDef<'taxonomy', MigrationReference[] | undefined>;
-    export type UrlSlugElement = MigrationElementDef<'url_slug', MigrationUrlSlugElementValue | undefined>;
-    export type CustomElement = MigrationElementDef<'custom', string | undefined>;
-    export type SubpagesElement = MigrationElementDef<'subpages', MigrationReference[] | undefined>;
+    export type TextElement = MigrationElementDef<'text', string>;
+    export type NumberElement = MigrationElementDef<'number', number>;
+    export type RichTextElement = MigrationElementDef<'rich_text', MigrationRichTextElementValue>;
+    export type MultipleChoiceElement = MigrationElementDef<'multiple_choice', MigrationReference[]>;
+    export type DateTimeElement = MigrationElementDef<'date_time', string>;
+    export type AssetElement = MigrationElementDef<'asset', MigrationReference[]>;
+    export type LinkedItemsElement = MigrationElementDef<'modular_content', MigrationReference[]>;
+    export type TaxonomyElement = MigrationElementDef<'taxonomy', MigrationReference[]>;
+    export type UrlSlugElement = MigrationElementDef<'url_slug', MigrationUrlSlugElementValue>;
+    export type CustomElement = MigrationElementDef<'custom', string>;
+    export type SubpagesElement = MigrationElementDef<'subpages', MigrationReference[]>;
 }
 
 export type MigrationReference = z.infer<typeof MigrationReferenceSchema>;
