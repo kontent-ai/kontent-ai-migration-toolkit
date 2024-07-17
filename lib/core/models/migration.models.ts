@@ -52,9 +52,9 @@ export type MigrationAsset = z.infer<typeof MigrationAssetSchema>;
 export type MigrationData = z.infer<typeof MigrationDataSchema>;
 
 export type MigrationItemVersion<TElements extends MigrationElements = MigrationElements> = z.infer<typeof MigrationItemVersionSchema> & {
-    readonly elements: TElements;
+    readonly elements: Readonly<TElements>;
 };
 
 export type MigrationItem<TElements extends MigrationElements = MigrationElements> = z.infer<typeof MigrationItemSchema> & {
-    readonly versions: MigrationItemVersion<TElements>[];
+    readonly versions: Readonly<MigrationItemVersion<TElements>[]>;
 };

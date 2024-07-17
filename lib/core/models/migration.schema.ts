@@ -139,7 +139,7 @@ export const MigrationItemSchema = z
                 workflow: MigrationReferenceSchema
             })
             .readonly(),
-        versions: z.array(MigrationItemVersionSchema)
+        versions: z.array(MigrationItemVersionSchema).readonly()
     })
     .readonly();
 
