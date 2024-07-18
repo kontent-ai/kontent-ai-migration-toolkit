@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.1.0...v1.2.0) (2024-07-18)
+
+
+### Features
+
+* Adds support for strongly typed system props (i.e. hint for available workflows, types, collection and more) ([08df178](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/08df178cad22a122def7e78ea5a81f7e705eacd0))
+* updates deps ([138d2ff](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/138d2fff545bccfb5e0fbd962848d1d0692288ad))
+
 ## [1.1.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.0.1...v1.1.0) (2024-07-16)
 
 
