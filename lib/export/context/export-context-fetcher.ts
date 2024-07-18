@@ -63,9 +63,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             logger: config.logger,
             logSpinner: logSpinner,
             func: async () => {
-                return (
-                    await config.managementClient.viewContentItem().byItemCodename(sourceItem.itemCodename).toPromise()
-                ).data;
+                return (await config.managementClient.viewContentItem().byItemCodename(sourceItem.itemCodename).toPromise()).data;
             },
             action: 'view',
             type: 'contentItem',
@@ -96,12 +94,8 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         });
     };
 
-    const isLanguageVariantPublished = (
-        languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>
-    ): boolean => {
-        return environmentData.workflows.find(
-            (workflow) => workflow.publishedStep.id === languageVariant.workflow.stepIdentifier.id
-        )
+    const isLanguageVariantPublished = (languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>): boolean => {
+        return environmentData.workflows.find((workflow) => workflow.publishedStep.id === languageVariant.workflow.stepIdentifier.id)
             ? true
             : false;
     };
@@ -188,10 +182,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             environmentData.collections,
             (collection) => collection.id === data.contentItem.collection.id,
             () => {
-                throwErrorForItemRequest(
-                    data.sourceItem,
-                    `Invalid collection '${chalk.yellow(data.contentItem.collection.id ?? '')}'`
-                );
+                throwErrorForItemRequest(data.sourceItem, `Invalid collection '${chalk.yellow(data.contentItem.collection.id ?? '')}'`);
             }
         );
 
@@ -199,10 +190,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             environmentData.contentTypes,
             (contentType) => contentType.contentTypeId === data.contentItem.type.id,
             () => {
-                throwErrorForItemRequest(
-                    data.sourceItem,
-                    `Invalid content type '${chalk.red(data.contentItem.type.id)}'`
-                );
+                throwErrorForItemRequest(data.sourceItem, `Invalid content type '${chalk.red(data.contentItem.type.id)}'`);
             }
         );
 
@@ -210,10 +198,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             environmentData.languages,
             (language) => language.id === data.languageVariant.language.id,
             () => {
-                throwErrorForItemRequest(
-                    data.sourceItem,
-                    `Invalid language '${chalk.red(data.languageVariant.language.id ?? '')}'`
-                );
+                throwErrorForItemRequest(data.sourceItem, `Invalid language '${chalk.red(data.languageVariant.language.id ?? '')}'`);
             }
         );
 
@@ -242,9 +227,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         };
     };
 
-    const prepareExportItemsAsync = async (
-        exportItems: readonly SourceExportItem[]
-    ): Promise<readonly ExportItem[]> => {
+    const prepareExportItemsAsync = async (exportItems: readonly SourceExportItem[]): Promise<readonly ExportItem[]> => {
         config.logger.log({
             type: 'info',
             message: `Preparing '${chalk.yellow(config.exportItems.length.toString())}' items for export`
@@ -257,7 +240,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             itemInfo: (input) => {
                 return {
                     title: `${input.itemCodename} (${input.languageCodename})`,
-                    itemType: 'exportedItem'
+                    itemType: 'exportItem'
                 };
             },
             items: exportItems,
@@ -290,9 +273,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         });
     };
 
-    const getContentItemsByIdsAsync = async (
-        itemIds: ReadonlySet<string>
-    ): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
+    const getContentItemsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
         return (
             await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | undefined>({
                 logger: config.logger,
@@ -310,10 +291,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                         return await runMapiRequestAsync({
                             logSpinner: logSpinner,
                             logger: config.logger,
-                            func: async () =>
-                                (
-                                    await config.managementClient.viewContentItem().byItemId(id).toPromise()
-                                ).data,
+                            func: async () => (await config.managementClient.viewContentItem().byItemId(id).toPromise()).data,
                             action: 'view',
                             type: 'contentItem',
                             itemName: `id -> ${id}`
@@ -330,9 +308,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         ).filter(isNotUndefined);
     };
 
-    const getAssetsByIdsAsync = async (
-        itemIds: ReadonlySet<string>
-    ): Promise<readonly Readonly<AssetModels.Asset>[]> => {
+    const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<AssetModels.Asset>[]> => {
         return (
             await processItemsAsync<string, Readonly<AssetModels.Asset> | undefined>({
                 logger: config.logger,
@@ -350,10 +326,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                         return await runMapiRequestAsync({
                             logger: config.logger,
                             logSpinner: logSpinner,
-                            func: async () =>
-                                (
-                                    await config.managementClient.viewAsset().byAssetId(id).toPromise()
-                                ).data,
+                            func: async () => (await config.managementClient.viewAsset().byAssetId(id).toPromise()).data,
                             action: 'view',
                             type: 'asset',
                             itemName: `id -> ${id}`
@@ -370,9 +343,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         ).filter(isNotUndefined);
     };
 
-    const getItemStatesAsync = async (
-        itemIds: ReadonlySet<string>
-    ): Promise<readonly ItemStateInSourceEnvironmentById[]> => {
+    const getItemStatesAsync = async (itemIds: ReadonlySet<string>): Promise<readonly ItemStateInSourceEnvironmentById[]> => {
         const items = await getContentItemsByIdsAsync(itemIds);
 
         return Array.from(itemIds).map<ItemStateInSourceEnvironmentById>((itemId) => {
@@ -385,9 +356,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         });
     };
 
-    const getAssetStatesAsync = async (
-        assetIds: ReadonlySet<string>
-    ): Promise<readonly AssetStateInSourceEnvironmentById[]> => {
+    const getAssetStatesAsync = async (assetIds: ReadonlySet<string>): Promise<readonly AssetStateInSourceEnvironmentById[]> => {
         const assets = await getAssetsByIdsAsync(assetIds);
 
         return Array.from(assetIds).map<AssetStateInSourceEnvironmentById>((assetId) => {
@@ -411,9 +380,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             const element = findRequired(
                 contentType.elements,
                 (element) => element.id === elementId,
-                `Could not find element with id '${chalk.red(elementId)}' in content type '${chalk.red(
-                    contentType.contentTypeCodename
-                )}'`
+                `Could not find element with id '${chalk.red(elementId)}' in content type '${chalk.red(contentType.contentTypeCodename)}'`
             );
 
             return element;
@@ -457,9 +424,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                 findRequired(
                     assetStates,
                     (m) => m.id === id,
-                    `Invalid state for asset '${chalk.red(
-                        id
-                    )}'. It is expected that all asset states will be initialized`
+                    `Invalid state for asset '${chalk.red(id)}'. It is expected that all asset states will be initialized`
                 ),
             getItemStateInSourceEnvironment: (id) =>
                 findRequired(

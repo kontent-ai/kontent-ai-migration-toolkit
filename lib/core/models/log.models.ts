@@ -1,4 +1,4 @@
-import { GeneralActionType, GeneralItemType, MapiAction, MapiType } from '../index.js';
+import { MigrationItemType, MapiAction, MapiType } from '../index.js';
 
 export type DebugType =
     | 'error'
@@ -8,10 +8,13 @@ export type DebugType =
     | 'errorData'
     | 'cancel'
     | 'process'
+    | 'readFs'
+    | 'skip'
+    | 'writeFs'
+    | 'download'
+    | MigrationItemType
     | MapiType
-    | GeneralActionType
-    | MapiAction
-    | GeneralItemType;
+    | MapiAction;
 
 export interface LogMessage {
     readonly type: DebugType;

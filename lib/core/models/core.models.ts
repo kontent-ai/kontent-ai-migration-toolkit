@@ -1,17 +1,9 @@
-import {
-    AssetModels,
-    ContentItemModels,
-    ContentTypeElements,
-    LanguageVariantModels,
-    WorkflowModels
-} from '@kontent-ai/management-sdk';
+import { AssetModels, ContentItemModels, ContentTypeElements, LanguageVariantModels, WorkflowModels } from '@kontent-ai/management-sdk';
 import { MigrationElementType } from './migration.models.js';
 import { WorkflowStep } from '../helpers/workflow-helper.js';
 
 export type TargetItemState = 'exists' | 'doesNotExists';
 export type CliAction = 'export' | 'import' | 'migrate';
-export type GeneralItemType = 'exportedItem' | 'migrationItem';
-export type GeneralActionType = 'readFs' | 'skip' | 'writeFs' | 'download';
 export type EnvContext = 'browser' | 'node';
 
 export type MapiAction =
@@ -25,6 +17,8 @@ export type MapiAction =
     | 'create'
     | 'upsert'
     | 'createNewVersion';
+
+export type MigrationItemType = 'exportItem';
 
 export type MapiType =
     | 'contentType'
@@ -40,7 +34,7 @@ export type MapiType =
 
 export interface ItemInfo {
     readonly title: string;
-    readonly itemType: GeneralItemType | MapiType;
+    readonly itemType: MapiType | MigrationItemType;
 }
 
 export interface ErrorData {
@@ -121,14 +115,14 @@ export interface FlattenedContentType {
 }
 
 export interface OriginalManagementError {
-    response?: {
-        status?: number;
-        config?: {
-            url?: string;
-            data?: string;
+    readonly response?: {
+        readonly status?: number;
+        readonly config?: {
+            readonly url?: string;
+            readonly data?: string;
         };
-        data?: {
-            error_code?: number;
+        readonly data?: {
+            readonly error_code?: number;
         };
     };
 }
