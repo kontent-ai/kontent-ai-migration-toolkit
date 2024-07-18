@@ -127,18 +127,18 @@ export const MigrationItemVersionSchema = z
     })
     .readonly();
 
+export const MigrationItemSystemSchema = z.strictObject({
+    codename: z.string(),
+    name: z.string(),
+    language: MigrationReferenceSchema,
+    type: MigrationReferenceSchema,
+    collection: MigrationReferenceSchema,
+    workflow: MigrationReferenceSchema
+});
+
 export const MigrationItemSchema = z
     .strictObject({
-        system: z
-            .strictObject({
-                codename: z.string(),
-                name: z.string(),
-                language: MigrationReferenceSchema,
-                type: MigrationReferenceSchema,
-                collection: MigrationReferenceSchema,
-                workflow: MigrationReferenceSchema
-            })
-            .readonly(),
+        system: MigrationItemSystemSchema,
         versions: z.array(MigrationItemVersionSchema).readonly()
     })
     .readonly();

@@ -3,27 +3,38 @@ import {
     MigrationItem,
     storeAsync,
     elementsBuilder,
-    MigrationElements,
     MigrationElementModels,
     importAsync,
-    FileBinaryData
+    FileBinaryData,
+    MigrationItemSystem
 } from '../lib/index.js';
 
 /**
- * Optionally (but strongly recommended) you may define a migration model
- * representing the content type you are trying to migrate into
+ * Optionally (but highly recommended) you may define a migration model
+ * representing the environment you are trying to migrate into.
  */
-interface ArticleElements extends MigrationElements {
-    title: MigrationElementModels.TextElement;
-    rating: MigrationElementModels.NumberElement;
-    related_pages: MigrationElementModels.LinkedItemsElement;
-    teaser_image: MigrationElementModels.AssetElement;
-}
+type LanguageCodenames = 'default' | 'en';
+type ContentTypeCodenames = 'article' | 'author';
+type CollectionCodenames = 'default' | 'global';
+type WorkflowCodenames = 'default' | 'custom';
+type WorkflowStepCodenames = 'published' | 'archived' | 'draft';
+type System = MigrationItemSystem<LanguageCodenames, ContentTypeCodenames, CollectionCodenames, WorkflowCodenames>;
+
+type ArticleItem = MigrationItem<
+    {
+        title: MigrationElementModels.TextElement;
+        rating: MigrationElementModels.NumberElement;
+        related_pages: MigrationElementModels.LinkedItemsElement;
+        teaser_image: MigrationElementModels.AssetElement;
+    },
+    System,
+    WorkflowStepCodenames
+>;
 
 /**
  * Typically you query your external system to create the migration items & assets
  * */
-const migrationItem: MigrationItem<ArticleElements> = {
+const migrationItem: ArticleItem = {
     system: {
         name: 'My article',
         // codename is primary identifier - also used for validating whether asset exists in target env
@@ -34,7 +45,7 @@ const migrationItem: MigrationItem<ArticleElements> = {
         },
         language: {
             // language codename must match the language in your target K.ai environment
-            codename: 'en_uk'
+            codename: 'en'
         },
         type: {
             // type codename must match the content type codename in your target K.ai environment

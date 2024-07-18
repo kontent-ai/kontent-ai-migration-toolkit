@@ -13,7 +13,8 @@ import {
     MigrationDataSchema,
     MigrationAssetSchema,
     MigrationItemVersionSchema,
-    MigrationItemSchema
+    MigrationItemSchema,
+    MigrationItemSystemSchema
 } from './migration.schema.js';
 
 export namespace MigrationElementModels {
@@ -38,7 +39,22 @@ export namespace MigrationElementModels {
     export type SubpagesElement = MigrationElementDef<'subpages', MigrationReference[]>;
 }
 
-export type MigrationReference = z.infer<typeof MigrationReferenceSchema>;
+export type MigrationReference<T extends string = string> = z.infer<typeof MigrationReferenceSchema> & {
+    readonly codename: T;
+};
+export type MigrationItemSystem<
+    TLanguage extends string = string,
+    TType extends string = string,
+    TCollection extends string = string,
+    TWorkflow extends string = string
+> = z.infer<typeof MigrationItemSystemSchema> & {
+    readonly codename: string;
+    readonly name: string;
+    readonly language: MigrationReference<TLanguage>;
+    readonly type: MigrationReference<TType>;
+    readonly collection: MigrationReference<TCollection>;
+    readonly workflow: MigrationReference<TWorkflow>;
+};
 export type MigrationUrlSlugMode = z.infer<typeof MigrationUrlSlugModeSchema>;
 export type MigrationElementType = z.infer<typeof MigrationElementTypeSchema>;
 export type MigrationUrlSlugElementValue = z.infer<typeof MigrationUrlSlugElementValueSchema>;
@@ -51,10 +67,19 @@ export type MigrationAssetDescription = z.infer<typeof MigrationAssetDescription
 export type MigrationAsset = z.infer<typeof MigrationAssetSchema>;
 export type MigrationData = z.infer<typeof MigrationDataSchema>;
 
-export type MigrationItemVersion<TElements extends MigrationElements = MigrationElements> = z.infer<typeof MigrationItemVersionSchema> & {
+export type MigrationItemVersion<
+    TElements extends MigrationElements = MigrationElements,
+    TWorkflowStepCodename extends string = string
+> = z.infer<typeof MigrationItemVersionSchema> & {
     readonly elements: Readonly<TElements>;
+    readonly workflow_step: MigrationReference<TWorkflowStepCodename>;
 };
 
-export type MigrationItem<TElements extends MigrationElements = MigrationElements> = z.infer<typeof MigrationItemSchema> & {
-    readonly versions: Readonly<MigrationItemVersion<TElements>[]>;
+export type MigrationItem<
+    TElements extends MigrationElements = MigrationElements,
+    TSystem extends MigrationItemSystem = MigrationItemSystem,
+    TWorkflowStepCodename extends string = string
+> = z.infer<typeof MigrationItemSchema> & {
+    readonly versions: Readonly<MigrationItemVersion<TElements, TWorkflowStepCodename>[]>;
+    readonly system: TSystem;
 };
