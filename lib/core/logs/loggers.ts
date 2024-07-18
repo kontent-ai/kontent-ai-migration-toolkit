@@ -63,12 +63,7 @@ function getLogDataMessage(data: LogSpinnerMessage): string {
 
     if (data.type === 'info') {
         typeColor = chalk.cyan;
-    } else if (
-        data.type === 'error' ||
-        data.type === 'errorData' ||
-        data.type === 'warning' ||
-        data.type === 'cancel'
-    ) {
+    } else if (data.type === 'error' || data.type === 'errorData' || data.type === 'warning' || data.type === 'cancel') {
         typeColor = chalk.red;
     } else if (data.type === 'completed') {
         typeColor = chalk.green;
