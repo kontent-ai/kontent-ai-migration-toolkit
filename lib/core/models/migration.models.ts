@@ -43,8 +43,8 @@ export type MigrationReference<T extends string = string> = z.infer<typeof Migra
     readonly codename: T;
 };
 export type MigrationItemSystem<
-    TLanguage extends string = string,
     TType extends string = string,
+    TLanguage extends string = string,
     TCollection extends string = string,
     TWorkflow extends string = string
 > = z.infer<typeof MigrationItemSystemSchema> & {

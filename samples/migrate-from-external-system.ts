@@ -14,11 +14,9 @@ import {
  * representing the environment you are trying to migrate into.
  */
 type LanguageCodenames = 'default' | 'en';
-type ContentTypeCodenames = 'article' | 'author';
 type CollectionCodenames = 'default' | 'global';
 type WorkflowCodenames = 'default' | 'custom';
 type WorkflowStepCodenames = 'published' | 'archived' | 'draft';
-type System = MigrationItemSystem<LanguageCodenames, ContentTypeCodenames, CollectionCodenames, WorkflowCodenames>;
 
 type ArticleItem = MigrationItem<
     {
@@ -27,7 +25,7 @@ type ArticleItem = MigrationItem<
         related_pages: MigrationElementModels.LinkedItemsElement;
         teaser_image: MigrationElementModels.AssetElement;
     },
-    System,
+    MigrationItemSystem<'article', LanguageCodenames, CollectionCodenames, WorkflowCodenames>,
     WorkflowStepCodenames
 >;
 
