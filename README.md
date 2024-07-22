@@ -1,13 +1,12 @@
 # Kontent.ai Migration Toolkit
 
-The purpose of this tool is to facilitate _content migration_ to & from [Kontent.ai](https://kontent.ai) environments.
-It can be used to simplify migration from external systems and also provides a built-in migration between kontent.ai
-environments.
+The purpose of this tool is to facilitate _content migration_ to & from [Kontent.ai](https://kontent.ai) environments. It can be used to
+simplify migration from external systems and also provides a built-in migration between kontent.ai environments.
 
 > [!TIP]  
-> This library aims to streamline the migration to / from Kontent.ai environments by providing an abstraction layer
-> which handles creation / updates of content items, language variants, moving items through workflow, publishing,
-> archiving, downloading binary data, uploading assets, `id` to `codename` translation and more.
+> This library aims to streamline the migration to / from Kontent.ai environments by providing an abstraction layer which handles creation /
+> updates of content items, language variants, moving items through workflow, publishing, archiving, downloading binary data, uploading
+> assets, `id` to `codename` translation and more.
 
 This library can only be used as a library both in `node.js` & `browser` or as a `CLI` utility.
 
@@ -36,8 +35,7 @@ kontent-ai-migration-toolkit migrate --help
 4. [Migrate content between Kontent.ai environments](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/blob/main/samples/migrate-between-kontent-ai-environments.ts)
 
 > [!NOTE]  
-> You can run `kontent-ai-migration-toolkit` many times over without being worried that duplicate content items / assets
-> are created.
+> You can run `kontent-ai-migration-toolkit` many times over without being worried that duplicate content items / assets are created.
 
 # Migrate between Kontent.ai environments
 
@@ -69,14 +67,13 @@ kontent-ai-migration-toolkit migrate --targetEnvironmentId=x --targetApiKey=x --
 # Import
 
 > [!CAUTION]  
-> **We do not recommended importing into a production environment directly without testing**. Instead you should first
-> create a testing environment and run the script there to make sure everything works as you intended to.
+> **We do not recommended importing into a production environment directly without testing**. Instead you should first create a testing
+> environment and run the script there to make sure everything works as you intended to.
 
 > [!NOTE]  
-> When importing it is essential that the target project structure (i.e. `Content types`, `Taxonomies`, `Collections`,
-> `Workflows`, `languages`...) are consistent with the ones defined in source environment. Any inconsistency in data
-> such as referencing inexistent taxonomy term, incorrect element type and other inconsistencies may cause import to
-> fail.
+> When importing it is essential that the target project structure (i.e. `Content types`, `Taxonomies`, `Collections`, `Workflows`,
+> `languages`...) are consistent with the ones defined in source environment. Any inconsistency in data such as referencing inexistent
+> taxonomy term, incorrect element type and other inconsistencies may cause import to fail.
 
 ## Configuration
 
@@ -97,8 +94,8 @@ kontent-ai-migration-toolkit import --targetEnvironmentId=x --targetApiKey=x --f
 
 # Migrate from Kontent.ai
 
-This library can also be used to export content items & assets from Kontent.ai environments. However, when migration
-from 3rd party system you typically only use the `import` capabilities of this repository.
+This library can also be used to export content items & assets from Kontent.ai environments. However, when migration from 3rd party system
+you typically only use the `import` capabilities of this repository.
 
 ## Configuration
 
@@ -120,27 +117,38 @@ kontent-ai-migration-toolkit export --sourceEnvironmentId=x --sourceApiKey=x --l
 
 # Migrate from external systems
 
-You can use this library when exporting from 3rd party systems (i.e. legacy CMS) as it will abstract your from using
-Kontent.ai Management API directly.
+You can use this library when exporting from 3rd party systems (i.e. legacy CMS) as it will abstract your from using Kontent.ai Management
+API directly.
 
-The main focus is therefore on transforming the data you need to migrate into a format this library supports. The main
-migration models are `MigrationItem` and `MigrationAsset`. For creating element values `elementsBuilder`.
+The main focus is therefore on transforming the data you need to migrate into a format this library supports. The main migration models are
+`MigrationItem` and `MigrationAsset`. For creating element values `elementsBuilder`.
 
 See below example of using a strongly typed model and migrating a single item with an asset.
 
 ```typescript
 /**
- * Optionally (but strongly recommended) you may define a migration model
- * representing the content type you are trying to migrate into
+ * Optionally (but highly recommended) you may define a migration model
+ * representing the environment you are trying to migrate into.
  */
-interface ArticleElements extends MigrationElements {
-    title: MigrationElementModels.TextElement;
-    rating: MigrationElementModels.NumberElement;
-    related_pages: MigrationElementModels.LinkedItemsElement;
-    teaser_image: MigrationElementModels.AssetElement;
-}
+type LanguageCodenames = 'default' | 'en';
+type CollectionCodenames = 'default' | 'global';
+type WorkflowCodenames = 'default' | 'custom';
+type ContentTypeCodenames = 'article' | 'author';
+type WorkflowStepCodenames = 'published' | 'archived' | 'draft';
+type ContentTypeCodename<Codename extends ContentTypeCodenames> = Codename;
 
-const migrationItem: MigrationItem<ArticleElements> = {
+type ArticleItem = MigrationItem<
+    {
+        title: MigrationElementModels.TextElement;
+        rating: MigrationElementModels.NumberElement;
+        related_pages: MigrationElementModels.LinkedItemsElement;
+        teaser_image: MigrationElementModels.AssetElement;
+    },
+    MigrationItemSystem<ContentTypeCodename<'article'>, LanguageCodenames, CollectionCodenames, WorkflowCodenames>,
+    WorkflowStepCodenames
+>;
+
+const migrationItem: ArticleItem = {
     system: {
         name: 'My article',
         // codename is primary identifier - also used for validating whether asset exists in target env
@@ -151,29 +159,39 @@ const migrationItem: MigrationItem<ArticleElements> = {
         },
         language: {
             // language codename must match the language in your target K.ai environment
-            codename: 'en_uk'
+            codename: 'en'
         },
         type: {
             // type codename must match the content type codename in your target K.ai environment
             codename: 'article'
+        },
+        workflow: {
+            codename: 'default'
         }
     },
-    elements: {
-        title: elementsBuilder.textElement({ value: 'Title of the article' }),
-        rating: elementsBuilder.numberElement({ value: 5 }),
-        related_pages: elementsBuilder.linkedItemsElement({
-            value: [
-                {
-                    codename: 'pageA'
-                },
-                {
-                    codename: 'pageB'
-                }
-            ]
-        }),
-        // assets are referenced by their codename
-        teaser_image: elementsBuilder.assetElement({ value: [{ codename: 'article_teaser' }] })
-    }
+    versions: [
+        {
+            workflow_step: {
+                codename: 'published'
+            },
+            elements: {
+                title: elementsBuilder.textElement({ value: 'Title of the article' }),
+                rating: elementsBuilder.numberElement({ value: 5 }),
+                related_pages: elementsBuilder.linkedItemsElement({
+                    value: [
+                        {
+                            codename: 'pageA'
+                        },
+                        {
+                            codename: 'pageB'
+                        }
+                    ]
+                }),
+                // assets are referenced by their codename
+                teaser_image: elementsBuilder.assetElement({ value: [{ codename: 'article_teaser' }] })
+            }
+        }
+    ]
 };
 
 const migrationAsset: MigrationAsset = {
@@ -218,21 +236,20 @@ await importAsync({
 
 ### How are content items imported?
 
-The Migration Toolkit creates content items that are not present in target project. If the content item exists in target
-project (based on item's `codename`) the item will be updated, otherwise it will be created. No duplicate items will be
-created. The workflow of the item in target environment will be set to match the source environment.
+The Migration Toolkit creates content items that are not present in target project. If the content item exists in target project (based on
+item's `codename`) the item will be updated, otherwise it will be created. No duplicate items will be created. The workflow of the item in
+target environment will be set to match the source environment.
 
 ### How are assets imported?
 
-If asset exists in target project (based on asset's `codename`), the asset upload will be skipped and not uploaded at
-all. Otherwise the asset will be created in target environment.
+If asset exists in target project (based on asset's `codename`), the asset upload will be skipped and not uploaded at all. Otherwise the
+asset will be created in target environment.
 
 ### How are referenced content items & asset handled?
 
-If you have a reference to a content item or asset (i.e. in linked items element, asset element, rich text element...)
-the migration toolkit first checks whether the referenced object exists (based on item or asset `codename`) and if it
-does, successfuly sets the reference. If the object does not exist, it will be referenced by an `external_id` which
-creates a placeholder for the item until it becomes available.
+If you have a reference to a content item or asset (i.e. in linked items element, asset element, rich text element...) the migration toolkit
+first checks whether the referenced object exists (based on item or asset `codename`) and if it does, successfuly sets the reference. If the
+object does not exist, it will be referenced by an `external_id` which creates a placeholder for the item until it becomes available.
 
 See the table below to learn how `external_id` is generated by default:
 
@@ -241,25 +258,23 @@ See the table below to learn how `external_id` is generated by default:
 | **Asset**        | `asset_{codename}` | my_file                         | `asset_my_file`         |
 | **Content item** | `item_{codename}`  | article                         | `item_article`          |
 
-If you need to change the way `external_id` is created, you may supply a custom implementation of `externalIdGenerator`
-within import / migrate functions.
+If you need to change the way `external_id` is created, you may supply a custom implementation of `externalIdGenerator` within import /
+migrate functions.
 
 ## Limitations
 
-1. Asset folder assignments are not preserved during migration because folders can be referenced only by id's and not
-   codenames.
-2. Assets element values are not preserved during migration because elements can be referenced only by id's and not
-   codenames.
-3. Language variants in `Scheduled` workflow step do not preserve their workflow status because the API does not provide
-   an information about scheduled times
+1. Asset folder assignments are not preserved during migration because folders can be referenced only by id's and not codenames.
+2. Assets element values are not preserved during migration because elements can be referenced only by id's and not codenames.
+3. Language variants in `Scheduled` workflow step do not preserve their workflow status because the API does not provide an information
+   about scheduled times
 
 ## FAQ
 
 ### I'm getting `Header overflow` exception
 
-The Node.js limits the maximum header size of HTTP requests. In some cases it may be required for you to increase this
-limitation to be able to successfully fetch data from Kontent.ai. You can do so by using the `max-http-header-size`
-option (https://nodejs.org/api/cli.html#--max-http-header-sizesize)
+The Node.js limits the maximum header size of HTTP requests. In some cases it may be required for you to increase this limitation to be able
+to successfully fetch data from Kontent.ai. You can do so by using the `max-http-header-size` option
+(https://nodejs.org/api/cli.html#--max-http-header-sizesize)
 
 Example script call:
 

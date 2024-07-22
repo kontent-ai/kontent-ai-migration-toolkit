@@ -42,18 +42,19 @@ export namespace MigrationElementModels {
 export type MigrationReference<T extends string = string> = z.infer<typeof MigrationReferenceSchema> & {
     readonly codename: T;
 };
+
 export type MigrationItemSystem<
-    TType extends string = string,
-    TLanguage extends string = string,
-    TCollection extends string = string,
-    TWorkflow extends string = string
+    TTypeCodenames extends string = string,
+    TLanguageCodenames extends string = string,
+    TCollectionCodenames extends string = string,
+    TWorkflowCodenames extends string = string
 > = z.infer<typeof MigrationItemSystemSchema> & {
     readonly codename: string;
     readonly name: string;
-    readonly language: MigrationReference<TLanguage>;
-    readonly type: MigrationReference<TType>;
-    readonly collection: MigrationReference<TCollection>;
-    readonly workflow: MigrationReference<TWorkflow>;
+    readonly language: MigrationReference<TLanguageCodenames>;
+    readonly type: MigrationReference<TTypeCodenames>;
+    readonly collection: MigrationReference<TCollectionCodenames>;
+    readonly workflow: MigrationReference<TWorkflowCodenames>;
 };
 export type MigrationUrlSlugMode = z.infer<typeof MigrationUrlSlugModeSchema>;
 export type MigrationElementType = z.infer<typeof MigrationElementTypeSchema>;
@@ -69,17 +70,17 @@ export type MigrationData = z.infer<typeof MigrationDataSchema>;
 
 export type MigrationItemVersion<
     TElements extends MigrationElements = MigrationElements,
-    TWorkflowStepCodename extends string = string
+    TWorkflowStepCodenames extends string = string
 > = z.infer<typeof MigrationItemVersionSchema> & {
     readonly elements: Readonly<TElements>;
-    readonly workflow_step: MigrationReference<TWorkflowStepCodename>;
+    readonly workflow_step: MigrationReference<TWorkflowStepCodenames>;
 };
 
 export type MigrationItem<
     TElements extends MigrationElements = MigrationElements,
     TSystem extends MigrationItemSystem = MigrationItemSystem,
-    TWorkflowStepCodename extends string = string
+    TWorkflowStepCodenames extends string = string
 > = z.infer<typeof MigrationItemSchema> & {
-    readonly versions: Readonly<MigrationItemVersion<TElements, TWorkflowStepCodename>[]>;
+    readonly versions: Readonly<MigrationItemVersion<TElements, TWorkflowStepCodenames>[]>;
     readonly system: TSystem;
 };

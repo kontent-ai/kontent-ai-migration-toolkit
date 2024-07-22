@@ -17,6 +17,8 @@ type LanguageCodenames = 'default' | 'en';
 type CollectionCodenames = 'default' | 'global';
 type WorkflowCodenames = 'default' | 'custom';
 type WorkflowStepCodenames = 'published' | 'archived' | 'draft';
+type ContentTypeCodenames = 'article' | 'author';
+type ContentTypeCodename<Codename extends ContentTypeCodenames> = Codename;
 
 type ArticleItem = MigrationItem<
     {
@@ -25,7 +27,7 @@ type ArticleItem = MigrationItem<
         related_pages: MigrationElementModels.LinkedItemsElement;
         teaser_image: MigrationElementModels.AssetElement;
     },
-    MigrationItemSystem<'article', LanguageCodenames, CollectionCodenames, WorkflowCodenames>,
+    MigrationItemSystem<ContentTypeCodename<'article'>, LanguageCodenames, CollectionCodenames, WorkflowCodenames>,
     WorkflowStepCodenames
 >;
 
