@@ -1,10 +1,4 @@
-import {
-    ContentItemModels,
-    ElementContracts,
-    LanguageVariantModels,
-    ManagementClient,
-    WorkflowModels
-} from '@kontent-ai/management-sdk';
+import { ContentItemModels, ElementContracts, LanguageVariantModels, ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
 import {
     Logger,
     processItemsAsync,
@@ -45,11 +39,9 @@ export function languageVariantImporter(config: {
                         .byLanguageCodename(data.migrationItem.system.language.codename)
                         .withData(() => {
                             return {
-                                elements: Object.entries(data.migrationItemVersion.elements).map(
-                                    ([codename, migrationElement]) => {
-                                        return getElementContract(data.migrationItem, migrationElement, codename);
-                                    }
-                                ),
+                                elements: Object.entries(data.migrationItemVersion.elements).map(([codename, migrationElement]) => {
+                                    return getElementContract(data.migrationItem, migrationElement, codename);
+                                }),
                                 workflow: {
                                     workflow_identifier: {
                                         codename: data.workflow.codename
@@ -112,9 +104,7 @@ export function languageVariantImporter(config: {
         readonly workflowStepCodenameInTargetEnvironment: string | undefined;
     }): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant>> => {
         // validate workflow
-        const { step, workflow } = workflowHelper(
-            config.importContext.environmentData.workflows
-        ).getWorkflowAndStepByCodenames({
+        const { step, workflow } = workflowHelper(config.importContext.environmentData.workflows).getWorkflowAndStepByCodenames({
             workflowCodename: data.migrationItem.system.workflow.codename,
             stepCodename: data.migrationItemVersion.workflow_step.codename
         });
@@ -203,16 +193,10 @@ export function languageVariantImporter(config: {
             });
         }
 
-        return [
-            ...(publishedLanguageVariant ? [publishedLanguageVariant] : []),
-            ...(draftLanguageVariant ? [draftLanguageVariant] : [])
-        ];
+        return [...(publishedLanguageVariant ? [publishedLanguageVariant] : []), ...(draftLanguageVariant ? [draftLanguageVariant] : [])];
     };
 
-    const createNewVersionOfLanguageVariantAsync = async (
-        logSpinner: LogSpinnerData,
-        migrationItem: MigrationItem
-    ): Promise<void> => {
+    const createNewVersionOfLanguageVariantAsync = async (logSpinner: LogSpinnerData, migrationItem: MigrationItem): Promise<void> => {
         await runMapiRequestAsync({
             logger: config.logger,
             func: async () => {
@@ -241,10 +225,17 @@ export function languageVariantImporter(config: {
                 logger: config.logger,
                 func: async () => {
                     await config.client
-                        .changeWorkflowStepOfLanguageVariant()
+                        .changeWorkflowOfLanguageVariant()
                         .byItemCodename(migrationItem.system.codename)
                         .byLanguageCodename(migrationItem.system.language.codename)
-                        .byWorkflowStepCodename(firstWorkflowStep.codename)
+                        .withData({
+                            workflow_identifier: {
+                                codename: workflow.codename
+                            },
+                            step_identifier: {
+                                codename: firstWorkflowStep.codename
+                            }
+                        })
                         .toPromise();
                 },
                 action: 'changeWorkflowStep',
@@ -306,10 +297,7 @@ export function languageVariantImporter(config: {
         });
 
         return (
-            await processItemsAsync<
-                MigrationItem,
-                readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]
-            >({
+            await processItemsAsync<MigrationItem, readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]>({
                 action: 'Importing language variants',
                 logger: config.logger,
                 parallelLimit: 1,
