@@ -263,8 +263,7 @@ migrate functions.
 
 ## Limitations
 
-1. Asset folder assignments are not preserved during migration because folders can be referenced only by id's and not codenames.
-2. Values for custom asset elements are not supported
+1. Custom asset elements are not supported (= values of these elements are not exported or imported )
 
 ## FAQ
 

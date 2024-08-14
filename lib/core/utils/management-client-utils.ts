@@ -1,4 +1,5 @@
 import {
+    AssetFolderModels,
     CollectionModels,
     ContentTypeModels,
     ContentTypeSnippetModels,
@@ -76,6 +77,16 @@ export function managementClientUtils(client: Readonly<ManagementClient>, logger
             func: async () => (await client.listTaxonomies().toAllPromise()).data.items,
             action: 'list',
             type: 'taxonomy'
+        });
+    };
+
+    const getAllAssetFoldersAsync = async (logSpinner: LogSpinnerData): Promise<readonly AssetFolderModels.AssetFolder[]> => {
+        return await runMapiRequestAsync({
+            logger: logger,
+            logSpinner: logSpinner,
+            func: async () => (await client.listAssetFolders().toPromise()).data.items,
+            action: 'list',
+            type: 'assetFolder'
         });
     };
 
@@ -171,6 +182,7 @@ export function managementClientUtils(client: Readonly<ManagementClient>, logger
         getAllWorkflowsAsync,
         getAllTaxonomiesAsync,
         getFlattenedContentTypesAsync,
-        getEnvironmentAsync
+        getEnvironmentAsync,
+        getAllAssetFoldersAsync
     };
 }

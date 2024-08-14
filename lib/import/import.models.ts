@@ -15,6 +15,7 @@ import {
     FlattenedContentType
 } from '../core/index.js';
 import {
+    AssetFolderModels,
     AssetModels,
     CollectionModels,
     ContentItemModels,
@@ -34,6 +35,7 @@ export interface ImportContextConfig {
 
 export interface ImportContextEnvironmentData {
     readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
+    readonly assetFolders: readonly Readonly<AssetFolderModels.AssetFolder>[];
     readonly collections: readonly Readonly<CollectionModels.Collection>[];
     readonly workflows: readonly Readonly<WorkflowModels.Workflow>[];
     readonly types: readonly Readonly<FlattenedContentType>[];

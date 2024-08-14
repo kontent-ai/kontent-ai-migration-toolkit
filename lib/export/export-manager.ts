@@ -1,6 +1,6 @@
 import { ExportContext, ExportConfig, ExportItem } from './export.models.js';
 import chalk from 'chalk';
-import { AssetModels, CollectionModels, ElementModels } from '@kontent-ai/management-sdk';
+import { AssetFolderModels, AssetModels, CollectionModels, ElementModels } from '@kontent-ai/management-sdk';
 import {
     MigrationAsset,
     MigrationItem,
@@ -189,6 +189,9 @@ export function exportManager(config: ExportConfig) {
                 const assetCollection: Readonly<CollectionModels.Collection> | undefined = context.environmentData.collections.find(
                     (m) => m.id === asset.collection?.reference?.id
                 );
+                const assetFolder: Readonly<AssetFolderModels.AssetFolder> | undefined = context.environmentData.assetFolders.find(
+                    (m) => m.id === asset.folder?.id
+                );
 
                 logSpinner({
                     type: 'download',
@@ -203,6 +206,7 @@ export function exportManager(config: ExportConfig) {
                     codename: asset.codename,
                     binaryData: binaryData.data,
                     collection: assetCollection ? { codename: assetCollection.codename } : undefined,
+                    folder: assetFolder ? { codename: assetFolder.codename } : undefined,
                     descriptions: asset.descriptions.map((description) => {
                         const language = findRequired(
                             context.environmentData.languages,

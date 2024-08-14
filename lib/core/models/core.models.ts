@@ -25,6 +25,7 @@ export type MigrationItemType = 'exportItem';
 
 export type MapiType =
     | 'contentType'
+    | 'assetFolder'
     | 'asset'
     | 'contentTypeSnippet'
     | 'contentItem'

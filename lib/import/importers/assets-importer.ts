@@ -1,4 +1,4 @@
-import { AssetModels, ManagementClient } from '@kontent-ai/management-sdk';
+import { AssetModels, ManagementClient, SharedContracts } from '@kontent-ai/management-sdk';
 import {
     MigrationAsset,
     Logger,
@@ -45,6 +45,7 @@ export function assetsImporter(data: {
                     !shouldUpdateAsset({
                         collections: data.importContext.environmentData.collections,
                         languages: data.importContext.environmentData.languages,
+                        assetFolders: data.importContext.environmentData.assetFolders,
                         migrationAsset: migrationAsset,
                         targetAsset: assetState.asset
                     })
@@ -64,9 +65,7 @@ export function assetsImporter(data: {
             .filter(isNotUndefined);
     };
 
-    const editAssets = async (
-        assetsToEdit: readonly AssetToEdit[]
-    ): Promise<readonly Readonly<AssetModels.Asset>[]> => {
+    const editAssets = async (assetsToEdit: readonly AssetToEdit[]): Promise<readonly Readonly<AssetModels.Asset>[]> => {
         data.logger.log({
             type: 'upsert',
             message: `Upserting '${chalk.yellow(assetsToEdit.length.toString())}' assets`
@@ -100,11 +99,10 @@ export function assetsImporter(data: {
                                 .withData(() => {
                                     return {
                                         title: assetEditRequest.migrationAsset.title,
-                                        descriptions: mapAssetDescriptions(
-                                            assetEditRequest.migrationAsset.descriptions
-                                        ),
+                                        descriptions: mapAssetDescriptions(assetEditRequest.migrationAsset.descriptions),
                                         collection: mapAssetCollection(assetEditRequest.migrationAsset.collection),
-                                        file_reference: uploadedBinaryFile ?? undefined
+                                        file_reference: uploadedBinaryFile ?? undefined,
+                                        folder: mapAssetFolder(assetEditRequest.migrationAsset.folder)
                                     };
                                 })
                                 .toPromise()
@@ -127,6 +125,16 @@ export function assetsImporter(data: {
                   reference: {
                       codename: migrationCollection.codename
                   }
+              }
+            : undefined;
+    };
+
+    const mapAssetFolder = (
+        migrationFolder: MigrationReference | undefined
+    ): Readonly<SharedContracts.IReferenceObjectContract> | undefined => {
+        return migrationFolder
+            ? {
+                  codename: migrationFolder.codename
               }
             : undefined;
     };
@@ -172,9 +180,7 @@ export function assetsImporter(data: {
         });
     };
 
-    const uploadAssetsAsync = async (
-        assetsToUpload: readonly MigrationAsset[]
-    ): Promise<readonly Readonly<AssetModels.Asset>[]> => {
+    const uploadAssetsAsync = async (assetsToUpload: readonly MigrationAsset[]): Promise<readonly Readonly<AssetModels.Asset>[]> => {
         data.logger.log({
             type: 'upload',
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
@@ -211,7 +217,8 @@ export function assetsImporter(data: {
                                         title: migrationAsset.title,
                                         external_id: assetStateInTargetEnv.externalIdToUse,
                                         collection: mapAssetCollection(migrationAsset.collection),
-                                        descriptions: mapAssetDescriptions(migrationAsset.descriptions)
+                                        descriptions: mapAssetDescriptions(migrationAsset.descriptions),
+                                        folder: mapAssetFolder(migrationAsset.folder)
                                     };
                                     return assetRequestData;
                                 })

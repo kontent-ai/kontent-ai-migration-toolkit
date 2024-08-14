@@ -18,13 +18,15 @@ import {
     LanguageModels,
     TaxonomyModels,
     ManagementClient,
-    SharedModels
+    SharedModels,
+    AssetFolderModels
 } from '@kontent-ai/management-sdk';
 
 export interface ExportContextEnvironmentData {
     readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
     readonly contentTypes: readonly Readonly<FlattenedContentType>[];
     readonly collections: readonly Readonly<CollectionModels.Collection>[];
+    readonly assetFolders: readonly Readonly<AssetFolderModels.AssetFolder>[];
     readonly workflows: readonly Readonly<WorkflowModels.Workflow>[];
     readonly taxonomies: readonly Readonly<TaxonomyModels.Taxonomy>[];
 }

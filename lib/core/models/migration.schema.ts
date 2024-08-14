@@ -165,7 +165,8 @@ const BaseMigrationAssetSchema = z.strictObject({
     filename: z.string(),
     title: z.string(),
     collection: z.optional(MigrationReferenceSchema),
-    descriptions: z.optional(z.array(MigrationAssetDescriptionSchema)).readonly()
+    descriptions: z.optional(z.array(MigrationAssetDescriptionSchema)).readonly(),
+    folder: z.optional(MigrationReferenceSchema)
 });
 
 export const MigrationAssetSchema = BaseMigrationAssetSchema.extend({

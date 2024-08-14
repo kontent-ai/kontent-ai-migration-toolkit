@@ -44,7 +44,8 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                 contentTypes: await mapiUtils.getFlattenedContentTypesAsync(spinnerData),
                 languages: await mapiUtils.getAllLanguagesAsync(spinnerData),
                 workflows: await mapiUtils.getAllWorkflowsAsync(spinnerData),
-                taxonomies: await mapiUtils.getAllTaxonomiesAsync(spinnerData)
+                taxonomies: await mapiUtils.getAllTaxonomiesAsync(spinnerData),
+                assetFolders: await mapiUtils.getAllAssetFoldersAsync(spinnerData)
             };
 
             spinnerData({ type: 'info', message: `Environmental data loaded` });

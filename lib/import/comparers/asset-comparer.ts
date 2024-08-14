@@ -1,4 +1,4 @@
-import { AssetModels, CollectionModels, LanguageModels } from '@kontent-ai/management-sdk';
+import { AssetFolderModels, AssetModels, CollectionModels, LanguageModels } from '@kontent-ai/management-sdk';
 import { MigrationAsset, MigrationAssetDescription, findRequired, geSizeInBytes } from '../../core/index.js';
 import deepEqual from 'deep-equal';
 
@@ -7,6 +7,7 @@ export function shouldUpdateAsset(data: {
     readonly targetAsset: Readonly<AssetModels.Asset>;
     readonly collections: readonly Readonly<CollectionModels.Collection>[];
     readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
+    readonly assetFolders: readonly Readonly<AssetFolderModels.AssetFolder>[];
 }): boolean {
     if (!isInSameCollection(data)) {
         return true;
@@ -17,6 +18,10 @@ export function shouldUpdateAsset(data: {
     }
 
     if (!isTitleIdentical(data)) {
+        return true;
+    }
+
+    if (!isFolderIdentical(data)) {
         return true;
     }
 
@@ -51,10 +56,15 @@ function isBinaryFileIdentical(data: {
     return sourceFileSize === targetFileSize && sourceFilename === targetFilename;
 }
 
-function isTitleIdentical(data: {
+function isFolderIdentical(data: {
     readonly migrationAsset: MigrationAsset;
     readonly targetAsset: Readonly<AssetModels.Asset>;
+    readonly assetFolders: readonly Readonly<AssetFolderModels.AssetFolder>[];
 }): boolean {
+    return data.assetFolders.find((m) => m.id === data.targetAsset.folder?.id)?.codename === data.migrationAsset.folder?.codename;
+}
+
+function isTitleIdentical(data: { readonly migrationAsset: MigrationAsset; readonly targetAsset: Readonly<AssetModels.Asset> }): boolean {
     const sourceTitle = data.migrationAsset.title?.length ? data.migrationAsset.title : undefined;
     const targetTitle = data.targetAsset.title?.length ? data.targetAsset.title : undefined;
 

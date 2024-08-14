@@ -48,7 +48,8 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
                 title: asset.title,
                 codename: asset.codename,
                 collection: asset.collection,
-                descriptions: asset.descriptions
+                descriptions: asset.descriptions,
+                folder: asset.folder
             });
 
             if (asset.binaryData) {
@@ -91,6 +92,7 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
                 collection: assetRecord.collection,
                 title: assetRecord.title,
                 descriptions: assetRecord.descriptions,
+                folder: assetRecord.folder,
                 binaryData: binaryFile
             };
 
