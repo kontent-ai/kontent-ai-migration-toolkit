@@ -17,14 +17,12 @@ export interface MigrationSource extends ManagementClientConfig {
     readonly items: readonly SourceExportItem[];
 }
 
-export interface MigrationTarget extends ManagementClientConfig {}
-
 export interface MigrationConfig {
     readonly retryStrategy?: IRetryStrategyOptions;
     readonly externalIdGenerator?: ExternalIdGenerator;
     readonly logger?: Logger;
     readonly sourceEnvironment: MigrationSource;
-    readonly targetEnvironment: MigrationTarget;
+    readonly targetEnvironment: ManagementClientConfig;
 }
 
 export interface MigrationResult {
