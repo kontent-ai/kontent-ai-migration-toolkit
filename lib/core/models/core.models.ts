@@ -1,6 +1,5 @@
 import { AssetModels, ContentItemModels, ContentTypeElements, LanguageVariantModels, WorkflowModels } from '@kontent-ai/management-sdk';
 import { MigrationElementType } from './migration.models.js';
-import { WorkflowStep } from '../helpers/workflow-helper.js';
 
 export type TargetItemState = 'exists' | 'doesNotExists';
 export type CliAction = 'export' | 'import' | 'migrate';
@@ -16,6 +15,10 @@ export type MapiAction =
     | 'upload'
     | 'create'
     | 'upsert'
+    | 'schedulePublish'
+    | 'scheduleUnpublish'
+    | 'cancelScheduledPublish'
+    | 'cancelScheduledUnpublish'
     | 'createNewVersion';
 
 export type MigrationItemType = 'exportItem';
@@ -31,6 +34,15 @@ export type MapiType =
     | 'taxonomy'
     | 'binaryFile'
     | 'workflow';
+
+export type LanguageVariantWorkflowStateValues = 'published' | 'archived' | 'draft' | 'scheduled';
+export type LanguageVariantSchedulesStateValues = 'scheduledPublish' | 'scheduledUnpublish' | 'n/a';
+export type LanguageVariantWorkflowState =
+    | {
+          readonly workflowState: LanguageVariantWorkflowStateValues;
+          readonly scheduledState: LanguageVariantSchedulesStateValues;
+      }
+    | undefined;
 
 export interface ItemInfo {
     readonly title: string;
@@ -74,13 +86,18 @@ export interface ItemStateInTargetEnvironmentByCodename {
     readonly externalIdToUse: string;
 }
 
+export interface LanguageVariantStateData {
+    readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
+    readonly workflow: Readonly<WorkflowModels.Workflow> | undefined;
+    readonly workflowState: LanguageVariantWorkflowState;
+}
+
 export interface LanguageVariantStateInTargetEnvironmentByCodename {
     readonly state: TargetItemState;
     readonly itemCodename: string;
     readonly languageCodename: string;
-    readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
-    readonly workflow: Readonly<WorkflowModels.Workflow> | undefined;
-    readonly step: Readonly<WorkflowStep> | undefined;
+    readonly publishedLanguageVariant: LanguageVariantStateData | undefined;
+    readonly draftLanguageVariant: LanguageVariantStateData | undefined;
 }
 
 export interface AssetStateInTargetEnvironmentByCodename {

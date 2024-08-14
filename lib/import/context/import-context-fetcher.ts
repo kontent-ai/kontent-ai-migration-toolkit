@@ -2,27 +2,29 @@ import { AssetModels, ContentItemModels, LanguageVariantModels } from '@kontent-
 import {
     AssetStateInTargetEnvironmentByCodename,
     ItemStateInTargetEnvironmentByCodename,
+    LanguageVariantSchedulesStateValues,
+    LanguageVariantStateData,
     LanguageVariantStateInTargetEnvironmentByCodename,
+    LanguageVariantWorkflowState,
+    LanguageVariantWorkflowStateValues,
+    LogSpinnerData,
     MigrationItem,
+    WorkflowStep,
     findRequired,
     is404Error,
     isNotUndefined,
     managementClientUtils,
     processItemsAsync,
     runMapiRequestAsync,
-    workflowHelper
+    workflowHelper as workflowHelperInit
 } from '../../core/index.js';
-import {
-    GetFlattenedElementByCodenames,
-    ImportContext,
-    ImportContextConfig,
-    ImportContextEnvironmentData
-} from '../import.models.js';
+import { GetFlattenedElementByCodenames, ImportContext, ImportContextConfig, ImportContextEnvironmentData } from '../import.models.js';
 import { ExtractItemByCodename, itemsExtractionProcessor } from '../../translation/index.js';
 import chalk from 'chalk';
 
 interface LanguageVariantWrapper {
-    readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
+    readonly draftLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
+    readonly publishedLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
     readonly migrationItem: MigrationItem;
 }
 
@@ -47,13 +49,10 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
     };
 
     const environmentData = await getEnvironmentDataAsync();
+    const workflowHelper = workflowHelperInit(environmentData.workflows);
 
     const getElement = () => {
-        const getFlattenedElement: GetFlattenedElementByCodenames = (
-            contentTypeCodename,
-            elementCodename,
-            sourceType
-        ) => {
+        const getFlattenedElement: GetFlattenedElementByCodenames = (contentTypeCodename, elementCodename, sourceType) => {
             const contentType = findRequired(
                 environmentData.types,
                 (type) => type.contentTypeCodename === contentTypeCodename,
@@ -65,9 +64,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                 (element) => element.codename === elementCodename,
                 `Element type with codename '${chalk.red(elementCodename)}' was not found in content type '${chalk.red(
                     contentTypeCodename
-                )}'. Available elements are '${contentType.elements
-                    .map((element) => chalk.yellow(element.codename))
-                    .join(', ')}'`
+                )}'. Available elements are '${contentType.elements.map((element) => chalk.yellow(element.codename)).join(', ')}'`
             );
 
             if (sourceType !== element.type) {
@@ -84,7 +81,70 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         return getFlattenedElement;
     };
 
-    const getLanguageVariantsAsync = async (
+    const getLatestLanguageVariantAsync = async (
+        logSpinner: LogSpinnerData,
+        migrationItem: MigrationItem
+    ): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined> => {
+        try {
+            const latestLanguageVariant = await runMapiRequestAsync({
+                logger: config.logger,
+                func: async () =>
+                    (
+                        await config.managementClient
+                            .viewLanguageVariant()
+                            .byItemCodename(migrationItem.system.codename)
+                            .byLanguageCodename(migrationItem.system.language.codename)
+                            .toPromise()
+                    ).data,
+                action: 'view',
+                type: 'languageVariant',
+                logSpinner: logSpinner,
+                itemName: `latest -> codename -> ${migrationItem.system.codename} (${migrationItem.system.language.codename})`
+            });
+
+            return latestLanguageVariant;
+        } catch (error) {
+            if (!is404Error(error)) {
+                throw error;
+            }
+
+            return undefined;
+        }
+    };
+
+    const getPublishedLanguageVariantAsync = async (
+        logSpinner: LogSpinnerData,
+        migrationItem: MigrationItem
+    ): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined> => {
+        try {
+            const draftLanguageVariant = await runMapiRequestAsync({
+                logger: config.logger,
+                func: async () =>
+                    (
+                        await config.managementClient
+                            .viewLanguageVariant()
+                            .byItemCodename(migrationItem.system.codename)
+                            .byLanguageCodename(migrationItem.system.language.codename)
+                            .published()
+                            .toPromise()
+                    ).data,
+                action: 'view',
+                type: 'languageVariant',
+                logSpinner: logSpinner,
+                itemName: `published -> codename -> ${migrationItem.system.codename} (${migrationItem.system.language.codename})`
+            });
+
+            return draftLanguageVariant;
+        } catch (error) {
+            if (!is404Error(error)) {
+                throw error;
+            }
+
+            return undefined;
+        }
+    };
+
+    const getLanguageVariantWrappersAsync = async (
         migrationItems: readonly MigrationItem[]
     ): Promise<readonly LanguageVariantWrapper[]> => {
         return (
@@ -100,34 +160,28 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                     };
                 },
                 processAsync: async (item, logSpinner) => {
-                    try {
-                        const languageVariant = await runMapiRequestAsync({
-                            logger: config.logger,
-                            func: async () =>
-                                (
-                                    await config.managementClient
-                                        .viewLanguageVariant()
-                                        .byItemCodename(item.system.codename)
-                                        .byLanguageCodename(item.system.language.codename)
-                                        .toPromise()
-                                ).data,
-                            action: 'view',
-                            type: 'languageVariant',
-                            logSpinner: logSpinner,
-                            itemName: `codename -> ${item.system.codename} (${item.system.language.codename})`
-                        });
+                    const latestLanguageVariant = await getLatestLanguageVariantAsync(logSpinner, item);
 
-                        return {
-                            languageVariant: languageVariant,
-                            migrationItem: item
-                        };
-                    } catch (error) {
-                        if (!is404Error(error)) {
-                            throw error;
-                        }
-
+                    if (!latestLanguageVariant) {
+                        // there is neither published or draft version as latest version does not exist at all
                         return undefined;
                     }
+
+                    if (workflowHelper.isPublishedStepById(latestLanguageVariant.workflow.stepIdentifier.id ?? '')) {
+                        // if latest version is published, it means that there is no draft, but there is published version
+                        return {
+                            migrationItem: item,
+                            draftLanguageVariant: undefined,
+                            publishedLanguageVariant: latestLanguageVariant
+                        };
+                    }
+
+                    // if latest version is a draft version,  check if there is published version as well
+                    return {
+                        migrationItem: item,
+                        draftLanguageVariant: latestLanguageVariant,
+                        publishedLanguageVariant: await getPublishedLanguageVariantAsync(logSpinner, item)
+                    };
                 }
             })
         ).filter(isNotUndefined);
@@ -152,10 +206,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                     try {
                         return await runMapiRequestAsync({
                             logger: config.logger,
-                            func: async () =>
-                                (
-                                    await config.managementClient.viewContentItem().byItemCodename(codename).toPromise()
-                                ).data,
+                            func: async () => (await config.managementClient.viewContentItem().byItemCodename(codename).toPromise()).data,
                             action: 'view',
                             type: 'contentItem',
                             logSpinner: logSpinner,
@@ -173,9 +224,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         ).filter(isNotUndefined);
     };
 
-    const getAssetsByCodenamesAsync = async (
-        assetCodenames: ReadonlySet<string>
-    ): Promise<readonly AssetModels.Asset[]> => {
+    const getAssetsByCodenamesAsync = async (assetCodenames: ReadonlySet<string>): Promise<readonly AssetModels.Asset[]> => {
         return (
             await processItemsAsync<string, Readonly<AssetModels.Asset> | undefined>({
                 action: 'Fetching assets',
@@ -192,10 +241,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                     try {
                         return await runMapiRequestAsync({
                             logger: config.logger,
-                            func: async () =>
-                                (
-                                    await config.managementClient.viewAsset().byAssetCodename(codename).toPromise()
-                                ).data,
+                            func: async () => (await config.managementClient.viewAsset().byAssetCodename(codename).toPromise()).data,
                             action: 'view',
                             type: 'asset',
                             logSpinner: logSpinner,
@@ -213,44 +259,91 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         ).filter(isNotUndefined);
     };
 
+    const getVariantState = (languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>): LanguageVariantStateData => {
+        const variantWorkflowId = languageVariant.workflow.workflowIdentifier.id;
+        const variantStepId = languageVariant.workflow.stepIdentifier.id;
+        const { workflow, step } = workflowHelper.getWorkflowAndStep({
+            workflowMatcher: {
+                errorMessage: `Could not workflow with id '${chalk.red(variantWorkflowId)}' in target project`,
+                match: (workflow) => workflow.id == variantWorkflowId
+            },
+            stepMatcher: {
+                errorMessage: `Could not workflow step with id '${chalk.red(variantStepId)}' in workflow '${chalk.yellow(
+                    variantWorkflowId
+                )}'`,
+                match: (step) => step.id == variantStepId
+            }
+        });
+
+        return {
+            languageVariant: languageVariant,
+            workflow: workflow,
+            workflowState: getWorkflowState(step, languageVariant)
+        };
+    };
+
     const getVariantStatesAsync = async (
         migrationItems: readonly MigrationItem[]
     ): Promise<readonly LanguageVariantStateInTargetEnvironmentByCodename[]> => {
-        const variants = await getLanguageVariantsAsync(migrationItems);
+        const variantWrappers = await getLanguageVariantWrappersAsync(migrationItems);
 
         return migrationItems.map<LanguageVariantStateInTargetEnvironmentByCodename>((migrationItem) => {
-            const variant = variants.find(
+            const variantWrapper = variantWrappers.find(
                 (m) =>
                     m.migrationItem.system.codename === migrationItem.system.codename &&
                     m.migrationItem.system.language === migrationItem.system.language
             );
 
-            const variantWorkflowId = variant?.languageVariant?.workflow?.workflowIdentifier?.id;
-            const variantStepId = variant?.languageVariant?.workflow?.stepIdentifier?.id;
-
-            const workflow = environmentData.workflows.find((workflow) => workflow.id === variantWorkflowId);
-
             return {
                 itemCodename: migrationItem.system.codename,
                 languageCodename: migrationItem.system.language.codename,
-                languageVariant: variant?.languageVariant,
-                workflow: workflow,
-                step: workflow
-                    ? workflowHelper(environmentData.workflows).getWorkflowStep(workflow, {
-                          errorMessage: `Could not workflow step with id '${chalk.red(
-                              variantStepId
-                          )}' in workflow '${chalk.yellow(workflow.codename)}'`,
-                          match: (step) => step.id == variantStepId
-                      })
+                draftLanguageVariant: variantWrapper?.draftLanguageVariant
+                    ? getVariantState(variantWrapper.draftLanguageVariant)
                     : undefined,
-                state: variant ? 'exists' : 'doesNotExists'
+                publishedLanguageVariant: variantWrapper?.publishedLanguageVariant
+                    ? getVariantState(variantWrapper.publishedLanguageVariant)
+                    : undefined,
+                state: variantWrapper ? 'exists' : 'doesNotExists'
             };
         });
     };
 
-    const getItemStatesAsync = async (
-        itemCodenames: ReadonlySet<string>
-    ): Promise<readonly ItemStateInTargetEnvironmentByCodename[]> => {
+    const getWorkflowState = (
+        step: Readonly<WorkflowStep>,
+        variant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined
+    ): LanguageVariantWorkflowState => {
+        if (!variant) {
+            return undefined;
+        }
+
+        const getScheduledState = (): LanguageVariantSchedulesStateValues => {
+            if (variant.schedule.publishTime && variant.schedule.publishDisplayTimezone) {
+                return 'scheduledPublish';
+            }
+
+            if (variant.schedule.unpublishTime && variant.schedule.unpublishDisplayTimezone) {
+                return 'scheduledUnpublish';
+            }
+            return 'n/a';
+        };
+
+        const getWorkflowState = (): LanguageVariantWorkflowStateValues => {
+            if (workflowHelper.isPublishedStepByCodename(step.codename)) {
+                return 'published';
+            }
+            if (workflowHelper.isArchivedStepByCodename(step.codename)) {
+                return 'archived';
+            }
+            return 'draft';
+        };
+
+        return {
+            workflowState: getWorkflowState(),
+            scheduledState: getScheduledState()
+        };
+    };
+
+    const getItemStatesAsync = async (itemCodenames: ReadonlySet<string>): Promise<readonly ItemStateInTargetEnvironmentByCodename[]> => {
         const items = await getContentItemsByCodenamesAsync(itemCodenames);
 
         return Array.from(itemCodenames).map<ItemStateInTargetEnvironmentByCodename>((codename) => {
@@ -311,17 +404,13 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         ]);
 
         // prepare state of objects in target environment
-        const itemStates: readonly ItemStateInTargetEnvironmentByCodename[] = await getItemStatesAsync(
-            itemCodenamesToCheckInTargetEnv
-        );
+        const itemStates: readonly ItemStateInTargetEnvironmentByCodename[] = await getItemStatesAsync(itemCodenamesToCheckInTargetEnv);
 
         const variantStates: readonly LanguageVariantStateInTargetEnvironmentByCodename[] = await getVariantStatesAsync(
             config.migrationData.items
         );
 
-        const assetStates: readonly AssetStateInTargetEnvironmentByCodename[] = await getAssetStatesAsync(
-            assetCodenamesToCheckInTargetEnv
-        );
+        const assetStates: readonly AssetStateInTargetEnvironmentByCodename[] = await getAssetStatesAsync(assetCodenamesToCheckInTargetEnv);
 
         return {
             environmentData,
@@ -334,9 +423,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                 return findRequired(
                     itemStates,
                     (state) => state.itemCodename === itemCodename,
-                    `Invalid state for item '${chalk.red(
-                        itemCodename
-                    )}'. It is expected that all item states will be initialized`
+                    `Invalid state for item '${chalk.red(itemCodename)}'. It is expected that all item states will be initialized`
                 );
             },
             getLanguageVariantStateInTargetEnvironment: (itemCodename, languageCodename) => {
@@ -352,9 +439,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                 return findRequired(
                     assetStates,
                     (state) => state.assetCodename === assetCodename,
-                    `Invalid state for asset '${chalk.red(
-                        assetCodename
-                    )}'. It is expected that all asset states will be initialized`
+                    `Invalid state for asset '${chalk.red(assetCodename)}'. It is expected that all asset states will be initialized`
                 );
             },
             getElement: getElementByCodenames

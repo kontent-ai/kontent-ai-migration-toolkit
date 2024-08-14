@@ -264,9 +264,7 @@ migrate functions.
 ## Limitations
 
 1. Asset folder assignments are not preserved during migration because folders can be referenced only by id's and not codenames.
-2. Assets element values are not preserved during migration because elements can be referenced only by id's and not codenames.
-3. Language variants in `Scheduled` workflow step do not preserve their workflow status because the API does not provide an information
-   about scheduled times
+2. Values for custom asset elements are not supported
 
 ## FAQ
 
