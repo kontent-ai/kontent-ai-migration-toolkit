@@ -1,5 +1,6 @@
 import { HttpService, IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import { OriginalManagementError } from '../models/core.models.js';
+import { match } from 'ts-pattern';
 
 const rateExceededErrorCode: number = 10000;
 const notFoundErrorCode: number = 10000;
@@ -14,21 +15,19 @@ export const defaultRetryStrategy: Readonly<IRetryStrategyOptions> = {
         const originalError = err as OriginalManagementError | undefined;
         const errorCode: number = originalError?.response?.data?.error_code ?? -1;
 
-        if (errorCode === rateExceededErrorCode) {
-            // retry rate exceeded error
-            return true;
-        }
-
-        if (errorCode === notFoundErrorCode) {
-            // do not retry errors indicating resource does not exist
-            return false;
-        }
-
-        if (errorCode >= 0) {
-            // otherwise if error code is set, do not retry the request
-            return false;
-        }
-        return true;
+        return (
+            match(errorCode)
+                // retry rate exceeded error
+                .with(rateExceededErrorCode, () => true)
+                // do not retry errors indicating resource does not exist
+                .with(notFoundErrorCode, () => false)
+                // if error code is set, do not retry the request
+                .when(
+                    (errorCode) => errorCode >= 0,
+                    () => false
+                )
+                .otherwise(() => true)
+        );
     },
     maxAttempts: 3,
     deltaBackoffMs: 1000

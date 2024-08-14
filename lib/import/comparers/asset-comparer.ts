@@ -9,38 +9,20 @@ export function shouldUpdateAsset(data: {
     readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
     readonly assetFolders: readonly Readonly<AssetFolderModels.AssetFolder>[];
 }): boolean {
-    if (!isInSameCollection(data)) {
-        return true;
-    }
-
-    if (!areDescriptionsIdentical(data)) {
-        return true;
-    }
-
-    if (!isTitleIdentical(data)) {
-        return true;
-    }
-
-    if (!isFolderIdentical(data)) {
-        return true;
-    }
-
-    if (!isBinaryFileIdentical(data)) {
-        return true;
-    }
-
-    return false;
+    return (
+        !isInSameCollection(data) ||
+        !areDescriptionsIdentical(data) ||
+        !isTitleIdentical(data) ||
+        !isFolderIdentical(data) ||
+        !isBinaryFileIdentical(data)
+    );
 }
 
 export function shouldReplaceBinaryFile(data: {
     readonly migrationAsset: MigrationAsset;
     readonly targetAsset: Readonly<AssetModels.Asset>;
 }): boolean {
-    if (!isBinaryFileIdentical(data)) {
-        return true;
-    }
-
-    return false;
+    return !isBinaryFileIdentical(data);
 }
 
 function isBinaryFileIdentical(data: {

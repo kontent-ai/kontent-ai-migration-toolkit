@@ -291,6 +291,35 @@ export function workflowImporter(config: {
         }
     };
 
+    const setScheduledStateOfLanguageVariantAsync = async (data: {
+        readonly logSpinner: LogSpinnerData;
+        readonly migrationItem: MigrationItem;
+        readonly migrationItemVersion: MigrationItemVersion;
+    }): Promise<void> => {
+        // set scheduling
+        if (data.migrationItemVersion.schedule.unpublish_time && data.migrationItemVersion.schedule.unpublish_display_timezone) {
+            await scheduleUnpublishLanguageVariantAsync({
+                logSpinner: data.logSpinner,
+                migrationItem: data.migrationItem,
+                schedule: {
+                    unpublish_time: data.migrationItemVersion.schedule.unpublish_time,
+                    unpublish_display_timezone: data.migrationItemVersion.schedule.unpublish_display_timezone
+                }
+            });
+        }
+
+        if (data.migrationItemVersion.schedule.publish_time && data.migrationItemVersion.schedule.publish_display_timezone) {
+            await schedulePublishLanguageVariantAsync({
+                logSpinner: data.logSpinner,
+                migrationItem: data.migrationItem,
+                schedule: {
+                    publish_time: data.migrationItemVersion.schedule.publish_time,
+                    publish_display_timezone: data.migrationItemVersion.schedule.publish_display_timezone
+                }
+            });
+        }
+    };
+
     const setWorkflowOfLanguageVariantAsync = async (data: {
         readonly logSpinner: LogSpinnerData;
         readonly workflowCodename: string;
@@ -307,30 +336,10 @@ export function workflowImporter(config: {
         } else {
             await changeWorkflowOfLanguageVariantAsync(data);
         }
-
-        // set scheduling if needed
-        if (data.migrationItemVersion.schedule.unpublish_time && data.migrationItemVersion.schedule.unpublish_display_timezone) {
-            await scheduleUnpublishLanguageVariantAsync({
-                logSpinner: data.logSpinner,
-                migrationItem: data.migrationItem,
-                schedule: {
-                    unpublish_time: data.migrationItemVersion.schedule.unpublish_time,
-                    unpublish_display_timezone: data.migrationItemVersion.schedule.unpublish_display_timezone
-                }
-            });
-        } else if (data.migrationItemVersion.schedule.publish_time && data.migrationItemVersion.schedule.publish_display_timezone) {
-            await schedulePublishLanguageVariantAsync({
-                logSpinner: data.logSpinner,
-                migrationItem: data.migrationItem,
-                schedule: {
-                    publish_time: data.migrationItemVersion.schedule.publish_time,
-                    publish_display_timezone: data.migrationItemVersion.schedule.publish_display_timezone
-                }
-            });
-        }
     };
 
     return {
+        setScheduledStateOfLanguageVariantAsync,
         setWorkflowOfLanguageVariantAsync,
         publishLanguageVariantAsync,
         unpublishLanguageVariantAsync,

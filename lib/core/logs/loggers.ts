@@ -1,19 +1,15 @@
-import chalk from 'chalk';
+import chalk, { ChalkInstance } from 'chalk';
 import { Logger, LogSpinnerMessage } from '../models/log.models.js';
 import { getCurrentEnvironment } from '../utils/global.utils.js';
+import { match, P } from 'ts-pattern';
 
 const originalWarn = console.warn;
 
 export function getDefaultLogger(): Logger {
-    const currentEnv = getCurrentEnvironment();
-
-    if (currentEnv === 'node') {
-        return defaultNodeLogger;
-    }
-    if (currentEnv === 'browser') {
-        return defaultBrowserLogger;
-    }
-    throw Error(`Invalid environment`);
+    return match(getCurrentEnvironment())
+        .with('node', () => defaultNodeLogger)
+        .with('browser', () => defaultBrowserLogger)
+        .exhaustive();
 }
 
 const defaultNodeLogger: Logger = {
@@ -59,17 +55,13 @@ const defaultBrowserLogger: Logger = {
 };
 
 function getLogDataMessage(data: LogSpinnerMessage): string {
-    let typeColor = chalk.yellow;
+    const color = match(data.type)
+        .returnType<ChalkInstance>()
+        .with('info', () => chalk.cyan)
+        .with(P.union('error', 'errorData', 'warning', 'cancel'), () => chalk.red)
+        .with('completed', () => chalk.green)
+        .with('skip', () => chalk.gray)
+        .otherwise(() => chalk.yellow);
 
-    if (data.type === 'info') {
-        typeColor = chalk.cyan;
-    } else if (data.type === 'error' || data.type === 'errorData' || data.type === 'warning' || data.type === 'cancel') {
-        typeColor = chalk.red;
-    } else if (data.type === 'completed') {
-        typeColor = chalk.green;
-    } else if (data.type === 'skip') {
-        typeColor = chalk.gray;
-    }
-
-    return `${typeColor(data.type)}: ${data.message}`;
+    return `${color(data.type)}: ${data.message}`;
 }

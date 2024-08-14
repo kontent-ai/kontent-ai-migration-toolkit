@@ -1,6 +1,7 @@
 import { AssetModels, ContentItemModels, ContentTypeElements, LanguageVariantModels, WorkflowModels } from '@kontent-ai/management-sdk';
 import { MigrationElementType } from './migration.models.js';
 
+export type LiteralUnion<T extends string> = T | (string & {});
 export type TargetItemState = 'exists' | 'doesNotExists';
 export type CliAction = 'export' | 'import' | 'migrate';
 export type EnvContext = 'browser' | 'node';

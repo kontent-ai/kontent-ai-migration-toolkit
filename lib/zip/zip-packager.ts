@@ -2,33 +2,34 @@ import JSZip from 'jszip';
 import chalk from 'chalk';
 import { Logger, formatBytes, getCurrentEnvironment, exitProgram, getDefaultLogger } from '../core/index.js';
 import { FileBinaryData, ZipCompressionLevel, ZipPackager } from './zip.models.js';
+import { match } from 'ts-pattern';
+
+type ZipOutputType = 'nodebuffer' | 'blob';
 
 export function zipPackager(jsZip: JSZip): ZipPackager {
     const getZipOutputType = (): 'nodebuffer' | 'blob' => {
-        const currentEnv = getCurrentEnvironment();
-
-        if (currentEnv === 'browser') {
-            return 'blob';
-        }
-        if (currentEnv === 'node') {
-            return 'nodebuffer';
-        }
-
-        exitProgram({
-            message: `Unsupported context`
-        });
+        return match(getCurrentEnvironment())
+            .returnType<ZipOutputType>()
+            .with('browser', () => 'blob')
+            .with('node', () => 'nodebuffer')
+            .exhaustive();
     };
 
     const getZipSizeInBytes = (zipData: FileBinaryData): number => {
-        if (zipData instanceof Blob) {
-            return zipData.size;
-        } else if (zipData instanceof Buffer) {
-            return zipData.byteLength;
-        }
-
-        exitProgram({
-            message: `Unrecognized zip data type '${typeof zipData}'`
-        });
+        return match(zipData)
+            .when(
+                (data) => data instanceof Blob,
+                (data) => data.size
+            )
+            .when(
+                (data) => data instanceof Buffer,
+                (data) => data.byteLength
+            )
+            .otherwise(() => {
+                exitProgram({
+                    message: `Unrecognized zip data type '${typeof zipData}'`
+                });
+            });
     };
 
     return {
@@ -44,19 +45,16 @@ export function zipPackager(jsZip: JSZip): ZipPackager {
 
             return zipPackager(folder);
         },
-        async generateZipAsync(config: {
-            logger?: Logger;
-            compressionLevel?: ZipCompressionLevel;
-        }): Promise<FileBinaryData> {
+        async generateZipAsync(config: { logger?: Logger; compressionLevel?: ZipCompressionLevel }): Promise<FileBinaryData> {
             const logger = config.logger ?? getDefaultLogger();
             const zipOutputType = getZipOutputType();
             const compressionLevel: ZipCompressionLevel = config.compressionLevel ?? 9;
 
             logger.log({
                 type: 'info',
-                message: `Creating zip file using '${chalk.yellow(
-                    zipOutputType
-                )}' with compression level '${chalk.yellow(compressionLevel.toString())}'`
+                message: `Creating zip file using '${chalk.yellow(zipOutputType)}' with compression level '${chalk.yellow(
+                    compressionLevel.toString()
+                )}'`
             });
 
             const result = await jsZip.generateAsync({

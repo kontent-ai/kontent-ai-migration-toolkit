@@ -19,11 +19,9 @@ export async function confirmExportAsync(data: {
         data.logger
     ).getEnvironmentAsync();
 
-    const text: string = `Are you sure to export '${chalk.cyan(
+    const text: string = `Are you sure to export '${chalk.cyan(data.dataToExport.itemsCount)}' content ${getItemsPluralText(
         data.dataToExport.itemsCount
-    )}' content ${getItemsPluralText(data.dataToExport.itemsCount)} from ${chalk.yellow(
-        environment.name
-    )} (${chalk.magenta(environment.environment)})?`;
+    )} from ${chalk.yellow(environment.name)} (${chalk.magenta(environment.environment)})?`;
 
     await confirmAsync({
         force: data.force,
@@ -65,9 +63,9 @@ export async function confirmMigrateAsync(data: {
 
     const text: string = `Are you sure to migrate '${chalk.cyan(data.dataToMigrate.itemsCount)}' ${getItemsPluralText(
         data.dataToMigrate.itemsCount
-    )} from ${chalk.yellow(sourceEnvironment.name)} (${chalk.magenta(
-        sourceEnvironment.environment
-    )}) to environment ${chalk.yellow(targetEnvironment.name)} (${chalk.magenta(targetEnvironment.environment)}) ?`;
+    )} from ${chalk.yellow(sourceEnvironment.name)} (${chalk.magenta(sourceEnvironment.environment)}) to environment ${chalk.yellow(
+        targetEnvironment.name
+    )} (${chalk.magenta(targetEnvironment.environment)}) ?`;
 
     await confirmAsync({
         force: data.force,
@@ -91,9 +89,7 @@ export async function confirmImportAsync(data: {
         data.logger
     ).getEnvironmentAsync();
 
-    const text: string = `Are you sure to import data into ${chalk.yellow(environment.name)} (${chalk.magenta(
-        environment.environment
-    )})?`;
+    const text: string = `Are you sure to import data into ${chalk.yellow(environment.name)} (${chalk.magenta(environment.environment)})?`;
 
     await confirmAsync({
         force: data.force,
@@ -116,24 +112,22 @@ async function confirmAsync(data: {
     if (data.force) {
         data.logger.log({
             type: 'info',
-            message: `Skipping confirmation prompt due to the use of 'force' param`
+            message: `Skipping confirmation`
         });
-    } else {
-        const confirmed = await prompts.default({
-            type: 'confirm',
-            name: 'confirm',
-            message: `${chalk.cyan(data.action)}: ${data.message}`
-        });
+        return;
+    }
 
-        if (!confirmed.confirm) {
-            throw Error(`Confirmation refused.`);
-        }
+    const confirmed = await prompts.default({
+        type: 'confirm',
+        name: 'confirm',
+        message: `${chalk.cyan(data.action)}: ${data.message}`
+    });
+
+    if (!confirmed.confirm) {
+        throw Error(`Confirmation refused.`);
     }
 }
 
 function getItemsPluralText(count: number): string {
-    if (count === 1) {
-        return 'item';
-    }
-    return 'items';
+    return count === 1 ? 'item' : 'items';
 }

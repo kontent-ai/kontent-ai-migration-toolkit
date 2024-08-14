@@ -1,3 +1,4 @@
+import { match } from 'ts-pattern';
 import { ContentItemModels, ElementContracts, LanguageVariantModels, ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
 import {
     Logger,
@@ -143,6 +144,13 @@ export function languageVariantImporter(config: {
             migrationItemVersion: data.migrationItemVersion
         });
 
+        // set scheduling
+        await workflowImporter.setScheduledStateOfLanguageVariantAsync({
+            logSpinner: data.logSpinner,
+            migrationItem: data.migrationItem,
+            migrationItemVersion: data.migrationItemVersion
+        });
+
         return languageVariant;
     };
 
@@ -210,16 +218,16 @@ export function languageVariantImporter(config: {
             migrationItem: data.migrationItem
         };
 
-        switch (data.scheduledState) {
-            case 'scheduledPublish':
+        await match(data.scheduledState)
+            .with('scheduledPublish', async () => {
                 // cancel scheduled publish if language variant is scheduled to be published
                 await workflowImporter.cancelScheduledPublishAsync(changeWorkflowData);
-                break;
-            case 'scheduledUnpublish':
+            })
+            .with('scheduledUnpublish', async () => {
                 // cancel scheduled unpublish if language variant is scheduled to be unpublished
                 await workflowImporter.cancelScheduledUnpublishAsync(changeWorkflowData);
-                break;
-        }
+            })
+            .otherwise(() => {});
     };
 
     const prepareTargetEnvironmentVariantForImportAsync = async (data: {
@@ -255,16 +263,16 @@ export function languageVariantImporter(config: {
             migrationItem: data.migrationItem
         };
 
-        switch (languageVariantToPrepare.workflowState?.workflowState) {
-            case 'published':
+        await match(languageVariantToPrepare.workflowState?.workflowState)
+            .with('published', async () => {
                 // create new version if language variant is published
                 await workflowImporter.createNewVersionOfLanguageVariantAsync(changeWorkflowData);
-                break;
-            case 'archived':
+            })
+            .with('archived', async () => {
                 // move to draft step if language variant is archived
                 await workflowImporter.moveToDraftStepAsync(changeWorkflowData);
-                break;
-        }
+            })
+            .otherwise(() => {});
     };
 
     const isPublishedWorkflowStep = (stepCodename: string, workflow: Readonly<WorkflowModels.Workflow>): boolean => {
