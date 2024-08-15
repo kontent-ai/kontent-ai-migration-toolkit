@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.4.0...v1.5.0) (2024-08-15)
+
+
+### Features
+
+* adds support for exporting / importing asset folder assignments ([a6a4372](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/a6a4372121be8b57831236ef8b5f7a5409d6f8ee))
+* updates deps ([af7f3be](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/af7f3be6ec88f78e67cbb9141da9771e02b645a3))
+* updates deps (& fixes Axios vulnerability) ([1b09e9d](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/1b09e9d040d694476802b5dc2c950f697bb00251))
+
 ## [1.4.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.3.0...v1.4.0) (2024-07-30)
 
 
