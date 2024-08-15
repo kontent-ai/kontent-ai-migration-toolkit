@@ -7,6 +7,7 @@ import {
     workflowHelper as workflowHelperInit,
     MigrationItemVersion
 } from '../../core/index.js';
+import { match } from 'ts-pattern';
 
 export function workflowImporter(config: {
     readonly logger: Logger;
@@ -296,6 +297,10 @@ export function workflowImporter(config: {
         readonly migrationItem: MigrationItem;
         readonly migrationItemVersion: MigrationItemVersion;
     }): Promise<void> => {
+        if (!data.migrationItemVersion.schedule) {
+            return;
+        }
+
         // set scheduling
         if (data.migrationItemVersion.schedule.unpublish_time && data.migrationItemVersion.schedule.unpublish_display_timezone) {
             await scheduleUnpublishLanguageVariantAsync({
@@ -327,15 +332,24 @@ export function workflowImporter(config: {
         readonly migrationItem: MigrationItem;
         readonly migrationItemVersion: MigrationItemVersion;
     }): Promise<void> => {
-        if (workflowHelper.isPublishedStepByCodename(data.stepCodename)) {
-            await publishLanguageVariantAsync(data);
-        } else if (workflowHelper.isArchivedStepByCodename(data.stepCodename)) {
-            await archiveLanguageVariantAsync(data);
-        } else if (workflowHelper.isScheduledStepByCodename(data.stepCodename)) {
-            // do nothing for scheduled step
-        } else {
-            await changeWorkflowOfLanguageVariantAsync(data);
-        }
+        return await match(data.stepCodename)
+            .returnType<Promise<void>>()
+            .when(
+                (stepCodename) => workflowHelper.isPublishedStepByCodename(stepCodename),
+                async () => await publishLanguageVariantAsync(data)
+            )
+            .when(
+                (stepCodename) => workflowHelper.isArchivedStepByCodename(stepCodename),
+                async () => await archiveLanguageVariantAsync(data)
+            )
+            .when(
+                (stepCodename) => workflowHelper.isScheduledStepByCodename(stepCodename),
+                async () => {
+                    // do nothing for scheduled step
+                    return await Promise.resolve();
+                }
+            )
+            .otherwise(async () => await changeWorkflowOfLanguageVariantAsync(data));
     };
 
     return {

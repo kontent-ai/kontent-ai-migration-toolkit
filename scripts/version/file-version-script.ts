@@ -16,7 +16,8 @@ export const ${propertyName} = {
 
     fs.writeFile(filePath, src, { flag: 'w' }, (err) => {
         if (err) {
-            return console.log(chalk.red(err.message));
+            console.log(chalk.red(err.message));
+            return;
         }
 
         console.log(chalk.green(`Updating version ${chalk.yellow(PackageJson.version)}`));

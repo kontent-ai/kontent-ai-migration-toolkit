@@ -133,7 +133,7 @@ export const MigrationItemVersionSchema = z
     .strictObject({
         workflow_step: MigrationReferenceSchema,
         elements: MigrationElementsSchema,
-        schedule: ScheduleSchema
+        schedule: ScheduleSchema.optional()
     })
     .readonly();
 

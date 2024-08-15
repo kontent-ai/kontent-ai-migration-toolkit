@@ -14,16 +14,11 @@ export async function getBinaryDataFromUrlAsync(url: string): Promise<{ data: Bu
         }
     );
 
-    const contentLengthHeader = response.headers.find((m) => m.header.toLowerCase() === 'content-length');
-    const contentLength = contentLengthHeader ? +contentLengthHeader.value : 0;
+    const contentLength = +(response.headers.find((m) => m.header.toLowerCase() === 'content-length')?.value ?? 0);
 
     return { data: response.data, contentLength: contentLength };
 }
 
 export function geSizeInBytes(data: Blob | Buffer): number {
-    if (data instanceof Blob) {
-        return data.size;
-    }
-
-    return data.byteLength;
+    return data instanceof Blob ? data.size : data.byteLength;
 }

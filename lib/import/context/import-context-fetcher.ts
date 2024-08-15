@@ -21,6 +21,7 @@ import {
 import { GetFlattenedElementByCodenames, ImportContext, ImportContextConfig, ImportContextEnvironmentData } from '../import.models.js';
 import { ExtractItemByCodename, itemsExtractionProcessor } from '../../translation/index.js';
 import chalk from 'chalk';
+import { match } from 'ts-pattern';
 
 interface LanguageVariantWrapper {
     readonly draftLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
@@ -318,24 +319,31 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         }
 
         const getScheduledState = (): LanguageVariantSchedulesStateValues => {
-            if (variant.schedule.publishTime && variant.schedule.publishDisplayTimezone) {
-                return 'scheduledPublish';
-            }
-
-            if (variant.schedule.unpublishTime && variant.schedule.unpublishDisplayTimezone) {
-                return 'scheduledUnpublish';
-            }
-            return 'n/a';
+            return match(variant.schedule)
+                .returnType<LanguageVariantSchedulesStateValues>()
+                .when(
+                    (schedule) => schedule.publishTime && schedule.publishDisplayTimezone,
+                    () => 'scheduledPublish'
+                )
+                .when(
+                    (schedule) => schedule.unpublishTime && schedule.unpublishDisplayTimezone,
+                    () => 'scheduledUnpublish'
+                )
+                .otherwise(() => 'n/a');
         };
 
         const getWorkflowState = (): LanguageVariantWorkflowStateValues => {
-            if (workflowHelper.isPublishedStepByCodename(step.codename)) {
-                return 'published';
-            }
-            if (workflowHelper.isArchivedStepByCodename(step.codename)) {
-                return 'archived';
-            }
-            return 'draft';
+            return match(step.codename)
+                .returnType<LanguageVariantWorkflowStateValues>()
+                .when(
+                    (stepCodename) => workflowHelper.isPublishedStepByCodename(stepCodename),
+                    () => 'published'
+                )
+                .when(
+                    (stepCodename) => workflowHelper.isArchivedStepByCodename(stepCodename),
+                    () => 'archived'
+                )
+                .otherwise(() => 'draft');
         };
 
         return {

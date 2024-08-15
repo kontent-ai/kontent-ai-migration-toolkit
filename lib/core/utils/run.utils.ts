@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { MapiAction, MapiType } from '../models/core.models.js';
 import { LogMessage, LogSpinnerData, Logger } from '../models/log.models.js';
+import { match } from 'ts-pattern';
 
 export async function runMapiRequestAsync<TResult>(data: {
     readonly logger: Logger;
@@ -10,24 +11,32 @@ export async function runMapiRequestAsync<TResult>(data: {
     readonly func: () => Promise<TResult>;
     readonly itemName?: string;
 }): Promise<TResult> {
-    let logData: LogMessage | undefined;
-
-    if (data.action === 'list') {
-        logData = {
-            message: `Fetching objects of type '${chalk.yellow(data.type)}'`,
-            type: data.action
-        };
-    } else if (data.itemName) {
-        logData = {
-            message: `${data.type} -> ${data.itemName}`,
-            type: data.action
-        };
-    } else {
-        logData = {
-            message: `${data.type}`,
-            type: data.action
-        };
-    }
+    const logData: LogMessage = match(data)
+        .returnType<LogMessage>()
+        .when(
+            (data) => data.action === 'list',
+            (data) => {
+                return {
+                    message: `Fetching objects of type '${chalk.yellow(data.type)}'`,
+                    type: data.action
+                };
+            }
+        )
+        .when(
+            (data) => data.itemName,
+            (data) => {
+                return {
+                    message: `${data.type} -> ${data.itemName}`,
+                    type: data.action
+                };
+            }
+        )
+        .otherwise(() => {
+            return {
+                message: `${data.type}`,
+                type: data.action
+            };
+        });
 
     logSpinnerOrDefault({
         logSpinner: data.logSpinner,
