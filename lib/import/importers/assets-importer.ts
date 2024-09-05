@@ -26,10 +26,10 @@ export function assetsImporter(data: {
     readonly client: Readonly<ManagementClient>;
     readonly importContext: ImportContext;
 }) {
-    const getAssetsToUpload = (): readonly MigrationAsset[] => {
+    const getAssetsToUpload = (): readonly MigrationAsset[] => { 
         return data.importContext.categorizedImportData.assets.filter((asset) => {
             return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
-        });
+        }).map(asset => ({...asset, descriptions: asset.descriptions?.filter(filterDescription)}));
     };
 
     const getAssetsToEdit = (): readonly AssetToEdit[] => {
@@ -54,7 +54,10 @@ export function assetsImporter(data: {
                 }
 
                 return {
-                    migrationAsset: migrationAsset,
+                    migrationAsset: {
+                        ...migrationAsset,
+                        descriptions: migrationAsset.descriptions?.filter(filterDescription)
+                    },
                     replaceBinaryFile: shouldReplaceBinaryFile({
                         migrationAsset: migrationAsset,
                         targetAsset: assetState.asset
@@ -116,6 +119,9 @@ export function assetsImporter(data: {
             }
         });
     };
+
+    const filterDescription = (description: Readonly<{language: {codename: string}, description?: string}>) =>
+        data.importContext.environmentData.languages.find(lang => lang.codename === description.language.codename)
 
     const mapAssetCollection = (
         migrationCollection: MigrationReference | undefined
