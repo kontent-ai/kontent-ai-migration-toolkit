@@ -1,19 +1,19 @@
-import { AssetModels, ManagementClient, SharedContracts } from '@kontent-ai/management-sdk';
+import { AssetModels, LanguageModels, ManagementClient, SharedContracts } from '@kontent-ai/management-sdk';
+import chalk from 'chalk';
+import mime from 'mime';
 import {
-    MigrationAsset,
-    Logger,
-    processItemsAsync,
-    runMapiRequestAsync,
-    MigrationAssetDescription,
-    MigrationReference,
     geSizeInBytes,
     isNotUndefined,
-    LogSpinnerData
+    Logger,
+    LogSpinnerData,
+    MigrationAsset,
+    MigrationAssetDescription,
+    MigrationReference,
+    processItemsAsync,
+    runMapiRequestAsync
 } from '../../core/index.js';
-import mime from 'mime';
-import chalk from 'chalk';
-import { ImportContext, ImportResult } from '../import.models.js';
 import { shouldReplaceBinaryFile, shouldUpdateAsset } from '../comparers/asset-comparer.js';
+import { ImportContext, ImportResult } from '../import.models.js';
 
 interface AssetToEdit {
     migrationAsset: MigrationAsset;
@@ -26,10 +26,12 @@ export function assetsImporter(data: {
     readonly client: Readonly<ManagementClient>;
     readonly importContext: ImportContext;
 }) {
-    const getAssetsToUpload = (): readonly MigrationAsset[] => { 
-        return data.importContext.categorizedImportData.assets.filter((asset) => {
-            return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
-        }).map(asset => ({...asset, descriptions: asset.descriptions?.filter(filterDescription)}));
+    const getAssetsToUpload = (): readonly MigrationAsset[] => {
+        return data.importContext.categorizedImportData.assets
+            .filter((asset) => {
+                return data.importContext.getAssetStateInTargetEnvironment(asset.codename).state === 'doesNotExists';
+            })
+            .map((asset) => ({ ...asset, descriptions: asset.descriptions?.filter(filterInvalidLanguages) }));
     };
 
     const getAssetsToEdit = (): readonly AssetToEdit[] => {
@@ -56,7 +58,7 @@ export function assetsImporter(data: {
                 return {
                     migrationAsset: {
                         ...migrationAsset,
-                        descriptions: migrationAsset.descriptions?.filter(filterDescription)
+                        descriptions: migrationAsset.descriptions?.filter(filterInvalidLanguages)
                     },
                     replaceBinaryFile: shouldReplaceBinaryFile({
                         migrationAsset: migrationAsset,
@@ -120,8 +122,9 @@ export function assetsImporter(data: {
         });
     };
 
-    const filterDescription = (description: Readonly<{language: {codename: string}, description?: string}>) =>
-        data.importContext.environmentData.languages.find(lang => lang.codename === description.language.codename)
+    const filterInvalidLanguages = (description: MigrationAssetDescription): Readonly<LanguageModels.LanguageModel> | undefined => {
+        return data.importContext.environmentData.languages.find((lang) => lang.codename === description.language.codename);
+    };
 
     const mapAssetCollection = (
         migrationCollection: MigrationReference | undefined
