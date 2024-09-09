@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.1](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.5.0...v1.5.1) (2024-09-09)
+
+
+### Bug Fixes
+
+* fix importing asset description to non-existent language ([571edd9](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/571edd97e756716a26a8503987ed4c6bdc59403c))
+
 ## [1.5.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.4.0...v1.5.0) (2024-08-15)
 
 
