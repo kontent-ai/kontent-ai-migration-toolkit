@@ -1,7 +1,8 @@
+import { Buffer } from 'buffer';
 import JSZip from 'jszip';
 import { Logger, MigrationData, getDefaultLogger } from '../core/index.js';
-import { zipTransformer } from './zip-transformer.js';
 import { zipPackager } from './zip-packager.js';
+import { zipTransformer } from './zip-transformer.js';
 import { FileBinaryData } from './zip.models.js';
 
 export function zipManager(logger?: Logger) {

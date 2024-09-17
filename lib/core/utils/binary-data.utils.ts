@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { defaultHttpService, defaultRetryStrategy } from './http.utils.js';
 
 export async function getBinaryDataFromUrlAsync(url: string): Promise<{ data: Buffer | Blob; contentLength: number }> {

@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { Logger } from '../core/index.js';
 
 export type FileBinaryData = Buffer | Blob;
