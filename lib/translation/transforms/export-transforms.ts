@@ -14,7 +14,7 @@ import chalk from 'chalk';
 export const exportTransforms: Readonly<Record<MigrationElementType, ExportTransformFunc>> = {
     text: (data) => data.exportElement.value?.toString(),
     number: (data) => {
-        if (!data.exportElement.value) {
+        if (data.exportElement.value === undefined || data.exportElement.value === null) {
             return undefined;
         }
 
