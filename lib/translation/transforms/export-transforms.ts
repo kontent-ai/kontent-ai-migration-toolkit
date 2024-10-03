@@ -243,6 +243,19 @@ function transformRichTextValue(
         };
     }).html;
 
+    // replace link asset ids with codenames
+    richTextHtml = richTextProcessor().processLinkAssetIds(richTextHtml, (id) => {
+        const assetInEnv = context.getAssetStateInSourceEnvironment(id).asset;
+
+        if (!assetInEnv) {
+            throw Error(`Failed to get asset with id '${chalk.red(id)}'`);
+        }
+
+        return {
+            codename: assetInEnv.codename
+        };
+    }).html;
+
     return {
         components: exportElement.components,
         value: richTextHtml

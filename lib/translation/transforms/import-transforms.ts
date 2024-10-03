@@ -211,5 +211,10 @@ function processImportRichTextHtmlValue(data: {
         return data.importContext.getAssetStateInTargetEnvironment(codename);
     }).html;
 
+    // replace link asset codenames with existing codename or external_id
+    richTextHtml = richTextProcessor().processLinkAssetCodenames(richTextHtml, (codename) => {
+        return data.importContext.getAssetStateInTargetEnvironment(codename);
+    }).html;
+
     return richTextHtml;
 }
