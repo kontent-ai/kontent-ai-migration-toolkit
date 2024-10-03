@@ -59,6 +59,10 @@ export function itemsExtractionProcessor() {
                                 .processAssetIds(rteValue ?? '')
                                 .ids.forEach((id) => extractedIds.assetIds.add(id));
 
+                            richTextProcessor()
+                                .processLinkAssetIds(rteValue ?? '')
+                                .ids.forEach((id) => extractedIds.assetIds.add(id));
+
                             // recursively extract data from components as well because they may reference additional assets & content items
                             const extractedComponents = extractReferencedDataFromExtractItems(
                                 itemElement.components.map((component) => {
@@ -124,6 +128,10 @@ export function itemsExtractionProcessor() {
                                 // assets
                                 richTextProcessor()
                                     .processAssetCodenames(richTextHtml)
+                                    .codenames.forEach((codename) => childExtractedCodenames.assetCodenames.add(codename));
+
+                                richTextProcessor()
+                                    .processLinkAssetCodenames(richTextHtml)
                                     .codenames.forEach((codename) => childExtractedCodenames.assetCodenames.add(codename));
 
                                 // recursively extract data from components as well because they may reference additional assets & content items

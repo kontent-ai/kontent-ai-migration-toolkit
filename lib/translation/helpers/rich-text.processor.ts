@@ -126,6 +126,42 @@ export function richTextProcessor() {
         };
     };
 
+    const processLinkAssetIds = (richTextHtml: string, replaceFunc?: IdReplaceFunc): ProcessIdsResult => {
+        const assetIds = new Set<string>();
+
+        if (!richTextHtml) {
+            return {
+                html: richTextHtml,
+                ids: assetIds
+            };
+        }
+
+        richTextHtml = richTextHtml.replaceAll(rteRegexes.elements.linkTagRegex, (linkTag) => {
+            const assetIdMatch = linkTag.match(rteRegexes.ids.dataAssetIdAttrRegex);
+            if (assetIdMatch && (assetIdMatch?.length ?? 0) >= 2) {
+                const assetId = assetIdMatch[1];
+
+                assetIds.add(assetId);
+
+                if (replaceFunc) {
+                    const { codename } = replaceFunc(assetId);
+
+                    return linkTag.replaceAll(
+                        `${attributes.ids.assetIdAttributeName}="${assetId}"`,
+                        `${attributes.codenames.assetCodenameAttribute}="${codename}"`
+                    );
+                }
+            }
+
+            return linkTag;
+        });
+
+        return {
+            html: richTextHtml,
+            ids: assetIds
+        };
+    };
+
     const processLinkItemIds = (richTextHtml: string, replaceFunc?: IdReplaceFunc): ProcessIdsResult => {
         const linkItemIds = new Set<string>();
 
@@ -288,13 +324,57 @@ export function richTextProcessor() {
             html: richTextHtml
         };
     };
+    
+    const processLinkAssetCodenames = (
+        richTextHtml: string,
+        replaceFunc?: CodenameReplaceFunc<AssetStateInTargetEnvironmentByCodename>
+    ): ProcessCodenamesResult => {
+        const assetCodenames = new Set<string>();
+
+        if (!richTextHtml) {
+            return {
+                codenames: assetCodenames,
+                html: richTextHtml
+            };
+        }
+
+        richTextHtml = richTextHtml.replaceAll(rteRegexes.elements.linkTagRegex, (linkTag) => {
+            const codenameMatch = linkTag.match(rteRegexes.codenames.rteAssetCodenameRegex);
+            if (codenameMatch && (codenameMatch?.length ?? 0) >= 2) {
+                const codename = codenameMatch[1];
+
+                assetCodenames.add(codename);
+
+                if (replaceFunc) {
+                    const assetState = replaceFunc(codename);
+
+                    if (assetState.asset && assetState.state === 'exists') {
+                        return linkTag;
+                    }
+                    return linkTag.replaceAll(
+                        `${attributes.codenames.assetCodenameAttribute}="${codename}"`,
+                        `${attributes.ids.externalAssetIdAttributeName}="${assetState.externalIdToUse}"`
+                    );
+                }
+            }
+
+            return linkTag;
+        });
+
+        return {
+            codenames: assetCodenames,
+            html: richTextHtml
+        };
+    };
 
     return {
         processAssetIds,
         processDataIds,
         processLinkItemIds,
+        processLinkAssetIds,
         processAssetCodenames,
         processItemCodenames,
-        processLinkItemCodenames
+        processLinkItemCodenames,
+        processLinkAssetCodenames
     };
 }
