@@ -27,7 +27,12 @@ type RichTextElementValue = {
     readonly components: Readonly<Component[]>;
 };
 
-type ElementValue = string | undefined | number | Reference[] | RichTextElementValue | UrlSlugElementValue;
+type DateTimeElementValue = {
+    readonly value?: string;
+    readonly time_zone?: string;
+};
+
+type ElementValue = string | undefined | number | Reference[] | RichTextElementValue | UrlSlugElementValue | DateTimeElementValue;
 
 type Element = {
     readonly type: ElementType;
@@ -107,6 +112,13 @@ export const MigrationUrlSlugElementValueSchema = z
     })
     .readonly();
 
+export const MigrationDateTimeElementValueSchema = z
+    .strictObject({
+        value: z.optional(z.string()),
+        time_zone: z.optional(z.string())
+    })
+    .readonly();
+
 export const MigrationRichTextElementValueSchema = z
     .strictObject({
         value: z.string(),
@@ -120,7 +132,8 @@ export const MigrationElementValueSchema = z.union([
     z.number(),
     z.array(MigrationReferenceSchema),
     MigrationRichTextElementValueSchema,
-    MigrationUrlSlugElementValueSchema
+    MigrationUrlSlugElementValueSchema,
+    MigrationDateTimeElementValueSchema
 ]);
 
 export const MigrationElementSchema = z
@@ -171,7 +184,7 @@ const BaseMigrationAssetSchema = z.strictObject({
 });
 
 export const MigrationAssetSchema = BaseMigrationAssetSchema.extend({
-    binaryData: z.union([z.instanceof(Buffer), z.instanceof(Blob)])
+    binary_data: z.union([z.instanceof(Buffer), z.instanceof(Blob)])
 }).readonly();
 
 export const ZipMigrationAssetSchema = BaseMigrationAssetSchema.extend({

@@ -174,8 +174,8 @@ export function assetsImporter(data: {
                     await data.client
                         .uploadBinaryFile()
                         .withData({
-                            binaryData: migrationAsset.binaryData,
-                            contentLength: geSizeInBytes(migrationAsset.binaryData),
+                            binaryData: migrationAsset.binary_data,
+                            contentLength: geSizeInBytes(migrationAsset.binary_data),
                             contentType: mime.getType(migrationAsset.filename) ?? '',
                             filename: migrationAsset.filename
                         })

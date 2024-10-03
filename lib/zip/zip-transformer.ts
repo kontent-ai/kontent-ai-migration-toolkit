@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import { z } from 'zod';
-import { FileBinaryData, ZipPackager } from './zip.models.js';
 import {
     Logger,
     MigrationAsset,
@@ -12,6 +11,7 @@ import {
     getDefaultLogger,
     mapAsync
 } from '../core/index.js';
+import { FileBinaryData, ZipPackager } from './zip.models.js';
 
 type ZipAssetRecord = z.infer<typeof ZipMigrationAssetSchema>;
 
@@ -52,8 +52,8 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
                 folder: asset.folder
             });
 
-            if (asset.binaryData) {
-                codenameFolder.addFile(asset.filename, asset.binaryData);
+            if (asset.binary_data) {
+                codenameFolder.addFile(asset.filename, asset.binary_data);
             }
         });
 
@@ -93,7 +93,7 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
                 title: assetRecord.title,
                 descriptions: assetRecord.descriptions,
                 folder: assetRecord.folder,
-                binaryData: binaryFile
+                binary_data: binaryFile
             };
 
             return migrationAsset;

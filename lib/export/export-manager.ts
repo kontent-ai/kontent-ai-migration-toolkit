@@ -1,29 +1,29 @@
-import { ExportContext, ExportConfig, ExportItem } from './export.models.js';
-import chalk from 'chalk';
 import { AssetFolderModels, AssetModels, CollectionModels, ElementModels } from '@kontent-ai/management-sdk';
+import chalk from 'chalk';
 import {
-    MigrationAsset,
-    MigrationItem,
-    FlattenedContentTypeElement,
     extractErrorData,
-    processItemsAsync,
-    getBinaryDataFromUrlAsync,
-    MigrationElements,
-    FlattenedContentType,
-    MigrationComponent,
-    getDefaultLogger,
-    MigrationData,
-    isNotUndefined,
-    MigrationElementValue,
-    getMigrationManagementClient,
     findRequired,
-    Writeable,
-    MigrationItemsSchema,
+    FlattenedContentType,
+    FlattenedContentTypeElement,
+    getBinaryDataFromUrlAsync,
+    getDefaultLogger,
+    getMigrationManagementClient,
+    isNotUndefined,
+    MigrationAsset,
     MigrationAssetsSchema,
-    MigrationItemVersion
+    MigrationComponent,
+    MigrationData,
+    MigrationElements,
+    MigrationElementValue,
+    MigrationItem,
+    MigrationItemsSchema,
+    MigrationItemVersion,
+    processItemsAsync,
+    Writeable
 } from '../core/index.js';
 import { exportTransforms } from '../translation/index.js';
 import { exportContextFetcherAsync } from './context/export-context-fetcher.js';
+import { ExportConfig, ExportContext, ExportItem } from './export.models.js';
 
 export function exportManager(config: ExportConfig) {
     const logger = config.logger ?? getDefaultLogger();
@@ -204,7 +204,7 @@ export function exportManager(config: ExportConfig) {
                     filename: asset.fileName,
                     title: asset.title ?? '',
                     codename: asset.codename,
-                    binaryData: binaryData.data,
+                    binary_data: binaryData.data,
                     collection: assetCollection ? { codename: assetCollection.codename } : undefined,
                     folder: assetFolder ? { codename: assetFolder.codename } : undefined,
                     descriptions: asset.descriptions.map((description) => {

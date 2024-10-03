@@ -1,10 +1,10 @@
-import { SharedContracts, LanguageVariantElementsBuilder, LanguageVariantElements } from '@kontent-ai/management-sdk';
+import { LanguageVariantElements, LanguageVariantElementsBuilder, SharedContracts } from '@kontent-ai/management-sdk';
 import {
-    parseAsMigrationReferencesArray,
     MigrationElementType,
-    MigrationRichTextElementValue,
     MigrationItem,
-    MigrationUrlSlugElementValue
+    MigrationRichTextElementValue,
+    MigrationUrlSlugElementValue,
+    parseAsMigrationReferencesArray
 } from '../../core/index.js';
 import { ImportContext, ImportTransformFunc } from '../../import/index.js';
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
@@ -62,7 +62,8 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: data.value?.toString() ?? null
+            value: data.value?.toString() ?? null,
+            display_timezone: null
         });
     },
     modular_content: (data) => {

@@ -1,20 +1,21 @@
 import { z } from 'zod';
 import {
+    MigrationAssetDescriptionSchema,
+    MigrationAssetSchema,
     MigrationComponentSchema,
-    MigrationElementTypeSchema,
-    MigrationElementValueSchema,
-    MigrationReferenceSchema,
-    MigrationUrlSlugElementValueSchema,
-    MigrationUrlSlugModeSchema,
-    MigrationRichTextElementValueSchema,
+    MigrationDataSchema,
+    MigrationDateTimeElementValueSchema,
     MigrationElementSchema,
     MigrationElementsSchema,
-    MigrationAssetDescriptionSchema,
-    MigrationDataSchema,
-    MigrationAssetSchema,
-    MigrationItemVersionSchema,
+    MigrationElementTypeSchema,
+    MigrationElementValueSchema,
     MigrationItemSchema,
-    MigrationItemSystemSchema
+    MigrationItemSystemSchema,
+    MigrationItemVersionSchema,
+    MigrationReferenceSchema,
+    MigrationRichTextElementValueSchema,
+    MigrationUrlSlugElementValueSchema,
+    MigrationUrlSlugModeSchema
 } from './migration.schema.js';
 
 export namespace MigrationElementModels {
@@ -58,6 +59,7 @@ export type MigrationItemSystem<
 };
 export type MigrationUrlSlugMode = z.infer<typeof MigrationUrlSlugModeSchema>;
 export type MigrationElementType = z.infer<typeof MigrationElementTypeSchema>;
+export type MigrationDateTimeElementValue = z.infer<typeof MigrationDateTimeElementValueSchema>;
 export type MigrationUrlSlugElementValue = z.infer<typeof MigrationUrlSlugElementValueSchema>;
 export type MigrationRichTextElementValue = z.infer<typeof MigrationRichTextElementValueSchema>;
 export type MigrationComponent = z.infer<typeof MigrationComponentSchema>;

@@ -1,6 +1,6 @@
 import { AssetFolderModels, AssetModels, CollectionModels, LanguageModels } from '@kontent-ai/management-sdk';
-import { MigrationAsset, MigrationAssetDescription, findRequired, geSizeInBytes } from '../../core/index.js';
 import deepEqual from 'deep-equal';
+import { MigrationAsset, MigrationAssetDescription, findRequired, geSizeInBytes } from '../../core/index.js';
 
 export function shouldUpdateAsset(data: {
     readonly migrationAsset: MigrationAsset;
@@ -29,7 +29,7 @@ function isBinaryFileIdentical(data: {
     readonly migrationAsset: MigrationAsset;
     readonly targetAsset: Readonly<AssetModels.Asset>;
 }): boolean {
-    const sourceFileSize = geSizeInBytes(data.migrationAsset.binaryData);
+    const sourceFileSize = geSizeInBytes(data.migrationAsset.binary_data);
     const targetFileSize = data.targetAsset.size;
 
     const sourceFilename = data.migrationAsset.filename;

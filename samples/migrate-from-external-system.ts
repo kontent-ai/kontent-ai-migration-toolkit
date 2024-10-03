@@ -89,7 +89,7 @@ const migrationAsset: MigrationAsset = {
     // title will be used in K.ai asset as a title
     title: 'Article teaser',
     // binary data of the asset you want to upload
-    binaryData: stringToBinaryData('data'),
+    binary_data: stringToBinaryData('data'),
     // collection assignment
     collection: {
         codename: 'teasers'
