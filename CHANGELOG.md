@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.5.1...v2.0.0) (2024-10-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Flattens element value stored to ensure that some future changes (such as support for new option) does not require breaking change
+* Adds support for migrating 'display_timezone' value between envrionments. To support this, it was required to change the contract for DateTime element value type.
+
+### Features
+
+* Adds support for migrating 'display_timezone' value between envrionments. To support this, it was required to change the contract for DateTime element value type. ([9d00460](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/9d00460ab3fbd479a1f3dad403bbf3a730743192))
+* Flattens element value stored to ensure that some future changes (such as support for new option) does not require breaking change ([d618afa](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/d618afac913685e632f87ffba2c0ca2baac9f1e2))
+* updates deps ([7f1d466](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/7f1d4667b59753bb28b4b5e218656809d7c94667))
+* uses `buffer` npm package ([40b50d5](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/40b50d53d1ff27d66cb197a6297ee1d2ee717228))
+
+
+### Bug Fixes
+
+* adds processing for asset links ([2e5a3df](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/2e5a3df30367d63f77b435ef6b106026d92c1eaf))
+* Update number transform to check for nullish values ([94041bd](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/94041bded425404bd7edff0174601f9b450f72d0))
+* update number transform to check for nullish values instead of falsey ones ([6562bd9](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/6562bd947f5bcfc20389b734b2308d6a3e9ed30b))
+
 ### [1.5.1](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.5.0...v1.5.1) (2024-09-09)
 
 
