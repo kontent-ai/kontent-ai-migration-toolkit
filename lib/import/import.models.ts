@@ -1,20 +1,4 @@
 import {
-    MigrationItem,
-    MigrationAsset,
-    Logger,
-    AssetStateInTargetEnvironmentByCodename,
-    ItemStateInTargetEnvironmentByCodename,
-    ReferencedDataInMigrationItems,
-    LanguageVariantStateInTargetEnvironmentByCodename,
-    ExternalIdGenerator,
-    FlattenedContentTypeElement,
-    MigrationElementValue,
-    MigrationElementType,
-    MigrationData,
-    ManagementClientConfig,
-    FlattenedContentType
-} from '../core/index.js';
-import {
     AssetFolderModels,
     AssetModels,
     CollectionModels,
@@ -25,6 +9,22 @@ import {
     ManagementClient,
     WorkflowModels
 } from '@kontent-ai/management-sdk';
+import {
+    AssetStateInTargetEnvironmentByCodename,
+    ExternalIdGenerator,
+    FlattenedContentType,
+    FlattenedContentTypeElement,
+    ItemStateInTargetEnvironmentByCodename,
+    LanguageVariantStateInTargetEnvironmentByCodename,
+    Logger,
+    ManagementClientConfig,
+    MigrationAsset,
+    MigrationData,
+    MigrationElementTransformData,
+    MigrationElementType,
+    MigrationItem,
+    ReferencedDataInMigrationItems
+} from '../core/index.js';
 
 export interface ImportContextConfig {
     readonly logger: Logger;
@@ -66,7 +66,7 @@ export interface ImportContext {
 }
 
 export type ImportTransformFunc = (data: {
-    readonly value: MigrationElementValue;
+    readonly elementData: MigrationElementTransformData;
     readonly elementCodename: string;
     readonly importContext: ImportContext;
     readonly migrationItems: readonly MigrationItem[];

@@ -17,7 +17,7 @@ import {
     Logger,
     ManagementClientConfig,
     MigrationComponent,
-    MigrationElementValue,
+    MigrationElementTransformData,
     MigrationUrlSlugMode,
     ReferencedDataInLanguageVariants
 } from '../core/index.js';
@@ -44,7 +44,7 @@ export type ExportTransformFunc = (data: {
     readonly typeElement: FlattenedContentTypeElement;
     readonly exportElement: ExportElement;
     readonly context: ExportContext;
-}) => MigrationElementValue;
+}) => MigrationElementTransformData;
 
 export interface ExportContext {
     readonly environmentData: ExportContextEnvironmentData;

@@ -14,7 +14,7 @@ import {
     MigrationComponent,
     MigrationData,
     MigrationElements,
-    MigrationElementValue,
+    MigrationElementTransformData,
     MigrationItem,
     MigrationItemsSchema,
     MigrationItemVersion,
@@ -111,7 +111,7 @@ export function exportManager(config: ExportConfig) {
 
                 model[typeElement.codename] = {
                     type: typeElement.type,
-                    value: getValueToStoreFromElement({
+                    ...getMigrationElementToStore({
                         context: context,
                         contentType: contentType,
                         exportElement: itemElement,
@@ -123,12 +123,12 @@ export function exportManager(config: ExportConfig) {
             }, {});
     };
 
-    const getValueToStoreFromElement = (data: {
+    const getMigrationElementToStore = (data: {
         context: ExportContext;
         contentType: FlattenedContentType;
         typeElement: FlattenedContentTypeElement;
         exportElement: ElementModels.ContentItemElement;
-    }): MigrationElementValue => {
+    }): MigrationElementTransformData => {
         try {
             return exportTransforms[data.typeElement.type]({
                 context: data.context,

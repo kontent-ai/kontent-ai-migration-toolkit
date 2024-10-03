@@ -1,12 +1,5 @@
 import { LanguageVariantElements, LanguageVariantElementsBuilder, SharedContracts } from '@kontent-ai/management-sdk';
-import {
-    MigrationDateTimeElementValue,
-    MigrationElementType,
-    MigrationItem,
-    MigrationRichTextElementValue,
-    MigrationUrlSlugElementValue,
-    parseAsMigrationReferencesArray
-} from '../../core/index.js';
+import { MigrationElementTransformData, MigrationElementType, MigrationItem, parseAsMigrationReferencesArray } from '../../core/index.js';
 import { ImportContext, ImportTransformFunc } from '../../import/index.js';
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
 
@@ -22,7 +15,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: parseAsMigrationReferencesArray(data.value).map((m) => {
+            value: parseAsMigrationReferencesArray(data.elementData.value).map((m) => {
                 return {
                     codename: m.codename
                 };
@@ -30,7 +23,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         });
     },
     asset: (data) => {
-        const assetReferences = parseAsMigrationReferencesArray(data.value)
+        const assetReferences = parseAsMigrationReferencesArray(data.elementData.value)
             .map((reference) => reference.codename)
             .map<Readonly<SharedContracts.IReferenceObjectContract>>((codename) => {
                 const assetState = data.importContext.getAssetStateInTargetEnvironment(codename);
@@ -55,22 +48,20 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: data.value?.toString() ?? ''
+            value: data.elementData.value?.toString() ?? ''
         });
     },
     date_time: (data) => {
-        const dateTimeValue = data.value as Readonly<MigrationDateTimeElementValue>;
-
         return elementsBuilder.dateTimeElement({
             element: {
                 codename: data.elementCodename
             },
-            value: dateTimeValue.value?.toString() ?? null,
-            display_timezone: dateTimeValue.display_timezone ?? null
+            value: data.elementData.value?.toString() ?? null,
+            display_timezone: data.elementData.display_timezone ?? null
         });
     },
     modular_content: (data) => {
-        const linkedItemReferences = parseAsMigrationReferencesArray(data.value)
+        const linkedItemReferences = parseAsMigrationReferencesArray(data.elementData.value)
             .map((reference) => reference.codename)
             .map<Readonly<SharedContracts.IReferenceObjectContract>>((codename) => {
                 const itemState = data.importContext.getItemStateInTargetEnvironment(codename);
@@ -94,7 +85,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: parseAsMigrationReferencesArray(data.value).map((m) => {
+            value: parseAsMigrationReferencesArray(data.elementData.value).map((m) => {
                 return {
                     codename: m.codename
                 };
@@ -106,12 +97,10 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: data.value ? +data.value : null
+            value: data.elementData ? +data.elementData : null
         });
     },
     rich_text: (data) => {
-        const rteElementValue = data.value as MigrationRichTextElementValue;
-
         return elementsBuilder.richTextElement({
             element: {
                 codename: data.elementCodename
@@ -119,11 +108,11 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             components: mapComponents({
                 importContext: data.importContext,
                 migrationItems: data.migrationItems,
-                rteValue: rteElementValue
+                elementData: data.elementData
             }),
             value:
                 processImportRichTextHtmlValue({
-                    element: rteElementValue,
+                    elementData: data.elementData,
                     importContext: data.importContext,
                     migrationItems: data.migrationItems
                 }) ?? null
@@ -134,7 +123,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: parseAsMigrationReferencesArray(data.value).map((m) => {
+            value: parseAsMigrationReferencesArray(data.elementData.value).map((m) => {
                 return {
                     codename: m.codename
                 };
@@ -146,28 +135,26 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: data.value?.toString() ?? null
+            value: data.elementData.value?.toString() ?? null
         });
     },
     url_slug: (data) => {
-        const urlSlugElementValue = data.value as Readonly<MigrationUrlSlugElementValue>;
-
         return elementsBuilder.urlSlugElement({
             element: {
                 codename: data.elementCodename
             },
-            value: urlSlugElementValue.value?.toString() ?? '',
-            mode: urlSlugElementValue.mode
+            value: data.elementData.value?.toString() ?? '',
+            mode: data.elementData.mode ?? 'autogenerated'
         });
     }
 };
 
 function mapComponents(data: {
-    readonly rteValue: MigrationRichTextElementValue;
+    readonly elementData: MigrationElementTransformData;
     readonly importContext: ImportContext;
     readonly migrationItems: readonly MigrationItem[];
 }): LanguageVariantElements.IRichTextComponent[] {
-    return data.rteValue.components.map((component) => {
+    return (data.elementData.components ?? []).map((component) => {
         const mappedComponent: Readonly<LanguageVariantElements.IRichTextComponent> = {
             id: component.system.id,
             type: {
@@ -178,7 +165,7 @@ function mapComponents(data: {
                     elementCodename: key,
                     importContext: data.importContext,
                     migrationItems: data.migrationItems,
-                    value: element.value
+                    elementData: element
                 });
 
                 return transformedElementValue;
@@ -190,15 +177,15 @@ function mapComponents(data: {
 }
 
 function processImportRichTextHtmlValue(data: {
-    readonly element: MigrationRichTextElementValue;
+    readonly elementData: MigrationElementTransformData;
     readonly importContext: ImportContext;
     readonly migrationItems: readonly MigrationItem[];
 }): string | undefined {
-    if (!data.element) {
+    if (!data.elementData) {
         return undefined;
     }
 
-    let richTextHtml: string = data.element.value ?? '';
+    let richTextHtml: string = data.elementData.value?.toString() ?? '';
 
     // replace item codenames with existing codename or external_id
     richTextHtml = richTextProcessor().processItemCodenames(richTextHtml, (codename) => {

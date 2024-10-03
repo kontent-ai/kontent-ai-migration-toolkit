@@ -4,7 +4,6 @@ import {
     MigrationAssetSchema,
     MigrationComponentSchema,
     MigrationDataSchema,
-    MigrationDateTimeElementValueSchema,
     MigrationElementSchema,
     MigrationElementsSchema,
     MigrationElementTypeSchema,
@@ -13,8 +12,6 @@ import {
     MigrationItemSystemSchema,
     MigrationItemVersionSchema,
     MigrationReferenceSchema,
-    MigrationRichTextElementValueSchema,
-    MigrationUrlSlugElementValueSchema,
     MigrationUrlSlugModeSchema
 } from './migration.schema.js';
 
@@ -29,13 +26,13 @@ export namespace MigrationElementModels {
 
     export type TextElement = MigrationElementDef<'text', string>;
     export type NumberElement = MigrationElementDef<'number', number>;
-    export type RichTextElement = MigrationElementDef<'rich_text', MigrationRichTextElementValue>;
+    export type RichTextElement = MigrationElementDef<'rich_text', string>;
     export type MultipleChoiceElement = MigrationElementDef<'multiple_choice', MigrationReference[]>;
-    export type DateTimeElement = MigrationElementDef<'date_time', MigrationDateTimeElementValue>;
+    export type DateTimeElement = MigrationElementDef<'date_time', string>;
     export type AssetElement = MigrationElementDef<'asset', MigrationReference[]>;
     export type LinkedItemsElement = MigrationElementDef<'modular_content', MigrationReference[]>;
     export type TaxonomyElement = MigrationElementDef<'taxonomy', MigrationReference[]>;
-    export type UrlSlugElement = MigrationElementDef<'url_slug', MigrationUrlSlugElementValue>;
+    export type UrlSlugElement = MigrationElementDef<'url_slug', string>;
     export type CustomElement = MigrationElementDef<'custom', string>;
     export type SubpagesElement = MigrationElementDef<'subpages', MigrationReference[]>;
 }
@@ -59,12 +56,10 @@ export type MigrationItemSystem<
 };
 export type MigrationUrlSlugMode = z.infer<typeof MigrationUrlSlugModeSchema>;
 export type MigrationElementType = z.infer<typeof MigrationElementTypeSchema>;
-export type MigrationDateTimeElementValue = z.infer<typeof MigrationDateTimeElementValueSchema>;
-export type MigrationUrlSlugElementValue = z.infer<typeof MigrationUrlSlugElementValueSchema>;
-export type MigrationRichTextElementValue = z.infer<typeof MigrationRichTextElementValueSchema>;
 export type MigrationComponent = z.infer<typeof MigrationComponentSchema>;
 export type MigrationElementValue = z.infer<typeof MigrationElementValueSchema>;
 export type MigrationElement = z.infer<typeof MigrationElementSchema>;
+export type MigrationElementTransformData = Omit<MigrationElement, 'type'>;
 export type MigrationElements = z.infer<typeof MigrationElementsSchema>;
 export type MigrationAssetDescription = z.infer<typeof MigrationAssetDescriptionSchema>;
 export type MigrationAsset = z.infer<typeof MigrationAssetSchema>;

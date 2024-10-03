@@ -1,15 +1,15 @@
-import { richTextProcessor } from '../index.js';
-import {
-    MigrationElementModels,
-    MigrationElements,
-    ReferencedDataInLanguageVariants,
-    ReferencedDataInMigrationItems,
-    parseAsMigrationReferencesArray
-} from '../../core/index.js';
-import { GetFlattenedElementByCodenames } from '../../import/index.js';
 import { ElementModels } from '@kontent-ai/management-sdk';
 import { GetFlattenedElementByIds } from 'lib/export/export.models.js';
 import { match, P } from 'ts-pattern';
+import {
+    MigrationElementModels,
+    MigrationElements,
+    parseAsMigrationReferencesArray,
+    ReferencedDataInLanguageVariants,
+    ReferencedDataInMigrationItems
+} from '../../core/index.js';
+import { GetFlattenedElementByCodenames } from '../../import/index.js';
+import { richTextProcessor } from '../index.js';
 
 export interface ExtractItemById {
     readonly elements: Readonly<ElementModels.ContentItemElement>[];
@@ -110,11 +110,10 @@ export function itemsExtractionProcessor() {
                 return Object.entries(item.elements).reduce<ReferencedDataInMigrationItemsLocal>(
                     (childExtractedCodenames, [elementCodename, element]) => {
                         const flattenedElement = getElement(item.contentTypeCodename, elementCodename, element.type);
-
                         match(flattenedElement.type)
                             .with('rich_text', () => {
                                 const richTextElementValue = element as MigrationElementModels.RichTextElement;
-                                const richTextHtml = richTextElementValue.value?.value ?? '';
+                                const richTextHtml = richTextElementValue?.value ?? '';
 
                                 // items
                                 richTextProcessor()
@@ -136,7 +135,7 @@ export function itemsExtractionProcessor() {
 
                                 // recursively extract data from components as well because they may reference additional assets & content items
                                 const extractedComponents = extractReferencedItemsFromMigrationItems(
-                                    (richTextElementValue.value?.components ?? []).map((component) => {
+                                    (element.components ?? []).map((component) => {
                                         const extractionItem: ExtractItemByCodename = {
                                             contentTypeCodename: component.system.type.codename,
                                             elements: component.elements

@@ -1,24 +1,24 @@
-import { match } from 'ts-pattern';
 import { ContentItemModels, ElementContracts, LanguageVariantModels, ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
+import chalk from 'chalk';
+import { match } from 'ts-pattern';
 import {
-    Logger,
-    processItemsAsync,
-    runMapiRequestAsync,
-    MigrationItem,
-    LogSpinnerData,
-    MigrationElement,
-    MigrationItemVersion,
-    workflowHelper,
     findRequired,
     isNotUndefined,
     LanguageVariantSchedulesStateValues,
-    LanguageVariantStateInTargetEnvironmentByCodename
+    LanguageVariantStateInTargetEnvironmentByCodename,
+    Logger,
+    LogSpinnerData,
+    MigrationElement,
+    MigrationItem,
+    MigrationItemVersion,
+    processItemsAsync,
+    runMapiRequestAsync,
+    workflowHelper
 } from '../../core/index.js';
-import chalk from 'chalk';
-import { ImportContext } from '../import.models.js';
 import { importTransforms } from '../../translation/index.js';
-import { workflowImporter as workflowImporterInit } from './workflow-importer.js';
+import { ImportContext } from '../import.models.js';
 import { throwErrorForMigrationItem } from '../utils/import.utils.js';
+import { workflowImporter as workflowImporterInit } from './workflow-importer.js';
 
 export function languageVariantImporter(config: {
     readonly logger: Logger;
@@ -290,7 +290,7 @@ export function languageVariantImporter(config: {
             elementCodename: elementCodename,
             importContext: config.importContext,
             migrationItems: config.importContext.categorizedImportData.contentItems,
-            value: element.value
+            elementData: element
         });
 
         return importTransformResult;
