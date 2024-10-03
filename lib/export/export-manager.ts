@@ -130,9 +130,6 @@ export function exportManager(config: ExportConfig) {
         exportElement: ElementModels.ContentItemElement;
     }): MigrationElementValue => {
         try {
-            if (data.typeElement.type === 'date_time') {
-                console.log(data.exportElement);
-            }
             return exportTransforms[data.typeElement.type]({
                 context: data.context,
                 typeElement: data.typeElement,
