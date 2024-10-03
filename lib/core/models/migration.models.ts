@@ -31,7 +31,7 @@ export namespace MigrationElementModels {
     export type NumberElement = MigrationElementDef<'number', number>;
     export type RichTextElement = MigrationElementDef<'rich_text', MigrationRichTextElementValue>;
     export type MultipleChoiceElement = MigrationElementDef<'multiple_choice', MigrationReference[]>;
-    export type DateTimeElement = MigrationElementDef<'date_time', string>;
+    export type DateTimeElement = MigrationElementDef<'date_time', MigrationDateTimeElementValue>;
     export type AssetElement = MigrationElementDef<'asset', MigrationReference[]>;
     export type LinkedItemsElement = MigrationElementDef<'modular_content', MigrationReference[]>;
     export type TaxonomyElement = MigrationElementDef<'taxonomy', MigrationReference[]>;
