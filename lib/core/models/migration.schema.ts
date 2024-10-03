@@ -29,7 +29,7 @@ type RichTextElementValue = {
 
 type DateTimeElementValue = {
     readonly value?: string;
-    readonly time_zone?: string;
+    readonly display_timezone?: string;
 };
 
 type ElementValue = string | undefined | number | Reference[] | RichTextElementValue | UrlSlugElementValue | DateTimeElementValue;
@@ -115,7 +115,7 @@ export const MigrationUrlSlugElementValueSchema = z
 export const MigrationDateTimeElementValueSchema = z
     .strictObject({
         value: z.optional(z.string()),
-        time_zone: z.optional(z.string())
+        display_timezone: z.optional(z.string())
     })
     .readonly();
 

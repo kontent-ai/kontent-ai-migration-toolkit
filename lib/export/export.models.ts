@@ -1,26 +1,26 @@
 import {
-    Logger,
-    FlattenedContentType,
-    AssetStateInSourceEnvironmentById,
-    FlattenedContentTypeElement,
-    ItemStateInSourceEnvironmentById,
-    ReferencedDataInLanguageVariants,
-    MigrationElementValue,
-    MigrationComponent,
-    MigrationUrlSlugMode,
-    ManagementClientConfig
-} from '../core/index.js';
-import {
-    LanguageVariantModels,
-    ContentItemModels,
-    WorkflowModels,
+    AssetFolderModels,
     CollectionModels,
+    ContentItemModels,
     LanguageModels,
-    TaxonomyModels,
+    LanguageVariantModels,
     ManagementClient,
     SharedModels,
-    AssetFolderModels
+    TaxonomyModels,
+    WorkflowModels
 } from '@kontent-ai/management-sdk';
+import {
+    AssetStateInSourceEnvironmentById,
+    FlattenedContentType,
+    FlattenedContentTypeElement,
+    ItemStateInSourceEnvironmentById,
+    Logger,
+    ManagementClientConfig,
+    MigrationComponent,
+    MigrationElementValue,
+    MigrationUrlSlugMode,
+    ReferencedDataInLanguageVariants
+} from '../core/index.js';
 
 export interface ExportContextEnvironmentData {
     readonly languages: readonly Readonly<LanguageModels.LanguageModel>[];
@@ -37,6 +37,7 @@ export interface ExportElement {
     readonly value: ExportElementValue;
     readonly components: readonly MigrationComponent[];
     readonly urlSlugMode: MigrationUrlSlugMode | undefined;
+    readonly displayTimezone: string | undefined;
 }
 
 export type ExportTransformFunc = (data: {

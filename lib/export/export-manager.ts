@@ -130,13 +130,17 @@ export function exportManager(config: ExportConfig) {
         exportElement: ElementModels.ContentItemElement;
     }): MigrationElementValue => {
         try {
+            if (data.typeElement.type === 'date_time') {
+                console.log(data.exportElement);
+            }
             return exportTransforms[data.typeElement.type]({
                 context: data.context,
                 typeElement: data.typeElement,
                 exportElement: {
                     components: data.exportElement.components.map((component) => mapToMigrationComponent(data.context, component)),
                     value: data.exportElement.value,
-                    urlSlugMode: data.exportElement.mode
+                    urlSlugMode: data.exportElement.mode,
+                    displayTimezone: data.exportElement.display_timezone
                 }
             });
         } catch (error) {

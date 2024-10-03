@@ -1,5 +1,6 @@
 import { LanguageVariantElements, LanguageVariantElementsBuilder, SharedContracts } from '@kontent-ai/management-sdk';
 import {
+    MigrationDateTimeElementValue,
     MigrationElementType,
     MigrationItem,
     MigrationRichTextElementValue,
@@ -58,12 +59,14 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
         });
     },
     date_time: (data) => {
+        const dateTimeValue = data.value as Readonly<MigrationDateTimeElementValue>;
+
         return elementsBuilder.dateTimeElement({
             element: {
                 codename: data.elementCodename
             },
-            value: data.value?.toString() ?? null,
-            display_timezone: null
+            value: dateTimeValue.value?.toString() ?? null,
+            display_timezone: dateTimeValue.display_timezone ?? null
         });
     },
     modular_content: (data) => {

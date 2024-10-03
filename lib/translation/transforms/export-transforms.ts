@@ -1,4 +1,7 @@
+import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
+import chalk from 'chalk';
 import {
+    MigrationDateTimeElementValue,
     MigrationElementType,
     MigrationReference,
     MigrationRichTextElementValue,
@@ -6,10 +9,8 @@ import {
     findRequired,
     isNotUndefined
 } from '../../core/index.js';
-import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
-import { ExportTransformFunc, ExportContext, ExportElement } from '../../export/index.js';
+import { ExportContext, ExportElement, ExportTransformFunc } from '../../export/index.js';
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
-import chalk from 'chalk';
 
 export const exportTransforms: Readonly<Record<MigrationElementType, ExportTransformFunc>> = {
     text: (data) => data.exportElement.value?.toString(),
@@ -28,7 +29,14 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
 
         return +data.exportElement.value;
     },
-    date_time: (data) => data.exportElement.value?.toString(),
+    date_time: (data) => {
+        const dateTimeValue: MigrationDateTimeElementValue = {
+            display_timezone: data.exportElement.displayTimezone,
+            value: data.exportElement.value?.toString()
+        };
+
+        return dateTimeValue;
+    },
     rich_text: (data) => transformRichTextValue(data.exportElement, data.context),
     asset: (data) => {
         if (!data.exportElement.value) {
