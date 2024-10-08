@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.1](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.1.0...v2.1.1) (2024-10-08)
+
+
+### Bug Fixes
+
+* updates deps which fixes possibility of sending incorrect headers ([1dbf50f](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/1dbf50f7ce08bdc070af7703d670b49da4c13367))
+
 ## [2.1.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.0.0...v2.1.0) (2024-10-08)
 
 
