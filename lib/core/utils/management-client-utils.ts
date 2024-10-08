@@ -1,3 +1,4 @@
+import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import {
     AssetFolderModels,
     CollectionModels,
@@ -10,14 +11,14 @@ import {
     WorkflowModels,
     createManagementClient
 } from '@kontent-ai/management-sdk';
-import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
-import { runMapiRequestAsync } from './run.utils.js';
-import { LogSpinnerData, Logger } from '../models/log.models.js';
-import { FlattenedContentType, FlattenedContentTypeElement } from '../models/core.models.js';
-import { isNotUndefined } from './global.utils.js';
 import chalk from 'chalk';
-import { defaultHttpService, defaultRetryStrategy } from './http.utils.js';
+import { coreConfig } from '../config.js';
+import { FlattenedContentType, FlattenedContentTypeElement } from '../models/core.models.js';
+import { LogSpinnerData, Logger } from '../models/log.models.js';
 import { findRequired } from './array.utils.js';
+import { isNotUndefined } from './global.utils.js';
+import { defaultHttpService, defaultRetryStrategy } from './http.utils.js';
+import { runMapiRequestAsync } from './run.utils.js';
 
 export interface ManagementClientConfig {
     readonly environmentId: string;
@@ -31,7 +32,13 @@ export function getMigrationManagementClient(config: ManagementClientConfig): Ma
         environmentId: config.environmentId,
         retryStrategy: config.retryStrategy ?? defaultRetryStrategy,
         httpService: defaultHttpService,
-        apiKey: config.apiKey
+        apiKey: config.apiKey,
+        headers: [
+            {
+                header: coreConfig.kontentTrackingHeaderName,
+                value: coreConfig.kontentTrackingHeaderValue
+            }
+        ]
     });
 }
 
