@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.0.0...v2.1.0) (2024-10-08)
+
+
+### Features
+
+* adds tracking header ([07ab957](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/07ab957b97271610b9a4177edcc6bafdb890f388))
+* updates deps ([2ff8ccc](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/2ff8ccc34c4c57fddbc49bb6e3299a0826ca2054))
+
 ## [2.0.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v1.5.1...v2.0.0) (2024-10-03)
 
 
