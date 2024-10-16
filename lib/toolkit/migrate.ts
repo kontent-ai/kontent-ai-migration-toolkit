@@ -1,4 +1,3 @@
-import { libMetadata } from '../metadata.js';
 import { IRetryStrategyOptions } from '@kontent-ai/core-sdk';
 import {
     ExternalIdGenerator,
@@ -9,9 +8,10 @@ import {
     getDefaultLogger
 } from '../core/index.js';
 import { SourceExportItem } from '../export/index.js';
+import { ImportResult } from '../import/index.js';
+import { libMetadata } from '../metadata.js';
 import { exportAsync } from './export.js';
 import { importAsync } from './import.js';
-import { ImportResult } from '../import/index.js';
 
 export interface MigrationSource extends ManagementClientConfig {
     readonly items: readonly SourceExportItem[];
@@ -64,6 +64,7 @@ export async function migrateAsync(config: MigrationConfig): Promise<MigrationRe
                 importResult,
                 migrationData
             };
-        }
+        },
+        logger: config.logger
     });
 }

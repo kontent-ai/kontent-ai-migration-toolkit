@@ -38,7 +38,8 @@ export async function storeAsync(config: StoreConfig): Promise<void> {
             } else {
                 throw Error(`Cannot store '${filename}' on File system because the provided zip is not a Buffer`);
             }
-        }
+        },
+        logger: config.logger
     });
 }
 
@@ -60,6 +61,7 @@ export async function extractAsync(config: ExtractConfig): Promise<MigrationData
         func: async () => {
             const fileData = await fileManager(logger).loadFileAsync(filename);
             return await zipManager(logger).parseZipAsync(fileData);
-        }
+        },
+        logger: config.logger
     });
 }

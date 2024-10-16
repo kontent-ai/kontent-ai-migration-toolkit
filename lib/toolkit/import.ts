@@ -16,6 +16,7 @@ export async function importAsync(config: ImportConfig): Promise<ImportResult> {
         },
         func: async () => {
             return await importManager(config).importAsync();
-        }
+        },
+        logger: config.logger
     });
 }
