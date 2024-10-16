@@ -1,10 +1,16 @@
-import { WorkflowModels } from '@kontent-ai/management-sdk';
+import { WorkflowContracts, WorkflowModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import { findRequired } from '../utils/array.utils.js';
+
+interface TransitionTo {
+    readonly codename: string;
+    readonly id: string;
+}
 
 export type WorkflowStep = {
     readonly codename: string;
     readonly id: string;
+    readonly transitionsTo: readonly TransitionTo[];
 };
 
 type WorkflowMatcher = {
@@ -17,12 +23,53 @@ type StepMatcher = {
 };
 
 export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workflow>[]) {
+    const mapContractToWorkflowSteps = (
+        workflow: Readonly<WorkflowModels.Workflow>,
+        stepsContract: readonly Readonly<WorkflowContracts.IWorkflowStepNewContract>[]
+    ): readonly WorkflowStep[] => {
+        const allStepsContracts = [...workflow.steps, workflow.archivedStep, workflow.publishedStep, workflow.scheduledStep];
+
+        return stepsContract.map<WorkflowStep>((m) => {
+            return {
+                codename: m.codename,
+                id: m.id,
+                transitionsTo: m.transitions_to.map((transitionTo) => {
+                    const transitionStep = allStepsContracts.find((step) => step.id === transitionTo.step.id);
+
+                    if (!transitionStep) {
+                        throw Error(`Could not find transition step with id '${transitionTo.step.id}' in workflow '${workflow.codename}'`);
+                    }
+
+                    return {
+                        codename: transitionStep.codename,
+                        id: transitionStep.id
+                    };
+                })
+            };
+        });
+    };
+
     const getWorkflowStep = (workflow: Readonly<WorkflowModels.Workflow>, stepMatcher: StepMatcher): WorkflowStep => {
-        return findRequired(
-            [...workflow.steps, workflow.archivedStep, workflow.publishedStep, workflow.scheduledStep],
-            stepMatcher.match,
-            stepMatcher.errorMessage
-        );
+        const workflowSteps: readonly WorkflowStep[] = [
+            ...mapContractToWorkflowSteps(workflow, workflow.steps),
+            {
+                codename: workflow.archivedStep.codename,
+                id: workflow.archivedStep.id,
+                transitionsTo: []
+            },
+            {
+                codename: workflow.publishedStep.codename,
+                id: workflow.publishedStep.id,
+                transitionsTo: []
+            },
+            {
+                codename: workflow.scheduledStep.codename,
+                id: workflow.scheduledStep.id,
+                transitionsTo: []
+            }
+        ];
+
+        return findRequired(workflowSteps, stepMatcher.match, stepMatcher.errorMessage);
     };
 
     const getWorkflow = (workflowMatcher: WorkflowMatcher): Readonly<WorkflowModels.Workflow> => {

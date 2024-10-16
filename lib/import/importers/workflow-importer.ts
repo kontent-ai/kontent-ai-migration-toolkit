@@ -1,13 +1,13 @@
-import { ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
+import { LanguageVariantModels, ManagementClient, SharedModels, WorkflowModels } from '@kontent-ai/management-sdk';
+import { match } from 'ts-pattern';
 import {
     Logger,
-    runMapiRequestAsync,
     LogSpinnerData,
     MigrationItem,
-    workflowHelper as workflowHelperInit,
-    MigrationItemVersion
+    MigrationItemVersion,
+    runMapiRequestAsync,
+    workflowHelper as workflowHelperInit
 } from '../../core/index.js';
-import { match } from 'ts-pattern';
 
 export function workflowImporter(config: {
     readonly logger: Logger;
@@ -19,6 +19,7 @@ export function workflowImporter(config: {
     const publishLanguageVariantAsync = async (data: {
         readonly logSpinner: LogSpinnerData;
         readonly migrationItem: MigrationItem;
+        readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
     }): Promise<void> => {
         await runMapiRequestAsync({
             logger: config.logger,
@@ -331,6 +332,7 @@ export function workflowImporter(config: {
         readonly stepCodename: string;
         readonly migrationItem: MigrationItem;
         readonly migrationItemVersion: MigrationItemVersion;
+        readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
     }): Promise<void> => {
         return await match(data.stepCodename)
             .returnType<Promise<void>>()

@@ -141,7 +141,8 @@ export function languageVariantImporter(config: {
             migrationItem: data.migrationItem,
             workflowCodename: workflow.codename,
             stepCodename: step.codename,
-            migrationItemVersion: data.migrationItemVersion
+            migrationItemVersion: data.migrationItemVersion,
+            languageVariant: languageVariant
         });
 
         // set scheduling

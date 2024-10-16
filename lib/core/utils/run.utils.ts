@@ -1,7 +1,7 @@
 import chalk from 'chalk';
+import { match } from 'ts-pattern';
 import { MapiAction, MapiType } from '../models/core.models.js';
 import { LogMessage, LogSpinnerData, Logger } from '../models/log.models.js';
-import { match } from 'ts-pattern';
 
 export async function runMapiRequestAsync<TResult>(data: {
     readonly logger: Logger;
