@@ -1,4 +1,4 @@
-import { WorkflowModels } from '@kontent-ai/management-sdk';
+import { WorkflowModels, WorkflowContracts } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import { findRequired } from '../utils/array.utils.js';
 
@@ -15,6 +15,12 @@ type StepMatcher = {
     readonly match: (step: WorkflowStep, index: number) => boolean;
     readonly errorMessage: string;
 };
+
+type Steps =
+    | WorkflowContracts.IWorkflowStepNewContract
+    | WorkflowContracts.IWorkflowPublishedStepContract
+    | WorkflowContracts.IWorkflowArchivedStepContract
+    | WorkflowContracts.IWorkflowScheduledStepContract;
 
 export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workflow>[]) {
     const getWorkflowStep = (workflow: Readonly<WorkflowModels.Workflow>, stepMatcher: StepMatcher): WorkflowStep => {
@@ -89,6 +95,80 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         return workflows.find((workflow) => workflow.publishedStep.id === stepId) ? true : false;
     };
 
+    const findWorkflowPath = (workflow: Readonly<WorkflowModels.Workflow>, workflowStep: WorkflowStep): string[] => {
+        const fromId = workflow.steps[0].id;
+        const stepId = workflowStep.id;
+
+        // If the start and end are the same, return empty path
+        if (fromId === stepId) {
+            return [];
+        }
+
+        // Create a map of id to WorkflowStep for easier lookup
+        const stepMap = new Map<string, Steps>();
+        
+        for (const step of workflow.steps) {
+            stepMap.set(step.id, step);
+        }
+
+        // Also add special steps to the map if they exist
+        if (workflow.publishedStep?.id) {
+            stepMap.set(workflow.publishedStep.id, workflow.publishedStep);
+        }
+        if (workflow.scheduledStep?.id) {
+            stepMap.set(workflow.scheduledStep.id, workflow.scheduledStep);
+        }
+        if (workflow.archivedStep?.id) {
+            stepMap.set(workflow.archivedStep.id, workflow.archivedStep);
+        }
+
+        // Check if both steps exist
+        if (!stepMap.has(fromId) || !stepMap.has(stepId)) {
+            throw new Error('One or both of the specified steps do not exist in the workflow');
+        }
+
+        // Queue for BFS
+        const queue: Array<{ id: string; path: string[] }> = [];
+        // Set to keep track of visited steps
+        const visited = new Set<string>();
+
+        // Start BFS
+        queue.push({ id: fromId, path: [] });
+        visited.add(fromId);
+
+        while (queue.length > 0) {
+            const { id, path } = queue.shift()!;
+            const currentStep = stepMap.get(id)!;
+
+            if ('transitions_to' in currentStep) {
+                // Check each transition
+                for (const {
+                    step: { id: nextId }
+                } of currentStep.transitions_to) {
+                    if (nextId === undefined) {
+                        continue;
+                    }
+
+                    if (nextId === stepId) {
+                        // Found the target step, return the path
+                        return [...path, nextId].map((id) => stepMap.get(id)!.codename);
+                    }
+
+                    if (!visited.has(nextId)) {
+                        visited.add(nextId);
+                        queue.push({
+                            id: nextId,
+                            path: [...path, nextId]
+                        });
+                    }
+                }
+            }
+        }
+
+        // If we get here, no path was found
+        throw new Error(`No path found from ${fromId} to ${stepId}`);
+    };
+
     return {
         getWorkflowByCodename,
         getWorkflowStepByCodename,
@@ -99,6 +179,7 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         isPublishedStepByCodename,
         isArchivedStepByCodename,
         isScheduledStepByCodename,
-        isPublishedStepById
+        isPublishedStepById,
+        findWorkflowPath
     };
 }

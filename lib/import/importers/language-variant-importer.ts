@@ -140,8 +140,9 @@ export function languageVariantImporter(config: {
             logSpinner: data.logSpinner,
             migrationItem: data.migrationItem,
             workflowCodename: workflow.codename,
-            stepCodename: step.codename,
-            migrationItemVersion: data.migrationItemVersion
+            migrationItemVersion: data.migrationItemVersion,
+            step,
+            workflow
         });
 
         // set scheduling

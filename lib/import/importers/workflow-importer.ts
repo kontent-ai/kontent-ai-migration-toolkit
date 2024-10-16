@@ -5,7 +5,8 @@ import {
     LogSpinnerData,
     MigrationItem,
     workflowHelper as workflowHelperInit,
-    MigrationItemVersion
+    MigrationItemVersion,
+    WorkflowStep
 } from '../../core/index.js';
 import { match } from 'ts-pattern';
 
@@ -166,12 +167,12 @@ export function workflowImporter(config: {
     const changeWorkflowOfLanguageVariantAsync = async (data: {
         readonly logSpinner: LogSpinnerData;
         readonly workflowCodename: string;
-        readonly stepCodename: string;
+        readonly step: WorkflowStep;
         readonly migrationItem: MigrationItem;
     }): Promise<void> => {
         const { workflow, step } = workflowHelper.getWorkflowAndStepByCodenames({
             workflowCodename: data.workflowCodename,
-            stepCodename: data.stepCodename
+            stepCodename: data.step.codename
         });
 
         await runMapiRequestAsync({
@@ -328,28 +329,37 @@ export function workflowImporter(config: {
     const setWorkflowOfLanguageVariantAsync = async (data: {
         readonly logSpinner: LogSpinnerData;
         readonly workflowCodename: string;
-        readonly stepCodename: string;
+        readonly step: WorkflowStep;
         readonly migrationItem: MigrationItem;
         readonly migrationItemVersion: MigrationItemVersion;
+        readonly workflow: Readonly<WorkflowModels.Workflow>;
     }): Promise<void> => {
-        return await match(data.stepCodename)
-            .returnType<Promise<void>>()
-            .when(
-                (stepCodename) => workflowHelper.isPublishedStepByCodename(stepCodename),
-                async () => await publishLanguageVariantAsync(data)
-            )
-            .when(
-                (stepCodename) => workflowHelper.isArchivedStepByCodename(stepCodename),
-                async () => await archiveLanguageVariantAsync(data)
-            )
-            .when(
-                (stepCodename) => workflowHelper.isScheduledStepByCodename(stepCodename),
-                async () => {
+        const workflowPath = workflowHelper.findWorkflowPath(data.workflow, data.step);
+
+        for (const stepCodename of workflowPath) {
+            await match(stepCodename)
+                .returnType<Promise<void>>()
+                .when(
+                    (stepCodename) => workflowHelper.isPublishedStepByCodename(stepCodename),
+                    () => publishLanguageVariantAsync(data)
+                )
+                .when(
+                    (stepCodename) => workflowHelper.isArchivedStepByCodename(stepCodename),
+                    () => archiveLanguageVariantAsync(data)
+                )
+                .when(
+                    (stepCodename) => workflowHelper.isScheduledStepByCodename(stepCodename),
                     // do nothing for scheduled step
-                    return await Promise.resolve();
-                }
-            )
-            .otherwise(async () => await changeWorkflowOfLanguageVariantAsync(data));
+                    () => Promise.resolve()
+                )
+                .otherwise(() => changeWorkflowOfLanguageVariantAsync({
+                    ...data,
+                    step: {
+                        codename: stepCodename,
+                        id: ''
+                    }
+                }));
+        }
     };
 
     return {
