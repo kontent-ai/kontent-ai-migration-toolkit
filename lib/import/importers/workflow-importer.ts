@@ -6,7 +6,8 @@ import {
     MigrationItem,
     MigrationItemVersion,
     runMapiRequestAsync,
-    workflowHelper as workflowHelperInit
+    workflowHelper as workflowHelperInit,
+    WorkflowStep
 } from '../../core/index.js';
 
 export function workflowImporter(config: {
@@ -20,6 +21,8 @@ export function workflowImporter(config: {
         readonly logSpinner: LogSpinnerData;
         readonly migrationItem: MigrationItem;
         readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
+        readonly workflowCodename: string;
+        readonly stepCodename: string;
     }): Promise<void> => {
         await runMapiRequestAsync({
             logger: config.logger,
@@ -38,6 +41,12 @@ export function workflowImporter(config: {
             itemName: `${data.migrationItem.system.codename} (${data.migrationItem.system.language.codename})`
         });
     };
+
+    const getPreviousToPublishStep = (workflow: Readonly<WorkflowModels.Workflow>, variantStep: WorkflowStep, publishStep: WorkflowStep) => {
+        const steps = workflowHelper.findShortestPathBetweenSteps(workflow, variantStep, publishStep);
+
+        return steps[steps.length - 2];
+      }
 
     const unpublishLanguageVariantAsync = async (data: {
         readonly logSpinner: LogSpinnerData;
@@ -338,7 +347,20 @@ export function workflowImporter(config: {
             .returnType<Promise<void>>()
             .when(
                 (stepCodename) => workflowHelper.isPublishedStepByCodename(stepCodename),
-                async () => await publishLanguageVariantAsync(data)
+                async () =>  {
+                    const { workflow, step: publishStep } = workflowHelper.getWorkflowAndStepByCodenames({
+                        workflowCodename: data.workflowCodename,
+                        stepCodename: data.stepCodename
+                    });
+                    const variantStep = workflowHelper.getWorkflowStepById(workflow, data.languageVariant.workflow.stepIdentifier.id as string);
+                    const previousToPublishStep = getPreviousToPublishStep(workflow, variantStep, publishStep)
+            
+                    if(previousToPublishStep) {
+                        await changeWorkflowOfLanguageVariantAsync({...data, stepCodename: previousToPublishStep})
+                    }
+
+                    await publishLanguageVariantAsync(data) 
+                } 
             )
             .when(
                 (stepCodename) => workflowHelper.isArchivedStepByCodename(stepCodename),

@@ -98,6 +98,18 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         });
     };
 
+    const getWorkflowStepById = (workflow: Readonly<WorkflowModels.Workflow>, stepId: string): WorkflowStep => {
+        return getWorkflowStep(workflow, {
+            errorMessage: [
+                `Workflow step with codename '${chalk.red(stepId)}' does not exist in target project`,
+                `Steps in workflow '${chalk.yellow(workflow.codename)}' are (${workflow.steps.length}): ${workflow.steps
+                    .map((m) => chalk.cyan(m.id))
+                    .join(', ')}`
+            ].join(', '),
+            match: (step) => step.id.toLowerCase() === stepId.toLowerCase()
+        });
+    };
+
     const getWorkflowAndStep = (data: {
         readonly workflowMatcher: WorkflowMatcher;
         readonly stepMatcher: StepMatcher;
@@ -165,6 +177,7 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         getWorkflowByCodename,
         getWorkflowStepByCodename,
         getWorkflowAndStepByCodenames,
+        getWorkflowStepById,
         getWorkflowStep,
         getWorkflowAndStep,
         getWorkflow,
