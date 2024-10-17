@@ -90,7 +90,7 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         return getWorkflowStep(workflow, {
             errorMessage: [
                 `Workflow step with codename '${chalk.red(stepCodename)}' does not exist in target project`,
-                `Step in workflow '${chalk.yellow(workflow.codename)}' are (${workflows.length}): ${workflows
+                `Steps in workflow '${chalk.yellow(workflow.codename)}' are (${workflow.steps.length}): ${workflow.steps
                     .map((m) => chalk.cyan(m.codename))
                     .join(', ')}`
             ].join(', '),
@@ -129,8 +129,8 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         while (deque.length !== 0) {
             const node = deque.shift() as Node;
 
-            if (node?.step.id === endStep.id) {
-                getResult({ parent: node, step: getWorkflowStepByCodename(workflow, node.step.codename) })
+            if (node.step.codename === endStep.codename) {
+                return getResult(node)
             }
 
             const newNodes = node.step.transitionsTo
