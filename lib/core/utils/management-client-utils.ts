@@ -33,6 +33,7 @@ export function getMigrationManagementClient(config: ManagementClientConfig): Ma
         retryStrategy: config.retryStrategy ?? defaultRetryStrategy,
         httpService: defaultHttpService,
         apiKey: config.apiKey,
+        baseUrl: config.baseUrl,
         headers: [
             {
                 header: coreConfig.kontentTrackingHeaderName,
