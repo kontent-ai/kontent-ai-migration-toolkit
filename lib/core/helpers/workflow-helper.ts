@@ -13,6 +13,10 @@ export type WorkflowStep = {
     readonly transitionsTo: readonly TransitionTo[];
 };
 
+export type ShortestPathResult = {
+    readonly stepCodename: string;
+};
+
 type WorkflowMatcher = {
     readonly match: (workflow: Readonly<WorkflowModels.Workflow>, index: number) => boolean;
     readonly errorMessage: string;
@@ -132,30 +136,38 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         };
     };
 
-    const findShortestPathBetweenSteps = (workflow: WorkflowModels.Workflow, startStep: WorkflowStep, endStep: WorkflowStep): ReadonlyArray<string> => {
-        type Node = Readonly<{ parent: null | Node, step: WorkflowStep }>
+    const findShortestPathBetweenSteps = (
+        workflow: WorkflowModels.Workflow,
+        startStep: WorkflowStep,
+        endStep: WorkflowStep
+    ): ReadonlyArray<ShortestPathResult> => {
+        type Node = Readonly<{ parent: null | Node; step: WorkflowStep }>;
         let deque: Array<Node> = [{ parent: null, step: startStep }];
 
-        const getResult = (node: Node): ReadonlyArray<string> => node.parent === null ? [] : [...getResult(node.parent), node.step.codename]
+        const getResult = (node: Node): ReadonlyArray<ShortestPathResult> =>
+            node.parent === null ? [] : [...getResult(node.parent), { stepCodename: node.step.codename }];
 
         while (deque.length !== 0) {
             const node = deque.shift() as Node;
 
             if (node.step.codename === endStep.codename) {
-                return getResult(node)
+                return getResult(node);
             }
 
             const newNodes = node.step.transitionsTo
-                .filter(s => deque.find(n => n.step.codename === s.codename) === undefined)
-                .map(t => ({
-                    parent: node, step: getWorkflowStepByCodename(workflow, t.codename)
-                }))
+                .filter((s) => deque.find((n) => n.step.codename === s.codename) === undefined)
+                .map((t) => ({
+                    parent: node,
+                    step: getWorkflowStepByCodename(workflow, t.codename)
+                }));
 
-            deque = deque.concat(newNodes)
+            deque = deque.concat(newNodes);
         }
 
-        throw new Error(`Could not find the path from step (codename: ${startStep.codename}) to step (codename: ${endStep.codename}) in workflow (codename: ${workflow.codename})`);
-    }
+        throw new Error(
+            `Could not find the path from step (codename: ${startStep.codename}) to step (codename: ${endStep.codename}) in workflow (codename: ${workflow.codename})`
+        );
+    };
 
     const isPublishedStepByCodename = (stepCodename: string): boolean => {
         return workflows.find((workflow) => workflow.publishedStep.codename === stepCodename) ? true : false;
