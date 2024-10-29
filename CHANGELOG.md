@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.1](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.2.0...v2.2.1) (2024-10-29)
+
+
+### Bug Fixes
+
+* Correctly forwards 'baseUrl' config to management client ([8136c68](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/8136c68029f9a4847a56ad93b697604f741b672a))
+
 ## [2.2.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.1.1...v2.2.0) (2024-10-29)
 
 
