@@ -1,4 +1,4 @@
-import { MigrationItemType, MapiAction, MapiType } from '../index.js';
+import { MapiAction, MapiType, MigrationItemType } from '../index.js';
 
 export type DebugType =
     | 'error'

@@ -27,7 +27,7 @@ export interface ManagementClientConfig {
     readonly baseUrl?: string;
 }
 
-export function getMigrationManagementClient(config: ManagementClientConfig): ManagementClient {
+export function getMigrationManagementClient(config: ManagementClientConfig): Readonly<ManagementClient> {
     return createManagementClient({
         environmentId: config.environmentId,
         retryStrategy: config.retryStrategy ?? defaultRetryStrategy,
