@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Features
 
+* Handles intermediate workflow steps transitions
 * updates deps ([e42f04d](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/e42f04d5ab08ce602292a31f34469b058fac9bb9))
 
 
@@ -20,7 +21,6 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Bug Fixes
 
-* Handles intermediate workflow steps transitions
 * updates deps which fixes possibility of sending incorrect headers ([1dbf50f](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/1dbf50f7ce08bdc070af7703d670b49da4c13367))
 
 ## [2.1.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.0.0...v2.1.0) (2024-10-08)
