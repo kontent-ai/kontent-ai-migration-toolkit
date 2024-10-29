@@ -97,7 +97,7 @@ export const importTransforms: Readonly<Record<MigrationElementType, ImportTrans
             element: {
                 codename: data.elementCodename
             },
-            value: data.elementData ? +data.elementData : null
+            value: data.elementData.value ? +data.elementData.value : null
         });
     },
     rich_text: (data) => {
