@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.1.1...v2.2.0) (2024-10-29)
+
+
+### Features
+
+* updates deps ([e42f04d](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/e42f04d5ab08ce602292a31f34469b058fac9bb9))
+
+
+### Bug Fixes
+
+* Fixes number element import transform (fixes https://github.com/kontent-ai/kontent-ai-migration-toolkit/issues/17) ([b5b27b9](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/b5b27b9c1f22c34cbccf49bf5393bd3b82bd7ccc))
+* handles exceptions when tracking events (fixes https://github.com/kontent-ai/kontent-ai-migration-toolkit/issues/14) ([28f3ea9](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/28f3ea95ee3114ef92b0eb0142bfa64f60b7501b))
+
 ### [2.1.1](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.1.0...v2.1.1) (2024-10-08)
 
 
