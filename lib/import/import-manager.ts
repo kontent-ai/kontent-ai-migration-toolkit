@@ -1,15 +1,15 @@
 import { ContentItemModels, LanguageVariantModels, ManagementClient } from '@kontent-ai/management-sdk';
 
-import { defaultExternalIdGenerator, Logger, getDefaultLogger, getMigrationManagementClient } from '../core/index.js';
+import { defaultExternalIdGenerator, getDefaultLogger, getMigrationManagementClient, Logger } from '../core/index.js';
+import { importContextFetcherAsync } from './context/import-context-fetcher.js';
 import { ImportConfig, ImportContext, ImportResult } from './import.models.js';
 import { assetsImporter } from './importers/assets-importer.js';
 import { contentItemsImporter } from './importers/content-items-importer.js';
 import { languageVariantImporter } from './importers/language-variant-importer.js';
-import { importContextFetcherAsync } from './context/import-context-fetcher.js';
 
 export function importManager(config: ImportConfig) {
     const logger: Logger = config.logger ?? getDefaultLogger();
-    const targetEnvironmentClient: ManagementClient = getMigrationManagementClient(config);
+    const targetEnvironmentClient: Readonly<ManagementClient> = getMigrationManagementClient(config);
 
     const importAssetsAsync = async (importContext: ImportContext): Promise<Pick<ImportResult, 'editedAssets' | 'uploadedAssets'>> => {
         if (!importContext.categorizedImportData.assets.length) {
