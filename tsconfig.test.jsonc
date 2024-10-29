@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        /* Language and Environment */
+        "target": "es2023",
+        "lib": ["esnext"],
+        /* Modules */
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "resolveJsonModule": true,
+        "allowImportingTsExtensions": true,
+        "esModuleInterop": true,
+        // needs to be added chalk to be processed
+        "allowJs": true,
+        /* Emit */
+        "noEmit": true,
+        /* Type Checking */
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "allowUnreachableCode": false,
+        "noErrorTruncation": true,
+        "skipLibCheck": true
+    },
+    "include": ["tests/**/*", "src/**/*"]
+}

@@ -13,6 +13,10 @@ export type WorkflowStep = {
     readonly transitionsTo: readonly TransitionTo[];
 };
 
+export type ShortestPathResult = {
+    readonly stepCodename: string;
+};
+
 type WorkflowMatcher = {
     readonly match: (workflow: Readonly<WorkflowModels.Workflow>, index: number) => boolean;
     readonly errorMessage: string;
@@ -90,11 +94,23 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         return getWorkflowStep(workflow, {
             errorMessage: [
                 `Workflow step with codename '${chalk.red(stepCodename)}' does not exist in target project`,
-                `Step in workflow '${chalk.yellow(workflow.codename)}' are (${workflows.length}): ${workflows
+                `Steps in workflow '${chalk.yellow(workflow.codename)}' are (${workflow.steps.length}): ${workflow.steps
                     .map((m) => chalk.cyan(m.codename))
                     .join(', ')}`
             ].join(', '),
             match: (step) => step.codename.toLowerCase() === stepCodename.toLowerCase()
+        });
+    };
+
+    const getWorkflowStepById = (workflow: Readonly<WorkflowModels.Workflow>, stepId: string): WorkflowStep => {
+        return getWorkflowStep(workflow, {
+            errorMessage: [
+                `Workflow step with codename '${chalk.red(stepId)}' does not exist in target project`,
+                `Steps in workflow '${chalk.yellow(workflow.codename)}' are (${workflow.steps.length}): ${workflow.steps
+                    .map((m) => chalk.cyan(m.id))
+                    .join(', ')}`
+            ].join(', '),
+            match: (step) => step.id.toLowerCase() === stepId.toLowerCase()
         });
     };
 
@@ -120,6 +136,39 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         };
     };
 
+    const findShortestPathBetweenSteps = (
+        workflow: WorkflowModels.Workflow,
+        startStep: WorkflowStep,
+        endStep: WorkflowStep
+    ): ReadonlyArray<ShortestPathResult> => {
+        type Node = Readonly<{ parent: null | Node; step: WorkflowStep }>;
+        let deque: Array<Node> = [{ parent: null, step: startStep }];
+
+        const getResult = (node: Node): ReadonlyArray<ShortestPathResult> =>
+            node.parent === null ? [] : [...getResult(node.parent), { stepCodename: node.step.codename }];
+
+        while (deque.length !== 0) {
+            const node = deque.shift() as Node;
+
+            if (node.step.codename === endStep.codename) {
+                return getResult(node);
+            }
+
+            const newNodes = node.step.transitionsTo
+                .filter((s) => deque.find((n) => n.step.codename === s.codename) === undefined)
+                .map((t) => ({
+                    parent: node,
+                    step: getWorkflowStepByCodename(workflow, t.codename)
+                }));
+
+            deque = deque.concat(newNodes);
+        }
+
+        throw new Error(
+            `Could not find the path from step (codename: ${startStep.codename}) to step (codename: ${endStep.codename}) in workflow (codename: ${workflow.codename})`
+        );
+    };
+
     const isPublishedStepByCodename = (stepCodename: string): boolean => {
         return workflows.find((workflow) => workflow.publishedStep.codename === stepCodename) ? true : false;
     };
@@ -140,12 +189,14 @@ export function workflowHelper(workflows: readonly Readonly<WorkflowModels.Workf
         getWorkflowByCodename,
         getWorkflowStepByCodename,
         getWorkflowAndStepByCodenames,
+        getWorkflowStepById,
         getWorkflowStep,
         getWorkflowAndStep,
         getWorkflow,
         isPublishedStepByCodename,
         isArchivedStepByCodename,
         isScheduledStepByCodename,
-        isPublishedStepById
+        isPublishedStepById,
+        findShortestPathBetweenSteps
     };
 }
