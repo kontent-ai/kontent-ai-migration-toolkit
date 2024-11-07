@@ -1,12 +1,5 @@
 import * as dotenv from 'dotenv';
-import {
-    confirmExportAsync,
-    exportAsync,
-    handleError,
-    storeAsync,
-    getDefaultLogger,
-    SourceExportItem
-} from '../../lib/index.js';
+import { confirmExportAsync, exportAsync, getDefaultLogger, handleError, SourceExportItem, storeAsync } from '../../lib/index.js';
 import { getEnvironmentRequiredValue } from './utils/test.utils.js';
 
 const run = async () => {

@@ -27,6 +27,8 @@ type ArticleItem = MigrationItem<
         rating: MigrationElementModels.NumberElement;
         related_pages: MigrationElementModels.LinkedItemsElement;
         teaser_image: MigrationElementModels.AssetElement;
+        text: MigrationElementModels.RichTextElement;
+        slug: MigrationElementModels.UrlSlugElement;
     },
     MigrationItemSystem<ContentTypeCodename<'article'>, LanguageCodenames, CollectionCodenames, WorkflowCodenames>,
     WorkflowStepCodenames
@@ -63,6 +65,8 @@ const migrationItem: ArticleItem = {
             },
             elements: {
                 title: elementsBuilder.textElement({ value: 'Title of the article' }),
+                text: elementsBuilder.richTextElement({ value: '<p>Content of the article</p>', components: [] }),
+                slug: elementsBuilder.urlSlugElement({ value: 'my-article' }),
                 rating: elementsBuilder.numberElement({ value: 5 }),
                 related_pages: elementsBuilder.linkedItemsElement({
                     value: [

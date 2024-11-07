@@ -26,13 +26,13 @@ export namespace MigrationElementModels {
 
     export type TextElement = MigrationElementDef<'text', string>;
     export type NumberElement = MigrationElementDef<'number', number>;
-    export type RichTextElement = MigrationElementDef<'rich_text', string>;
+    export type RichTextElement = MigrationElementDef<'rich_text', string> & Pick<MigrationElement, 'components'>;
     export type MultipleChoiceElement = MigrationElementDef<'multiple_choice', MigrationReference[]>;
-    export type DateTimeElement = MigrationElementDef<'date_time', string>;
+    export type DateTimeElement = MigrationElementDef<'date_time', string> & Pick<MigrationElement, 'display_timezone'>;
     export type AssetElement = MigrationElementDef<'asset', MigrationReference[]>;
     export type LinkedItemsElement = MigrationElementDef<'modular_content', MigrationReference[]>;
     export type TaxonomyElement = MigrationElementDef<'taxonomy', MigrationReference[]>;
-    export type UrlSlugElement = MigrationElementDef<'url_slug', string>;
+    export type UrlSlugElement = MigrationElementDef<'url_slug', string> & Pick<MigrationElement, 'mode'>;
     export type CustomElement = MigrationElementDef<'custom', string>;
     export type SubpagesElement = MigrationElementDef<'subpages', MigrationReference[]>;
 }
