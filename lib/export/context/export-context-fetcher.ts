@@ -173,11 +173,11 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         readonly contentItem: Readonly<ContentItemModels.ContentItem>;
         readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
     }): {
-        collection: Readonly<CollectionModels.Collection>;
-        language: Readonly<LanguageModels.LanguageModel>;
-        workflow: Readonly<WorkflowModels.Workflow>;
-        contentType: Readonly<FlattenedContentType>;
-        workflowStepCodename: string;
+        readonly collection: Readonly<CollectionModels.Collection>;
+        readonly language: Readonly<LanguageModels.LanguageModel>;
+        readonly workflow: Readonly<WorkflowModels.Workflow>;
+        readonly contentType: Readonly<FlattenedContentType>;
+        readonly workflowStepCodename: string;
     } => {
         const collection = findRequired(
             environmentData.collections,
