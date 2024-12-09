@@ -1,14 +1,7 @@
 import { ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
-import {
-    Logger,
-    processItemsAsync,
-    runMapiRequestAsync,
-    MigrationItem,
-    LogSpinnerData,
-    findRequired
-} from '../../core/index.js';
 import chalk from 'chalk';
-import { ImportContext } from '../import.models.js';
+import { LogSpinnerData, Logger, MigrationItem, findRequired, processItemsAsync, runMapiRequestAsync } from '../../core/index.js';
+import { ImportContext, ImportedItem } from '../import.models.js';
 
 export function contentItemsImporter(data: {
     readonly logger: Logger;
@@ -26,8 +19,7 @@ export function contentItemsImporter(data: {
         );
 
         return (
-            migrationContentItem.system.name !== contentItem.name ||
-            migrationContentItem.system.collection.codename !== collection.codename
+            migrationContentItem.system.name !== contentItem.name || migrationContentItem.system.collection.codename !== collection.codename
         );
     };
 
@@ -35,9 +27,7 @@ export function contentItemsImporter(data: {
         logSpinner: LogSpinnerData,
         migrationContentItem: MigrationItem
     ): Promise<{ contentItem: Readonly<ContentItemModels.ContentItem>; status: 'created' | 'itemAlreadyExists' }> => {
-        const itemStateInTargetEnv = data.importContext.getItemStateInTargetEnvironment(
-            migrationContentItem.system.codename
-        );
+        const itemStateInTargetEnv = data.importContext.getItemStateInTargetEnvironment(migrationContentItem.system.codename);
 
         if (itemStateInTargetEnv.state === 'exists' && itemStateInTargetEnv.item) {
             return {
@@ -111,7 +101,7 @@ export function contentItemsImporter(data: {
         return preparedContentItemResult.contentItem;
     };
 
-    const importAsync = async (): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
+    const importAsync = async (): Promise<readonly ImportedItem[]> => {
         const contentItemsToImport = data.importContext.categorizedImportData.contentItems;
 
         data.logger.log({

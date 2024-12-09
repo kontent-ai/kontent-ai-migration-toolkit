@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import pLimit from 'p-limit';
-import { ItemInfo } from '../models/core.models.js';
+import { ItemInfo, ItemProcessingResult } from '../models/core.models.js';
 import { LogSpinnerData, Logger } from '../models/log.models.js';
 
 type ProcessSetAction =
@@ -21,7 +21,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
     readonly parallelLimit: number;
     readonly processAsync: (item: Readonly<InputItem>, logSpinner: LogSpinnerData) => Promise<Readonly<OutputItem>>;
     readonly itemInfo: (item: Readonly<InputItem>) => ItemInfo;
-}): Promise<readonly OutputItem[]> {
+}): Promise<readonly ItemProcessingResult<InputItem, OutputItem>[]> {
     if (!data.items.length) {
         return [];
     }
@@ -32,21 +32,36 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         const limit = pLimit(data.parallelLimit);
         let processedItemsCount: number = 1;
 
-        const requests: Promise<OutputItem>[] = data.items.map((item) =>
+        const requests: Promise<ItemProcessingResult<InputItem, OutputItem>>[] = data.items.map((item) =>
             limit(() => {
-                return data.processAsync(item, logSpinner).then((output) => {
-                    const itemInfo = data.itemInfo(item);
-                    const prefix = getPercentagePrefix(processedItemsCount, data.items.length);
+                return data
+                    .processAsync(item, logSpinner)
+                    .then<OutputItem>((output) => {
+                        const itemInfo = data.itemInfo(item);
+                        const prefix = getPercentagePrefix(processedItemsCount, data.items.length);
 
-                    logSpinner({
-                        prefix: prefix,
-                        message: itemInfo.title,
-                        type: itemInfo.itemType
+                        logSpinner({
+                            prefix: prefix,
+                            message: itemInfo.title,
+                            type: itemInfo.itemType
+                        });
+
+                        processedItemsCount++;
+                        return output;
+                    })
+                    .then<ItemProcessingResult<InputItem, OutputItem>>((outputItem) => {
+                        return {
+                            inputItem: item,
+                            outputItem: outputItem
+                        };
+                    })
+                    .catch<ItemProcessingResult<InputItem, OutputItem>>((error) => {
+                        return {
+                            inputItem: item,
+                            outputItem: undefined,
+                            error: error
+                        };
                     });
-
-                    processedItemsCount++;
-                    return output;
-                });
             })
         );
 
@@ -58,11 +73,11 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         });
 
         // Only '<parallelLimit>' promises at a time
-        const outputItems = await Promise.all(requests);
+        const resultItems = await Promise.all(requests);
 
-        logSpinner({ type: 'info', message: `Completed '${chalk.yellow(data.action)}' (${outputItems.length})` });
+        logSpinner({ type: 'info', message: `Completed '${chalk.yellow(data.action)}' (${resultItems.length})` });
 
-        return outputItems;
+        return resultItems;
     });
 }
 

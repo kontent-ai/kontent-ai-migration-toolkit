@@ -1,4 +1,6 @@
 import { AssetModels, ContentItemModels, LanguageVariantModels } from '@kontent-ai/management-sdk';
+import chalk from 'chalk';
+import { match } from 'ts-pattern';
 import {
     AssetStateInTargetEnvironmentByCodename,
     ItemStateInTargetEnvironmentByCodename,
@@ -18,10 +20,8 @@ import {
     runMapiRequestAsync,
     workflowHelper as workflowHelperInit
 } from '../../core/index.js';
-import { GetFlattenedElementByCodenames, ImportContext, ImportContextConfig, ImportContextEnvironmentData } from '../import.models.js';
 import { ExtractItemByCodename, itemsExtractionProcessor } from '../../translation/index.js';
-import chalk from 'chalk';
-import { match } from 'ts-pattern';
+import { GetFlattenedElementByCodenames, ImportContext, ImportContextConfig, ImportContextEnvironmentData } from '../import.models.js';
 
 interface LanguageVariantWrapper {
     readonly draftLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
@@ -186,7 +186,9 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                     };
                 }
             })
-        ).filter(isNotUndefined);
+        )
+            .map((m) => m.outputItem)
+            .filter(isNotUndefined);
     };
 
     const getContentItemsByCodenamesAsync = async (
@@ -223,7 +225,9 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                     }
                 }
             })
-        ).filter(isNotUndefined);
+        )
+            .map((m) => m.outputItem)
+            .filter(isNotUndefined);
     };
 
     const getAssetsByCodenamesAsync = async (assetCodenames: ReadonlySet<string>): Promise<readonly AssetModels.Asset[]> => {
@@ -258,7 +262,9 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                     }
                 }
             })
-        ).filter(isNotUndefined);
+        )
+            .map((m) => m.outputItem)
+            .filter(isNotUndefined);
     };
 
     const getVariantState = (languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>): LanguageVariantStateData => {

@@ -1,8 +1,7 @@
-import { ContentItemModels, LanguageVariantModels, ManagementClient } from '@kontent-ai/management-sdk';
-
+import { ManagementClient } from '@kontent-ai/management-sdk';
 import { defaultExternalIdGenerator, getDefaultLogger, getMigrationManagementClient, Logger } from '../core/index.js';
 import { importContextFetcherAsync } from './context/import-context-fetcher.js';
-import { ImportConfig, ImportContext, ImportResult } from './import.models.js';
+import { ImportConfig, ImportContext, ImportedItem, ImportedLanguageVariant, ImportResult } from './import.models.js';
 import { assetsImporter } from './importers/assets-importer.js';
 import { contentItemsImporter } from './importers/content-items-importer.js';
 import { languageVariantImporter } from './importers/language-variant-importer.js';
@@ -29,7 +28,8 @@ export function importManager(config: ImportConfig) {
             logger: logger
         }).importAsync();
     };
-    const importContentItemsAsync = async (importContext: ImportContext): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
+
+    const importContentItemsAsync = async (importContext: ImportContext): Promise<readonly ImportedItem[]> => {
         if (!importContext.categorizedImportData.contentItems.length) {
             logger.log({
                 type: 'info',
@@ -46,8 +46,8 @@ export function importManager(config: ImportConfig) {
 
     const importLanguageVariantsAsync = async (
         importContext: ImportContext,
-        contentItems: readonly Readonly<ContentItemModels.ContentItem>[]
-    ): Promise<readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]> => {
+        contentItems: readonly ImportedItem[]
+    ): Promise<readonly ImportedLanguageVariant[]> => {
         if (!importContext.categorizedImportData.contentItems.length) {
             logger.log({
                 type: 'info',

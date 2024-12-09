@@ -175,58 +175,62 @@ export function exportManager(config: ExportConfig) {
             message: `Preparing to download '${chalk.yellow(assets.length.toString())}' assets`
         });
 
-        return await processItemsAsync<Readonly<AssetModels.Asset>, MigrationAsset>({
-            action: 'Downloading assets',
-            logger: logger,
-            parallelLimit: 5,
-            itemInfo: (input) => {
-                return {
-                    title: input.codename,
-                    itemType: 'asset'
-                };
-            },
-            items: assets,
-            processAsync: async (asset, logSpinner) => {
-                const assetCollection: Readonly<CollectionModels.Collection> | undefined = context.environmentData.collections.find(
-                    (m) => m.id === asset.collection?.reference?.id
-                );
-                const assetFolder: Readonly<AssetFolderModels.AssetFolder> | undefined = context.environmentData.assetFolders.find(
-                    (m) => m.id === asset.folder?.id
-                );
+        return (
+            await processItemsAsync<Readonly<AssetModels.Asset>, MigrationAsset>({
+                action: 'Downloading assets',
+                logger: logger,
+                parallelLimit: 5,
+                itemInfo: (input) => {
+                    return {
+                        title: input.codename,
+                        itemType: 'asset'
+                    };
+                },
+                items: assets,
+                processAsync: async (asset, logSpinner) => {
+                    const assetCollection: Readonly<CollectionModels.Collection> | undefined = context.environmentData.collections.find(
+                        (m) => m.id === asset.collection?.reference?.id
+                    );
+                    const assetFolder: Readonly<AssetFolderModels.AssetFolder> | undefined = context.environmentData.assetFolders.find(
+                        (m) => m.id === asset.folder?.id
+                    );
 
-                logSpinner({
-                    type: 'download',
-                    message: `${asset.url}`
-                });
+                    logSpinner({
+                        type: 'download',
+                        message: `${asset.url}`
+                    });
 
-                const migrationAsset: MigrationAsset = {
-                    filename: asset.fileName,
-                    title: asset.title ?? '',
-                    codename: asset.codename,
-                    binary_data: (await getBinaryDataFromUrlAsync(asset.url)).data,
-                    collection: assetCollection ? { codename: assetCollection.codename } : undefined,
-                    folder: assetFolder ? { codename: assetFolder.codename } : undefined,
-                    descriptions: asset.descriptions.map((description) => {
-                        const language = findRequired(
-                            context.environmentData.languages,
-                            (language) => language.id === description.language.id,
-                            `Could not find language with id '${chalk.red(description.language.id)}' requested by asset '${chalk.red(
-                                asset.codename
-                            )}'`
-                        );
+                    const migrationAsset: MigrationAsset = {
+                        filename: asset.fileName,
+                        title: asset.title ?? '',
+                        codename: asset.codename,
+                        binary_data: (await getBinaryDataFromUrlAsync(asset.url)).data,
+                        collection: assetCollection ? { codename: assetCollection.codename } : undefined,
+                        folder: assetFolder ? { codename: assetFolder.codename } : undefined,
+                        descriptions: asset.descriptions.map((description) => {
+                            const language = findRequired(
+                                context.environmentData.languages,
+                                (language) => language.id === description.language.id,
+                                `Could not find language with id '${chalk.red(description.language.id)}' requested by asset '${chalk.red(
+                                    asset.codename
+                                )}'`
+                            );
 
-                        return {
-                            description: description.description ?? undefined,
-                            language: {
-                                codename: language.codename
-                            }
-                        };
-                    })
-                };
+                            return {
+                                description: description.description ?? undefined,
+                                language: {
+                                    codename: language.codename
+                                }
+                            };
+                        })
+                    };
 
-                return migrationAsset;
-            }
-        });
+                    return migrationAsset;
+                }
+            })
+        )
+            .map((m) => m.outputItem)
+            .filter(isNotUndefined);
     };
 
     return {
