@@ -150,7 +150,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         migrationItems: readonly MigrationItem[]
     ): Promise<readonly LanguageVariantWrapper[]> => {
         return (
-            await processItemsAsync<MigrationItem, LanguageVariantWrapper | undefined>({
+            await processItemsAsync<MigrationItem, LanguageVariantWrapper | '404'>({
                 action: 'Fetching language variants',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -166,7 +166,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
 
                     if (!latestLanguageVariant) {
                         // there is neither published or draft version as latest version does not exist at all
-                        return undefined;
+                        return '404';
                     }
 
                     if (workflowHelper.isPublishedStepById(latestLanguageVariant.workflow.stepIdentifier.id ?? '')) {
@@ -188,6 +188,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
             })
         )
             .map((m) => m.outputItem)
+            .filter((m) => m !== '404')
             .filter(isNotUndefined);
     };
 
@@ -195,7 +196,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         itemCodenames: ReadonlySet<string>
     ): Promise<readonly ContentItemModels.ContentItem[]> => {
         return (
-            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | undefined>({
+            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | '404'>({
                 action: 'Fetching content items',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -221,18 +222,19 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                             throw error;
                         }
 
-                        return undefined;
+                        return '404';
                     }
                 }
             })
         )
             .map((m) => m.outputItem)
-            .filter(isNotUndefined);
+            .filter(isNotUndefined)
+            .filter((m) => m !== '404');
     };
 
     const getAssetsByCodenamesAsync = async (assetCodenames: ReadonlySet<string>): Promise<readonly AssetModels.Asset[]> => {
         return (
-            await processItemsAsync<string, Readonly<AssetModels.Asset> | undefined>({
+            await processItemsAsync<string, Readonly<AssetModels.Asset> | '404'>({
                 action: 'Fetching assets',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -258,13 +260,14 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                             throw error;
                         }
 
-                        return undefined;
+                        return '404';
                     }
                 }
             })
         )
             .map((m) => m.outputItem)
-            .filter(isNotUndefined);
+            .filter(isNotUndefined)
+            .filter((m) => m !== '404');
     };
 
     const getVariantState = (languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>): LanguageVariantStateData => {

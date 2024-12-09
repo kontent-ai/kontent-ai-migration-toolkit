@@ -75,7 +75,15 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         // Only '<parallelLimit>' promises at a time
         const resultItems = await Promise.all(requests);
 
-        logSpinner({ type: 'info', message: `Completed '${chalk.yellow(data.action)}' (${resultItems.length})` });
+        const failedItemsCount = resultItems.filter((m) => !m.outputItem).length;
+        const failedText = failedItemsCount ? ` Failed (${chalk.red()}) items` : ``;
+
+        logSpinner({
+            type: 'info',
+            message: `Completed '${chalk.yellow(data.action)}'. Processed (${chalk.green(
+                resultItems.filter((m) => m.outputItem).length
+            )}) items.${failedText}`
+        });
 
         return resultItems;
     });

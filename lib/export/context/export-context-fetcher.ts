@@ -280,7 +280,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
 
     const getContentItemsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
         return (
-            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | undefined>({
+            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | '404'>({
                 logger: config.logger,
                 action: 'Fetching content items',
                 parallelLimit: 1,
@@ -306,18 +306,19 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                             throw error;
                         }
 
-                        return undefined;
+                        return '404';
                     }
                 }
             })
         )
             .map((m) => m.outputItem)
+            .filter((m) => m !== '404')
             .filter(isNotUndefined);
     };
 
     const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<AssetModels.Asset>[]> => {
         return (
-            await processItemsAsync<string, Readonly<AssetModels.Asset> | undefined>({
+            await processItemsAsync<string, Readonly<AssetModels.Asset> | '404'>({
                 logger: config.logger,
                 action: 'Fetching assets',
                 parallelLimit: 1,
@@ -343,12 +344,13 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                             throw error;
                         }
 
-                        return undefined;
+                        return '404';
                     }
                 }
             })
         )
             .map((m) => m.outputItem)
+            .filter((m) => m !== '404')
             .filter(isNotUndefined);
     };
 
