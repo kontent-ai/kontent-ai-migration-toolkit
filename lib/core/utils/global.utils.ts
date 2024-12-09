@@ -11,7 +11,7 @@ export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 export const isNotUndefined = <T>(item: T | undefined): item is T => item !== undefined;
 
 export function formatBytes(bytes: number): string {
-    return format(bytes);
+    return format(bytes) ?? 'n/a';
 }
 
 export function sleepAsync(ms: number): Promise<void> {
@@ -36,9 +36,9 @@ export function getCurrentEnvironment(): EnvContext {
 export const defaultZipFilename: string = 'data.zip';
 
 export async function executeWithTrackingAsync<TResult>(data: {
-    func: () => Promise<TResult extends void ? void : Readonly<TResult>>;
-    event: Readonly<ITrackingEventData>;
-    logger?: Logger;
+    readonly func: () => Promise<TResult extends void ? void : Readonly<TResult>>;
+    readonly event: Readonly<ITrackingEventData>;
+    readonly logger?: Logger;
 }): Promise<TResult extends void ? void : Readonly<TResult>> {
     const trackingService = getTrackingService();
     const logger = data.logger ?? getDefaultLogger();
@@ -83,7 +83,10 @@ export async function executeWithTrackingAsync<TResult>(data: {
     }
 }
 
-async function runTrackingFuncWithErrorHadlingAsync<T>(data: { func: () => Promise<T>; logger: Logger }): Promise<T | void> {
+async function runTrackingFuncWithErrorHadlingAsync<T>(data: {
+    readonly func: () => Promise<T>;
+    readonly logger: Logger;
+}): Promise<T | void> {
     try {
         return await data.func();
     } catch (trackingError) {

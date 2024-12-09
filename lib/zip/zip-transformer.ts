@@ -21,7 +21,7 @@ export function zipTransformer(zip: ZipPackager, logger?: Logger) {
     const assetsFilename: string = 'assets.json';
     const assetsBinaryFolderName: string = 'binary_data';
 
-    const getAssetFolderConfig = (asset: MigrationAsset): { partialColder: string; fullPath: string } => {
+    const getAssetFolderConfig = (asset: MigrationAsset): { readonly partialColder: string; readonly fullPath: string } => {
         const codenamePartialFolder: string = asset.codename.slice(0, 2);
         return {
             partialColder: codenamePartialFolder,

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer as BufferProxy } from 'buffer';
 import chalk from 'chalk';
 import JSZip from 'jszip';
 import { match } from 'ts-pattern';
@@ -23,7 +23,7 @@ export function zipPackager(jsZip: JSZip): ZipPackager {
                 (data) => data.size
             )
             .when(
-                (data) => data instanceof Buffer,
+                (data) => data instanceof BufferProxy,
                 (data) => data.byteLength
             )
             .otherwise(() => {
@@ -75,8 +75,7 @@ export function zipPackager(jsZip: JSZip): ZipPackager {
             return result;
         },
         async getBinaryDataAsync(filePath: string): Promise<FileBinaryData | undefined> {
-            const binaryData = await jsZip.file(filePath)?.async(getZipOutputType());
-            return binaryData;
+            return await jsZip.file(filePath)?.async(getZipOutputType());
         },
         async getFileContentAsync(filePath: string): Promise<string | undefined> {
             return await jsZip.file(filePath)?.async('string');

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer as BufferProxy } from 'buffer';
 import { z } from 'zod';
 
 interface Elements {
@@ -145,7 +145,7 @@ const BaseMigrationAssetSchema = z.strictObject({
 });
 
 export const MigrationAssetSchema = BaseMigrationAssetSchema.extend({
-    binary_data: z.union([z.instanceof(Buffer), z.instanceof(Blob)])
+    binary_data: z.union([z.instanceof(BufferProxy), z.instanceof(Blob)])
 }).readonly();
 
 export const ZipMigrationAssetSchema = BaseMigrationAssetSchema.extend({

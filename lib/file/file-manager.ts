@@ -1,13 +1,14 @@
+import { Buffer as BufferProxy } from 'buffer';
 import chalk from 'chalk';
-import { Logger } from '../core/index.js';
 import { promises } from 'fs';
+import { Logger } from '../core/index.js';
 
 export function fileManager(logger: Logger) {
     const getFilePath = (filename: string): string => {
         return `./${filename}`;
     };
 
-    const loadFileAsync = async (filename: string): Promise<Buffer> => {
+    const loadFileAsync = async (filename: string): Promise<BufferProxy> => {
         const filePath = getFilePath(filename);
 
         logger.log({
@@ -20,7 +21,7 @@ export function fileManager(logger: Logger) {
         return file;
     };
 
-    const writeFileAsync = async (fileNameWithoutExtension: string, content: string | Buffer): Promise<void> => {
+    const writeFileAsync = async (fileNameWithoutExtension: string, content: string | BufferProxy): Promise<void> => {
         const filePath = getFilePath(fileNameWithoutExtension);
 
         logger.log({

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer as BufferProxy } from 'buffer';
 import { defaultZipFilename, executeWithTrackingAsync, getDefaultLogger, Logger, MigrationData } from '../core/index.js';
 import { fileManager } from '../file/index.js';
 import { libMetadata } from '../metadata.js';
@@ -33,7 +33,7 @@ export async function storeAsync(config: StoreConfig): Promise<void> {
         func: async () => {
             const zipData = await zipManager(logger).createZipAsync(config.data);
 
-            if (zipData instanceof Buffer) {
+            if (zipData instanceof BufferProxy) {
                 await fileManager(logger).writeFileAsync(filename, zipData);
             } else {
                 throw Error(`Cannot store '${filename}' on File system because the provided zip is not a Buffer`);

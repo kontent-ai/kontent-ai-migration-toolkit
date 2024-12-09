@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer as BufferProxy } from 'buffer';
 import {
     elementsBuilder,
     FileBinaryData,
@@ -23,12 +23,12 @@ type ContentTypeCodename<Codename extends ContentTypeCodenames> = Codename;
 
 type ArticleItem = MigrationItem<
     {
-        title: MigrationElementModels.TextElement;
-        rating: MigrationElementModels.NumberElement;
-        related_pages: MigrationElementModels.LinkedItemsElement;
-        teaser_image: MigrationElementModels.AssetElement;
-        text: MigrationElementModels.RichTextElement;
-        slug: MigrationElementModels.UrlSlugElement;
+        readonly title: MigrationElementModels.TextElement;
+        readonly rating: MigrationElementModels.NumberElement;
+        readonly related_pages: MigrationElementModels.LinkedItemsElement;
+        readonly teaser_image: MigrationElementModels.AssetElement;
+        readonly text: MigrationElementModels.RichTextElement;
+        readonly slug: MigrationElementModels.UrlSlugElement;
     },
     MigrationItemSystem<ContentTypeCodename<'article'>, LanguageCodenames, CollectionCodenames, WorkflowCodenames>,
     WorkflowStepCodenames
@@ -129,5 +129,5 @@ await importAsync({
 });
 
 function stringToBinaryData(input: string): FileBinaryData {
-    return Buffer.from(input);
+    return BufferProxy.from(input);
 }

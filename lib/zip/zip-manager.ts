@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer as BufferProxy } from 'buffer';
 import JSZip from 'jszip';
 import { Logger, MigrationData, getDefaultLogger } from '../core/index.js';
 import { zipPackager } from './zip-packager.js';
@@ -17,7 +17,7 @@ export function zipManager(logger?: Logger) {
         return await zipTransformer(zipPackager(new JSZip()), loggerToUse).transformAsync(migrationData);
     };
 
-    const parseZipAsync = async (zipFile: Buffer): Promise<MigrationData> => {
+    const parseZipAsync = async (zipFile: BufferProxy): Promise<MigrationData> => {
         loggerToUse.log({
             type: 'info',
             message: `Parsing zip file`

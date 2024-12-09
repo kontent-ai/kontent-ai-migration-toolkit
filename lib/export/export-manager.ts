@@ -45,8 +45,8 @@ export function exportManager(config: ExportConfig) {
                     codename: exportItem.workflow.codename
                 }
             },
-            versions: exportItem.versions.map((version) => {
-                return <MigrationItemVersion>{
+            versions: exportItem.versions.map<MigrationItemVersion>((version) => {
+                return {
                     elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements),
                     schedule: {
                         publish_time: version.languageVariant.schedule.publishTime ?? undefined,
@@ -199,13 +199,11 @@ export function exportManager(config: ExportConfig) {
                     message: `${asset.url}`
                 });
 
-                const binaryData = await getBinaryDataFromUrlAsync(asset.url);
-
                 const migrationAsset: MigrationAsset = {
                     filename: asset.fileName,
                     title: asset.title ?? '',
                     codename: asset.codename,
-                    binary_data: binaryData.data,
+                    binary_data: (await getBinaryDataFromUrlAsync(asset.url)).data,
                     collection: assetCollection ? { codename: assetCollection.codename } : undefined,
                     folder: assetFolder ? { codename: assetFolder.codename } : undefined,
                     descriptions: asset.descriptions.map((description) => {
