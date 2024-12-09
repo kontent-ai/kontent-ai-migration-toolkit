@@ -124,10 +124,10 @@ export function exportManager(config: ExportConfig) {
     };
 
     const getMigrationElementToStore = (data: {
-        context: ExportContext;
-        contentType: FlattenedContentType;
-        typeElement: FlattenedContentTypeElement;
-        exportElement: ElementModels.ContentItemElement;
+        readonly context: ExportContext;
+        readonly contentType: FlattenedContentType;
+        readonly typeElement: FlattenedContentTypeElement;
+        readonly exportElement: ElementModels.ContentItemElement;
     }): MigrationElementTransformData => {
         try {
             return exportTransforms[data.typeElement.type]({
