@@ -55,6 +55,10 @@ const defaultBrowserLogger: Logger = {
 };
 
 function getLogDataMessage(data: LogSpinnerMessage): string {
+    if (!data.type) {
+        return data.message;
+    }
+
     const color = match(data.type)
         .returnType<ChalkInstance>()
         .with('info', () => chalk.cyan)

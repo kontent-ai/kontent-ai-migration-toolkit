@@ -17,7 +17,7 @@ export type DebugType =
     | MapiAction;
 
 export interface LogMessage {
-    readonly type: LiteralUnion<DebugType>;
+    readonly type?: LiteralUnion<DebugType>;
     readonly message: string;
 }
 

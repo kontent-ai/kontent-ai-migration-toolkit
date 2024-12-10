@@ -2,18 +2,40 @@ import { ManagementClient } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import { defaultExternalIdGenerator, extractErrorData, getDefaultLogger, getMigrationManagementClient, Logger } from '../core/index.js';
 import { importContextFetcherAsync } from './context/import-context-fetcher.js';
-import {
-    EditedAsset,
-    ImportConfig,
-    ImportContext,
-    ImportedAsset,
-    ImportedItem,
-    ImportedLanguageVariant,
-    ImportResult
-} from './import.models.js';
+import { ImportConfig, ImportContext, ImportedItem, ImportedLanguageVariant, ImportResult } from './import.models.js';
 import { assetsImporter } from './importers/assets-importer.js';
 import { contentItemsImporter } from './importers/content-items-importer.js';
 import { languageVariantImporter } from './importers/language-variant-importer.js';
+
+const reportFilename: string = `import-report.json`;
+
+type ReportResult = {
+    readonly errorsCount: number;
+    readonly assets: {
+        readonly count: number;
+        readonly successful: Array<{ readonly codename: string }>;
+        readonly failed: Array<{ readonly codename: string; readonly error: string }>;
+    };
+    readonly languageVariants: {
+        readonly count: number;
+        readonly successful: Array<{
+            readonly codename: string;
+            readonly language: { readonly codename: string };
+            readonly type: { readonly codename: string };
+        }>;
+        readonly failed: Array<{
+            readonly codename: string;
+            readonly language: { readonly codename: string };
+            readonly type: { readonly codename: string };
+            readonly error: string;
+        }>;
+    };
+    readonly contentItems: {
+        readonly count: number;
+        readonly successful: Array<{ readonly codename: string }>;
+        readonly failed: Array<{ readonly codename: string; readonly type: { readonly codename: string }; readonly error: string }>;
+    };
+};
 
 export function importManager(config: ImportConfig) {
     const logger: Logger = config.logger ?? getDefaultLogger();
@@ -72,37 +94,114 @@ export function importManager(config: ImportConfig) {
         }).importAsync();
     };
 
-    const getImportErrors = (
-        contentItems: readonly ImportedItem[],
-        languageVariants: readonly ImportedLanguageVariant[],
-        importedAssets: readonly ImportedAsset[],
-        editedAssets: readonly EditedAsset[]
-    ): readonly string[] => {
-        return [
-            ...editedAssets
-                .filter((m) => m.error)
-                .map(
-                    (m) =>
-                        `Failed to edit asset '${chalk.yellow(m.inputItem.migrationAsset.codename)}': ${extractErrorData(m.error).message}`
-                ),
-            ...importedAssets
-                .filter((m) => m.error)
-                .map((m) => `Failed to upload asset '${chalk.yellow(m.inputItem.codename)}': ${extractErrorData(m.error).message}`),
-            ...contentItems
-                .filter((m) => m.error)
-                .map(
-                    (m) =>
-                        `Failed to import content item '${chalk.yellow(m.inputItem.system.codename)}': ${extractErrorData(m.error).message}`
-                ),
-            ...languageVariants
-                .filter((m) => m.error)
-                .map(
-                    (m) =>
-                        `Failed to import language variant '${chalk.yellow(m.inputItem.system.codename)}' in language '${chalk.yellow(
-                            m.inputItem.system.language.codename
-                        )}': ${extractErrorData(m.error).message}`
-                )
+    const getReportResult = (importResult: ImportResult): ReportResult => {
+        return {
+            errorsCount:
+                importResult.editedAssets.filter((m) => !m.outputItem).length +
+                importResult.uploadedAssets.filter((m) => !m.outputItem).length +
+                importResult.contentItems.filter((m) => !m.outputItem).length +
+                importResult.languageVariants.filter((m) => !m.outputItem).length,
+            assets: {
+                count: importResult.uploadedAssets.length + importResult.editedAssets.length,
+                successful: [
+                    ...importResult.uploadedAssets.filter((m) => m.outputItem).map((m) => m.inputItem.codename),
+                    ...importResult.editedAssets.filter((m) => m.outputItem).map((m) => m.inputItem.migrationAsset.codename)
+                ].map((m) => {
+                    return {
+                        codename: m
+                    };
+                }),
+                failed: [
+                    ...importResult.uploadedAssets
+                        .filter((m) => !m.outputItem)
+                        .map((m) => {
+                            return {
+                                codename: m.inputItem.codename,
+                                error: extractErrorData(m.error).message
+                            };
+                        }),
+                    ...importResult.editedAssets
+                        .filter((m) => !m.outputItem)
+                        .map((m) => {
+                            return {
+                                codename: m.inputItem.migrationAsset.codename,
+                                error: extractErrorData(m.error).message
+                            };
+                        })
+                ]
+            },
+            contentItems: {
+                count: importResult.contentItems.length,
+                successful: importResult.contentItems
+                    .filter((m) => m.outputItem)
+                    .map((m) => {
+                        return {
+                            codename: m.inputItem.system.codename
+                        };
+                    }),
+                failed: importResult.contentItems
+                    .filter((m) => !m.outputItem)
+                    .map((m) => {
+                        return {
+                            codename: m.inputItem.system.codename,
+                            type: m.inputItem.system.type,
+                            error: extractErrorData(m.error).message
+                        };
+                    })
+            },
+            languageVariants: {
+                count: importResult.languageVariants.length,
+                successful: importResult.languageVariants
+                    .filter((m) => m.outputItem)
+                    .map((m) => {
+                        return {
+                            codename: m.inputItem.system.codename,
+                            language: m.inputItem.system.language,
+                            type: m.inputItem.system.type
+                        };
+                    }),
+                failed: importResult.languageVariants
+                    .filter((m) => !m.outputItem)
+                    .map((m) => {
+                        return {
+                            codename: m.inputItem.system.codename,
+                            language: m.inputItem.system.language,
+                            type: m.inputItem.system.type,
+                            error: extractErrorData(m.error).message
+                        };
+                    })
+            }
+        };
+    };
+
+    const printReportToConsole = (reportResult: ReportResult, logger: Logger): void => {
+        const errors = [
+            ...reportResult.assets.failed.map((m) => [
+                `Object type: ${chalk.yellow('Asset')}`,
+                `Codename: ${chalk.yellow(m.codename)}`,
+                `${chalk.red(m.error)}`
+            ]),
+            ...reportResult.contentItems.failed.map((m) => [
+                `Object type: ${chalk.yellow('Content item')}`,
+                `Codename:${chalk.yellow(m.codename)}`,
+                `Content Type: ${chalk.yellow(m.type.codename)}`,
+                `${chalk.red(m.error)}`
+            ]),
+            ...reportResult.languageVariants.failed.map((m) => [
+                `Object type: ${chalk.yellow('Language variant')}`,
+                `Codename: ${chalk.yellow(m.codename)}`,
+                `Language: ${chalk.yellow(m.language.codename)}`,
+                `Content Type: ${chalk.yellow(m.type.codename)}`,
+                `${chalk.red(m.error)}`
+            ])
         ];
+
+        errors.forEach((error, index) => {
+            logger.log({ message: `${chalk.red(`\nError #${index + 1}`)}` });
+            error.forEach((m) => {
+                logger.log({ message: m });
+            });
+        });
     };
 
     return {
@@ -125,13 +224,20 @@ export function importManager(config: ImportConfig) {
             // #3 Language variants
             const languageVariants = await importLanguageVariantsAsync(importContext, contentItems);
 
-            const importErrors = getImportErrors(contentItems, languageVariants, uploadedAssets, editedAssets);
+            const reportResult = getReportResult({
+                contentItems,
+                editedAssets,
+                languageVariants,
+                uploadedAssets
+            });
 
-            if (importErrors.length) {
-                importErrors.forEach((error, index) => logger.log({ type: chalk.red(`#${index + 1}`), message: error }));
+            if (reportResult.errorsCount) {
+                printReportToConsole(reportResult, logger);
                 logger.log({
                     type: 'completed',
-                    message: `Finished import with '${chalk.red(importErrors.length)}' errors`
+                    message: `Finished import with '${chalk.red(reportResult.errorsCount)}' ${
+                        reportResult.errorsCount === 1 ? 'error' : 'errors'
+                    }`
                 });
             } else {
                 logger.log({
@@ -145,6 +251,12 @@ export function importManager(config: ImportConfig) {
                 uploadedAssets,
                 contentItems,
                 languageVariants
+            };
+        },
+        getReportFile(importResult: ImportResult): { filename: string; content: string } {
+            return {
+                filename: reportFilename,
+                content: JSON.stringify(getReportResult(importResult))
             };
         }
     };

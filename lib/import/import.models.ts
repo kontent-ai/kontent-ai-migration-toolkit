@@ -76,13 +76,14 @@ export type ImportTransformFunc = (data: {
 export interface ImportConfig extends ManagementClientConfig {
     readonly data: MigrationData;
     readonly externalIdGenerator?: ExternalIdGenerator;
+    readonly createReportFile?: boolean;
     readonly logger?: Logger;
 }
 
 export interface AssetToEdit {
-    migrationAsset: MigrationAsset;
-    targetAsset: Readonly<AssetModels.Asset>;
-    replaceBinaryFile: boolean;
+    readonly migrationAsset: MigrationAsset;
+    readonly targetAsset: Readonly<AssetModels.Asset>;
+    readonly replaceBinaryFile: boolean;
 }
 
 export type ImportedItem = ItemProcessingResult<MigrationItem, Readonly<ContentItemModels.ContentItem>>;
