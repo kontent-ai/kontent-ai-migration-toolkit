@@ -1,7 +1,7 @@
 import chalk, { ChalkInstance } from 'chalk';
+import { match, P } from 'ts-pattern';
 import { Logger, LogSpinnerMessage } from '../models/log.models.js';
 import { getCurrentEnvironment } from '../utils/global.utils.js';
-import { match, P } from 'ts-pattern';
 
 const originalWarn = console.warn;
 

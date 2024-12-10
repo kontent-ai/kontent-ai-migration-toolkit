@@ -76,11 +76,11 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         const resultItems = await Promise.all(requests);
 
         const failedItemsCount = resultItems.filter((m) => !m.outputItem).length;
-        const failedText = failedItemsCount ? ` Failed (${chalk.red()}) items` : ``;
+        const failedText = failedItemsCount ? ` Failed (${chalk.red(failedItemsCount)}) items` : ``;
 
         logSpinner({
             type: 'info',
-            message: `Completed '${chalk.yellow(data.action)}'. Processed (${chalk.green(
+            message: `Completed '${chalk.yellow(data.action)}'. Successfully processed (${chalk.green(
                 resultItems.filter((m) => m.outputItem).length
             )}) items.${failedText}`
         });

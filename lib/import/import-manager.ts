@@ -1,7 +1,16 @@
 import { ManagementClient } from '@kontent-ai/management-sdk';
-import { defaultExternalIdGenerator, getDefaultLogger, getMigrationManagementClient, Logger } from '../core/index.js';
+import chalk from 'chalk';
+import { defaultExternalIdGenerator, extractErrorData, getDefaultLogger, getMigrationManagementClient, Logger } from '../core/index.js';
 import { importContextFetcherAsync } from './context/import-context-fetcher.js';
-import { ImportConfig, ImportContext, ImportedItem, ImportedLanguageVariant, ImportResult } from './import.models.js';
+import {
+    EditedAsset,
+    ImportConfig,
+    ImportContext,
+    ImportedAsset,
+    ImportedItem,
+    ImportedLanguageVariant,
+    ImportResult
+} from './import.models.js';
 import { assetsImporter } from './importers/assets-importer.js';
 import { contentItemsImporter } from './importers/content-items-importer.js';
 import { languageVariantImporter } from './importers/language-variant-importer.js';
@@ -63,6 +72,39 @@ export function importManager(config: ImportConfig) {
         }).importAsync();
     };
 
+    const getImportErrors = (
+        contentItems: readonly ImportedItem[],
+        languageVariants: readonly ImportedLanguageVariant[],
+        importedAssets: readonly ImportedAsset[],
+        editedAssets: readonly EditedAsset[]
+    ): readonly string[] => {
+        return [
+            ...editedAssets
+                .filter((m) => m.error)
+                .map(
+                    (m) =>
+                        `Failed to edit asset '${chalk.yellow(m.inputItem.migrationAsset.codename)}': ${extractErrorData(m.error).message}`
+                ),
+            ...importedAssets
+                .filter((m) => m.error)
+                .map((m) => `Failed to upload asset '${chalk.yellow(m.inputItem.codename)}': ${extractErrorData(m.error).message}`),
+            ...contentItems
+                .filter((m) => m.error)
+                .map(
+                    (m) =>
+                        `Failed to import content item '${chalk.yellow(m.inputItem.system.codename)}': ${extractErrorData(m.error).message}`
+                ),
+            ...languageVariants
+                .filter((m) => m.error)
+                .map(
+                    (m) =>
+                        `Failed to import language variant '${chalk.yellow(m.inputItem.system.codename)}' in language '${chalk.yellow(
+                            m.inputItem.system.language.codename
+                        )}': ${extractErrorData(m.error).message}`
+                )
+        ];
+    };
+
     return {
         async importAsync(): Promise<ImportResult> {
             const importContext = await (
@@ -83,10 +125,20 @@ export function importManager(config: ImportConfig) {
             // #3 Language variants
             const languageVariants = await importLanguageVariantsAsync(importContext, contentItems);
 
-            logger.log({
-                type: 'completed',
-                message: `Finished import`
-            });
+            const importErrors = getImportErrors(contentItems, languageVariants, uploadedAssets, editedAssets);
+
+            if (importErrors.length) {
+                importErrors.forEach((error, index) => logger.log({ type: chalk.red(`#${index + 1}`), message: error }));
+                logger.log({
+                    type: 'completed',
+                    message: `Finished import with '${chalk.red(importErrors.length)}' errors`
+                });
+            } else {
+                logger.log({
+                    type: 'completed',
+                    message: `Finished import`
+                });
+            }
 
             return {
                 editedAssets,

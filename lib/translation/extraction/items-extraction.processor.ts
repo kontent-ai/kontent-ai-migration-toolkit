@@ -12,7 +12,7 @@ import { GetFlattenedElementByCodenames } from '../../import/index.js';
 import { richTextProcessor } from '../index.js';
 
 export interface ExtractItemById {
-    readonly elements: Readonly<ElementModels.ContentItemElement>[];
+    readonly elements: readonly Readonly<ElementModels.ContentItemElement>[];
     readonly contentTypeId: string;
 }
 
@@ -95,7 +95,7 @@ export function itemsExtractionProcessor() {
             { itemIds: new Set(), assetIds: new Set() }
         );
 
-        return <ReferencedDataInLanguageVariants>{
+        return {
             itemIds: extractedIds.itemIds,
             assetIds: extractedIds.assetIds
         };
@@ -175,7 +175,7 @@ export function itemsExtractionProcessor() {
             }
         );
 
-        return <ReferencedDataInMigrationItems>{
+        return {
             itemCodenames: extractedCodenames.itemCodenames,
             assetCodenames: extractedCodenames.assetCodenames
         };
