@@ -253,7 +253,7 @@ export function importManager(config: ImportConfig) {
                 languageVariants
             };
         },
-        getReportFile(importResult: ImportResult): { filename: string; content: string } {
+        getReportFile(importResult: ImportResult): { readonly filename: string; readonly content: string } {
             return {
                 filename: reportFilename,
                 content: JSON.stringify(getReportResult(importResult))
