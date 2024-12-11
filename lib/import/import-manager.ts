@@ -97,10 +97,10 @@ export function importManager(config: ImportConfig) {
     const getReportResult = (importResult: ImportResult): ReportResult => {
         return {
             errorsCount:
-                importResult.editedAssets.filter((m) => !m.outputItem).length +
-                importResult.uploadedAssets.filter((m) => !m.outputItem).length +
-                importResult.contentItems.filter((m) => !m.outputItem).length +
-                importResult.languageVariants.filter((m) => !m.outputItem).length,
+                importResult.editedAssets.filter((m) => m.error).length +
+                importResult.uploadedAssets.filter((m) => m.error).length +
+                importResult.contentItems.filter((m) => m.error).length +
+                importResult.languageVariants.filter((m) => m.error).length,
             assets: {
                 count: importResult.uploadedAssets.length + importResult.editedAssets.length,
                 successful: [
@@ -113,7 +113,7 @@ export function importManager(config: ImportConfig) {
                 }),
                 failed: [
                     ...importResult.uploadedAssets
-                        .filter((m) => !m.outputItem)
+                        .filter((m) => m.error)
                         .map((m) => {
                             return {
                                 codename: m.inputItem.codename,
@@ -121,7 +121,7 @@ export function importManager(config: ImportConfig) {
                             };
                         }),
                     ...importResult.editedAssets
-                        .filter((m) => !m.outputItem)
+                        .filter((m) => m.error)
                         .map((m) => {
                             return {
                                 codename: m.inputItem.migrationAsset.codename,
@@ -140,7 +140,7 @@ export function importManager(config: ImportConfig) {
                         };
                     }),
                 failed: importResult.contentItems
-                    .filter((m) => !m.outputItem)
+                    .filter((m) => m.error)
                     .map((m) => {
                         return {
                             codename: m.inputItem.system.codename,
@@ -161,7 +161,7 @@ export function importManager(config: ImportConfig) {
                         };
                     }),
                 failed: importResult.languageVariants
-                    .filter((m) => !m.outputItem)
+                    .filter((m) => m.error)
                     .map((m) => {
                         return {
                             codename: m.inputItem.system.codename,
