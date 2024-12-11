@@ -97,15 +97,15 @@ export function importManager(config: ImportConfig) {
     const getReportResult = (importResult: ImportResult): ReportResult => {
         return {
             errorsCount:
-                importResult.editedAssets.filter((m) => m.error).length +
-                importResult.uploadedAssets.filter((m) => m.error).length +
-                importResult.contentItems.filter((m) => m.error).length +
-                importResult.languageVariants.filter((m) => m.error).length,
+                importResult.editedAssets.filter((m) => m.state === 'error').length +
+                importResult.uploadedAssets.filter((m) => m.state === 'error').length +
+                importResult.contentItems.filter((m) => m.state === 'error').length +
+                importResult.languageVariants.filter((m) => m.state === 'error').length,
             assets: {
                 count: importResult.uploadedAssets.length + importResult.editedAssets.length,
                 successful: [
-                    ...importResult.uploadedAssets.filter((m) => m.outputItem).map((m) => m.inputItem.codename),
-                    ...importResult.editedAssets.filter((m) => m.outputItem).map((m) => m.inputItem.migrationAsset.codename)
+                    ...importResult.uploadedAssets.filter((m) => m.state === 'valid').map((m) => m.inputItem.codename),
+                    ...importResult.editedAssets.filter((m) => m.state === 'valid').map((m) => m.inputItem.migrationAsset.codename)
                 ].map((m) => {
                     return {
                         codename: m
@@ -113,19 +113,19 @@ export function importManager(config: ImportConfig) {
                 }),
                 failed: [
                     ...importResult.uploadedAssets
-                        .filter((m) => m.error)
+                        .filter((m) => m.state === 'error')
                         .map((m) => {
                             return {
                                 codename: m.inputItem.codename,
-                                error: extractErrorData(m.error).message
+                                error: extractErrorData(m.state === 'error').message
                             };
                         }),
                     ...importResult.editedAssets
-                        .filter((m) => m.error)
+                        .filter((m) => m.state === 'error')
                         .map((m) => {
                             return {
                                 codename: m.inputItem.migrationAsset.codename,
-                                error: extractErrorData(m.error).message
+                                error: extractErrorData(m.state === 'error').message
                             };
                         })
                 ]
@@ -133,26 +133,26 @@ export function importManager(config: ImportConfig) {
             contentItems: {
                 count: importResult.contentItems.length,
                 successful: importResult.contentItems
-                    .filter((m) => m.outputItem)
+                    .filter((m) => m.state === 'valid')
                     .map((m) => {
                         return {
                             codename: m.inputItem.system.codename
                         };
                     }),
                 failed: importResult.contentItems
-                    .filter((m) => m.error)
+                    .filter((m) => m.state === 'error')
                     .map((m) => {
                         return {
                             codename: m.inputItem.system.codename,
                             type: m.inputItem.system.type,
-                            error: extractErrorData(m.error).message
+                            error: extractErrorData(m.state === 'error').message
                         };
                     })
             },
             languageVariants: {
                 count: importResult.languageVariants.length,
                 successful: importResult.languageVariants
-                    .filter((m) => m.outputItem)
+                    .filter((m) => m.state === 'valid')
                     .map((m) => {
                         return {
                             codename: m.inputItem.system.codename,
@@ -161,13 +161,13 @@ export function importManager(config: ImportConfig) {
                         };
                     }),
                 failed: importResult.languageVariants
-                    .filter((m) => m.error)
+                    .filter((m) => m.state === 'error')
                     .map((m) => {
                         return {
                             codename: m.inputItem.system.codename,
                             language: m.inputItem.system.language,
                             type: m.inputItem.system.type,
-                            error: extractErrorData(m.error).message
+                            error: extractErrorData(m.state === 'error').message
                         };
                     })
             }

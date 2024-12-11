@@ -14,7 +14,6 @@ import {
     WorkflowStep,
     findRequired,
     is404Error,
-    isNotUndefined,
     managementClientUtils,
     processItemsAsync,
     runMapiRequestAsync,
@@ -187,8 +186,8 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                 }
             })
         )
-            .map((m) => m.outputItem)
-            .filter(isNotUndefined);
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getContentItemsByCodenamesAsync = async (
@@ -226,8 +225,8 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                 }
             })
         )
-            .map((m) => m.outputItem)
-            .filter(isNotUndefined);
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getAssetsByCodenamesAsync = async (assetCodenames: ReadonlySet<string>): Promise<readonly AssetModels.Asset[]> => {
@@ -263,8 +262,8 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                 }
             })
         )
-            .map((m) => m.outputItem)
-            .filter(isNotUndefined);
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getVariantState = (languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>): LanguageVariantStateData => {

@@ -229,8 +229,8 @@ export function exportManager(config: ExportConfig) {
                 }
             })
         )
-            .map((m) => m.outputItem)
-            .filter(isNotUndefined);
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     return {

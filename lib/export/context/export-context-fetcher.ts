@@ -12,7 +12,6 @@ import {
     findRequired,
     FlattenedContentType,
     is404Error,
-    isNotUndefined,
     ItemStateInSourceEnvironmentById,
     LogSpinnerData,
     managementClientUtils,
@@ -274,8 +273,8 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                 }
             })
         )
-            .map((m) => m.outputItem)
-            .filter(isNotUndefined);
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getContentItemsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
@@ -311,8 +310,8 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                 }
             })
         )
-            .map((m) => m.outputItem)
-            .filter(isNotUndefined);
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<AssetModels.Asset>[]> => {
@@ -348,8 +347,8 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                 }
             })
         )
-            .map((m) => m.outputItem)
-            .filter(isNotUndefined);
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getItemStatesAsync = async (itemIds: ReadonlySet<string>): Promise<readonly ItemStateInSourceEnvironmentById[]> => {

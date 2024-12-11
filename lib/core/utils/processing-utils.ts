@@ -52,20 +52,20 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                     .then<ItemProcessingResult<InputItem, OutputItem>>((outputItem) => {
                         if (outputItem === '404') {
                             return {
-                                inputItem: item,
-                                outputItem: undefined,
-                                error: undefined
+                                state: '404',
+                                inputItem: item
                             };
                         }
                         return {
                             inputItem: item,
-                            outputItem: outputItem
+                            outputItem: outputItem,
+                            state: 'valid'
                         };
                     })
                     .catch<ItemProcessingResult<InputItem, OutputItem>>((error) => {
                         return {
+                            state: 'error',
                             inputItem: item,
-                            outputItem: undefined,
                             error: error
                         };
                     });
@@ -82,13 +82,13 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         // Only '<parallelLimit>' promises at a time
         const resultItems = await Promise.all(requests);
 
-        const failedItemsCount = resultItems.filter((m) => m.error).length;
+        const failedItemsCount = resultItems.filter((m) => m.state === 'error').length;
         const failedText = failedItemsCount ? ` Failed (${chalk.red(failedItemsCount)}) items` : ``;
 
         logSpinner({
             type: 'info',
             message: `Completed '${chalk.yellow(data.action)}'. Successfully processed (${chalk.green(
-                resultItems.filter((m) => m.outputItem).length
+                resultItems.filter((m) => m.state === 'valid').length
             )}) items.${failedText}`
         });
 
