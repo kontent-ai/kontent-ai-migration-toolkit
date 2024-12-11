@@ -1,4 +1,4 @@
-import { ContentItemModels, ElementContracts, LanguageVariantModels, ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
+import { ElementContracts, LanguageVariantModels, ManagementClient, WorkflowModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import { match } from 'ts-pattern';
 import {
@@ -16,13 +16,13 @@ import {
     workflowHelper
 } from '../../core/index.js';
 import { importTransforms } from '../../translation/index.js';
-import { ImportContext } from '../import.models.js';
+import { ImportContext, ImportedItem, ImportedLanguageVariant } from '../import.models.js';
 import { throwErrorForMigrationItem } from '../utils/import.utils.js';
 import { workflowImporter as workflowImporterInit } from './workflow-importer.js';
 
 export function languageVariantImporter(config: {
     readonly logger: Logger;
-    readonly preparedContentItems: readonly ContentItemModels.ContentItem[];
+    readonly preparedContentItems: readonly ImportedItem[];
     readonly importContext: ImportContext;
     readonly client: Readonly<ManagementClient>;
 }) {
@@ -37,7 +37,7 @@ export function languageVariantImporter(config: {
         readonly logSpinner: LogSpinnerData;
         readonly migrationItem: MigrationItem;
         readonly migrationItemVersion: MigrationItemVersion;
-        readonly preparedContentItem: Readonly<ContentItemModels.ContentItem>;
+        readonly preparedContentItem: ImportedItem;
     }): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant>> => {
         return await runMapiRequestAsync({
             logger: config.logger,
@@ -45,7 +45,7 @@ export function languageVariantImporter(config: {
                 return (
                     await config.client
                         .upsertLanguageVariant()
-                        .byItemCodename(data.preparedContentItem.codename)
+                        .byItemCodename(data.preparedContentItem.inputItem.system.codename)
                         .byLanguageCodename(data.migrationItem.system.language.codename)
                         .withData(() => {
                             return {
@@ -110,7 +110,7 @@ export function languageVariantImporter(config: {
         readonly logSpinner: LogSpinnerData;
         readonly migrationItem: MigrationItem;
         readonly migrationItemVersion: MigrationItemVersion;
-        readonly preparedContentItem: Readonly<ContentItemModels.ContentItem>;
+        readonly preparedContentItem: ImportedItem;
         readonly createNewVersion?: boolean;
     }): Promise<Readonly<LanguageVariantModels.ContentItemLanguageVariant>> => {
         // validate workflow
@@ -158,7 +158,7 @@ export function languageVariantImporter(config: {
     const importLanguageVariantAsync = async (
         logSpinner: LogSpinnerData,
         migrationItem: MigrationItem,
-        preparedContentItem: Readonly<ContentItemModels.ContentItem>
+        preparedContentItem: ImportedItem
     ): Promise<readonly LanguageVariantModels.ContentItemLanguageVariant[]> => {
         const { draftVersion, publishedVersion } = categorizeVersions(migrationItem);
 
@@ -297,7 +297,7 @@ export function languageVariantImporter(config: {
         return importTransformResult;
     };
 
-    const importAsync = async (): Promise<readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]> => {
+    const importAsync = async (): Promise<readonly ImportedLanguageVariant[]> => {
         config.logger.log({
             type: 'info',
             message: `Importing '${chalk.yellow(
@@ -305,32 +305,30 @@ export function languageVariantImporter(config: {
             )}' language variants`
         });
 
-        return (
-            await processItemsAsync<MigrationItem, readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]>({
-                action: 'Importing language variants',
-                logger: config.logger,
-                parallelLimit: 1,
-                items: config.importContext.categorizedImportData.contentItems,
-                itemInfo: (input) => {
-                    return {
-                        itemType: 'languageVariant',
-                        title: input.system.name,
-                        partA: input.system.language.codename
-                    };
-                },
-                processAsync: async (migrationItem, logSpinner) => {
-                    const contentItem = findRequired(
-                        config.preparedContentItems,
-                        (item) => item.codename === migrationItem.system.codename,
-                        `Missing content item with codename '${chalk.red(
-                            migrationItem.system.codename
-                        )}'. Content item should have been prepepared.`
-                    );
+        return await processItemsAsync<MigrationItem, readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]>({
+            action: 'Importing language variants',
+            logger: config.logger,
+            parallelLimit: 1,
+            items: config.importContext.categorizedImportData.contentItems,
+            itemInfo: (input) => {
+                return {
+                    itemType: 'languageVariant',
+                    title: input.system.name,
+                    partA: input.system.language.codename
+                };
+            },
+            processAsync: async (migrationItem, logSpinner) => {
+                const contentItem = findRequired(
+                    config.preparedContentItems,
+                    (item) => item.inputItem.system.codename === migrationItem.system.codename,
+                    `Missing content item with codename '${chalk.red(
+                        migrationItem.system.codename
+                    )}'. Content item should have been prepepared.`
+                );
 
-                    return await importLanguageVariantAsync(logSpinner, migrationItem, contentItem);
-                }
-            })
-        ).flatMap((m) => m.map((s) => s));
+                return await importLanguageVariantAsync(logSpinner, migrationItem, contentItem);
+            }
+        });
     };
 
     return {

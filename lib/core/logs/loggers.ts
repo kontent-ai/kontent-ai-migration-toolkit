@@ -1,7 +1,7 @@
 import chalk, { ChalkInstance } from 'chalk';
+import { match, P } from 'ts-pattern';
 import { Logger, LogSpinnerMessage } from '../models/log.models.js';
 import { getCurrentEnvironment } from '../utils/global.utils.js';
-import { match, P } from 'ts-pattern';
 
 const originalWarn = console.warn;
 
@@ -55,6 +55,10 @@ const defaultBrowserLogger: Logger = {
 };
 
 function getLogDataMessage(data: LogSpinnerMessage): string {
+    if (!data.type) {
+        return data.message;
+    }
+
     const color = match(data.type)
         .returnType<ChalkInstance>()
         .with('info', () => chalk.cyan)

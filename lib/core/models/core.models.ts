@@ -145,3 +145,9 @@ export interface OriginalManagementError {
         };
     };
 }
+
+export type ItemProcessingResult<InputItem, OutputItem> = {
+    readonly inputItem: InputItem;
+    readonly outputItem: OutputItem | undefined;
+    readonly error?: unknown;
+};
