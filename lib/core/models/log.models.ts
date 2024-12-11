@@ -1,4 +1,4 @@
-import { LiteralUnion, MapiAction, MapiType, MigrationItemType } from '../index.js';
+import { MapiAction, MapiType, MigrationItemType } from '../index.js';
 
 export type DebugType =
     | 'error'
@@ -17,7 +17,7 @@ export type DebugType =
     | MapiAction;
 
 export interface LogMessage {
-    readonly type?: LiteralUnion<DebugType>;
+    readonly type?: DebugType;
     readonly message: string;
 }
 
