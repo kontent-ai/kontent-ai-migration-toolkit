@@ -1,9 +1,8 @@
 import { HttpService, IRetryStrategyOptions } from '@kontent-ai/core-sdk';
-import { OriginalManagementError } from '../models/core.models.js';
 import { match } from 'ts-pattern';
+import { OriginalManagementError } from '../models/core.models.js';
 
 const rateExceededErrorCode: number = 10000;
-const notFoundErrorCode: number = 10000;
 
 export const defaultHttpService: Readonly<HttpService> = new HttpService({
     logErrorsToConsole: false
@@ -19,8 +18,6 @@ export const defaultRetryStrategy: Readonly<IRetryStrategyOptions> = {
             match(errorCode)
                 // retry rate exceeded error
                 .with(rateExceededErrorCode, () => true)
-                // do not retry errors indicating resource does not exist
-                .with(notFoundErrorCode, () => false)
                 // if error code is set, do not retry the request
                 .when(
                     (errorCode) => errorCode >= 0,
