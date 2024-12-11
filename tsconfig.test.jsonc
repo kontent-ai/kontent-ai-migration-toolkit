@@ -9,7 +9,7 @@
         "resolveJsonModule": true,
         "allowImportingTsExtensions": true,
         "esModuleInterop": true,
-        // needs to be added chalk to be processed
+        /* Needs to be added chalk to be processed */
         "allowJs": true,
         /* Emit */
         "noEmit": true,
