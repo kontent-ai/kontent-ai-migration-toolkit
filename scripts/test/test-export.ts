@@ -14,6 +14,10 @@ const run = async () => {
         {
             itemCodename: getEnvironmentRequiredValue('item'),
             languageCodename: getEnvironmentRequiredValue('language')
+        },
+        {
+            itemCodename: getEnvironmentRequiredValue('item'),
+            languageCodename: getEnvironmentRequiredValue('languageSecondary')
         }
     ];
 

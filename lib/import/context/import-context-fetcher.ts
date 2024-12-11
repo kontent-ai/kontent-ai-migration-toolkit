@@ -1,4 +1,6 @@
 import { AssetModels, ContentItemModels, LanguageVariantModels } from '@kontent-ai/management-sdk';
+import chalk from 'chalk';
+import { match } from 'ts-pattern';
 import {
     AssetStateInTargetEnvironmentByCodename,
     ItemStateInTargetEnvironmentByCodename,
@@ -12,16 +14,13 @@ import {
     WorkflowStep,
     findRequired,
     is404Error,
-    isNotUndefined,
     managementClientUtils,
     processItemsAsync,
     runMapiRequestAsync,
     workflowHelper as workflowHelperInit
 } from '../../core/index.js';
-import { GetFlattenedElementByCodenames, ImportContext, ImportContextConfig, ImportContextEnvironmentData } from '../import.models.js';
 import { ExtractItemByCodename, itemsExtractionProcessor } from '../../translation/index.js';
-import chalk from 'chalk';
-import { match } from 'ts-pattern';
+import { GetFlattenedElementByCodenames, ImportContext, ImportContextConfig, ImportContextEnvironmentData } from '../import.models.js';
 
 interface LanguageVariantWrapper {
     readonly draftLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined;
@@ -150,7 +149,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         migrationItems: readonly MigrationItem[]
     ): Promise<readonly LanguageVariantWrapper[]> => {
         return (
-            await processItemsAsync<MigrationItem, LanguageVariantWrapper | undefined>({
+            await processItemsAsync<MigrationItem, LanguageVariantWrapper>({
                 action: 'Fetching language variants',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -166,7 +165,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
 
                     if (!latestLanguageVariant) {
                         // there is neither published or draft version as latest version does not exist at all
-                        return undefined;
+                        return '404';
                     }
 
                     if (workflowHelper.isPublishedStepById(latestLanguageVariant.workflow.stepIdentifier.id ?? '')) {
@@ -186,14 +185,16 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                     };
                 }
             })
-        ).filter(isNotUndefined);
+        )
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getContentItemsByCodenamesAsync = async (
         itemCodenames: ReadonlySet<string>
     ): Promise<readonly ContentItemModels.ContentItem[]> => {
         return (
-            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | undefined>({
+            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem>>({
                 action: 'Fetching content items',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -219,16 +220,18 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                             throw error;
                         }
 
-                        return undefined;
+                        return '404';
                     }
                 }
             })
-        ).filter(isNotUndefined);
+        )
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getAssetsByCodenamesAsync = async (assetCodenames: ReadonlySet<string>): Promise<readonly AssetModels.Asset[]> => {
         return (
-            await processItemsAsync<string, Readonly<AssetModels.Asset> | undefined>({
+            await processItemsAsync<string, Readonly<AssetModels.Asset>>({
                 action: 'Fetching assets',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -254,11 +257,13 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
                             throw error;
                         }
 
-                        return undefined;
+                        return '404';
                     }
                 }
             })
-        ).filter(isNotUndefined);
+        )
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getVariantState = (languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>): LanguageVariantStateData => {

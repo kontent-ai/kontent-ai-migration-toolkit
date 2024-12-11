@@ -14,6 +14,7 @@ import {
     ExternalIdGenerator,
     FlattenedContentType,
     FlattenedContentTypeElement,
+    ItemProcessingResult,
     ItemStateInTargetEnvironmentByCodename,
     LanguageVariantStateInTargetEnvironmentByCodename,
     Logger,
@@ -75,12 +76,27 @@ export type ImportTransformFunc = (data: {
 export interface ImportConfig extends ManagementClientConfig {
     readonly data: MigrationData;
     readonly externalIdGenerator?: ExternalIdGenerator;
+    readonly createReportFile?: boolean;
     readonly logger?: Logger;
 }
 
+export interface AssetToEdit {
+    readonly migrationAsset: MigrationAsset;
+    readonly targetAsset: Readonly<AssetModels.Asset>;
+    readonly replaceBinaryFile: boolean;
+}
+
+export type ImportedItem = ItemProcessingResult<MigrationItem, Readonly<ContentItemModels.ContentItem>>;
+export type ImportedLanguageVariant = ItemProcessingResult<
+    MigrationItem,
+    readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[]
+>;
+export type EditedAsset = ItemProcessingResult<AssetToEdit, Readonly<AssetModels.Asset>>;
+export type ImportedAsset = ItemProcessingResult<MigrationAsset, Readonly<AssetModels.Asset>>;
+
 export interface ImportResult {
-    readonly uploadedAssets: readonly Readonly<AssetModels.Asset>[];
-    readonly editedAssets: readonly Readonly<AssetModels.Asset>[];
-    readonly contentItems: readonly Readonly<ContentItemModels.ContentItem>[];
-    readonly languageVariants: readonly Readonly<LanguageVariantModels.ContentItemLanguageVariant>[];
+    readonly uploadedAssets: readonly ImportedAsset[];
+    readonly editedAssets: readonly EditedAsset[];
+    readonly contentItems: readonly ImportedItem[];
+    readonly languageVariants: readonly ImportedLanguageVariant[];
 }

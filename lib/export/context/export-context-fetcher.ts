@@ -1,23 +1,22 @@
 import {
-    WorkflowModels,
-    LanguageVariantModels,
-    ContentItemModels,
     AssetModels,
     CollectionModels,
-    LanguageModels
+    ContentItemModels,
+    LanguageModels,
+    LanguageVariantModels,
+    WorkflowModels
 } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import {
-    processItemsAsync,
-    runMapiRequestAsync,
+    AssetStateInSourceEnvironmentById,
+    findRequired,
+    FlattenedContentType,
     is404Error,
     ItemStateInSourceEnvironmentById,
-    AssetStateInSourceEnvironmentById,
-    FlattenedContentType,
-    isNotUndefined,
-    managementClientUtils,
     LogSpinnerData,
-    findRequired,
+    managementClientUtils,
+    processItemsAsync,
+    runMapiRequestAsync,
     workflowHelper
 } from '../../core/index.js';
 import { itemsExtractionProcessor } from '../../translation/index.js';
@@ -25,10 +24,10 @@ import {
     DefaultExportContextConfig,
     ExportContext,
     ExportContextEnvironmentData,
-    SourceExportItem,
     ExportItem,
+    ExportItemVersion,
     GetFlattenedElementByIds,
-    ExportItemVersion
+    SourceExportItem
 } from '../export.models.js';
 import { throwErrorForItemRequest } from '../utils/export.utils.js';
 
@@ -173,11 +172,11 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
         readonly contentItem: Readonly<ContentItemModels.ContentItem>;
         readonly languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>;
     }): {
-        collection: Readonly<CollectionModels.Collection>;
-        language: Readonly<LanguageModels.LanguageModel>;
-        workflow: Readonly<WorkflowModels.Workflow>;
-        contentType: Readonly<FlattenedContentType>;
-        workflowStepCodename: string;
+        readonly collection: Readonly<CollectionModels.Collection>;
+        readonly language: Readonly<LanguageModels.LanguageModel>;
+        readonly workflow: Readonly<WorkflowModels.Workflow>;
+        readonly contentType: Readonly<FlattenedContentType>;
+        readonly workflowStepCodename: string;
     } => {
         const collection = findRequired(
             environmentData.collections,
@@ -234,49 +233,53 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             message: `Preparing '${chalk.yellow(config.exportItems.length.toString())}' items for export`
         });
 
-        return await processItemsAsync<SourceExportItem, ExportItem>({
-            logger: config.logger,
-            action: 'Preparing content items & language variants',
-            parallelLimit: 1,
-            itemInfo: (input) => {
-                return {
-                    title: `${input.itemCodename} (${input.languageCodename})`,
-                    itemType: 'exportItem'
-                };
-            },
-            items: exportItems,
-            processAsync: async (requestItem, logSpinner) => {
-                const contentItem = await getContentItemAsync(requestItem, logSpinner);
-                const versions = await getExportItemVersionsAsync(requestItem, contentItem, logSpinner);
+        return (
+            await processItemsAsync<SourceExportItem, ExportItem>({
+                logger: config.logger,
+                action: 'Preparing content items & language variants',
+                parallelLimit: 1,
+                itemInfo: (input) => {
+                    return {
+                        title: `${input.itemCodename} (${input.languageCodename})`,
+                        itemType: 'exportItem'
+                    };
+                },
+                items: exportItems,
+                processAsync: async (requestItem, logSpinner) => {
+                    const contentItem = await getContentItemAsync(requestItem, logSpinner);
+                    const versions = await getExportItemVersionsAsync(requestItem, contentItem, logSpinner);
 
-                // get shared attributes from any version
-                const anyVersion = versions[0];
-                if (!anyVersion) {
-                    throwErrorForItemRequest(requestItem, `Expected at least 1 version of the content item`);
+                    // get shared attributes from any version
+                    const anyVersion = versions[0];
+                    if (!anyVersion) {
+                        throwErrorForItemRequest(requestItem, `Expected at least 1 version of the content item`);
+                    }
+
+                    const { collection, contentType, language, workflow } = validateExportItem({
+                        sourceItem: requestItem,
+                        contentItem: contentItem,
+                        languageVariant: anyVersion.languageVariant
+                    });
+
+                    return {
+                        contentItem,
+                        versions,
+                        contentType,
+                        requestItem,
+                        workflow,
+                        collection,
+                        language
+                    };
                 }
-
-                const { collection, contentType, language, workflow } = validateExportItem({
-                    sourceItem: requestItem,
-                    contentItem: contentItem,
-                    languageVariant: anyVersion.languageVariant
-                });
-
-                return {
-                    contentItem,
-                    versions,
-                    contentType,
-                    requestItem,
-                    workflow,
-                    collection,
-                    language
-                };
-            }
-        });
+            })
+        )
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getContentItemsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
         return (
-            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | undefined>({
+            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem>>({
                 logger: config.logger,
                 action: 'Fetching content items',
                 parallelLimit: 1,
@@ -302,16 +305,18 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                             throw error;
                         }
 
-                        return undefined;
+                        return '404';
                     }
                 }
             })
-        ).filter(isNotUndefined);
+        )
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<AssetModels.Asset>[]> => {
         return (
-            await processItemsAsync<string, Readonly<AssetModels.Asset> | undefined>({
+            await processItemsAsync<string, Readonly<AssetModels.Asset>>({
                 logger: config.logger,
                 action: 'Fetching assets',
                 parallelLimit: 1,
@@ -337,11 +342,13 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
                             throw error;
                         }
 
-                        return undefined;
+                        return '404';
                     }
                 }
             })
-        ).filter(isNotUndefined);
+        )
+            .filter((m) => m.state === 'valid')
+            .map((m) => m.outputItem);
     };
 
     const getItemStatesAsync = async (itemIds: ReadonlySet<string>): Promise<readonly ItemStateInSourceEnvironmentById[]> => {

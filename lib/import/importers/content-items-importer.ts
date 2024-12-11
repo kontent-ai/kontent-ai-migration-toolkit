@@ -1,14 +1,7 @@
 import { ContentItemModels, ManagementClient } from '@kontent-ai/management-sdk';
-import {
-    Logger,
-    processItemsAsync,
-    runMapiRequestAsync,
-    MigrationItem,
-    LogSpinnerData,
-    findRequired
-} from '../../core/index.js';
 import chalk from 'chalk';
-import { ImportContext } from '../import.models.js';
+import { LogSpinnerData, Logger, MigrationItem, findRequired, processItemsAsync, runMapiRequestAsync } from '../../core/index.js';
+import { ImportContext, ImportedItem } from '../import.models.js';
 
 export function contentItemsImporter(data: {
     readonly logger: Logger;
@@ -26,8 +19,7 @@ export function contentItemsImporter(data: {
         );
 
         return (
-            migrationContentItem.system.name !== contentItem.name ||
-            migrationContentItem.system.collection.codename !== collection.codename
+            migrationContentItem.system.name !== contentItem.name || migrationContentItem.system.collection.codename !== collection.codename
         );
     };
 
@@ -35,9 +27,7 @@ export function contentItemsImporter(data: {
         logSpinner: LogSpinnerData,
         migrationContentItem: MigrationItem
     ): Promise<{ contentItem: Readonly<ContentItemModels.ContentItem>; status: 'created' | 'itemAlreadyExists' }> => {
-        const itemStateInTargetEnv = data.importContext.getItemStateInTargetEnvironment(
-            migrationContentItem.system.codename
-        );
+        const itemStateInTargetEnv = data.importContext.getItemStateInTargetEnvironment(migrationContentItem.system.codename);
 
         if (itemStateInTargetEnv.state === 'exists' && itemStateInTargetEnv.item) {
             return {
@@ -111,8 +101,19 @@ export function contentItemsImporter(data: {
         return preparedContentItemResult.contentItem;
     };
 
-    const importAsync = async (): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
-        const contentItemsToImport = data.importContext.categorizedImportData.contentItems;
+    const importAsync = async (): Promise<readonly ImportedItem[]> => {
+        // Only import unique content items based on their codename. The input may contain items in various language variants which share
+        // the same underlying content item.
+        const contentItemsToImport = data.importContext.categorizedImportData.contentItems.reduce<Readonly<MigrationItem[]>>(
+            (filteredItems, item) => {
+                if (filteredItems.some((m) => m.system.codename === item.system.codename)) {
+                    return filteredItems;
+                }
+
+                return [...filteredItems, item];
+            },
+            []
+        );
 
         data.logger.log({
             type: 'info',
@@ -127,7 +128,7 @@ export function contentItemsImporter(data: {
             itemInfo: (item) => {
                 return {
                     itemType: 'contentItem',
-                    title: `${item.system.codename} -> ${item.system.language.codename}`
+                    title: `${item.system.codename} -> ${item.system.type.codename}`
                 };
             },
             processAsync: async (item, logSpinner) => {

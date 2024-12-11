@@ -145,3 +145,19 @@ export interface OriginalManagementError {
         };
     };
 }
+
+export type ItemProcessingResult<InputItem, OutputItem> =
+    | {
+          readonly state: 'valid';
+          readonly inputItem: InputItem;
+          readonly outputItem: OutputItem;
+      }
+    | {
+          readonly state: 'error';
+          readonly inputItem: InputItem;
+          readonly error: unknown;
+      }
+    | {
+          readonly state: '404';
+          readonly inputItem: InputItem;
+      };

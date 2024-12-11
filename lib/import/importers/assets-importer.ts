@@ -13,13 +13,7 @@ import {
     runMapiRequestAsync
 } from '../../core/index.js';
 import { shouldReplaceBinaryFile, shouldUpdateAsset } from '../comparers/asset-comparer.js';
-import { ImportContext, ImportResult } from '../import.models.js';
-
-interface AssetToEdit {
-    migrationAsset: MigrationAsset;
-    targetAsset: Readonly<AssetModels.Asset>;
-    replaceBinaryFile: boolean;
-}
+import { AssetToEdit, EditedAsset, ImportContext, ImportedAsset, ImportResult } from '../import.models.js';
 
 export function assetsImporter(data: {
     readonly logger: Logger;
@@ -70,7 +64,7 @@ export function assetsImporter(data: {
             .filter(isNotUndefined);
     };
 
-    const editAssets = async (assetsToEdit: readonly AssetToEdit[]): Promise<readonly Readonly<AssetModels.Asset>[]> => {
+    const editAssets = async (assetsToEdit: readonly AssetToEdit[]): Promise<readonly EditedAsset[]> => {
         data.logger.log({
             type: 'upsert',
             message: `Upserting '${chalk.yellow(assetsToEdit.length.toString())}' assets`
@@ -189,7 +183,7 @@ export function assetsImporter(data: {
         });
     };
 
-    const uploadAssetsAsync = async (assetsToUpload: readonly MigrationAsset[]): Promise<readonly Readonly<AssetModels.Asset>[]> => {
+    const uploadAssetsAsync = async (assetsToUpload: readonly MigrationAsset[]): Promise<readonly ImportedAsset[]> => {
         data.logger.log({
             type: 'upload',
             message: `Uploading '${chalk.yellow(assetsToUpload.length.toString())}' assets`
