@@ -102,7 +102,18 @@ export function contentItemsImporter(data: {
     };
 
     const importAsync = async (): Promise<readonly ImportedItem[]> => {
-        const contentItemsToImport = data.importContext.categorizedImportData.contentItems;
+        // Only import unique content items based on their codename. The input may contain items in various language variants which share
+        // the same underlying content item.
+        const contentItemsToImport = data.importContext.categorizedImportData.contentItems.reduce<Readonly<MigrationItem[]>>(
+            (filteredItems, item) => {
+                if (filteredItems.some((m) => m.system.codename === item.system.codename)) {
+                    return filteredItems;
+                }
+
+                return [...filteredItems, item];
+            },
+            []
+        );
 
         data.logger.log({
             type: 'info',
@@ -117,7 +128,7 @@ export function contentItemsImporter(data: {
             itemInfo: (item) => {
                 return {
                     itemType: 'contentItem',
-                    title: `${item.system.codename} -> ${item.system.language.codename}`
+                    title: `${item.system.codename} -> ${item.system.type.codename}`
                 };
             },
             processAsync: async (item, logSpinner) => {
