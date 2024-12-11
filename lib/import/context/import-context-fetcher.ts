@@ -150,7 +150,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         migrationItems: readonly MigrationItem[]
     ): Promise<readonly LanguageVariantWrapper[]> => {
         return (
-            await processItemsAsync<MigrationItem, LanguageVariantWrapper | '404'>({
+            await processItemsAsync<MigrationItem, LanguageVariantWrapper>({
                 action: 'Fetching language variants',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -188,7 +188,6 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
             })
         )
             .map((m) => m.outputItem)
-            .filter((m) => m !== '404')
             .filter(isNotUndefined);
     };
 
@@ -196,7 +195,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
         itemCodenames: ReadonlySet<string>
     ): Promise<readonly ContentItemModels.ContentItem[]> => {
         return (
-            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | '404'>({
+            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem>>({
                 action: 'Fetching content items',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -228,13 +227,12 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
             })
         )
             .map((m) => m.outputItem)
-            .filter(isNotUndefined)
-            .filter((m) => m !== '404');
+            .filter(isNotUndefined);
     };
 
     const getAssetsByCodenamesAsync = async (assetCodenames: ReadonlySet<string>): Promise<readonly AssetModels.Asset[]> => {
         return (
-            await processItemsAsync<string, Readonly<AssetModels.Asset> | '404'>({
+            await processItemsAsync<string, Readonly<AssetModels.Asset>>({
                 action: 'Fetching assets',
                 logger: config.logger,
                 parallelLimit: 1,
@@ -266,8 +264,7 @@ export async function importContextFetcherAsync(config: ImportContextConfig) {
             })
         )
             .map((m) => m.outputItem)
-            .filter(isNotUndefined)
-            .filter((m) => m !== '404');
+            .filter(isNotUndefined);
     };
 
     const getVariantState = (languageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant>): LanguageVariantStateData => {

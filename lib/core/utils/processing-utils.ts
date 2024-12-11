@@ -19,7 +19,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
     readonly logger: Logger;
     readonly items: Readonly<InputItem[]>;
     readonly parallelLimit: number;
-    readonly processAsync: (item: Readonly<InputItem>, logSpinner: LogSpinnerData) => Promise<Readonly<OutputItem>>;
+    readonly processAsync: (item: Readonly<InputItem>, logSpinner: LogSpinnerData) => Promise<Readonly<OutputItem> | '404'>;
     readonly itemInfo: (item: Readonly<InputItem>) => ItemInfo;
 }): Promise<readonly ItemProcessingResult<InputItem, OutputItem>[]> {
     if (!data.items.length) {
@@ -36,7 +36,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
             limit(() => {
                 return data
                     .processAsync(item, logSpinner)
-                    .then<OutputItem>((output) => {
+                    .then<OutputItem | '404'>((output) => {
                         const itemInfo = data.itemInfo(item);
                         const prefix = getPercentagePrefix(processedItemsCount, data.items.length);
 
@@ -50,6 +50,13 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                         return output;
                     })
                     .then<ItemProcessingResult<InputItem, OutputItem>>((outputItem) => {
+                        if (outputItem === '404') {
+                            return {
+                                inputItem: item,
+                                outputItem: undefined,
+                                error: undefined
+                            };
+                        }
                         return {
                             inputItem: item,
                             outputItem: outputItem
@@ -75,7 +82,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         // Only '<parallelLimit>' promises at a time
         const resultItems = await Promise.all(requests);
 
-        const failedItemsCount = resultItems.filter((m) => !m.outputItem).length;
+        const failedItemsCount = resultItems.filter((m) => m.error).length;
         const failedText = failedItemsCount ? ` Failed (${chalk.red(failedItemsCount)}) items` : ``;
 
         logSpinner({

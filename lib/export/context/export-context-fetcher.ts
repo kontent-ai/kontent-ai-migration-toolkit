@@ -280,7 +280,7 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
 
     const getContentItemsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
         return (
-            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem> | '404'>({
+            await processItemsAsync<string, Readonly<ContentItemModels.ContentItem>>({
                 logger: config.logger,
                 action: 'Fetching content items',
                 parallelLimit: 1,
@@ -312,13 +312,12 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             })
         )
             .map((m) => m.outputItem)
-            .filter((m) => m !== '404')
             .filter(isNotUndefined);
     };
 
     const getAssetsByIdsAsync = async (itemIds: ReadonlySet<string>): Promise<readonly Readonly<AssetModels.Asset>[]> => {
         return (
-            await processItemsAsync<string, Readonly<AssetModels.Asset> | '404'>({
+            await processItemsAsync<string, Readonly<AssetModels.Asset>>({
                 logger: config.logger,
                 action: 'Fetching assets',
                 parallelLimit: 1,
@@ -350,7 +349,6 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             })
         )
             .map((m) => m.outputItem)
-            .filter((m) => m !== '404')
             .filter(isNotUndefined);
     };
 
