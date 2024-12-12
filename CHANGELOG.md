@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.2.2...v2.3.0) (2024-12-12)
+
+
+### Features
+
+* updates deps,  improves types a bit, removes browser note from readme due to outstanding issues ([446575e](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/446575ebd7950f33bd8ecf06b6ec924bcc77e289))
+
+
+### Bug Fixes
+
+* Fixes import when multiple language variants reference same content item (fixes https://github.com/kontent-ai/kontent-ai-migration-toolkit/issues/19) ([0aeff7a](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/0aeff7a7c2f1088cd1a2ba9fe518cf398a07224a))
+* Remove unnecessary handling for not found error code (fixes https://github.com/kontent-ai/kontent-ai-migration-toolkit/issues/20) ([0383b52](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/0383b525cc9bdf0c1d12291862fd12c23d828fb9))
+
 ### [2.2.2](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.2.1...v2.2.2) (2024-11-07)
 
 
