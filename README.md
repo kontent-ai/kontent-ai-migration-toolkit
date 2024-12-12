@@ -55,7 +55,7 @@ You may migrate content (items & asset) between Kontent.ai environments. For mig
 | **targetApiKey**        | Management API key of target environment **(required)**                                               |
 | **language**            | Codename of language that items will be exported in **(required)**                                    |
 | **items**               | Comma separated list of items that will be exported **(required)**                                    |
-| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false` |
+| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Defaults to `false` |
 
 ## Migrate CLI
 
@@ -77,13 +77,14 @@ kontent-ai-migration-toolkit migrate --targetEnvironmentId=x --targetApiKey=x --
 
 ## Configuration
 
-| Config                  | Value                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| **targetEnvironmentId** | Id of Kontent.ai environment **(required)**                                                           |
-| **targetApiKey**        | Management API key **(required)**                                                                     |
-| **filename**            | Name of the zip file **(required)**                                                                   |
-| baseUrl                 | Custom base URL for Kontent.ai API calls                                                              |
-| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false` |
+| Config                  | Value                                                                                                                                   |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **targetEnvironmentId** | Id of Kontent.ai environment **(required)**                                                                                             |
+| **targetApiKey**        | Management API key **(required)**                                                                                                       |
+| **filename**            | Name of the zip file **(required)**                                                                                                     |
+| baseUrl                 | Custom base URL for Kontent.ai API calls                                                                                                |
+| force                   | Can be used to disable confirmation prompts. Options: `true` & `false`. Defaults to `false`                                             |
+| createReportFile        | When enabled, a detailed `json` file will be created in current dir with import details. Options: `true` & `false`. Defaults to `false` |
 
 ## Import CLI
 

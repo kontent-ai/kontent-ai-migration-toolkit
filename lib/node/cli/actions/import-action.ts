@@ -7,6 +7,7 @@ export async function importActionAsync(argsFetcher: CliArgumentsFetcher): Promi
     const environmentId = argsFetcher.getRequiredArgumentValue('targetEnvironmentId');
     const apiKey = argsFetcher.getRequiredArgumentValue('targetApiKey');
     const baseUrl = argsFetcher.getOptionalArgumentValue('baseUrl');
+    const createReportFile = argsFetcher.getBooleanArgumentValue('createReportFile', false);
     const force = argsFetcher.getBooleanArgumentValue('force', false);
     const filename = argsFetcher.getOptionalArgumentValue('filename') ?? defaultZipFilename;
 
@@ -27,7 +28,8 @@ export async function importActionAsync(argsFetcher: CliArgumentsFetcher): Promi
         data: importData,
         baseUrl: baseUrl,
         environmentId: environmentId,
-        apiKey: apiKey
+        apiKey: apiKey,
+        createReportFile: createReportFile
     });
 
     log.log({ type: 'completed', message: `Import has been successful` });
