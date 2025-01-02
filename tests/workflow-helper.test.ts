@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { workflowHelper } from '../lib/index.js';
 
 describe('findShortestPathBetweenSteps', () => {
-    const createWorkflow = (steps: Array<WorkflowContracts.IWorkflowStepNewContract>) =>
-        ({
+    const createWorkflow = (steps: Array<WorkflowContracts.IWorkflowStepNewContract>): Readonly<WorkflowModels.Workflow> => {
+        const workflow: Omit<WorkflowModels.Workflow, '_raw'> = {
             id: 'workflow_001',
             name: 'Content Publishing Workflow',
             codename: 'content_publishing_workflow',
@@ -28,13 +28,16 @@ describe('findShortestPathBetweenSteps', () => {
                 codename: 'archived_step',
                 role_ids: []
             }
-        } as const satisfies Omit<WorkflowModels.Workflow, '_raw'>);
+        };
+
+        return workflow as WorkflowModels.Workflow;
+    };
 
     const createStep = (
         id: string,
         codename: string,
         transitions_to: ReadonlyArray<string>
-    ): WorkflowContracts.IWorkflowStepNewContract => ({
+    ): Readonly<WorkflowContracts.IWorkflowStepNewContract> => ({
         id,
         name: '',
         codename,
@@ -49,7 +52,7 @@ describe('findShortestPathBetweenSteps', () => {
             createStep('step_002', 'step_2', ['step_004']),
             createStep('step_003', 'step_3', ['publish_step_id']),
             createStep('step_004', 'step_4', ['publish_step_id'])
-        ]) as unknown as WorkflowModels.Workflow;
+        ]);
         const workflowHelp = workflowHelper([typeWorkflow]);
 
         const result = workflowHelp.findShortestPathBetweenSteps(
@@ -65,7 +68,7 @@ describe('findShortestPathBetweenSteps', () => {
         const typeWorkflow = createWorkflow([
             createStep('step_001', 'step_1', ['step_002']),
             createStep('step_002', 'step_2', ['publish_step_id'])
-        ]) as unknown as WorkflowModels.Workflow;
+        ]);
         const workflowHelp = workflowHelper([typeWorkflow]);
 
         const result = workflowHelp.findShortestPathBetweenSteps(
@@ -82,7 +85,7 @@ describe('findShortestPathBetweenSteps', () => {
             createStep('step_001', 'step_1', ['step_002']),
             createStep('step_002', 'step_2', ['step_003']),
             createStep('step_003', 'step_3', [])
-        ]) as unknown as WorkflowModels.Workflow;
+        ]);
 
         const workflowHelp = workflowHelper([typeWorkflow]);
 

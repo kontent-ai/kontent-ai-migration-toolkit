@@ -20,7 +20,7 @@
     "type": "module",
     "directories": {},
     "scripts": {
-        "test": "npm run test:all",
+        "test": "npm run test:unit",
         "release": "npm run lint && standard-version && npm run update:version",
         "release:major": "npm run lint && standard-version --release-as major  && npm run update:version",
         "release:major:beta": "npm run lint && standard-version --prerelease --release-as major  && npm run update:version",
@@ -29,7 +29,6 @@
         "publish:beta": "npm publish --tag=next",
         "build:es2022": "tsc --p tsconfig.es2022.json",
         "build": "npm run clean && npm run lint && npm run build:es2022",
-        "test:all": "npm run build",
         "test:migrate": "cd scripts/test && tsx test-migrate.ts",
         "test:import": "cd scripts/test && tsx test-import.ts",
         "test:export": "cd scripts/test && tsx test-export.ts",
