@@ -8,26 +8,21 @@ export function contentItemsImporter(data: {
     readonly client: Readonly<ManagementClient>;
     readonly importContext: ImportContext;
 }) {
-    const shouldUpdateContentItem = (
-        migrationContentItem: MigrationItem,
-        contentItem: Readonly<ContentItemModels.ContentItem>
-    ): boolean => {
+    const shouldUpdateContentItem = (migrationItem: MigrationItem, contentItem: Readonly<ContentItemModels.ContentItem>): boolean => {
         const collection = findRequired(
             data.importContext.environmentData.collections,
-            (collection) => collection.codename === migrationContentItem.system.collection.codename,
-            `Invalid collection '${migrationContentItem.system.collection.codename}'`
+            (collection) => collection.id === contentItem.collection.id,
+            `Invalid collection with id '${contentItem.collection.id}' for content item '${contentItem.codename}'`
         );
 
-        return (
-            migrationContentItem.system.name !== contentItem.name || migrationContentItem.system.collection.codename !== collection.codename
-        );
+        return migrationItem.system.name !== contentItem.name || migrationItem.system.collection.codename !== collection.codename;
     };
 
     const prepareContentItemAsync = async (
         logSpinner: LogSpinnerData,
-        migrationContentItem: MigrationItem
+        migrationItem: MigrationItem
     ): Promise<{ contentItem: Readonly<ContentItemModels.ContentItem>; status: 'created' | 'itemAlreadyExists' }> => {
-        const itemStateInTargetEnv = data.importContext.getItemStateInTargetEnvironment(migrationContentItem.system.codename);
+        const itemStateInTargetEnv = data.importContext.getItemStateInTargetEnvironment(migrationItem.system.codename);
 
         if (itemStateInTargetEnv.state === 'exists' && itemStateInTargetEnv.item) {
             return {
@@ -43,14 +38,14 @@ export function contentItemsImporter(data: {
                     await data.client
                         .addContentItem()
                         .withData({
-                            name: migrationContentItem.system.name,
+                            name: migrationItem.system.name,
                             type: {
-                                codename: migrationContentItem.system.type.codename
+                                codename: migrationItem.system.type.codename
                             },
                             external_id: itemStateInTargetEnv.externalIdToUse,
-                            codename: migrationContentItem.system.codename,
+                            codename: migrationItem.system.codename,
                             collection: {
-                                codename: migrationContentItem.system.collection.codename
+                                codename: migrationItem.system.collection.codename
                             }
                         })
                         .toPromise()
@@ -58,7 +53,7 @@ export function contentItemsImporter(data: {
             action: 'create',
             type: 'contentItem',
             logSpinner: logSpinner,
-            itemName: `${migrationContentItem.system.codename} (${migrationContentItem.system.language.codename})`
+            itemName: `${migrationItem.system.codename} (${migrationItem.system.language.codename})`
         });
 
         return {
