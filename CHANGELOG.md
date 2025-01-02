@@ -1,7 +1,19 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See
-[standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [2.4.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.3.0...v2.4.0) (2025-01-02)
+
+
+### Features
+
+* updates deps ([81916c9](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/81916c99bc015df9a03c431c972bb904144ff0d9))
+
+
+### Bug Fixes
+
+* Correctly assert whether content item should be updated when collection changes (fixes https://github.com/kontent-ai/kontent-ai-migration-toolkit/issues/24) ([c2b157d](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/c2b157d3f95fb8939695e577e32e5bd950b116ec))
+* Handle new line in link tag regex (fixes https://github.com/kontent-ai/kontent-ai-migration-toolkit/issues/25) ([4eb103a](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/commit/4eb103a1f35db355320fc686bd4cb09d454ab642))
 
 ## [2.3.0](https://github.com/Kontent-ai/kontent-ai-migration-toolkit/compare/v2.2.2...v2.3.0) (2024-12-12)
 

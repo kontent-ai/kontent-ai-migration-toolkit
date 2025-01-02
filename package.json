@@ -1,6 +1,6 @@
 {
     "name": "@kontent-ai/migration-toolkit",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "description": "This program can be used to import content related data into Kontent.ai from various sources. The included functionality enables the content & asset export/import from Kontent.ai environments.",
     "preferGlobal": true,
     "private": false,
