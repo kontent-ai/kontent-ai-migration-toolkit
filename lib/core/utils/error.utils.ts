@@ -1,8 +1,8 @@
 import { SharedModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
-import { ErrorData, OriginalManagementError } from '../models/core.models.js';
-import { ZodError } from 'zod';
 import { match } from 'ts-pattern';
+import { ZodError } from 'zod';
+import { ErrorData, OriginalManagementError } from '../models/core.models.js';
 
 export function extractErrorData(error: unknown): ErrorData {
     return match(error)

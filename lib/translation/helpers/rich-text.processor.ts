@@ -1,7 +1,7 @@
 import { AssetStateInTargetEnvironmentByCodename, ItemStateInTargetEnvironmentByCodename } from 'lib/core/index.js';
 
-type CodenameReplaceFunc<T> = (codename: string) => T;
-type IdReplaceFunc = (id: string) => { codename: string };
+export type CodenameReplaceFunc<T> = (codename: string) => T;
+export type IdReplaceFunc = (id: string) => { codename: string };
 
 interface ProcessCodenamesResult {
     readonly codenames: ReadonlySet<string>;
@@ -35,7 +35,7 @@ const rteRegexes = {
         objectTagRegex: new RegExp(`<object(.+?)</object>`, 'g'),
         imgTagRegex: new RegExp(`<img(.+?)</img>`, 'g'),
         figureTagRegex: new RegExp(`<figure(.+?)</figure>`, 'g'),
-        linkTagRegex: new RegExp(`<a(.+?)</a>`, 'g')
+        linkTagRegex: new RegExp(`<a([\\s\\S]*)</a>`, 'gm')
     },
     ids: {
         dataItemIdAttrRegex: new RegExp(`${attributes.ids.itemIdAttributeName}=\\"(.+?)\\"`),
@@ -324,7 +324,7 @@ export function richTextProcessor() {
             html: richTextHtml
         };
     };
-    
+
     const processLinkAssetCodenames = (
         richTextHtml: string,
         replaceFunc?: CodenameReplaceFunc<AssetStateInTargetEnvironmentByCodename>
